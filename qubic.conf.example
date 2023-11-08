@@ -1,0 +1,4 @@
+node_ip=127.0.0.1
+node_port=21841
+schedule_tick_offset=20
+seed=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
