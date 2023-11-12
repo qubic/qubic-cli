@@ -9,7 +9,7 @@ char* g_requestedTxId  = nullptr;
 char* g_requestedIdentity  = nullptr;
 
 int64_t g_TxAmount = 0;
-ushort g_TxType = 0;
+uint16_t g_TxType = 0;
 int g_nodePort = DEFAULT_NODE_PORT;
 int g_txExtraDataSize = 0;
 int g_rawPacketSize = 0;

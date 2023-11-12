@@ -29,7 +29,7 @@ void getPublicKeyFromPrivateKey(const uint8_t* privateKey, uint8_t* publicKey)
 
 void getIdentityFromPublicKey(const uint8_t* pubkey, char* dstIdentity, bool isLowerCase)
 {
-    uint8_t publicKey[32] __attribute((aligned(32)));
+    uint8_t publicKey[32] ;
     memcpy(publicKey, pubkey, 32);
     uint16_t identity[61] = {0};
     for (int i = 0; i < 4; i++)

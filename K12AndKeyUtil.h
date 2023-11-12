@@ -304,7 +304,7 @@
 #define K12_chunkSize 8192
 #define K12_suffixLeaf 0x0B
 typedef struct {
-    uint8_t state[200] __attribute__((aligned(32)));
+    uint8_t state[200];
     uint8_t byteIOIndex;
 } KangarooTwelve_F;
 
@@ -561,10 +561,10 @@ typedef unsigned long long felm_t[2]; // Datatype for representing 128-bit field
 typedef felm_t f2elm_t[2]; // Datatype for representing quadratic extension field elements
 typedef struct
 { // Point representation in affine coordinates
-    f2elm_t x __attribute((aligned(32)));
-    f2elm_t y __attribute((aligned(32)));
+    f2elm_t x;
+    f2elm_t y;
 } point_affine;
-typedef point_affine point_t[1] __attribute((aligned(32)));
+typedef point_affine point_t[1];
 
 typedef struct
 { // Point representation in extended coordinates
@@ -574,7 +574,7 @@ typedef struct
     f2elm_t ta;
     f2elm_t tb;
 } point_extproj;
-typedef point_extproj point_extproj_t[1] __attribute((aligned(32)));
+typedef point_extproj point_extproj_t[1];
 
 typedef struct
 { // Point representation in extended coordinates (for precomputed points)
@@ -583,7 +583,7 @@ typedef struct
     f2elm_t z2;
     f2elm_t t2;
 } point_extproj_precomp;
-typedef point_extproj_precomp point_extproj_precomp_t[1] __attribute((aligned(32)));
+typedef point_extproj_precomp point_extproj_precomp_t[1];
 
 typedef struct
 { // Point representation in extended affine coordinates (for precomputed points)
@@ -591,7 +591,7 @@ typedef struct
     f2elm_t yx;
     f2elm_t t2;
 } point_precomp;
-typedef point_precomp point_precomp_t[1] __attribute((aligned(32)));
+typedef point_precomp point_precomp_t[1];
 
 static const unsigned long long PARAMETER_d[4] = { 0x0000000000000142, 0x00000000000000E4, 0xB3821488F1FC0C8D, 0x5E472F846657E0FC };
 static const unsigned long long curve_order[4] = { CURVE_ORDER_0, CURVE_ORDER_1, CURVE_ORDER_2, CURVE_ORDER_3 };
@@ -992,7 +992,7 @@ static void fpneg1271(felm_t a)
     a[0] = ~a[0];
     a[1] = 0x7FFFFFFFFFFFFFFF - a[1];
 }
-
+#ifndef _MSC_VER 
 static uint64_t _umul128(uint64_t a, uint64_t b, long long unsigned int *hi)
 {
     union { unsigned __int128 v; uint64_t sv[2]; } var;
@@ -1001,6 +1001,7 @@ static uint64_t _umul128(uint64_t a, uint64_t b, long long unsigned int *hi)
     if (hi) *hi = var.sv[1];
     return var.sv[0];
 }
+
 
 static uint64_t __shiftleft128 (uint64_t  LowPart, uint64_t HighPart, uint8_t Shift)
 {
@@ -1025,6 +1026,7 @@ static uint64_t __shiftright128 (uint64_t  LowPart, uint64_t HighPart, uint8_t S
 
     return ret;
 }
+#endif
 
 static void fpmul1271(felm_t a, felm_t b, felm_t c)
 { // Field multiplication, c = a*b mod (2^127-1)
@@ -1205,9 +1207,9 @@ static void Montgomery_multiply_mod_order(const unsigned long long* ma, const un
 { // 256-bit Montgomery multiplication modulo the curve order, mc = ma*mb*r' mod order, where ma,mb,mc in [0, order-1]
     // ma, mb and mc are assumed to be in Montgomery representation
     // The Montgomery constant r' = -r^(-1) mod 2^(log_2(r)) is the global value "Montgomery_rprime", where r is the order
-    unsigned long long P[8] __attribute((aligned(32)));
-    unsigned long long Q[4] __attribute((aligned(32)));
-    unsigned long long temp[8] __attribute((aligned(32)));
+    unsigned long long P[8];
+    unsigned long long Q[4];
+    unsigned long long temp[8];
 
     if (mb[0] == 1 && !mb[1] && !mb[2] && !mb[3])
     {
@@ -1382,8 +1384,8 @@ static void eccmadd(point_precomp_t Q, point_extproj_t P)
 
 static void ecc_mul_fixed(unsigned long long* k, point_t Q)
 { // Fixed-base scalar multiplication Q = k*G, where G is the generator. FIXED_BASE_TABLE stores v*2^(w-1) = 80 multiples of G.
-    unsigned int digits[250] __attribute((aligned(32)));
-    unsigned long long scalar[4] __attribute((aligned(32)));
+    unsigned int digits[250];
+    unsigned long long scalar[4];
 
     Montgomery_multiply_mod_order(k, Montgomery_Rprime, scalar);
     Montgomery_multiply_mod_order(scalar, ONE, scalar);
@@ -2190,8 +2192,8 @@ static void sign(const unsigned char* subseed, const unsigned char* publicKey, c
     // Inputs: 32-byte subseed, 32-byte publicKey, and messageDigest of size 32 in bytes
     // Output: 64-byte signature
     point_t R;
-    unsigned char k[64] __attribute__((aligned(32))), h[64] __attribute__((aligned(32))) , temp[32 + 64] __attribute__((aligned(32)));
-    unsigned long long r[8] __attribute__((aligned(32)));
+    unsigned char k[64] , h[64]  , temp[32 + 64] ;
+    unsigned long long r[8] ;
 
     KangarooTwelve((unsigned char*)subseed, 32, k, 64);
 

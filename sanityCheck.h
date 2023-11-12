@@ -1,10 +1,23 @@
 #pragma once
 
-#include <netinet/in.h>
-#include <arpa/inet.h>
+
 #include <fstream>
 
-static void sanityCheckTxType(ushort type)
+static bool isValidIpAddress(char* ipAddress)
+{
+    int a, b, c, d;
+    int r = sscanf(ipAddress, "%d.%d.%d.%d", &a, &b, &c, &d);
+    if (r == 4 && (0 <= a && a < 256)
+        && (0 <= b && b < 256)
+        && (0 <= c && c < 256)
+        && (0 <= d && d < 256))
+    {
+        return true;
+    }
+    return false;
+}
+
+static void sanityCheckTxType(uint16_t type)
 {
     if (type > 1)
     {
@@ -25,12 +38,7 @@ static void sanityCheckSeed(char* privKey)
         exit(1);
     }
 }
-static bool isValidIpAddress(char *ipAddress)
-{
-    struct sockaddr_in sa;
-    int result = inet_pton(AF_INET, ipAddress, &(sa.sin_addr));
-    return result != 0;
-}
+
 static void sanityCheckNode(char* ip, int port)
 {
 	if (port < 1024)

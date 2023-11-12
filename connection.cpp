@@ -1,10 +1,44 @@
+#ifdef _MSC_VER 
+#pragma comment(lib, "Ws2_32.lib")
+#include <Winsock2.h>
+#include <Ws2tcpip.h>
+#define close(x) closesocket(x)
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <cstring>
 #include <unistd.h>
+#endif
+#include <cstring>
+
 #include "connection.h"
 #include "logger.h"
+#ifdef _MSC_VER
+static int connect(const char* nodeIp, int nodePort)
+{
+    WSADATA wsa_data;
+    WSAStartup(MAKEWORD(2, 0), &wsa_data);
+
+    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    size_t tv = 1000;
+    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+    sockaddr_in addr;
+    memset((char*)&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(nodePort);
+
+    if (inet_pton(AF_INET, nodeIp, &addr.sin_addr) <= 0) {
+        LOG("Error translating command line ip address to usable one.");
+        return -1;
+    }
+    int res = connect(serverSocket, (const sockaddr*)&addr, sizeof(addr));
+    if (res < 0) {
+        LOG("Failed to connect %s | error %d\n", nodeIp, res);
+        return -1;
+    }
+    return serverSocket;
+}
+#else
 static int connect(const char* nodeIp, int nodePort)
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -28,6 +62,7 @@ static int connect(const char* nodeIp, int nodePort)
     }
     return serverSocket;
 }
+#endif
 QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 {
 	memset(mNodeIp, 0, 32);
@@ -42,7 +77,7 @@ QubicConnection::~QubicConnection()
 
 int QubicConnection::receiveData(uint8_t* buffer, int sz)
 {
-	return recv(mSocket, buffer, sz, 0);
+	return recv(mSocket, (char*)buffer, sz, 0);
 }
 void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
 {
@@ -62,7 +97,7 @@ int QubicConnection::sendData(uint8_t* buffer, int sz)
     int size = sz;
     int numberOfBytes;
     while (size) {
-        if ((numberOfBytes = send(mSocket, buffer, size, 0)) <= 0) {
+        if ((numberOfBytes = send(mSocket, (char*)buffer, size, 0)) <= 0) {
             return 0;
         }
         buffer += numberOfBytes;
