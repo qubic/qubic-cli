@@ -47,7 +47,7 @@ static int connect(const char* nodeIp, int nodePort)
     tv.tv_usec = 0;
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
     sockaddr_in addr;
-    explicit_bzero((char *)&addr, sizeof(addr));
+    memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(nodePort);
 
