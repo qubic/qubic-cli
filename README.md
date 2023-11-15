@@ -45,8 +45,8 @@ Command:
 		Send a raw packet to nodeip. Valid node ip/port are required.
 	-publishproposal 
 		(on development)
-	-qxaction
-		(on development)
+	-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
+		Transfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.
 ```
 
 ### BUILD
