@@ -5,6 +5,7 @@
 #include "sanityCheck.h"
 #include "walletUtils.h"
 #include "nodeUtils.h"
+#include "assetUtil.h"
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +25,9 @@ int main(int argc, char *argv[])
 			printBalance(g_requestedIdentity, g_nodeIp, g_nodePort);
 			break;
 		case GET_ASSET:
-			printf("On development. Come back later\n");
+            sanityCheckIdentity(g_requestedIdentity);
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printOwnedAsset(g_nodeIp, g_nodePort, g_requestedIdentity);
 			break;
 		case SEND_COIN:
 			sanityCheckNode(g_nodeIp, g_nodePort);
@@ -80,8 +83,17 @@ int main(int argc, char *argv[])
 		case VOTE_PROPOSAL:
 			printf("On development. Come back later\n");
 			break;
-		case QX_ACTION:
-			printf("On development. Come back later\n");
+		case QX_TRANSFER_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckIdentity(g_qx_share_transfer_possessed_identity);
+            sanityCheckIdentity(g_qx_share_transfer_new_owner_identity);
+            sanityCheckAmountTransferAsset(g_qx_share_transfer_amount);
+            transferQxAsset(g_nodeIp, g_nodePort, g_seed,
+                g_qx_share_transfer_possessed_identity,
+                g_qx_share_transfer_new_owner_identity,
+                  g_qx_share_transfer_amount,
+              g_offsetScheduledTick);
 			break;
 		default:
 			printf("Unexpected command!\n");

@@ -57,6 +57,15 @@ static void sanityCheckNode(char* ip, int port)
 		exit(1);		
 	}
 }
+
+static void sanityCheckAmountTransferAsset(long long amount)
+{
+    if (amount <= 0){
+        LOG("Invalid amount\n");
+        exit(1);
+    }
+}
+
 static void sanityCheckIdentity(char* identity)
 {
 	if (identity == NULL){

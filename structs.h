@@ -14,7 +14,7 @@ enum COMMAND
     SEND_RAW_PACKET = 7,
     PUBLISH_PROPOSAL = 8,
     VOTE_PROPOSAL = 9,
-    QX_ACTION = 10,
+    QX_TRANSFER_ASSET = 10,
     GET_TICK_DATA=11,
     READ_TICK_DATA=12,
     CHECK_TX_ON_TICK=13,
@@ -175,3 +175,86 @@ struct SpecialCommand
 {
     unsigned long long everIncreasingNonceAndCommandType;
 };
+
+struct Asset
+{
+    union
+    {
+        struct
+        {
+            unsigned char publicKey[32];
+            unsigned char type;
+            char name[7]; // Capital letters + digits
+            char numberOfDecimalPlaces;
+            char unitOfMeasurement[7]; // Powers of the corresponding SI base units going in alphabetical order
+        } issuance;
+
+        struct
+        {
+            unsigned char publicKey[32];
+            unsigned char type;
+            char padding[1];
+            unsigned short managingContractIndex;
+            unsigned int issuanceIndex;
+            long long numberOfUnits;
+        } ownership;
+
+        struct
+        {
+            unsigned char publicKey[32];
+            unsigned char type;
+            char padding[1];
+            unsigned short managingContractIndex;
+            unsigned int ownershipIndex;
+            long long numberOfUnits;
+        } possession;
+    } varStruct;
+};
+
+typedef struct
+{
+    unsigned char publicKey[32];
+} RequestIssuedAssets;
+
+typedef struct
+{
+    Asset asset;
+    unsigned int tick;
+    // TODO: Add siblings
+} RespondIssuedAssets;
+
+typedef struct
+{
+    unsigned char publicKey[32];
+} RequestOwnedAssets;
+
+typedef struct
+{
+    Asset asset;
+    Asset issuanceAsset;
+    unsigned int tick;
+    // TODO: Add siblings
+} RespondOwnedAssets;
+
+typedef struct
+{
+    unsigned char publicKey[32];
+} RequestPossessedAssets;
+
+typedef struct
+{
+    Asset asset;
+    Asset ownershipAsset;
+    Asset issuanceAsset;
+    unsigned int tick;
+    // TODO: Add siblings
+} RespondPossessedAssets;
+
+typedef struct
+{
+    uint8_t issuer[32];
+    uint8_t possessor[32];
+    uint8_t newOwner[32];
+    unsigned long long assetName;
+    long long numberOfUnits;
+} TransferAssetOwnershipAndPossession_input;

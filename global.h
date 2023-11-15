@@ -7,6 +7,9 @@ char* g_configFile = nullptr;
 char* g_requestedFileName = nullptr;
 char* g_requestedTxId  = nullptr;
 char* g_requestedIdentity  = nullptr;
+char* g_qx_share_transfer_possessed_identity = nullptr;
+char* g_qx_share_transfer_new_owner_identity = nullptr;
+long long g_qx_share_transfer_amount = 0;
 
 int64_t g_TxAmount = 0;
 uint16_t g_TxType = 0;

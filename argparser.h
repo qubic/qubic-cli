@@ -40,7 +40,7 @@ void print_help(){
     printf("\t\tRead tick data from a file, print the output on screen\n");
     printf("\t-getbalance <IDENTITY>\n");
     printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
-    printf("\t-getasset <IDENTITY>\n");
+    printf("\t-getownedasset <IDENTITY>\n");
     printf("\t\t(On development)\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a normal transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.\n");
@@ -52,8 +52,8 @@ void print_help(){
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
     printf("\t-publishproposal \n");
     printf("\t\t(on development)\n");
-    printf("\t-qxaction\n");
-    printf("\t\t(on development)\n");
+    printf("\t-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
+    printf("\t\tTransfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.\n");
 }
 
 static long long charToNumber(char* a)
@@ -117,7 +117,7 @@ void parseArgument(int argc, char** argv){
     // basic config:
     // -conf , -seed, -nodeip, -nodeport, -scheduletick
     // command:
-    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal, -qxaction
+    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getownedasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal, -qxtransfershare
     int i = 1;
     g_cmd = TOTAL_COMMAND;
     while (i < argc)
@@ -210,7 +210,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getasset") == 0)
+        if(strcmp(argv[i], "-getownedasset") == 0)
         {
             g_cmd = GET_ASSET;
             g_requestedIdentity = argv[i+1];
@@ -261,10 +261,15 @@ void parseArgument(int argc, char** argv){
             LOG("On development\n");
             exit(0);
         }
-        if(strcmp(argv[i], "-qxaction") == 0)
+        if(strcmp(argv[i], "-qxtransfershare") == 0)
         {
-            LOG("On development\n");
-            exit(0);
+            g_cmd = QX_TRANSFER_ASSET;
+            g_qx_share_transfer_possessed_identity = argv[i+1];
+            g_qx_share_transfer_new_owner_identity = argv[i+2];
+            g_qx_share_transfer_amount = charToNumber(argv[i+3]);
+            i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
         }
         i++;
     }
