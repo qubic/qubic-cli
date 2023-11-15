@@ -241,9 +241,17 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     LOG("Tick data and tick transactions have been written to %s\n", fileName);
 }
 
-void readTickDataFromFile(const char* fileName, TickData& td, std::vector<Transaction>& txs, std::vector<extraDataStruct>* extraData, std::vector<SignatureStruct>* signatures)
+void readTickDataFromFile(const char* fileName, TickData& td,
+                          std::vector<Transaction>& txs,
+                          std::vector<extraDataStruct>* extraData,
+                          std::vector<SignatureStruct>* signatures,
+                          std::vector<TxhashStruct>* txHashes)
 {
-    uint8_t buffer[1024];
+    uint8_t extraDataBuffer[1024] = {0};
+    uint8_t signatureBuffer[128] = {0};
+    char txHashBuffer[128] = {0};
+    uint8_t digest[32] = {0};
+
     FILE* f = fopen(fileName, "rb");
     fread(&td, 1, sizeof(TickData), f);
     int numTx = 0;
@@ -256,19 +264,35 @@ void readTickDataFromFile(const char* fileName, TickData& td, std::vector<Transa
         fread(&tx, 1, sizeof(Transaction), f);
         int extraDataSize = tx.inputSize;
         if (extraDataSize != 0){
-            fread(buffer, 1, extraDataSize, f);
+            fread(extraDataBuffer, 1, extraDataSize, f);
             if (extraData != nullptr){
                 extraDataStruct eds;
                 eds.vecU8.resize(extraDataSize);
-                memcpy(eds.vecU8.data(), buffer, extraDataSize);
+                memcpy(eds.vecU8.data(), extraDataBuffer, extraDataSize);
                 extraData->push_back(eds);
             }
         }
-        fread(buffer, 1, SIGNATURE_SIZE, f);
+        fread(signatureBuffer, 1, SIGNATURE_SIZE, f);
         if (signatures != nullptr){
             SignatureStruct sig;
-            memcpy(sig.sig, buffer, SIGNATURE_SIZE);
+            memcpy(sig.sig, signatureBuffer, SIGNATURE_SIZE);
             signatures->push_back(sig);
+        }
+        if (txHashes != nullptr){
+            std::vector<uint8_t> raw_data;
+            raw_data.resize(sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
+            auto ptr = raw_data.data();
+            memcpy(ptr, &tx, sizeof(Transaction));
+            memcpy(ptr + sizeof(Transaction), extraDataBuffer, tx.inputSize);
+            memcpy(ptr + sizeof(Transaction) + tx.inputSize, signatureBuffer, SIGNATURE_SIZE);
+            KangarooTwelve(ptr,
+                           raw_data.size(),
+                           digest,
+                           32);
+            TxhashStruct tx_hash;
+            getTxHashFromDigest(digest, txHashBuffer);
+            memcpy(tx_hash.hash, txHashBuffer, 60);
+            txHashes->push_back(tx_hash);
         }
         txs.push_back(tx);
     }
@@ -280,23 +304,25 @@ void printTickDataFromFile(const char* fileName)
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatures;
+    std::vector<TxhashStruct> txHashes;
     uint8_t digest[32];
     char hexDigest[64];
-    readTickDataFromFile(fileName, td, txs, &extraData, &signatures);
+    readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
     //verifying everything
     KangarooTwelve(reinterpret_cast<const uint8_t *>(&td),
                    sizeof(TickData) - SIGNATURE_SIZE,
                    digest,
-                   32); // recompute digest for txhash
+                   32);
     byteToHex(digest, hexDigest, 32);
     LOG("NOTICE: To verify this tick is signed by correct computor run: ./qubic-cli -verify <COMPUTOR_IDENTITY> %s\n", hexDigest);
     LOG("Epoch: %u\n", td.epoch);
     LOG("Tick: %u\n", td.tick);
     LOG("Computor index: %u\n", td.computorIndex);
     LOG("Datetime: %u-%u-%u %u:%u:%u.%u\n", td.day, td.month, td.year, td.hour, td.minute, td.second, td.millisecond);
+
     for (int i = 0; i < txs.size(); i++)
     {
-        printReceipt(txs[i], nullptr, extraData[i].vecU8.data());
+        printReceipt(txs[i], txHashes[i].hash, extraData[i].vecU8.data());
         if (verifyTx(txs[i], extraData[i].vecU8.data(), signatures[i].sig))
         {
             LOG("Transaction is VERIFIED\n");
@@ -312,24 +338,13 @@ bool checkTxOnFile(const char* txHash, const char* fileName)
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatures;
+    std::vector<TxhashStruct> txHashes;
 
-    uint8_t digest[32];
-    char txHashFromDigest[64];
-    readTickDataFromFile(fileName, td, txs, &extraData, &signatures);
+    readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
 
     for (int i = 0; i < txs.size(); i++)
     {
-        std::vector<uint8_t> buffer;
-        buffer.resize(sizeof(Transaction) + txs[i].inputSize + SIGNATURE_SIZE);
-        memcpy(buffer.data(), &txs[i], sizeof(Transaction));
-        memcpy(buffer.data() + sizeof(Transaction), extraData[i].vecU8.data(), txs[i].inputSize);
-        memcpy(buffer.data() + sizeof(Transaction) + txs[i].inputSize, signatures[i].sig, SIGNATURE_SIZE);
-        KangarooTwelve(buffer.data(),
-                       buffer.size(),
-                       digest,
-                       32);
-        getTxHashFromDigest(digest, txHashFromDigest);
-        if (memcmp(txHashFromDigest, txHash, 60) == 0){
+        if (memcmp(txHashes[i].hash, txHash, 60) == 0){
             LOG("Found tx %s on file %s\n", txHash, fileName);
             printReceipt(txs[i], txHash, extraData[i].vecU8.data());
             return true;

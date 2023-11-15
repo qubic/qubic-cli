@@ -87,11 +87,15 @@ void printReceipt(Transaction& tx, const char* txHash, const uint8_t* extraData)
 {
     char sourceIdentity[128] = {0};
     char dstIdentity[128] = {0};
+    char txHashClean[128] = {0};
     bool isLowerCase = false;
     getIdentityFromPublicKey(tx.sourcePublicKey, sourceIdentity, isLowerCase);
     getIdentityFromPublicKey(tx.destinationPublicKey, dstIdentity, isLowerCase);
     LOG("~~~~~RECEIPT~~~~~\n");
-    if (txHash != nullptr) LOG("TxHash: %s\n", txHash);
+    if (txHash != nullptr) {
+        memcpy(txHashClean, txHash, 60);
+        LOG("TxHash: %s\n", txHashClean);
+    }
     LOG("From: %s\n", sourceIdentity);
     LOG("To: %s\n", dstIdentity);
     LOG("Input type: %u\n", tx.inputType);
