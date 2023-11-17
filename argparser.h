@@ -54,6 +54,7 @@ void print_help(){
     printf("\t\t(on development)\n");
     printf("\t-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.\n");
+    printf("\t\t(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)\n");
 }
 
 static long long charToNumber(char* a)
