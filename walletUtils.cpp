@@ -74,9 +74,9 @@ void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
     getPublicKeyFromIdentity(publicIdentity, publicKey);
     auto entity = getBalance(nodeIp, nodePort, publicKey);
     LOG("Identity: %s\n", publicIdentity);
-    LOG("Balance: %ld\n", entity.entity.incomingAmount - entity.entity.outgoingAmount);
-    LOG("Incoming Amount: %ld\n", entity.entity.incomingAmount);
-    LOG("Outgoing Amount: %ld\n", entity.entity.outgoingAmount);
+    LOG("Balance: %lld\n", entity.entity.incomingAmount - entity.entity.outgoingAmount);
+    LOG("Incoming Amount: %lld\n", entity.entity.incomingAmount);
+    LOG("Outgoing Amount: %lld\n", entity.entity.outgoingAmount);
     LOG("Number Of Incoming Transfers: %ld\n", entity.entity.numberOfIncomingTransfers);
     LOG("Number Of Outgoing Transfers: %ld\n", entity.entity.numberOfOutgoingTransfers);
     LOG("Latest Incoming Transfer Tick: %u\n", entity.entity.latestIncomingTransferTick);
