@@ -403,3 +403,61 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     delete qc;
     LOG("Send command %d to node %s\n", command, nodeIp);
 }
+
+BroadcastComputors getComputorFromNode(const char* nodeIp, const int nodePort)
+{
+    BroadcastComputors result;
+    static struct
+    {
+        RequestResponseHeader header;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.setType(REQUEST_COMPUTORS);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == BROADCAST_COMPUTORS){
+            auto bc = (BroadcastComputors*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *bc;
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+    return result;
+}
+
+void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName)
+{
+    auto bc = getComputorFromNode(nodeIp, nodePort);
+    uint8_t digest[32] = {0};
+    uint8_t arbPubkey[32] = {0};
+    // verify with arb, dump data
+    getPublicKeyFromIdentity(ARBITRATOR, arbPubkey);
+    for (int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+    {
+        char identity[128] = {0};
+        const bool isLowerCase = false;
+        getIdentityFromPublicKey(bc.computors.publicKeys[i], identity, isLowerCase);
+        LOG("%d %s\n", i, identity);
+    }
+    LOG("Epoch: %u\n", bc.computors.epoch);
+    KangarooTwelve(reinterpret_cast<const uint8_t *>(&bc),
+                  sizeof(BroadcastComputors) - SIGNATURE_SIZE,
+                  digest,
+                  32);
+    if (verify(arbPubkey, digest, bc.computors.signature)){
+        LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
+    } else {
+        LOG("Computor list is NOT verified\n");
+    }
+    FILE* f = fopen(fileName, "wb");
+    fwrite(&bc, 1, sizeof(BroadcastComputors), f);
+    fclose(f);
+}

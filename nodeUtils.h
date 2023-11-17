@@ -7,3 +7,4 @@ void printTickDataFromFile(const char* fileName);
 bool checkTxOnFile(const char* txHash, const char* fileName);
 void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, uint8_t* rawPacket);
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command);
+void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName);

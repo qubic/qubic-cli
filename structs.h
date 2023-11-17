@@ -19,7 +19,8 @@ enum COMMAND
     READ_TICK_DATA=12,
     CHECK_TX_ON_TICK=13,
     CHECK_TX_ON_FILE=14,
-    TOTAL_COMMAND = 15
+    GET_COMP_LIST=15,
+    TOTAL_COMMAND = 16
 };
 
 struct RequestResponseHeader {
@@ -258,3 +259,16 @@ typedef struct
     unsigned long long assetName;
     long long numberOfUnits;
 } TransferAssetOwnershipAndPossession_input;
+
+typedef struct
+{
+    // TODO: Padding
+    unsigned short epoch;
+    unsigned char publicKeys[NUMBER_OF_COMPUTORS][32];
+    unsigned char signature[SIGNATURE_SIZE];
+} Computors;
+
+typedef struct
+{
+    Computors computors;
+} BroadcastComputors;

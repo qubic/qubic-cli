@@ -95,6 +95,10 @@ int main(int argc, char *argv[])
                   g_qx_share_transfer_amount,
               g_offsetScheduledTick);
 			break;
+        case GET_COMP_LIST:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getComputorListToFile(g_nodeIp, g_nodePort, g_requestedFileName);
+            break;
 		default:
 			printf("Unexpected command!\n");
 			break;
