@@ -311,6 +311,9 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
     //verifying everything
     BroadcastComputors bc;
+    if (bc.computors.epoch != td.epoch){
+        LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td.epoch);
+    }
     bc = readComputorListFromFile(compFile);
     int computorIndex = td.computorIndex;
     td.computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
