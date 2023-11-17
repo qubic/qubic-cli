@@ -263,15 +263,16 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         Transaction tx;
         fread(&tx, 1, sizeof(Transaction), f);
         int extraDataSize = tx.inputSize;
-        if (extraDataSize != 0){
-            fread(extraDataBuffer, 1, extraDataSize, f);
-            if (extraData != nullptr){
-                extraDataStruct eds;
+        if (extraData != nullptr){
+            extraDataStruct eds;
+            if (extraDataSize != 0){
+                fread(extraDataBuffer, 1, extraDataSize, f);
                 eds.vecU8.resize(extraDataSize);
                 memcpy(eds.vecU8.data(), extraDataBuffer, extraDataSize);
-                extraData->push_back(eds);
             }
+            extraData->push_back(eds);
         }
+
         fread(signatureBuffer, 1, SIGNATURE_SIZE, f);
         if (signatures != nullptr){
             SignatureStruct sig;
@@ -311,10 +312,10 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
     //verifying everything
     BroadcastComputors bc;
+    bc = readComputorListFromFile(compFile);
     if (bc.computors.epoch != td.epoch){
         LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td.epoch);
     }
-    bc = readComputorListFromFile(compFile);
     int computorIndex = td.computorIndex;
     td.computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
     KangarooTwelve(reinterpret_cast<const uint8_t *>(&td),
@@ -334,7 +335,8 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
 
     for (int i = 0; i < txs.size(); i++)
     {
-        printReceipt(txs[i], txHashes[i].hash, extraData[i].vecU8.data());
+        uint8_t* extraDataPtr = extraData[i].vecU8.empty() ? nullptr : extraData[i].vecU8.data();
+        printReceipt(txs[i], txHashes[i].hash, extraDataPtr);
         if (verifyTx(txs[i], extraData[i].vecU8.data(), signatures[i].sig))
         {
             LOG("Transaction is VERIFIED\n");

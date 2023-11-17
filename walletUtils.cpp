@@ -102,7 +102,7 @@ void printReceipt(Transaction& tx, const char* txHash, const uint8_t* extraData)
     LOG("Amount: %lu\n", tx.amount);
     LOG("Tick: %u\n", tx.tick);
     LOG("Extra data size: %u\n", tx.inputSize);
-    if (extraData != nullptr){
+    if (extraData != nullptr && tx.inputSize){
         char hex_tring[1024] = {0};
         for (int i = 0; i < tx.inputSize; i++)
             sprintf(hex_tring + i * 2, "%02x", extraData[i]);
@@ -117,7 +117,7 @@ bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signatur
     uint8_t digest[32] = {0};
     buffer.resize(sizeof(Transaction) + tx.inputSize);
     memcpy(buffer.data(), &tx, sizeof(Transaction));
-    memcpy(buffer.data() + sizeof(Transaction), extraData, tx.inputSize);
+    if (extraData && tx.inputSize) memcpy(buffer.data() + sizeof(Transaction), extraData, tx.inputSize);
     KangarooTwelve(buffer.data(),
                    buffer.size(),
                    digest,
