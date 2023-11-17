@@ -209,7 +209,8 @@ void parseArgument(int argc, char** argv){
         {
             g_cmd = READ_TICK_DATA;
             g_requestedFileName = argv[i+1];
-            i+=2;
+            g_requestedFileName2 = argv[i+2];
+            i+=3;
             CHECK_OVER_PARAMETERS
             break;
         }

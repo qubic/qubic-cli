@@ -298,7 +298,9 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     }
 }
 
-void printTickDataFromFile(const char* fileName)
+BroadcastComputors readComputorListFromFile(const char* fileName);
+
+void printTickDataFromFile(const char* fileName, const char* compFile)
 {
     TickData td;
     std::vector<Transaction> txs;
@@ -306,18 +308,25 @@ void printTickDataFromFile(const char* fileName)
     std::vector<SignatureStruct> signatures;
     std::vector<TxhashStruct> txHashes;
     uint8_t digest[32];
-    char hexDigest[64];
     readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
     //verifying everything
+    BroadcastComputors bc;
+    bc = readComputorListFromFile(compFile);
+    int computorIndex = td.computorIndex;
+    td.computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
     KangarooTwelve(reinterpret_cast<const uint8_t *>(&td),
                    sizeof(TickData) - SIGNATURE_SIZE,
                    digest,
                    32);
-    byteToHex(digest, hexDigest, 32);
-    LOG("NOTICE: To verify this tick is signed by correct computor run: ./qubic-cli -verify <COMPUTOR_IDENTITY> %s\n", hexDigest);
+    uint8_t* computorOfThisTick = bc.computors.publicKeys[computorIndex];
+    if (verify(computorOfThisTick, digest, td.signature)){
+        LOG("Tick is VERIFIED (signed by correct computor).\n");
+    } else {
+        LOG("Tick is NOT verified (not signed by correct computor).\n");
+    }
     LOG("Epoch: %u\n", td.epoch);
     LOG("Tick: %u\n", td.tick);
-    LOG("Computor index: %u\n", td.computorIndex);
+    LOG("Computor index: %u\n", computorIndex);
     LOG("Datetime: %u-%u-%u %u:%u:%u.%u\n", td.day, td.month, td.year, td.hour, td.minute, td.second, td.millisecond);
 
     for (int i = 0; i < txs.size(); i++)
@@ -404,6 +413,28 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     LOG("Send command %d to node %s\n", command, nodeIp);
 }
 
+BroadcastComputors readComputorListFromFile(const char* fileName)
+{
+    BroadcastComputors result;
+    FILE* f = fopen(fileName, "rb");
+    fread(&result, 1, sizeof(BroadcastComputors), f);
+    fclose(f);
+    uint8_t digest[32] = {0};
+    uint8_t arbPubkey[32] = {0};
+    // verify with arb
+    getPublicKeyFromIdentity(ARBITRATOR, arbPubkey);
+    KangarooTwelve(reinterpret_cast<const uint8_t *>(&result),
+                   sizeof(BroadcastComputors) - SIGNATURE_SIZE,
+                   digest,
+                   32);
+    if (verify(arbPubkey, digest, result.computors.signature)){
+        LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
+    } else {
+        LOG("Computor list is NOT verified\n");
+    }
+    return result;
+}
+
 BroadcastComputors getComputorFromNode(const char* nodeIp, const int nodePort)
 {
     BroadcastComputors result;
@@ -461,3 +492,4 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     fwrite(&bc, 1, sizeof(BroadcastComputors), f);
     fclose(f);
 }
+

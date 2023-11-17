@@ -5,6 +5,7 @@ char* g_nodeIp = DEFAULT_NODE_IP;
 char* g_targetIdentity = nullptr;
 char* g_configFile = nullptr;
 char* g_requestedFileName = nullptr;
+char* g_requestedFileName2 = nullptr;
 char* g_requestedTxId  = nullptr;
 char* g_requestedIdentity  = nullptr;
 char* g_qx_share_transfer_possessed_identity = nullptr;

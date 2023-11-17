@@ -70,7 +70,8 @@ int main(int argc, char *argv[])
             break;
         case READ_TICK_DATA:
             sanityFileExist(g_requestedFileName);
-            printTickDataFromFile(g_requestedFileName);
+            sanityFileExist(g_requestedFileName2);
+            printTickDataFromFile(g_requestedFileName, g_requestedFileName2);
             break;
         case CHECK_TX_ON_FILE:
             sanityFileExist(g_requestedFileName);
