@@ -105,8 +105,15 @@ void transferQxAsset(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
+    uint32_t scheduledTick = 0;
+    if (scheduledTickOffset < 50000){
+        uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+        scheduledTick = currentTick + scheduledTickOffset;
+    } else {
+        scheduledTick = scheduledTickOffset;
+    }
+    packet.transaction.tick = scheduledTick;
+
     packet.transaction.inputType = 1;
     packet.transaction.inputSize = sizeof(TransferAssetOwnershipAndPossession_input);
 
@@ -136,7 +143,7 @@ void transferQxAsset(const char* nodeIp, int nodePort,
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ta));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
     delete qc;
 }
