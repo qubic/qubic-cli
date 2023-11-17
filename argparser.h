@@ -43,7 +43,7 @@ void print_help(){
     printf("\t-getbalance <IDENTITY>\n");
     printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
     printf("\t-getownedasset <IDENTITY>\n");
-    printf("\t\t(On development)\n");
+    printf("\t\tPrint OWNED asset of an identity\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a normal transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.\n");
     printf("\t-sendcustomtransaction <TARGET_IDENTITY> <TX_TYPE> <AMOUNT> <EXTRA_BYTE_SIZE> <EXTRA_BYTE_IN_HEX>\n");

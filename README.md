@@ -9,7 +9,7 @@ An intermediate tool to communicate to qubic core node.
 Basic config:
 	-conf <file>
 		Specify configuration file. Relative paths will be prefixed by datadir location. See qubic.conf.example.
-		Notice: variables in config file will be overrided by values on parameters.
+		Notice: variables in qubic.conf will be overrided by values on parameters.
 	-seed <SEED>
 		55-char seed private key
 	-nodeip <IPv4_ADDRESS>
@@ -25,16 +25,18 @@ Command:
 		Show current tick information of a node
 	-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>
 		Get tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.
+	-getcomputorlist <OUTPUT_FILE_NAME>
+		Get of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
 	-checktxontick <TICK_NUMBER> <TX_ID>
 		Check if a transaction is included in a tick. valid node ip/port are required.
 	-checktxonfile <TX_ID> <TICK_DATA_FILE>
 		Check if a transaction is included in a tick (tick data from a file). valid node ip/port are required.
-	-readtickdata <FILE_NAME>
-		Read tick data from a file, print the output on screen
+	-readtickdata <FILE_NAME> <COMPUTOR_LIST>
+		Read tick data from a file, print the output on screen, COMPUTOR_LIST is required if you need to verify block data
 	-getbalance <IDENTITY>
 		Balance of an identity (amount of qubic, number of in/out txs)
-	-getasset <IDENTITY>
-		(On development)
+	-getownedasset <IDENTITY>
+		Print OWNED asset of an identity
 	-sendtoaddress <TARGET_IDENTITY> <AMOUNT>
 		Perform a normal transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.
 	-sendcustomtransaction <TARGET_IDENTITY> <TX_TYPE> <AMOUNT> <EXTRA_BYTE_SIZE> <EXTRA_BYTE_IN_HEX>
@@ -47,6 +49,7 @@ Command:
 		(on development)
 	-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
 		Transfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.
+		(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)
 ```
 
 ### BUILD
