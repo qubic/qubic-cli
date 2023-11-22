@@ -104,7 +104,7 @@ void transferQxAsset(const char* nodeIp, int nodePort,
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 0;
+    packet.transaction.amount = 1000000;
     uint32_t scheduledTick = 0;
     if (scheduledTickOffset < 50000){
         uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
@@ -114,7 +114,7 @@ void transferQxAsset(const char* nodeIp, int nodePort,
     }
     packet.transaction.tick = scheduledTick;
 
-    packet.transaction.inputType = 1;
+    packet.transaction.inputType = 2;
     packet.transaction.inputSize = sizeof(TransferAssetOwnershipAndPossession_input);
 
     // fill the input
