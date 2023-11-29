@@ -10,7 +10,7 @@ char* g_requestedTxId  = nullptr;
 char* g_requestedIdentity  = nullptr;
 char* g_qx_share_transfer_possessed_identity = nullptr;
 char* g_qx_share_transfer_new_owner_identity = nullptr;
-long long g_qx_share_transfer_amount = 0;
+int64_t g_qx_share_transfer_amount = 0;
 
 int64_t g_TxAmount = 0;
 uint16_t g_TxType = 0;
@@ -18,8 +18,13 @@ int g_nodePort = DEFAULT_NODE_PORT;
 int g_txExtraDataSize = 0;
 int g_rawPacketSize = 0;
 int g_requestedSpecialCommand = -1;
+
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;
 uint8_t g_txExtraData[1024] = {0};
 uint8_t g_rawPacket[1024] = {0};
 
+char* g_qx_issue_asset_name = nullptr;
+char* g_qx_issue_unit_of_measurement = nullptr;
+int64_t g_qx_issue_asset_number_of_unit = -1;
+char g_qx_issue_asset_num_decimal = 0;

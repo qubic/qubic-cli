@@ -57,6 +57,8 @@ void print_help(){
     printf("\t-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.\n");
     printf("\t\t(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)\n");
+    printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
+    printf("\t\tCreate an asset via Qx contract.\n");
 }
 
 static long long charToNumber(char* a)
@@ -280,6 +282,17 @@ void parseArgument(int argc, char** argv){
             g_qx_share_transfer_new_owner_identity = argv[i+2];
             g_qx_share_transfer_amount = charToNumber(argv[i+3]);
             i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qxissueasset") == 0)
+        {
+            g_cmd = QX_ISSUE_ASSET;
+            g_qx_issue_asset_name = argv[i+1];
+            g_qx_issue_asset_number_of_unit = charToNumber(argv[i+2]);
+            g_qx_issue_unit_of_measurement = argv[i+3];
+            g_qx_issue_asset_num_decimal = charToNumber(argv[i+4]);
+            i+=5;
             CHECK_OVER_PARAMETERS
             break;
         }

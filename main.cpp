@@ -96,6 +96,20 @@ int main(int argc, char *argv[])
                   g_qx_share_transfer_amount,
               g_offsetScheduledTick);
 			break;
+        case QX_ISSUE_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckNumberOfUnit(g_qx_issue_asset_number_of_unit);
+            sanityCheckValidString(g_qx_issue_asset_name);
+            sanityCheckValidString(g_qx_issue_unit_of_measurement);
+            sanityCheckNumberOfDecimal(g_qx_issue_asset_num_decimal);
+            qxIssueAsset(g_nodeIp, g_nodePort, g_seed,
+                         g_qx_issue_asset_name,
+                         g_qx_issue_unit_of_measurement,
+                         g_qx_issue_asset_number_of_unit,
+                         g_qx_issue_asset_num_decimal,
+                         g_offsetScheduledTick);
+            break;
         case GET_COMP_LIST:
             sanityCheckNode(g_nodeIp, g_nodePort);
             getComputorListToFile(g_nodeIp, g_nodePort, g_requestedFileName);

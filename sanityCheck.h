@@ -131,3 +131,27 @@ static void sanityCheckSpecialCommand(int cmd)
         exit(1);
     }
 }
+
+static void sanityCheckNumberOfUnit(long long unit)
+{
+    if (unit <= 0){
+        LOG("Invalid number of unit\n");
+        exit(1);
+    }
+}
+
+static void sanityCheckNumberOfDecimal(char unit)
+{
+    if (unit < 0){
+        LOG("Invalid number of decimal\n");
+        exit(1);
+    }
+}
+
+static void sanityCheckValidString(const char* str)
+{
+    if (str == nullptr){
+        LOG("Invalid string\n");
+        exit(1);
+    }
+}

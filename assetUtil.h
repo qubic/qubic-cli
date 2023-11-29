@@ -6,3 +6,10 @@ void transferQxAsset(const char* nodeIp, int nodePort,
                      const char* newOwnerIdentity,
                      long long numberOfUnits,
                      uint32_t scheduledTickOffset);
+void qxIssueAsset(const char* nodeIp, int nodePort,
+                  const char* seed,
+                  const char* assetName,
+                  const char* unitOfMeasurement,
+                  int64_t numberOfUnits,
+                  char numberOfDecimalPlaces,
+                  uint32_t scheduledTickOffset);

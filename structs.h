@@ -20,7 +20,8 @@ enum COMMAND
     CHECK_TX_ON_TICK=13,
     CHECK_TX_ON_FILE=14,
     GET_COMP_LIST=15,
-    TOTAL_COMMAND = 16
+    QX_ISSUE_ASSET = 16,
+    TOTAL_COMMAND = 17
 };
 
 struct RequestResponseHeader {
@@ -259,6 +260,14 @@ typedef struct
     unsigned long long assetName;
     long long numberOfUnits;
 } TransferAssetOwnershipAndPossession_input;
+
+struct IssueAsset_input
+{
+    uint64_t name;
+    int64_t numberOfUnits;
+    uint64_t unitOfMeasurement;
+    char numberOfDecimalPlaces;
+};
 
 typedef struct
 {
