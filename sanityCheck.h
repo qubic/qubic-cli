@@ -37,6 +37,9 @@ static void sanityCheckSeed(char* privKey)
         LOG("Seed must be 55-char length\n");
         exit(1);
     }
+    if (memcmp(privKey, DEFAULT_SEED, 55) == 0){
+        LOG("WARNING: You are using default seed\n");
+    }
 }
 
 static void sanityCheckNode(char* ip, int port)
@@ -78,6 +81,11 @@ static void sanityCheckIdentity(char* identity)
 			exit(1);
 		}
 	}
+    if (!checkSumIdentity(identity))
+    {
+        LOG("Identity checksum failed: %s\n", identity);
+        exit(1);
+    }
 }
 static void sanityCheckTxHash(char* txHash)
 {

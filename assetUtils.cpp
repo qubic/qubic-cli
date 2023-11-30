@@ -75,7 +75,7 @@ void printOwnedAsset(const char * nodeIp, const int nodePort, const char* reques
 		long long numberOfUnits;
 	};
  */
-void transferQxAsset(const char* nodeIp, int nodePort,
+void transferQxShare(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* possessorIdentity,
                      const char* newOwnerIdentity,
@@ -212,17 +212,6 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
     auto qc = new QubicConnection(nodeIp, nodePort);
-
-//    {
-//        char buffer[8];
-//        printf("testing no real send\n");
-//        memcpy(buffer, &packet.ia.name, 8);
-//        printf("name: %s\n", buffer);
-//        memcpy(buffer, &packet.ia.unitOfMeasurement, 8);
-//        printf("unitOfMeasurement: %s\n", buffer);
-//        printf("num unit: %lld\n", packet.ia.numberOfUnits);
-//        printf("num unit: %d\n", packet.ia.numberOfDecimalPlaces);
-//    }
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(IssueAsset_input)+ SIGNATURE_SIZE,
@@ -231,6 +220,87 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ia));
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
+    LOG("to check your tx confirmation status\n");
+    delete qc;
+}
+
+void qxTransferAsset(const char* nodeIp, int nodePort,
+                     const char* seed,
+                     const char* pAssetName,
+                     const char* pIssuer,
+                     const char* possessorIdentity,
+                     const char* newOwnerIdentity,
+                     long long numberOfUnits,
+                     uint32_t scheduledTickOffset)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subSeed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    uint8_t issuer[32] = {0};
+    uint8_t possessorPublicKey[32] = {0};
+    uint8_t newOwnerPublicKey[32] = {0};
+    char txHash[128] = {0};
+    char assetNameU1[8] = {0};
+
+    memcpy(assetNameU1, pAssetName, strlen(pAssetName));
+    hexToByte(pIssuer, issuer, 32);
+
+    getSubseedFromSeed((uint8_t*)seed, subSeed);
+    getPrivateKeyFromSubSeed(subSeed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    getPublicKeyFromIdentity(QX_ADDRESS, destPublicKey);
+    getPublicKeyFromIdentity(possessorIdentity, possessorPublicKey);
+    getPublicKeyFromIdentity(newOwnerIdentity, newOwnerPublicKey);
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        TransferAssetOwnershipAndPossession_input ta;
+        uint8_t sig[SIGNATURE_SIZE];
+    } packet;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 1000000;
+    uint32_t scheduledTick = 0;
+    if (scheduledTickOffset < 50000){
+        uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+        scheduledTick = currentTick + scheduledTickOffset;
+    } else {
+        scheduledTick = scheduledTickOffset;
+    }
+    packet.transaction.tick = scheduledTick;
+    packet.transaction.inputType = 2;
+    packet.transaction.inputSize = sizeof(TransferAssetOwnershipAndPossession_input);
+
+    // fill the input
+    memcpy(&packet.ta.assetName, assetNameU1, 8);
+    memcpy(packet.ta.issuer, issuer, 32);
+    memcpy(packet.ta.possessor, possessorPublicKey, 32);
+    memcpy(packet.ta.newOwner, newOwnerPublicKey, 32);
+    packet.ta.numberOfUnits = numberOfUnits;
+    // sign the packet
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(Transaction) + sizeof(TransferAssetOwnershipAndPossession_input),
+                   digest,
+                   32);
+    sign(subSeed, sourcePublicKey, digest, signature);
+    memcpy(packet.sig, signature, SIGNATURE_SIZE);
+    // set header
+    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE);
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("Transaction has been sent!\n");
+    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ta));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
     delete qc;

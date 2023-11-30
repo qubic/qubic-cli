@@ -1,6 +1,8 @@
 #include <cstdint>
 #include "keyUtils.h"
 #include "K12AndKeyUtil.h"
+#include "logger.h"
+
 bool getSubseedFromSeed(const uint8_t* seed, uint8_t* subseed)
 {
     uint8_t seedBytes[55];
@@ -75,4 +77,34 @@ void getPublicKeyFromIdentity(const char* identity, uint8_t* publicKey)
         }
     }
     memcpy(publicKey, publicKeyBuffer, 32);
+}
+
+bool checkSumIdentity(char* identity)
+{
+    unsigned char publicKeyBuffer[32];
+    for (int i = 0; i < 4; i++)
+    {
+        *((unsigned long long*) & publicKeyBuffer[i << 3]) = 0;
+        for (int j = 14; j-- > 0; )
+        {
+            if (identity[i * 14 + j] < 'A' || identity[i * 14 + j] > 'Z')
+            {
+                return false;
+            }
+
+            *((unsigned long long*) & publicKeyBuffer[i << 3]) = *((unsigned long long*) & publicKeyBuffer[i << 3]) * 26 + (identity[i * 14 + j] - 'A');
+        }
+    }
+    unsigned int identityBytesChecksum;
+    KangarooTwelve(publicKeyBuffer, 32, (unsigned char*)&identityBytesChecksum, 3);
+    identityBytesChecksum &= 0x3FFFF;
+    for (int i = 0; i < 4; i++)
+    {
+        if (identityBytesChecksum % 26 + 'A' != identity[56 + i])
+        {
+            return false;
+        }
+        identityBytesChecksum /= 26;
+    }
+    return true;
 }

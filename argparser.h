@@ -59,6 +59,8 @@ void print_help(){
     printf("\t\t(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)\n");
     printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
     printf("\t\tCreate an asset via Qx contract.\n");
+    printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
+    printf("\t\tTransfer an asset via Qx contract.\n");
 }
 
 static long long charToNumber(char* a)
@@ -277,7 +279,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qxtransfershare") == 0)
         {
-            g_cmd = QX_TRANSFER_ASSET;
+            g_cmd = QX_TRANSFER_QXSHARE;
             g_qx_share_transfer_possessed_identity = argv[i+1];
             g_qx_share_transfer_new_owner_identity = argv[i+2];
             g_qx_share_transfer_amount = charToNumber(argv[i+3]);
@@ -293,6 +295,18 @@ void parseArgument(int argc, char** argv){
             g_qx_issue_unit_of_measurement = argv[i+3];
             g_qx_issue_asset_num_decimal = charToNumber(argv[i+4]);
             i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qxtransferasset") == 0)
+        {
+            g_cmd = QX_TRANSFER_ASSET;
+            g_qx_asset_transfer_asset_name = argv[i+1];
+            g_qx_asset_transfer_issuer_in_hex = argv[i+2];
+            g_qx_asset_transfer_possessed_identity = argv[i+3];
+            g_qx_asset_transfer_new_owner_identity = argv[i+4];
+            g_qx_asset_transfer_amount = charToNumber(argv[i+5]);
+            i+=6;
             CHECK_OVER_PARAMETERS
             break;
         }
