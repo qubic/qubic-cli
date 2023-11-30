@@ -131,6 +131,10 @@ int main(int argc, char *argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getComputorListToFile(g_nodeIp, g_nodePort, g_requestedFileName);
             break;
+        case GET_NODE_IP_LIST:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getNodeIpList(g_nodeIp, g_nodePort);
+            break;
 		default:
 			printf("Unexpected command!\n");
 			break;

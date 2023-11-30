@@ -27,6 +27,8 @@ Command:
 		Get tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.
 	-getcomputorlist <OUTPUT_FILE_NAME>
 		Get of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
+	-getnodeiplist
+		Print a list of node ip from a seed node ip. Valid node ip/port are required.
 	-checktxontick <TICK_NUMBER> <TX_ID>
 		Check if a transaction is included in a tick. valid node ip/port are required.
 	-checktxonfile <TX_ID> <TICK_DATA_FILE>
@@ -50,6 +52,10 @@ Command:
 	-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
 		Transfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.
 		(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)
+	-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>
+		Create an asset via Qx contract.
+	-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
+		Transfer an asset via Qx contract.
 ```
 
 ### BUILD

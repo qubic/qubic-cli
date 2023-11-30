@@ -22,7 +22,8 @@ enum COMMAND
     GET_COMP_LIST=15,
     QX_ISSUE_ASSET = 16,
     QX_TRANSFER_ASSET = 17,
-    TOTAL_COMMAND = 18
+    GET_NODE_IP_LIST=18,
+    TOTAL_COMMAND = 19
 };
 
 struct RequestResponseHeader {
@@ -282,3 +283,8 @@ typedef struct
 {
     Computors computors;
 } BroadcastComputors;
+
+typedef struct
+{
+    unsigned char peers[4][4];
+} ExchangePublicPeers;

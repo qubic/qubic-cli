@@ -1,6 +1,7 @@
 #include <cstring>
 #include <vector>
 #include <cstdlib>
+#include <algorithm>
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -498,3 +499,51 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     fclose(f);
 }
 
+std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
+{
+    std::vector<std::string> result;
+    memset(&result, 0, sizeof(CurrentTickInfo));
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_CURRENT_TICK_INFO);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == EXCHANGE_PUBLIC_PEERS){
+            auto epp = (ExchangePublicPeers*)(data + ptr + sizeof(RequestResponseHeader));
+            for (int i = 0; i < 4; i++){
+                std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
+                result.push_back(new_ip);
+            }
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+    return result;
+}
+void getNodeIpList(const char* nodeIp, const int nodePort)
+{
+    LOG("Fetching node ip list from %s\n", nodeIp);
+    std::vector<std::string> result = _getNodeIpList(nodeIp, nodePort);
+    int count = 0;
+    for (int i = 0; i < result.size() && count++ < 4; i++){
+        std::vector<std::string> new_result = _getNodeIpList(result[i].c_str(), nodePort);
+        result.insert(result.end(), new_result.begin(), new_result.end());
+    }
+    std::sort(result.begin(), result.end());
+    auto last = std::unique(result.begin(), result.end());
+    result.erase(last, result.end());
+    for (auto s : result){
+        LOG("%s\n", s.c_str());
+    }
+}
