@@ -22,6 +22,7 @@ static int connect(const char* nodeIp, int nodePort)
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     size_t tv = 1000;
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
+    setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof tv);
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -46,6 +47,7 @@ static int connect(const char* nodeIp, int nodePort)
     tv.tv_sec = 1;
     tv.tv_usec = 0;
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
+    setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof tv);
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
