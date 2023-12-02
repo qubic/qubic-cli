@@ -36,6 +36,8 @@ void print_help(){
     printf("\t\tGet of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
     printf("\t-getnodeiplist\n");
     printf("\t\tPrint a list of node ip from a seed node ip. Valid node ip/port are required.\n");
+    printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
+    printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
     printf("\t-checktxontick <TICK_NUMBER> <TX_ID>\n");
     printf("\t\tCheck if a transaction is included in a tick. valid node ip/port are required.\n");
     printf("\t-checktxonfile <TX_ID> <TICK_DATA_FILE>\n");
