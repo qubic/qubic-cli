@@ -9,3 +9,4 @@ void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, ui
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command);
 void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName);
 void getNodeIpList(const char* nodeIp, const int nodePort);
+void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode);

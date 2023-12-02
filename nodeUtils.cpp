@@ -9,6 +9,7 @@
 #include "K12AndKeyUtil.h"
 #include "keyUtils.h"
 #include "walletUtils.h"
+#include "qubicLogParser.h"
 
 static CurrentTickInfo getTickInfoFromNode(const char* nodeIp, int nodePort)
 {
@@ -546,4 +547,33 @@ void getNodeIpList(const char* nodeIp, const int nodePort)
     for (auto s : result){
         LOG("%s\n", s.c_str());
     }
+}
+
+void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
+{
+    struct {
+        RequestResponseHeader header;
+        unsigned long long passcode[4];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestLog::type());
+    memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RespondLog::type()){
+            auto logBuffer = (uint8_t*)(data + ptr + sizeof(RequestResponseHeader));
+            printQubicLog(logBuffer, header->size() - sizeof(RequestResponseHeader));
+        }
+        ptr+= header->size();
+    }
+    delete qc;
 }

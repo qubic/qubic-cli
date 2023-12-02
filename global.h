@@ -34,3 +34,5 @@ char* g_qx_asset_transfer_new_owner_identity = nullptr;
 int64_t g_qx_asset_transfer_amount = -1;
 char* g_qx_asset_transfer_asset_name;
 char* g_qx_asset_transfer_issuer_in_hex;
+
+uint64_t g_get_log_passcode[4] = {0};

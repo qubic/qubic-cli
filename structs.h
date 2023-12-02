@@ -23,7 +23,8 @@ enum COMMAND
     QX_ISSUE_ASSET = 16,
     QX_TRANSFER_ASSET = 17,
     GET_NODE_IP_LIST=18,
-    TOTAL_COMMAND = 19
+    GET_LOG_FROM_NODE = 19,
+    TOTAL_COMMAND = 20
 };
 
 struct RequestResponseHeader {
@@ -34,6 +35,7 @@ private:
 
 public:
     inline unsigned int size() {
+        if (((*((unsigned int*)_size)) & 0xFFFFFF)==0) return INT32_MAX; // size is never zero, zero means broken packets
         return (*((unsigned int*)_size)) & 0xFFFFFF;
     }
 
@@ -288,3 +290,23 @@ typedef struct
 {
     unsigned char peers[4][4];
 } ExchangePublicPeers;
+
+struct RequestLog // Fetches log
+{
+    unsigned long long passcode[4];
+
+    static constexpr unsigned char type()
+    {
+        return 44;
+    }
+};
+
+struct RespondLog // Returns buffered log; clears the buffer; make sure you fetch log quickly enough, if the buffer is overflown log stops being written into it till the node restart
+{
+    // Variable-size log;
+
+    static constexpr unsigned char type()
+    {
+        return 45;
+    }
+};

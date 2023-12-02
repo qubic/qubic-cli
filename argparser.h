@@ -72,6 +72,13 @@ static long long charToNumber(char* a)
     retVal = strtoll(a, &endptr, 10);
     return retVal;
 }
+static uint64_t charToUnsignedNumber(char* a)
+{
+    uint64_t retVal = 0;
+    char *endptr = nullptr;
+    retVal = strtoll(a, &endptr, 10);
+    return retVal;
+}
 
 void readConfigFile(const char* path)
 {
@@ -232,6 +239,17 @@ void parseArgument(int argc, char** argv){
             g_cmd = GET_BALANCE;
             g_requestedIdentity = argv[i+1];
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-getlogfromnode") == 0)
+        {
+            g_cmd = GET_LOG_FROM_NODE;
+            g_get_log_passcode[0] = charToUnsignedNumber(argv[i+1]);
+            g_get_log_passcode[1] = charToUnsignedNumber(argv[i+2]);
+            g_get_log_passcode[2] = charToUnsignedNumber(argv[i+3]);
+            g_get_log_passcode[3] = charToUnsignedNumber(argv[i+4]);
+            i+=5;
             CHECK_OVER_PARAMETERS
             break;
         }
