@@ -299,6 +299,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         }
         txs.push_back(tx);
     }
+    fclose(f);
 }
 
 BroadcastComputors readComputorListFromFile(const char* fileName);
