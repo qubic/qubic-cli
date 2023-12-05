@@ -139,6 +139,11 @@ int main(int argc, char *argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getLogFromNode(g_nodeIp, g_nodePort, g_get_log_passcode);
             break;
+        case DUMP_SPECTRUM_FILE:
+            sanityFileExist(g_dump_binary_file_input);
+            sanityCheckValidString(g_dump_binary_file_output);
+            dumpSpectrumToFile(g_dump_binary_file_input, g_dump_binary_file_output);
+            break;
 		default:
 			printf("Unexpected command!\n");
 			break;

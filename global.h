@@ -35,4 +35,7 @@ int64_t g_qx_asset_transfer_amount = -1;
 char* g_qx_asset_transfer_asset_name;
 char* g_qx_asset_transfer_issuer_in_hex;
 
+char* g_dump_binary_file_input;
+char* g_dump_binary_file_output;
+
 uint64_t g_get_log_passcode[4] = {0};

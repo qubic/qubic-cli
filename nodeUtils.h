@@ -10,3 +10,4 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
 void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName);
 void getNodeIpList(const char* nodeIp, const int nodePort);
 void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode);
+void dumpSpectrumToFile(const char* input, const char* output);

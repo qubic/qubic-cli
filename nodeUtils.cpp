@@ -578,3 +578,44 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     }
     delete qc;
 }
+static bool isEmptyEntity(const Entity& e){
+    bool is_pubkey_zero = true;
+    for (int i = 0; i < 32; i++){
+        if (e.publicKey[i] != 0){
+            is_pubkey_zero = false;
+            break;
+        }
+    }
+    if (is_pubkey_zero) return true;
+    if (e.outgoingAmount == 0 && e.incomingAmount == 0) return true;
+    if (e.latestIncomingTransferTick == 0 && e.latestOutgoingTransferTick == 0) return true;
+    return false;
+}
+
+void dumpSpectrumToFile(const char* input, const char* output){
+    const size_t SPECTRUM_CAPACITY = 0x1000000ULL; // may be changed in the future
+    Entity* spectrum = (Entity*)malloc(SPECTRUM_CAPACITY*sizeof(Entity));
+    FILE* f = fopen(input, "rb");
+    fread(spectrum, 1, SPECTRUM_CAPACITY*sizeof(Entity), f);
+    fclose(f);
+    f = fopen(output, "w");
+    {
+        std::string header ="ID,LastInTick,LastOutTick,AmountIn,AmountOut,Balance\n";
+        fwrite(header.c_str(), 1, header.size(), f);
+    }
+    char buffer[128] = {0};
+    for (int i = 0; i < SPECTRUM_CAPACITY; i++){
+        if (!isEmptyEntity(spectrum[i])){
+            memset(buffer, 0, 128);
+            getIdentityFromPublicKey(spectrum[i].publicKey, buffer, false);
+            std::string id = buffer;
+            std::string line = id + "," + std::to_string(spectrum[i].latestIncomingTransferTick)
+                                  + "," + std::to_string(spectrum[i].latestOutgoingTransferTick)
+                                  + "," + std::to_string(spectrum[i].incomingAmount)
+                                  + "," + std::to_string(spectrum[i].outgoingAmount)
+                                  + "," + std::to_string(spectrum[i].incomingAmount-spectrum[i].outgoingAmount) + "\n";
+            fwrite(line.c_str(), 1, line.size(), f);
+        }
+    }
+    fclose(f);
+}

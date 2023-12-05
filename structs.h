@@ -24,7 +24,9 @@ enum COMMAND
     QX_TRANSFER_ASSET = 17,
     GET_NODE_IP_LIST=18,
     GET_LOG_FROM_NODE = 19,
-    TOTAL_COMMAND = 20
+    DUMP_SPECTRUM_FILE = 20,
+    DUMP_UNIVERSE_FILE = 21,
+    TOTAL_COMMAND = 22
 };
 
 struct RequestResponseHeader {

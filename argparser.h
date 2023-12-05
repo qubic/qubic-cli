@@ -65,6 +65,10 @@ void print_help(){
     printf("\t\tCreate an asset via Qx contract.\n");
     printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset via Qx contract.\n");
+    printf("\t-dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
+    printf("\t\tDump spectrum file into csv.\n");
+    printf("\t-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
+    printf("\t\tDump spectrum file into csv.\n");
 }
 
 static long long charToNumber(char* a)
@@ -339,6 +343,25 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+        if(strcmp(argv[i], "-dumpspectrumfile") == 0)
+        {
+            g_cmd = DUMP_SPECTRUM_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-dumpuniversefile") == 0)
+        {
+            g_cmd = DUMP_UNIVERSE_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
         i++;
     }
     if (g_configFile != nullptr)
