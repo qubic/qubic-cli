@@ -58,6 +58,10 @@ Command:
 		Create an asset via Qx contract.
 	-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
 		Transfer an asset via Qx contract.
+    -dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>
+		Dump spectrum file into csv.
+	-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>
+		Dump spectrum file into csv.
 ```
 
 ### BUILD
