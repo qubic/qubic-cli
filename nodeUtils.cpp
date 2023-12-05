@@ -592,7 +592,7 @@ static bool isEmptyEntity(const Entity& e){
     return false;
 }
 
-void dumpSpectrumToFile(const char* input, const char* output){
+void dumpSpectrumToCSV(const char* input, const char* output){
     const size_t SPECTRUM_CAPACITY = 0x1000000ULL; // may be changed in the future
     Entity* spectrum = (Entity*)malloc(SPECTRUM_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
@@ -617,5 +617,49 @@ void dumpSpectrumToFile(const char* input, const char* output){
             fwrite(line.c_str(), 1, line.size(), f);
         }
     }
+    free(spectrum);
+    fclose(f);
+}
+
+//only print ownership
+void dumpUniverseToCSV(const char* input, const char* output){
+    const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
+    Asset* asset = (Asset*)malloc(ASSETS_CAPACITY*sizeof(Entity));
+    FILE* f = fopen(input, "rb");
+    fread(asset, 1, ASSETS_CAPACITY*sizeof(Asset), f);
+    fclose(f);
+    f = fopen(output, "w");
+    {
+        std::string header ="OwnerID,AssetName,AssetIssue,Amount\n";
+        fwrite(header.c_str(), 1, header.size(), f);
+    }
+    char buffer[128] = {0};
+    for (int i = 0; i < ASSETS_CAPACITY; i++){
+        if (asset[i].varStruct.ownership.type == OWNERSHIP){
+            memset(buffer, 0, 128);
+            getIdentityFromPublicKey(asset[i].varStruct.ownership.publicKey, buffer, false);
+            std::string id = buffer;
+            std::string asset_name = "null";
+            std::string issuerID = "null";
+            size_t issue_index = asset[i].varStruct.ownership.issuanceIndex;
+            {
+                //get asset name
+                memset(buffer, 0, 128);
+                memcpy(buffer, asset[issue_index].varStruct.issuance.name, 7);
+                asset_name = buffer;
+            }
+            {
+                //get issuer
+                memset(buffer, 0, 128);
+                getIdentityFromPublicKey(asset[issue_index].varStruct.issuance.publicKey, buffer, false);
+                issuerID = buffer;
+            }
+            std::string line = id + "," + asset_name
+                                  + "," + issuerID
+                                  + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
+            fwrite(line.c_str(), 1, line.size(), f);
+        }
+    }
+    free(asset);
     fclose(f);
 }

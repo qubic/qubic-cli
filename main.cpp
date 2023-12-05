@@ -142,7 +142,12 @@ int main(int argc, char *argv[])
         case DUMP_SPECTRUM_FILE:
             sanityFileExist(g_dump_binary_file_input);
             sanityCheckValidString(g_dump_binary_file_output);
-            dumpSpectrumToFile(g_dump_binary_file_input, g_dump_binary_file_output);
+            dumpSpectrumToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
+            break;
+        case DUMP_UNIVERSE_FILE:
+            sanityFileExist(g_dump_binary_file_input);
+            sanityCheckValidString(g_dump_binary_file_output);
+            dumpUniverseToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
             break;
 		default:
 			printf("Unexpected command!\n");

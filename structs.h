@@ -184,6 +184,11 @@ struct SpecialCommand
     unsigned long long everIncreasingNonceAndCommandType;
 };
 
+#define EMPTY 0
+#define ISSUANCE 1
+#define OWNERSHIP 2
+#define POSSESSION 3
+
 struct Asset
 {
     union
