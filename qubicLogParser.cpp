@@ -49,45 +49,47 @@ std::string parseLogToString_type0(uint8_t* ptr){
 }
 void printQubicLog(uint8_t* logBuffer, int bufferSize){
     if (bufferSize < 16){
-        LOG("Buffer size is too small (not enough to contain the header)\n");
+        LOG("Buffer size is too small (not enough to contain the header), expected 16 | received %d\n", bufferSize);
         return;
     }
-    // basic info
-    uint8_t year = *((unsigned char*)(logBuffer + 0));
-    uint8_t month = *((unsigned char*)(logBuffer + 1));
-    uint8_t day = *((unsigned char*)(logBuffer + 2));
-    uint8_t hour = *((unsigned char*)(logBuffer + 3));
-    uint8_t minute = *((unsigned char*)(logBuffer + 4));
-    uint8_t second = *((unsigned char*)(logBuffer + 5));
-    uint16_t epoch = *((unsigned char*)(logBuffer + 6));
-    uint32_t tick = *((unsigned int*)(logBuffer + 8));
-    uint32_t tmp = *((unsigned int*)(logBuffer + 12));
-    uint8_t messageType = tmp >> 24;
-    std::string mt = logTypeToString(messageType);
-    uint32_t messageSize = (tmp << 8) >> 8;
+    uint8_t* end = logBuffer + bufferSize;
+    while (logBuffer < end){
+        // basic info
+        uint8_t year = *((unsigned char*)(logBuffer + 0));
+        uint8_t month = *((unsigned char*)(logBuffer + 1));
+        uint8_t day = *((unsigned char*)(logBuffer + 2));
+        uint8_t hour = *((unsigned char*)(logBuffer + 3));
+        uint8_t minute = *((unsigned char*)(logBuffer + 4));
+        uint8_t second = *((unsigned char*)(logBuffer + 5));
+        uint16_t epoch = *((unsigned char*)(logBuffer + 6));
+        uint32_t tick = *((unsigned int*)(logBuffer + 8));
+        uint32_t tmp = *((unsigned int*)(logBuffer + 12));
+        uint8_t messageType = tmp >> 24;
+        std::string mt = logTypeToString(messageType);
+        uint32_t messageSize = (tmp << 8) >> 8;
 
-    logBuffer += 16;
-    std::string humanLog = "[Can't parse]";
-    switch(messageType){
-        case 0:
-            if (messageSize == 72){ //TODO: change this to constant
-                humanLog = parseLogToString_type0(logBuffer);
-            } else {
-                LOG("Malfunction buffer size for QU_TRANSFER log\n");
-            }
-            break;
-            //TODO: fill these functions
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 255:
-            break;
+        logBuffer += 16;
+        std::string humanLog = "[Can't parse]";
+        switch(messageType){
+            case 0:
+                if (messageSize == 72){ //TODO: change this to constant
+                    humanLog = parseLogToString_type0(logBuffer);
+                } else {
+                    LOG("Malfunction buffer size for QU_TRANSFER log\n");
+                }
+                break;
+                //TODO: fill these functions
+            case 1:
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+            case 255:
+                break;
+        }
+        LOG("%02d-%02d-%02d %02d:%02d:%02d %u.%03d %s: %s\n", year, month, day, hour, minute, second, tick, epoch, mt.c_str(), humanLog.c_str());
+        logBuffer+= messageSize;
     }
-
-    // tmp
-    LOG("%02d-%02d-%02d %02d:%02d:%02d %u.%03d %s: %s\n", year, month, day, hour, minute, second, tick, epoch, mt.c_str(), humanLog.c_str());
 }
