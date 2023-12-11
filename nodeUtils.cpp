@@ -1,6 +1,7 @@
 #include <cstring>
 #include <vector>
 #include <cstdlib>
+#include <ctime>
 #include <algorithm>
 #include "structs.h"
 #include "connection.h"
