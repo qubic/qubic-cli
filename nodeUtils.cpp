@@ -630,7 +630,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
     fclose(f);
     f = fopen(output, "w");
     {
-        std::string header ="OwnerID,AssetName,AssetIssue,Amount\n";
+        std::string header ="Index,Type,ID,OwnerIndex,ContractIndex,AssetName,AssetIssuer,Amount\n";
         fwrite(header.c_str(), 1, header.size(), f);
     }
     char buffer[128] = {0};
@@ -654,9 +654,61 @@ void dumpUniverseToCSV(const char* input, const char* output){
                 getIdentityFromPublicKey(asset[issue_index].varStruct.issuance.publicKey, buffer, false);
                 issuerID = buffer;
             }
-            std::string line = id + "," + asset_name
-                                  + "," + issuerID
-                                  + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
+            std::string line = std::to_string(i) + ",OWNERSHIP,"+ id
+                                + "," + std::to_string(i) + ","
+                                + std::to_string(asset[i].varStruct.ownership.managingContractIndex) + "," + asset_name
+                                + "," + issuerID
+                                + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
+            fwrite(line.c_str(), 1, line.size(), f);
+        }
+        if (asset[i].varStruct.ownership.type == POSSESSION){
+            memset(buffer, 0, 128);
+            getIdentityFromPublicKey(asset[i].varStruct.possession.publicKey, buffer, false);
+            std::string id = buffer;
+            std::string asset_name = "null";
+            std::string issuerID = "null";
+            std::string str_index = std::to_string(i);
+            int owner_index = asset[i].varStruct.possession.ownershipIndex;
+            int contract_index = asset[i].varStruct.possession.managingContractIndex;
+            std::string str_owner_index = std::to_string(owner_index);
+            std::string str_contract_index = std::to_string(contract_index);
+            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
+            {
+                //get asset name
+                int issuance_index = asset[owner_index].varStruct.ownership.issuanceIndex;
+                memset(buffer, 0, 128);
+                memcpy(buffer, asset[issuance_index].varStruct.issuance.name, 7);
+                asset_name = buffer;
+                memset(buffer, 0, 128);
+                getIdentityFromPublicKey(asset[issuance_index].varStruct.issuance.publicKey, buffer, false);
+                issuerID = buffer;
+            }
+            std::string line = str_index + ",POSSESSION," + id + "," + str_owner_index + "," +
+                    str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
+            fwrite(line.c_str(), 1, line.size(), f);
+        }
+        if (asset[i].varStruct.ownership.type == ISSUANCE){
+            memset(buffer, 0, 128);
+            getIdentityFromPublicKey(asset[i].varStruct.issuance.publicKey, buffer, false);
+            std::string id = buffer;
+            std::string asset_name = "null";
+            std::string issuerID = "null";
+            std::string str_index = std::to_string(i);
+            std::string str_owner_index = std::to_string(0);
+            std::string str_contract_index = std::to_string(1); // don't know how to get this yet
+            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
+            {
+                //get asset name
+                memset(buffer, 0, 128);
+                memcpy(buffer, asset[i].varStruct.issuance.name, 7);
+                asset_name = buffer;
+                memset(buffer, 0, 128);
+                getIdentityFromPublicKey(asset[i].varStruct.issuance.publicKey, buffer, false);
+                issuerID = buffer;
+            }
+//            std::string header ="Index,Type,ID,OwnerIndex,ContractIndex,AssetName,AssetIssuer,Amount\n";
+            std::string line = str_index + ",ISSUANCE," + id + "," + str_owner_index + "," +
+                               str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
     }
