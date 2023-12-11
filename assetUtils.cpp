@@ -50,9 +50,6 @@ static void printOwnedAsset(Asset owned, Asset iss)
     byteToHex(iss.varStruct.issuance.publicKey, hexIssuer, 32);
     LOG("Asset issuer: %s\n", hexIssuer);
     LOG("Asset name: %s\n", name);
-    LOG("Asset unit of measurement: %s\n", unitOfMeasurement);
-    LOG("Asset type: %u\n", iss.varStruct.issuance.type);
-    LOG("Type: %u\n", owned.varStruct.ownership.type);
     LOG("Managing contract index: %d\n", owned.varStruct.ownership.managingContractIndex);
     LOG("Issuance Index: %d\n", owned.varStruct.ownership.issuanceIndex);
     LOG("Number Of Units: %d\n", owned.varStruct.ownership.numberOfUnits);
