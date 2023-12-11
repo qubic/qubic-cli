@@ -29,6 +29,7 @@ int main(int argc, char *argv[])
             sanityCheckIdentity(g_requestedIdentity);
             sanityCheckNode(g_nodeIp, g_nodePort);
             printOwnedAsset(g_nodeIp, g_nodePort, g_requestedIdentity);
+            printPossessionAsset(g_nodeIp, g_nodePort, g_requestedIdentity);
 			break;
 		case SEND_COIN:
 			sanityCheckNode(g_nodeIp, g_nodePort);
