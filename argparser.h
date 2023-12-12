@@ -361,6 +361,13 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+        if(strcmp(argv[i], "-printqxfee") == 0)
+        {
+            g_cmd = PRINT_QX_FEE;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         i++;
     }

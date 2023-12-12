@@ -26,7 +26,8 @@ enum COMMAND
     GET_LOG_FROM_NODE = 19,
     DUMP_SPECTRUM_FILE = 20,
     DUMP_UNIVERSE_FILE = 21,
-    TOTAL_COMMAND = 22
+    PRINT_QX_FEE =22,
+    TOTAL_COMMAND = 23
 };
 
 struct RequestResponseHeader {
@@ -316,4 +317,34 @@ struct RespondLog // Returns buffered log; clears the buffer; make sure you fetc
     {
         return 45;
     }
+};
+
+struct RequestContractFunction // Invokes contract function
+{
+    unsigned int contractIndex;
+    unsigned short inputType;
+    unsigned short inputSize;
+    // Variable-size input
+
+    static constexpr unsigned char type()
+    {
+        return 42;
+    }
+};
+
+struct RespondContractFunction // Returns result of contract function invocation
+{
+    // Variable-size output; the size must be 0 if the invocation has failed for whatever reason (e.g. no a function registered for [inputType], or the function has timed out)
+
+    static constexpr unsigned char type()
+    {
+        return 43;
+    }
+};
+
+struct Fees_output
+{
+    uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t transferFee; // Amount of qus
+    uint32_t tradeFee; // Number of billionths
 };

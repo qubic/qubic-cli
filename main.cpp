@@ -7,6 +7,7 @@
 #include "assetUtil.h"
 #include "keyUtils.h"
 #include "sanityCheck.h"
+#include "SCUtils.h"
 
 int main(int argc, char *argv[])
 {
@@ -145,10 +146,9 @@ int main(int argc, char *argv[])
             sanityCheckValidString(g_dump_binary_file_output);
             dumpSpectrumToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
             break;
-        case DUMP_UNIVERSE_FILE:
-            sanityFileExist(g_dump_binary_file_input);
-            sanityCheckValidString(g_dump_binary_file_output);
-            dumpUniverseToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
+        case PRINT_QX_FEE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printQxFee(g_nodeIp, g_nodePort);
             break;
 		default:
 			printf("Unexpected command!\n");

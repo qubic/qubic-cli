@@ -96,7 +96,6 @@ static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
     LOG("Asset issuer: %s\n", hexIssuer);
     LOG("Asset name: %s\n", name);
     LOG("Managing contract index: %d\n", possession.varStruct.possession.managingContractIndex);
-    LOG("Managing contract index: %d\n", possession.varStruct.possession.managingContractIndex);
     LOG("Owner index: %u\n", possession.varStruct.possession.ownershipIndex);
     LOG("Owner ID: %s\n", ownerId);
     LOG("Number Of Units: %d\n", possession.varStruct.possession.numberOfUnits);

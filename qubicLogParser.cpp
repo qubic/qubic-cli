@@ -69,7 +69,7 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         uint32_t messageSize = (tmp << 8) >> 8;
 
         logBuffer += 16;
-        std::string humanLog = "[Can't parse]";
+        std::string humanLog = "null";
         switch(messageType){
             case 0:
                 if (messageSize == 72){ //TODO: change this to constant
@@ -90,6 +90,13 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
                 break;
         }
         LOG("%02d-%02d-%02d %02d:%02d:%02d %u.%03d %s: %s\n", year, month, day, hour, minute, second, tick, epoch, mt.c_str(), humanLog.c_str());
+        if (humanLog == "null"){
+            char buff[1024] = {0};
+            for (int i = 0; i < messageSize; i++){
+                sprintf(buff + i*2, "%02x", logBuffer[i]);
+            }
+            LOG("Can't parse, original message: ");
+        }
         logBuffer+= messageSize;
     }
 }
