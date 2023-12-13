@@ -58,10 +58,14 @@ Command:
 		Create an asset via Qx contract.
 	-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
 		Transfer an asset via Qx contract.
-    -dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>
+	-dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>
 		Dump spectrum file into csv.
 	-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>
 		Dump spectrum file into csv.
+	-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>
+		Participating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.
+	-getipostatus <CONTRACT_INDEX>
+		View IPO status. valid node ip/port, CONTRACT_INDEX are required
 ```
 
 ### BUILD
