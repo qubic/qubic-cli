@@ -69,6 +69,10 @@ void print_help(){
     printf("\t\tDump spectrum file into csv.\n");
     printf("\t-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
     printf("\t\tDump spectrum file into csv.\n");
+    printf("\t-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>\n");
+    printf("\t\tParticipating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.\n");
+    printf("\t-getipostatus <CONTRACT_INDEX>\n");
+    printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
 }
 
 static long long charToNumber(char* a)
