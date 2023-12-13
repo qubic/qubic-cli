@@ -444,14 +444,14 @@ BroadcastComputors readComputorListFromFile(const char* fileName)
     return result;
 }
 
-BroadcastComputors getComputorFromNode(const char* nodeIp, const int nodePort)
+bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComputors& result)
 {
-    BroadcastComputors result;
     static struct
     {
         RequestResponseHeader header;
     } packet;
     packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_COMPUTORS);
     auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
@@ -460,22 +460,29 @@ BroadcastComputors getComputorFromNode(const char* nodeIp, const int nodePort)
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
+    bool okay = false;
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == BROADCAST_COMPUTORS){
             auto bc = (BroadcastComputors*)(data + ptr + sizeof(RequestResponseHeader));
             result = *bc;
+            okay = true;
         }
         ptr+= header->size();
     }
     delete qc;
-    return result;
+    return okay;
 }
 
 void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName)
 {
-    auto bc = getComputorFromNode(nodeIp, nodePort);
+    BroadcastComputors bc;
+    if (!getComputorFromNode(nodeIp, nodePort, bc))
+    {
+        LOG("Failed to get valid computor list!");
+        return;
+    }
     uint8_t digest[32] = {0};
     uint8_t arbPubkey[32] = {0};
     // verify with arb, dump data
