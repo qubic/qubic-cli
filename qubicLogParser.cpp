@@ -95,7 +95,7 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
             for (int i = 0; i < messageSize; i++){
                 sprintf(buff + i*2, "%02x", logBuffer[i]);
             }
-            LOG("Can't parse, original message: ");
+            LOG("Can't parse, original message: %s\n", buff);
         }
         logBuffer+= messageSize;
     }
