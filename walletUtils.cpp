@@ -240,3 +240,118 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
+
+void makeIPOBid(const char* nodeIp, int nodePort,
+                const char* seed,
+                uint32_t contractIndex,
+                uint64_t pricePerShare,
+                uint16_t numberOfShare,
+                uint32_t scheduledTickOffset){
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char publicIdentity[128] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    // Contracts are identified by their index stored in the first 64 bits of the id, all
+    // other bits are zeroed. However, the max number of contracts is limited to 2^32 - 1,
+    // only 32 bits are used for the contract index.
+    ((uint64_t*)destPublicKey)[0] = contractIndex;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        ContractIPOBid ipo;
+        unsigned char signature[64];
+    } packet;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 0;
+    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = 0;
+    packet.transaction.inputSize = sizeof(packet.ipo);
+    packet.ipo.price = pricePerShare;
+    packet.ipo.quantity = numberOfShare;
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(packet.ipo),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(packet.ipo) + SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("IPO bidding has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
+    RespondContractIPO result;
+    memset(&result, 0, sizeof(RespondContractIPO));
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractIPO req;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_CONTRACT_IPO);
+    packet.req.contractIndex = contractIndex;
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RESPOND_CONTRACT_IPO){
+            auto rcipo = (RespondContractIPO*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *rcipo;
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+    return result;
+}
+static bool isZeroPubkey(uint8_t* pubkey){
+    for (int i = 0; i < 32; i++){
+        if (pubkey[i] != 0){
+            return false;
+        }
+    }
+    return true;
+}
+void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
+    RespondContractIPO status = _getIPOStatus(nodeIp, nodePort, contractIndex);
+    LOG("Identity - Price per share\n");
+    for (int i = 0; i < NUMBER_OF_COMPUTORS; i++){
+        if (!isZeroPubkey(status.publicKeys[i])){
+            char identity[128] = {0};
+            getIdentityFromPublicKey(status.publicKeys[i], identity, false);
+
+            LOG("%s: %lld\n", identity, status.prices[i]);
+        }
+    }
+}

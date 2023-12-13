@@ -14,3 +14,10 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
 
 void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr);
 bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signature);
+void makeIPOBid(const char* nodeIp, int nodePort,
+                const char* seed,
+                uint32_t contractIndex,
+                uint64_t pricePerShare,
+                uint16_t numberOfShare,
+                uint32_t scheduledTickOffset);
+void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex);

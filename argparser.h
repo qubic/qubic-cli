@@ -369,6 +369,25 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
+        if(strcmp(argv[i], "-makeipobid") == 0)
+        {
+            g_cmd = MAKE_IPO_BID;
+            g_ipo_contract_index = charToNumber(argv[i + 1]);
+            g_make_ipo_bid_number_of_share = charToNumber(argv[i+2]);
+            g_make_ipo_bid_price_per_share = charToNumber(argv[i+3]);
+            i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-getipostatus") == 0)
+        {
+            g_cmd = GET_IPO_STATUS;
+            g_ipo_contract_index = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
         i++;
     }
     if (g_configFile != nullptr)

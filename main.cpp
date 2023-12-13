@@ -146,9 +146,22 @@ int main(int argc, char *argv[])
             sanityCheckValidString(g_dump_binary_file_output);
             dumpSpectrumToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
             break;
+        case DUMP_UNIVERSE_FILE:
+            sanityFileExist(g_dump_binary_file_input);
+            sanityCheckValidString(g_dump_binary_file_output);
+            dumpUniverseToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
+            break;
         case PRINT_QX_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printQxFee(g_nodeIp, g_nodePort);
+            break;
+        case MAKE_IPO_BID:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            makeIPOBid(g_nodeIp, g_nodePort, g_seed, g_ipo_contract_index, g_make_ipo_bid_price_per_share, g_make_ipo_bid_number_of_share, g_offsetScheduledTick);
+            break;
+        case GET_IPO_STATUS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printIPOStatus(g_nodeIp, g_nodePort, g_ipo_contract_index);
             break;
 		default:
 			printf("Unexpected command!\n");

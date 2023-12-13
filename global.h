@@ -38,4 +38,10 @@ char* g_qx_asset_transfer_issuer_in_hex;
 char* g_dump_binary_file_input;
 char* g_dump_binary_file_output;
 
+//IPO bid
+uint32_t g_ipo_contract_index = 0;
+uint16_t g_make_ipo_bid_number_of_share = 0;
+uint64_t g_make_ipo_bid_price_per_share = 0;
+
+
 uint64_t g_get_log_passcode[4] = {0};

@@ -27,7 +27,9 @@ enum COMMAND
     DUMP_SPECTRUM_FILE = 20,
     DUMP_UNIVERSE_FILE = 21,
     PRINT_QX_FEE =22,
-    TOTAL_COMMAND = 23
+    MAKE_IPO_BID=23,
+    GET_IPO_STATUS=24,
+    TOTAL_COMMAND = 25
 };
 
 struct RequestResponseHeader {
@@ -348,3 +350,23 @@ struct Fees_output
     uint32_t transferFee; // Amount of qus
     uint32_t tradeFee; // Number of billionths
 };
+struct ContractIPOBid
+{
+    long long price;
+    unsigned short quantity;
+};
+#define REQUEST_CONTRACT_IPO 33
+typedef struct
+{
+    unsigned int contractIndex;
+} RequestContractIPO;
+
+#define RESPOND_CONTRACT_IPO 34
+
+typedef struct
+{
+    unsigned int contractIndex;
+    unsigned int tick;
+    uint8_t publicKeys[NUMBER_OF_COMPUTORS][32];
+    long long prices[NUMBER_OF_COMPUTORS];
+} RespondContractIPO;
