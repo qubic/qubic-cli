@@ -170,7 +170,14 @@ static void sanityCheckUnitofMeasurement(const char* str)
         exit(1);
     }
     if (strlen(str) != 7){
-        LOG("UnitofMeasurement length must be 7\n");
+        LOG("UnitofMeasurement length must be 7, they are powers of the corresponding SI base units:\n");
+        LOG("AMPERE\n");
+        LOG("CANDELA\n");
+        LOG("KELVIN\n");
+        LOG("KILOGRAM\n");
+        LOG("METER\n");
+        LOG("MOLE\n");
+        LOG("SECOND\n");
         exit(1);
     }
 }
