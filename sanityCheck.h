@@ -163,3 +163,14 @@ static void sanityCheckValidString(const char* str)
         exit(1);
     }
 }
+static void sanityCheckUnitofMeasurement(const char* str)
+{
+    if (str == nullptr){
+        LOG("Invalid string\n");
+        exit(1);
+    }
+    if (strlen(str) != 7){
+        LOG("UnitofMeasurement length must be 7\n");
+        exit(1);
+    }
+}

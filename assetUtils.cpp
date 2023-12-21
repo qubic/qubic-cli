@@ -206,7 +206,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     char assetNameS1[8] = {0};
     char UoMS1[8] = {0};
     memcpy(assetNameS1, assetName, strlen(assetName));
-    memcpy(UoMS1, unitOfMeasurement, strlen(unitOfMeasurement));
+    for (int i = 0; i < 7; i++) UoMS1[i] = unitOfMeasurement[i] - 48;
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};

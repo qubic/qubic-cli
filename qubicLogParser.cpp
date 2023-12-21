@@ -5,10 +5,15 @@
 #include "logger.h"
 
 #define QU_TRANSFER 0
+#define QU_TRANSFER_LOG_SIZE 72
 #define ASSET_ISSUANCE 1
+#define ASSET_ISSUANCE_LOG_SIZE 55
 #define ASSET_OWNERSHIP_CHANGE 2
+#define ASSET_OWNERSHIP_CHANGE_LOG_SIZE 119
 #define ASSET_POSSESSION_CHANGE 3
+#define ASSET_POSSESSION_CHANGE_LOG_SIZE 119
 #define CONTRACT_ERROR_MESSAGE 4
+#define CONTRACT_ERROR_MESSAGE_LOG_SIZE 4
 #define CONTRACT_WARNING_MESSAGE 5
 #define CONTRACT_INFORMATION_MESSAGE 6
 #define CONTRACT_DEBUG_MESSAGE 7
@@ -47,7 +52,63 @@ std::string parseLogToString_type0(uint8_t* ptr){
     std::string result = "from " + std::string(sourceIdentity) + " to " + std::string(destIdentity) + " " + std::to_string(amount) + "QU.";
     return result;
 }
+std::string parseLogToString_type1(uint8_t* ptr){
+    char sourceIdentity[61] = {0};
+    char name[8] = {0};
+    char numberOfDecimalPlaces = 0;
+    uint8_t unit[8] = {0};
+
+    long long numberOfShares = 0;
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(ptr, sourceIdentity, isLowerCase);
+    memcpy(&numberOfShares, ptr+32, 8);
+    memcpy(name, ptr+32+8, 7);
+    numberOfDecimalPlaces = ((char*)ptr)[32+8+7];
+    memcpy(unit, ptr+32+8+7+1, 7);
+    std::string result = std::string(sourceIdentity) + " issued " + std::to_string(numberOfShares) + " " + std::string(name)
+                       + ". Number of decimal: " + std::to_string(numberOfDecimalPlaces) + ". Unit of measurement: "
+                       + std::to_string(unit[0]) + "-"
+                       + std::to_string(unit[1]) + "-"
+                       + std::to_string(unit[2]) + "-"
+                       + std::to_string(unit[3]) + "-"
+                       + std::to_string(unit[4]) + "-"
+                       + std::to_string(unit[5]) + "-"
+                       + std::to_string(unit[6]);
+    return result;
+}
+std::string parseLogToString_type2_type3(uint8_t* ptr){
+    char sourceIdentity[61] = {0};
+    char dstIdentity[61] = {0};
+    char issuerIdentity[61] = {0};
+    char name[8] = {0};
+    char numberOfDecimalPlaces = 0;
+    char unit[8] = {0};
+    long long numberOfShares = 0;
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(ptr, sourceIdentity, isLowerCase);
+    getIdentityFromPublicKey(ptr+32, dstIdentity, isLowerCase);
+    getIdentityFromPublicKey(ptr+64, issuerIdentity, isLowerCase);
+    memcpy(&numberOfShares, ptr+96, 8);
+    memcpy(name, ptr+96+8, 7);
+    numberOfDecimalPlaces = ((char*)ptr)[96+8+7];
+    memcpy(unit, ptr+96+8+7+1, 7);
+    std::string result = "from " + std::string(sourceIdentity) + " to " + std::string(dstIdentity) + " " + std::to_string(numberOfShares) + " " + std::string(name)
+                         + "(Issuer: " + std::string(issuerIdentity) + ")"
+                         + ". Number of decimal: " + std::to_string(numberOfDecimalPlaces) + ". Unit of measurement: "
+                         + std::to_string(unit[0]) + "-"
+                         + std::to_string(unit[1]) + "-"
+                         + std::to_string(unit[2]) + "-"
+                         + std::to_string(unit[3]) + "-"
+                         + std::to_string(unit[4]) + "-"
+                         + std::to_string(unit[5]) + "-"
+                         + std::to_string(unit[6]);
+    return result;
+}
 void printQubicLog(uint8_t* logBuffer, int bufferSize){
+    if (bufferSize == 0){
+        LOG("Empty log\n");
+        return;
+    }
     if (bufferSize < 16){
         LOG("Buffer size is too small (not enough to contain the header), expected 16 | received %d\n", bufferSize);
         return;
@@ -71,21 +132,39 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         logBuffer += 16;
         std::string humanLog = "null";
         switch(messageType){
-            case 0:
-                if (messageSize == 72){ //TODO: change this to constant
+            case QU_TRANSFER:
+                if (messageSize == QU_TRANSFER_LOG_SIZE){
                     humanLog = parseLogToString_type0(logBuffer);
                 } else {
                     LOG("Malfunction buffer size for QU_TRANSFER log\n");
                 }
                 break;
-                //TODO: fill these functions
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
+            case ASSET_ISSUANCE:
+                if (messageSize == ASSET_ISSUANCE_LOG_SIZE){
+                    humanLog = parseLogToString_type1(logBuffer);
+                } else {
+                    LOG("Malfunction buffer size for ASSET_ISSUANCE log\n");
+                }
+                break;
+            case ASSET_OWNERSHIP_CHANGE:
+                if (messageSize == ASSET_OWNERSHIP_CHANGE_LOG_SIZE){
+                    humanLog = parseLogToString_type2_type3(logBuffer);
+                } else {
+                    LOG("Malfunction buffer size for ASSET_OWNERSHIP_CHANGE log\n");
+                }
+                break;
+            case ASSET_POSSESSION_CHANGE:
+                if (messageSize == ASSET_POSSESSION_CHANGE_LOG_SIZE){
+                    humanLog = parseLogToString_type2_type3(logBuffer);
+                } else {
+                    LOG("Malfunction buffer size for ASSET_POSSESSION_CHANGE log\n");
+                }
+                break;
+            // TODO: stay up-to-date with core node contract logger
+            case CONTRACT_ERROR_MESSAGE:
+            case CONTRACT_WARNING_MESSAGE:
+            case CONTRACT_INFORMATION_MESSAGE:
+            case CONTRACT_DEBUG_MESSAGE:
             case 255:
                 break;
         }
