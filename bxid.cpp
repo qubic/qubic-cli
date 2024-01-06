@@ -73,7 +73,6 @@ usage:
 #include "K12AndKeyUtil.h"
 #include "keyUtils.h"
 #include "walletUtils.h"
-#include "uthash.h"
 #include <fcntl.h>
 #include <unistd.h>
 #include <time.h>
