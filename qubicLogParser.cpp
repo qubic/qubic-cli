@@ -43,7 +43,7 @@ std::string logTypeToString(uint8_t type){
 }
 std::string parseLogToString_type0(uint8_t* ptr){
     char sourceIdentity[61] = {0};
-    char destIdentity[61] = {0};;
+    char destIdentity[61] = {0};
     uint64_t amount;
     const bool isLowerCase = false;
     getIdentityFromPublicKey(ptr, sourceIdentity, isLowerCase);
@@ -113,6 +113,19 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         LOG("Buffer size is too small (not enough to contain the header), expected 16 | received %d\n", bufferSize);
         return;
     }
+    static FILE *fp;
+    if ( fp == 0 )
+    {
+        if ( (fp= fopen("logfile","rb+")) == 0 )
+            fp = fopen("logfile","wb");
+        else fseek(fp,0,SEEK_END);
+    }
+    if ( fp != 0 )
+    {
+        fwrite(&bufferSize,1,sizeof(bufferSize),fp);
+        fwrite(logBuffer,1,bufferSize,fp);
+        fflush(fp);
+    }
     uint8_t* end = logBuffer + bufferSize;
     while (logBuffer < end){
         // basic info
@@ -122,7 +135,7 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         uint8_t hour = *((unsigned char*)(logBuffer + 3));
         uint8_t minute = *((unsigned char*)(logBuffer + 4));
         uint8_t second = *((unsigned char*)(logBuffer + 5));
-        uint16_t epoch = *((unsigned char*)(logBuffer + 6));
+        uint16_t epoch = *((unsigned short*)(logBuffer + 6));
         uint32_t tick = *((unsigned int*)(logBuffer + 8));
         uint32_t tmp = *((unsigned int*)(logBuffer + 12));
         uint8_t messageType = tmp >> 24;
