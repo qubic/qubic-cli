@@ -113,6 +113,19 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         LOG("Buffer size is too small (not enough to contain the header), expected 16 | received %d\n", bufferSize);
         return;
     }
+    static FILE *fp;
+    if ( fp == 0 )
+    {
+        if ( (fp= fopen("logfile","rb+")) == 0 )
+            fp = fopen("logfile","wb");
+        else fseek(fp,0,SEEK_END);
+    }
+    if ( fp != 0 )
+    {
+        fwrite(&bufferSize,1,sizeof(bufferSize),fp);
+        fwrite(logBuffer,1,bufferSize,fp);
+        fflush(fp);
+    }
     uint8_t* end = logBuffer + bufferSize;
     while (logBuffer < end){
         // basic info
