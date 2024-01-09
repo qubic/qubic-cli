@@ -391,7 +391,7 @@ void myprintQubicLog(FILE *jsonfp,uint8_t* logBuffer, int bufferSize)
         uint8_t hour = *((unsigned char*)(logBuffer + 3));
         uint8_t minute = *((unsigned char*)(logBuffer + 4));
         uint8_t second = *((unsigned char*)(logBuffer + 5));
-        t = makeunixtime(2000 + year,month,day,hour,minute,second);
+        t = makeunixtime(2000 + year,month-1,day,hour,minute,second);
         uint16_t epoch = *((unsigned short*)(logBuffer + 6));
         uint32_t tick = *((unsigned int*)(logBuffer + 8));
         uint32_t tmp = *((unsigned int*)(logBuffer + 12));
