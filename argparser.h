@@ -58,9 +58,6 @@ void print_help(){
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
     printf("\t-publishproposal \n");
     printf("\t\t(on development)\n");
-    printf("\t-qxtransfershare <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
-    printf("\t\tTransfer Qx's shares to new owner. valid private key and node ip/port, POSSESSED_IDENTITY are required.\n");
-    printf("\t\t(if you set -scheduletick larger than 50000, the tool will be forced to send the tx at that tick)\n");
     printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
     printf("\t\tCreate an asset via Qx contract.\n");
     printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
@@ -143,7 +140,7 @@ void parseArgument(int argc, char** argv){
     // basic config:
     // -conf , -seed, -nodeip, -nodeport, -scheduletick
     // command:
-    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getownedasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal, -qxtransfershare
+    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getownedasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal
     int i = 1;
     g_cmd = TOTAL_COMMAND;
     while (i < argc)
@@ -314,16 +311,6 @@ void parseArgument(int argc, char** argv){
             LOG("On development\n");
             exit(0);
         }
-        if(strcmp(argv[i], "-qxtransfershare") == 0)
-        {
-            g_cmd = QX_TRANSFER_QXSHARE;
-            g_qx_share_transfer_possessed_identity = argv[i+1];
-            g_qx_share_transfer_new_owner_identity = argv[i+2];
-            g_qx_share_transfer_amount = charToNumber(argv[i+3]);
-            i+=4;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
         if(strcmp(argv[i], "-qxissueasset") == 0)
         {
             g_cmd = QX_ISSUE_ASSET;
@@ -387,6 +374,32 @@ void parseArgument(int argc, char** argv){
         {
             g_cmd = GET_IPO_STATUS;
             g_ipo_contract_index = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotteryissuebet") == 0)
+        {
+            g_cmd = QUOTTERY_ISSUE_BET;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotteryjoinbet") == 0)
+        {
+            g_cmd = QUOTTERY_JOIN_BET;
+            g_quottery_bid_id = charToNumber(argv[i + 1]);
+            g_quottery_number_bet_slot = charToNumber(argv[i+2]);
+            g_quottery_amount_per_bet_slot = charToNumber(argv[i+3]);
+            g_quottery_picked_option = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterygetbetinfo") == 0)
+        {
+            g_cmd = QUOTTERY_GET_BET_INFO;
+            g_quottery_bid_id = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;

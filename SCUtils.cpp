@@ -4,7 +4,7 @@
 #include "connection.h"
 #include "logger.h"
 
-void getQxFees(const char* nodeIp, const int nodePort, Fees_output& result){
+void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     auto qc = new QubicConnection(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -26,7 +26,7 @@ void getQxFees(const char* nodeIp, const int nodePort, Fees_output& result){
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto fees = (Fees_output*)(data + ptr + sizeof(RequestResponseHeader));
+            auto fees = (QxFees_output*)(data + ptr + sizeof(RequestResponseHeader));
             result = *fees;
         }
         ptr+= header->size();
@@ -35,7 +35,7 @@ void getQxFees(const char* nodeIp, const int nodePort, Fees_output& result){
 }
 
 void printQxFee(const char* nodeIp, const int nodePort){
-    Fees_output result;
+    QxFees_output result;
     getQxFees(nodeIp, nodePort, result);
     LOG("Asset issuance fee: %u\n", result.assetIssuanceFee);
     LOG("Transfer fee: %u\n", result.transferFee);

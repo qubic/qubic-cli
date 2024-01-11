@@ -8,5 +8,6 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/assetUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/qubicLogParser.cpp
 		  ${CMAKE_SOURCE_DIR}/SCUtils.cpp
+		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES})

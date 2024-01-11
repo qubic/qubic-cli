@@ -88,7 +88,7 @@ static void getTickTransactions(const char* nodeIp, const int nodePort, const ui
     packet.header.setType(REQUEST_TICK_TRANSACTIONS); // REQUEST_TICK_TRANSACTIONS
     packet.txs.tick = requestedTick;
     for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
-    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 1;
+    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
     auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;

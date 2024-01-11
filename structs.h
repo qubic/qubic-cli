@@ -14,7 +14,7 @@ enum COMMAND
     SEND_RAW_PACKET = 7,
     PUBLISH_PROPOSAL = 8,
     VOTE_PROPOSAL = 9,
-    QX_TRANSFER_QXSHARE = 10,
+    PLACE_HOLDER = 10,
     GET_TICK_DATA=11,
     READ_TICK_DATA=12,
     CHECK_TX_ON_TICK=13,
@@ -29,7 +29,10 @@ enum COMMAND
     PRINT_QX_FEE =22,
     MAKE_IPO_BID=23,
     GET_IPO_STATUS=24,
-    TOTAL_COMMAND = 25
+    QUOTTERY_ISSUE_BET=25,
+    QUOTTERY_JOIN_BET=26,
+    QUOTTERY_GET_BET_INFO=27,
+    TOTAL_COMMAND = 28
 };
 
 struct RequestResponseHeader {
@@ -344,7 +347,7 @@ struct RespondContractFunction // Returns result of contract function invocation
     }
 };
 
-struct Fees_output
+struct QxFees_output
 {
     uint32_t assetIssuanceFee; // Amount of qus
     uint32_t transferFee; // Amount of qus

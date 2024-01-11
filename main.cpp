@@ -8,6 +8,7 @@
 #include "keyUtils.h"
 #include "sanityCheck.h"
 #include "SCUtils.h"
+#include "quottery.h"
 
 int main(int argc, char *argv[])
 {
@@ -87,18 +88,6 @@ int main(int argc, char *argv[])
 		case VOTE_PROPOSAL:
 			printf("On development. Come back later\n");
 			break;
-		case QX_TRANSFER_QXSHARE:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            sanityCheckIdentity(g_qx_share_transfer_possessed_identity);
-            sanityCheckIdentity(g_qx_share_transfer_new_owner_identity);
-            sanityCheckAmountTransferAsset(g_qx_share_transfer_amount);
-            transferQxShare(g_nodeIp, g_nodePort, g_seed,
-                            g_qx_share_transfer_possessed_identity,
-                            g_qx_share_transfer_new_owner_identity,
-                            g_qx_share_transfer_amount,
-                            g_offsetScheduledTick);
-			break;
         case QX_ISSUE_ASSET:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -163,8 +152,21 @@ int main(int argc, char *argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printIPOStatus(g_nodeIp, g_nodePort, g_ipo_contract_index);
             break;
+        case QUOTTERY_ISSUE_BET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            quotteryIssueBet(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case QUOTTERY_GET_BET_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            quotteryPrintBetInfo(g_nodeIp, g_nodePort, g_quottery_bid_id);
+            break;
+        case QUOTTERY_JOIN_BET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bid_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
+            break;
 		default:
-			printf("Unexpected command!\n");
+			printf("Unexpected command! here\n");
 			break;
 	}
     return 0;
