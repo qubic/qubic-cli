@@ -166,6 +166,17 @@ struct QuorumData
 
 typedef struct
 {
+    unsigned int tick;
+    unsigned char voteFlags[(NUMBER_OF_COMPUTORS + 7) / 8];
+} RequestedQuorumTick;
+
+typedef struct
+{
+    RequestedQuorumTick requestedQuorumTick;
+} RequestQuorumTick;
+
+typedef struct
+{
     unsigned short computorIndex;
     unsigned short epoch;
     unsigned int tick;
