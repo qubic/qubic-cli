@@ -20,7 +20,7 @@ static CurrentTickInfo getTickInfoFromNode(const char* nodeIp, int nodePort)
 	struct {
         RequestResponseHeader header;
     } packet;
-    if ( qc->mSocket < 0 )
+    if ( qc->error < 0 )
 	return(result);
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
