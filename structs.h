@@ -29,7 +29,8 @@ enum COMMAND
     PRINT_QX_FEE =22,
     MAKE_IPO_BID=23,
     GET_IPO_STATUS=24,
-    TOTAL_COMMAND = 25
+    GET_QUORUMTICK=25,
+    TOTAL_COMMAND = 26
 };
 
 struct RequestResponseHeader {
@@ -117,6 +118,51 @@ typedef struct
     unsigned short numberOfAlignedVotes;
     unsigned short numberOfMisalignedVotes;
 } CurrentTickInfo;
+
+struct Tick
+{
+    unsigned short computorIndex;
+    unsigned short epoch;
+    unsigned int tick;
+
+    unsigned short millisecond;
+    unsigned char second;
+    unsigned char minute;
+    unsigned char hour;
+    unsigned char day;
+    unsigned char month;
+    unsigned char year;
+
+    unsigned long long prevResourceTestingDigest;
+    unsigned long long saltedResourceTestingDigest;
+
+    unsigned char prevSpectrumDigest[32];
+    unsigned char prevUniverseDigest[32];
+    unsigned char prevComputerDigest[32];
+    unsigned char saltedSpectrumDigest[32];
+    unsigned char saltedUniverseDigest[32];
+    unsigned char saltedComputerDigest[32];
+
+    unsigned char transactionDigest[32];
+    unsigned char expectedNextTickTransactionDigest[32];
+
+    unsigned char signature[SIGNATURE_SIZE];
+};
+
+struct quorumdiff
+{
+    unsigned long long saltedResourceTestingDigest;
+    uint8_t saltedSpectrumDigest[32];
+    uint8_t saltedUniverseDigest[32];
+    uint8_t saltedComputerDigest[32];
+    uint8_t expectedNextTickTransactionDigest[32];
+    unsigned char signature[SIGNATURE_SIZE];
+};
+
+struct QuorumData
+{
+    Tick Quorum[NUMBER_OF_COMPUTORS];
+};
 
 typedef struct
 {
