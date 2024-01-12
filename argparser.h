@@ -388,7 +388,7 @@ void parseArgument(int argc, char** argv){
         if(strcmp(argv[i], "-quotteryjoinbet") == 0)
         {
             g_cmd = QUOTTERY_JOIN_BET;
-            g_quottery_bid_id = charToNumber(argv[i + 1]);
+            g_quottery_bet_id = charToNumber(argv[i + 1]);
             g_quottery_number_bet_slot = charToNumber(argv[i+2]);
             g_quottery_amount_per_bet_slot = charToNumber(argv[i+3]);
             g_quottery_picked_option = charToNumber(argv[i+4]);
@@ -399,8 +399,39 @@ void parseArgument(int argc, char** argv){
         if(strcmp(argv[i], "-quotterygetbetinfo") == 0)
         {
             g_cmd = QUOTTERY_GET_BET_INFO;
-            g_quottery_bid_id = charToNumber(argv[i + 1]);
+            g_quottery_bet_id = charToNumber(argv[i + 1]);
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterygetbetdetail") == 0)
+        {
+            g_cmd = QUOTTERY_GET_BET_DETAIL;
+            g_quottery_bet_id = charToNumber(argv[i + 1]);
+            g_quottery_option_id = charToNumber(argv[i + 2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterygetactivebet") == 0)
+        {
+            g_cmd = QUOTTERY_GET_ACTIVE_BET;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterygetactivebetbycreator") == 0)
+        {
+            g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
+            g_quottery_creator_id = argv[i+1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterygetbetfee") == 0)
+        {
+            g_cmd = QUOTTERY_GET_BET_FEE;
+            i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }

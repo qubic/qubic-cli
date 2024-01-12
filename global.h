@@ -43,7 +43,9 @@ uint32_t g_ipo_contract_index = 0;
 uint16_t g_make_ipo_bid_number_of_share = 0;
 uint64_t g_make_ipo_bid_price_per_share = 0;
 // quottery
-uint32_t g_quottery_bid_id;
+uint32_t g_quottery_bet_id;
+uint32_t g_quottery_option_id;
+char* g_quottery_creator_id = nullptr;
 uint64_t g_quottery_number_bet_slot;
 uint64_t g_quottery_amount_per_bet_slot;
 uint32_t g_quottery_picked_option;

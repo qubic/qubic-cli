@@ -159,14 +159,31 @@ int main(int argc, char *argv[])
             break;
         case QUOTTERY_GET_BET_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintBetInfo(g_nodeIp, g_nodePort, g_quottery_bid_id);
+            quotteryPrintBetInfo(g_nodeIp, g_nodePort, g_quottery_bet_id);
             break;
         case QUOTTERY_JOIN_BET:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bid_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
+            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
+            break;
+        case QUOTTERY_GET_BET_DETAIL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            quotteryPrintBetOptionDetail(g_nodeIp, g_nodePort, g_quottery_bet_id, g_quottery_option_id);
+            break;
+        case QUOTTERY_GET_ACTIVE_BET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            quotteryPrintActiveBet(g_nodeIp, g_nodePort);
+            break;
+        case QUOTTERY_GET_ACTIVE_BET_BY_CREATOR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_quottery_creator_id);
+            quotteryPrintActiveBetByCreator(g_nodeIp, g_nodePort, g_quottery_creator_id);
+            break;
+        case QUOTTERY_GET_BET_FEE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            quotteryPrintBetFees(g_nodeIp, g_nodePort);
             break;
 		default:
-			printf("Unexpected command! here\n");
+			printf("Unexpected command!\n");
 			break;
 	}
     return 0;

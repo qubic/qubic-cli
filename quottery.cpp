@@ -12,6 +12,19 @@
 #include "logger.h"
 #include "walletUtils.h"
 
+constexpr int QUOTTERY_CONTRACT_ID = 2;
+enum quotteryViewId{
+    fee = 1,
+    betInfo = 2,
+    betDetail = 3,
+    activeBet = 4,
+    activeBetByCreator = 5
+};
+enum quotteryFuncId{
+    issue = 1,
+    join = 2,
+};
+
 
 void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output& result){
     auto qc = new QubicConnection(nodeIp, nodePort);
@@ -23,8 +36,8 @@ void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
     packet.rcf.inputSize = 0;
-    packet.rcf.inputType = 1;
-    packet.rcf.contractIndex = 2;
+    packet.rcf.inputType = quotteryViewId::fee;
+    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -47,10 +60,11 @@ void quotteryPrintBetFees(const char* nodeIp, const int nodePort){
     QuotteryFees_output result;
     memset(&result, 1, sizeof(QuotteryFees_output));
     quotteryGetFees(nodeIp, nodePort, result);
-    LOG("feePerSlotPerDay: %llu\n", result.feePerSlotPerDay);
-    LOG("gameOperatorFee: %llu\n", result.gameOperatorFee);
-    LOG("feePerSlotPerDay: %llu\n", result.shareholderFee);
-    LOG("feePerSlotPerDay: %llu\n", result.minBetSlotAmount);
+    LOG("Fee per slot per day: %llu qu\n", result.feePerSlotPerDay);
+    LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
+    LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
+    LOG("Shareholders fee: %.2f%%\n", result.shareholderFee/100.0);
+
 }
 
 static int accumulatedDay(int month)
@@ -104,7 +118,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     const bool isLowerCase = false;
     getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = 2;
+    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
     ((uint64_t*)destPublicKey)[1] = 0;
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
@@ -166,11 +180,11 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         packet.ibi.endDate[3] = 0;
     }
     {
-        promptStdin("Enter amount per bet slot", buff, 16);
+        promptStdin("Enter amount of qus per bet slot", buff, 16);
         packet.ibi.amountPerSlot = std::atoi(buff);
     }
     {
-        promptStdin("Enter max bet slot per option", buff, 16);
+        promptStdin("Enter max number of bet slot per option", buff, 16);
         packet.ibi.maxBetSlotPerOption = std::atoi(buff);
     }
 
@@ -192,7 +206,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
 
     uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = 1;
+    packet.transaction.inputType = quotteryFuncId::issue;
     packet.transaction.inputSize = sizeof(QuotteryissueBet_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryissueBet_input),
@@ -230,7 +244,7 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     const bool isLowerCase = false;
     getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = 2;
+    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
     ((uint64_t*)destPublicKey)[1] = 0;
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
@@ -250,15 +264,12 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     packet.transaction.amount = amountPerSlot*numberOfBetSlot;
     uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = 2;
+    packet.transaction.inputType = quotteryFuncId::join;
     packet.transaction.inputSize = sizeof(QuotteryjoinBet_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryjoinBet_input),
                    digest,
                    32);
-    printf("size of joinBet_input %d\n", sizeof(QuotteryjoinBet_input));
-    printf("size of transaction %d\n", sizeof(Transaction));
-    printf("size of packet %d\n", sizeof(packet));
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
     packet.header.setSize(sizeof(packet));
@@ -276,29 +287,6 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
-
-struct getBetInfo_input {
-    uint32_t betId;
-};
-
-struct getBetInfo_output {
-    // meta data info
-    uint32_t betId;
-    uint32_t nOption;      // options number
-    uint8_t creator[32];
-    uint8_t betDesc[32];      // 32 bytes
-    uint8_t optionDesc[8*32];  // 8x(32)=256bytes
-    uint8_t oracleProviderId[8*32]; // 256x8=2048bytes
-    uint32_t oracleFees[8];   // 4x8 = 32 bytes
-
-    uint8_t openDate[4];     // creation date, start to receive bet
-    uint8_t closeDate[4];    // stop receiving bet date
-    uint8_t endDate[4];       // result date
-    // Amounts and numbers
-    uint64_t minBetAmount;
-    uint32_t maxBetSlotPerOption;
-    uint32_t currentBetState[8]; // how many bet slots have been filled on each option
-};
 void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBetInfo_output& result){
     auto qc = new QubicConnection(nodeIp, nodePort);
     struct {
@@ -309,8 +297,8 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 4;
-    packet.rcf.inputType = 2;
+    packet.rcf.inputSize = sizeof(getBetInfo_input);
+    packet.rcf.inputType = quotteryViewId::betInfo;
     packet.rcf.contractIndex = 2;
     packet.input.betId = betId;
     qc->sendData((uint8_t *) &packet, packet.header.size());
@@ -330,19 +318,29 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     }
     delete qc;
 }
-static bool isZeroPubkey(uint8_t* pubkey){
-    for (int i = 0; i < 32; i++){
-        if (pubkey[i] != 0){
-            return false;
-        }
+static bool isArrayZero(uint8_t* ptr, int len){
+    for (int i = 0; i < len; i++){
+        if (ptr[i] != 0) return false;
     }
     return true;
+}
+static bool isZeroPubkey(uint8_t* pubkey){
+    return isArrayZero(pubkey, 32);
 }
 void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
 
     getBetInfo_output result;
-    memset(&result, 1, sizeof(getBetInfo_output));
+    memset(&result, 0, sizeof(getBetInfo_output));
+    LOG("Getting betId #%d info...\n", betId);
     quotteryGetBetInfo(nodeIp, nodePort, betId, result);
+    if (isArrayZero((uint8_t*)&result, sizeof(getBetInfo_output))){
+        LOG("Failed to get\n");
+        return;
+    }
+    if (result.betId == -1){
+        LOG("BetId #%d doesn't exist\n", betId);
+        return;
+    }
     char buf[128] = {0};
     LOG("Bet Id: %u\n", result.betId); //    uint32_t betId;
     LOG("Number of options: %u\n", result.nOption); //    uint8_t nOption;      // options number
@@ -368,18 +366,158 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
     {
         LOG("Minimum bet amount: %llu\n", result.minBetAmount);
         LOG("Maximum slot per option: %llu\n", result.maxBetSlotPerOption);
-        LOG("OpenDate: %u-%u-%u 00:00:00\n", result.openDate[0], result.openDate[1], result.openDate[2]);
-        LOG("CloseDate: %u-%u-%u 23:59:59\n", result.closeDate[0], result.closeDate[1], result.closeDate[2]);
-        LOG("EndDate: %u-%u-%u 23:59:59\n", result.endDate[0], result.endDate[1], result.endDate[2]);
+        LOG("OpenDate: %02u-%02u-%02u 00:00:00\n", result.openDate[0], result.openDate[1], result.openDate[2]);
+        LOG("CloseDate: %02u-%02u-%02u 23:59:59\n", result.closeDate[0], result.closeDate[1], result.closeDate[2]);
+        LOG("EndDate: %02u-%02u-%02u 23:59:59\n", result.endDate[0], result.endDate[1], result.endDate[2]);
     }
     LOG("Oracle IDs\n");
     for (int i = 0; i < 8; i++){
         if (!isZeroPubkey(result.oracleProviderId+i*32)){
             memset(buf, 0 , 128);
-            byteToHex(result.oracleProviderId+i*32, buf, 32);
+            getIdentityFromPublicKey(result.oracleProviderId+i*32, buf, false);
             uint32_t fee_u32 = result.oracleFees[i];
             double fee = (fee_u32)/100.0;
             LOG("%s\tFee: %.2f%%\n", buf, fee);
         }
     }
+}
+
+//  getBetOptionDetail 3
+void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result){
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        getBetOptionDetail_input bo_inp;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(getBetOptionDetail_input);
+    packet.rcf.inputType = quotteryViewId::betDetail;
+    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
+    packet.bo_inp.betId = betId;
+    packet.bo_inp.betOption = betOption;
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RespondContractFunction::type()){
+            auto oup = (getBetOptionDetail_output*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *oup;
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+}
+// showing which ID bet for an option
+void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption){
+    getBetOptionDetail_output result;
+    memset(&result, 0, sizeof(getBetOptionDetail_output));
+    quotteryGetBetOptionDetail(nodeIp, nodePort, betId, betOption, result);
+    if (isArrayZero((uint8_t*)&result, sizeof(getBetOptionDetail_output))){
+        LOG("Failed to get\n");
+        return;
+    }
+    LOG("List of IDs bet option #%d on betID %d\n", betOption, betId);
+    char buf[128] = {0};
+    for (int i = 0; i < 1024; i++){
+        if (!isZeroPubkey(result.bettor + i*32)){
+            memset(buf, 0, 128);
+            getIdentityFromPublicKey(result.bettor + i * 32, buf, false);
+            LOG("%s\n", buf);
+        }
+    }
+}
+//getActiveBet 4
+void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_output& result){
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = 0;
+    packet.rcf.inputType = quotteryViewId::activeBet;
+    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RespondContractFunction::type()){
+            auto oup = (getActiveBet_output*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *oup;
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+}
+// showing which ID bet for an option
+void quotteryPrintActiveBet(const char* nodeIp, const int nodePort){
+    getActiveBet_output result;
+    memset(&result, 0, sizeof(getActiveBet_output));
+    quotteryGetActiveBet(nodeIp, nodePort, result);
+    LOG("List of active bet (%d):\n", result.count);
+    for (int i = 0; i < result.count; i++){
+        LOG("%u, ", result.betId[i]);
+    }
+    LOG("\n");
+}
+//getBetByCreator 5
+//getActiveBet 4
+void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getActiveBetByCreator_output& result, const uint8_t* creator){
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        getActiveBetByCreator_input abi;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(getActiveBetByCreator_input);
+    packet.rcf.inputType = quotteryViewId::activeBetByCreator;
+    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
+    memcpy(packet.abi.creator, creator, 32);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RespondContractFunction::type()){
+            auto oup = (getActiveBetByCreator_output*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *oup;
+        }
+        ptr+= header->size();
+    }
+    delete qc;
+}
+
+void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, const char* identity){
+    uint8_t creatorPubkey[32] = {0};
+    getPublicKeyFromIdentity(identity, creatorPubkey);
+    getActiveBetByCreator_output result;
+    memset(&result, 0, sizeof(getActiveBet_output));
+    quotteryGetActiveBetByCreator(nodeIp, nodePort, result, creatorPubkey);
+    LOG("List of active bet (%d):\n", result.count);
+    for (int i = 0; i < result.count; i++){
+        LOG("%u, ", result.betId[i]);
+    }
+    LOG("\n");
 }
