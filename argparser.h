@@ -202,6 +202,15 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+        if(strcmp(argv[i], "-getquorum") == 0)
+        {
+            g_cmd = GET_QUORUMTICK;
+            g_requestedTickNumber = charToNumber(argv[i+1]);
+            g_requestedFileName = argv[i + 2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if(strcmp(argv[i], "-getcomputorlist") == 0)
         {
             g_cmd = GET_COMP_LIST;
