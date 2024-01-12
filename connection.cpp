@@ -71,6 +71,9 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 	memcpy(mNodeIp, nodeIp, strlen(nodeIp));
 	mNodePort = nodePort;
 	mSocket = connect(nodeIp, nodePort);
+	if ( mSocket < 0 )
+		error = 1;
+	else error = 0;
 }
 QubicConnection::~QubicConnection()
 {
