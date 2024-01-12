@@ -20,6 +20,8 @@ static CurrentTickInfo getTickInfoFromNode(const char* nodeIp, int nodePort)
 	struct {
         RequestResponseHeader header;
     } packet;
+    if ( qc->mSocket < 0 )
+	return(result);
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
@@ -722,4 +724,147 @@ void dumpUniverseToCSV(const char* input, const char* output){
     }
     free(asset);
     fclose(f);
+}
+
+static int32_t getQuorumTick(const char* nodeIp, const int nodePort, const uint32_t tick, struct QuorumData &result)
+{
+    memset(&result, 0, sizeof(struct QuorumData));
+    static struct
+    {
+        RequestResponseHeader header;
+        RequestQuorumTick requestQuorumTick;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_QUORUMTICK);
+    packet.requestQuorumTick.requestedQuorumTick.tick = tick;
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int n=0,recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == BROADCAST_TICK)
+        {
+            memcpy(&result.Quorum[n],(Tick *)(data + ptr + sizeof(RequestResponseHeader)),sizeof(Tick));
+            //fprintf(stderr,"%d %d tick.%d\n",n,result.Quorum[n].computorIndex,result.Quorum[n].tick);
+            n++;
+        }
+        ptr += header->size();
+    }
+    //fprintf(stderr,"got %ld quorum bytes votes.%d\n",buffer.size(),n);
+    delete qc;
+    return(n);
+}
+
+int32_t cmptick(Tick *a,Tick *b)
+{
+    if ( a->epoch != b->epoch )
+        return(-1);
+    if ( a->tick != b->tick )
+        return(-2);
+    if ( a->millisecond != b->millisecond )
+        return(-3);
+    if ( a->second != b->second )
+        return(-4);
+    if ( a->minute != b->minute )
+        return(-5);
+    if ( a->hour != b->hour )
+        return(-6);
+    if ( a->day != b->day )
+        return(-7);
+    if ( a->month != b->month )
+        return(-8);
+    if ( a->year != b->year )
+        return(-9);
+    if ( a->prevResourceTestingDigest != b->prevResourceTestingDigest )
+        return(-10);
+    //if ( a->saltedResourceTestingDigest != b->saltedResourceTestingDigest )
+    //    return(-11);
+    if ( memcmp(a->prevSpectrumDigest,b->prevSpectrumDigest,sizeof(a->prevSpectrumDigest)) != 0 )
+        return(-12);
+    if ( memcmp(a->prevUniverseDigest,b->prevUniverseDigest,sizeof(a->prevUniverseDigest)) != 0 )
+        return(-13);
+    if ( memcmp(a->prevComputerDigest,b->prevComputerDigest,sizeof(a->prevComputerDigest)) != 0 )
+        return(-14);
+    //if ( memcmp(a->saltedSpectrumDigest,b->saltedSpectrumDigest,sizeof(a->saltedSpectrumDigest)) != 0 )
+    //    return(-15);
+    //if ( memcmp(a->saltedUniverseDigest,b->saltedUniverseDigest,sizeof(a->saltedUniverseDigest)) != 0 )
+    //    return(-16);
+    //if ( memcmp(a->saltedComputerDigest,b->saltedComputerDigest,sizeof(a->saltedComputerDigest)) != 0 )
+    //    return(-17);
+    if ( memcmp(a->transactionDigest,b->transactionDigest,sizeof(a->transactionDigest)) != 0 )
+        return(-18);
+    //if ( memcmp(a->expectedNextTickTransactionDigest,b->expectedNextTickTransactionDigest,sizeof(a->expectedNextTickTransactionDigest)) != 0 )
+    //    return(-19);
+    return(0);
+}
+
+int32_t getQuorumTickToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
+{
+    struct quorumdiff qdiffs[NUMBER_OF_COMPUTORS],*qp;
+    FILE *fp;
+    uint8_t bits[(NUMBER_OF_COMPUTORS+7)/8];
+    int32_t i,n,err,computor;
+    uint32_t currenTick = getTickNumberFromNode(nodeIp, nodePort);
+    if (currenTick <= requestedTick)
+    {
+        //LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
+        return(-1);
+    }
+    struct QuorumData qd;
+    n = getQuorumTick(nodeIp, nodePort, requestedTick, qd);
+    if ( n < 451 )
+    {
+        LOG("n.%d insufficient for quorum tick.%d\n",n,requestedTick);
+        return(-1);
+    }
+    memset(qdiffs,0,sizeof(qdiffs));
+    memset(bits,0,sizeof(bits));
+    for (i=1; i<n; i++)
+    {
+        if ( (err= cmptick(&qd.Quorum[0],&qd.Quorum[i])) != 0 )
+        {
+            printf("i.%d of %d. cmperr.%d\n",i,n,err);
+            return(-1);
+        }
+        else
+        {
+            computor = qd.Quorum[i].computorIndex;
+            qp = &qdiffs[computor];
+            //printf("%d ",computor);
+            bits[computor >> 3] |= (1 << (computor & 7));
+            qp->saltedResourceTestingDigest = qd.Quorum[i].saltedResourceTestingDigest;
+            memcpy(qp->saltedSpectrumDigest,qd.Quorum[i].saltedSpectrumDigest,sizeof(qp->saltedSpectrumDigest));
+            memcpy(qp->saltedUniverseDigest,qd.Quorum[i].saltedUniverseDigest,sizeof(qp->saltedUniverseDigest));
+            memcpy(qp->saltedComputerDigest,qd.Quorum[i].saltedComputerDigest,sizeof(qp->saltedComputerDigest));
+            memcpy(qp->expectedNextTickTransactionDigest,qd.Quorum[i].expectedNextTickTransactionDigest,sizeof(qp->expectedNextTickTransactionDigest));
+            memcpy(qp->signature,qd.Quorum[i].signature,sizeof(qp->signature));
+        }
+    }
+    //printf("computors n.%d first one.%d tick.%d\n",n,qd.Quorum[0].computorIndex,requestedTick);
+    if ( (fp= fopen(fileName,"wb")) != 0 )
+    {
+        fwrite(&qd.Quorum[0],1,sizeof(qd.Quorum[i]),fp);
+        fwrite(bits,1,sizeof(bits),fp);
+        for (i=0; i<NUMBER_OF_COMPUTORS; i++)
+        {
+            if ( (bits[i >> 3] & (1 << (i & 7))) != 0 )
+                fwrite(&qdiffs[i],1,sizeof(qdiffs[i]),fp);
+        }
+        fclose(fp);
+        char fname2[512];
+        sprintf(fname2,"%s.raw",fileName);
+        if ( (fp=fopen(fname2,"wb")) != 0 )
+        {
+            fwrite(&qd.Quorum[0],n,sizeof(qd.Quorum[0]),fp);
+            fclose(fp);
+        }
+    } else printf("error opening (%s)\n",fileName);
+    //printf("saved computors n.%d\n",n);
+    return(1);
 }
