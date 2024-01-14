@@ -23,6 +23,8 @@ enum quotteryViewId{
 enum quotteryFuncId{
     issue = 1,
     join = 2,
+    cancelBet = 3,
+    publishResult = 4
 };
 
 
@@ -64,7 +66,9 @@ void quotteryPrintBetFees(const char* nodeIp, const int nodePort){
     LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
     LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
     LOG("Shareholders fee: %.2f%%\n", result.shareholderFee/100.0);
-
+    char buf[64] = {0};
+    getIdentityFromPublicKey(result.gameOperatorPubkey, buf, false);
+    LOG("Game operator ID: %s\n", buf);
 }
 
 static int accumulatedDay(int month)
@@ -520,4 +524,114 @@ void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, con
         LOG("%u, ", result.betId[i]);
     }
     LOG("\n");
+}
+
+void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t scheduledTickOffset){
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char publicIdentity[128] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        cancelBet_input cbi;
+        unsigned char signature[64];
+    } packet;
+    packet.cbi.betId = betId;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 0;
+    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = quotteryFuncId::cancelBet;
+    packet.transaction.inputSize = sizeof(cancelBet_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(cancelBet_input),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(cancelBet_input) + SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("Cancel bet tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t winOption, const uint32_t scheduledTickOffset){
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char publicIdentity[128] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        publishResult_input pri;
+        unsigned char signature[64];
+    } packet;
+    packet.pri.betId = betId;
+    packet.pri.winOption = winOption;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 0;
+    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = quotteryFuncId::publishResult;
+    packet.transaction.inputSize = sizeof(publishResult_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(publishResult_input),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(publishResult_input) + SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("Publishing result tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
 }

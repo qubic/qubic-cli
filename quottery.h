@@ -23,6 +23,7 @@ struct QuotteryFees_output
     uint64_t gameOperatorFee; // Amount of qus
     uint64_t shareholderFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
     uint64_t minBetSlotAmount; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
+    uint8_t gameOperatorPubkey[32];
 };
 
 
@@ -69,6 +70,17 @@ struct getActiveBetByCreator_output{
     uint32_t count;
     uint32_t betId[1024];
 };
+
+struct publishResult_input{
+    uint32_t betId;
+    uint32_t winOption;
+};
+#pragma pack(1)
+struct cancelBet_input{
+    uint32_t betId;
+};
+#pragma pop()
+
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset);
 void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId);
 void quotteryPrintBetFees(const char* nodeIp, const int nodePort);
@@ -76,3 +88,5 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
 void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption);
 void quotteryPrintActiveBet(const char* nodeIp, const int nodePort);
 void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, const char* identity);
+void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t scheduledTickOffset);
+void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t winOption, const uint32_t scheduledTickOffset);

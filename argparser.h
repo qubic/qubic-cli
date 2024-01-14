@@ -435,6 +435,23 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+        if(strcmp(argv[i], "-quotterypublishresult") == 0)
+        {
+            g_cmd = QUOTTERY_PUBLISH_RESULT;
+            g_quottery_bet_id = charToNumber(argv[i + 1]);
+            g_quottery_option_id = charToNumber(argv[i + 2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-quotterycancelbet") == 0)
+        {
+            g_cmd = QUOTTERY_CANCEL_BET;
+            g_quottery_bet_id = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         i++;
     }

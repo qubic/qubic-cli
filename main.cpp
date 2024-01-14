@@ -163,6 +163,7 @@ int main(int argc, char *argv[])
             break;
         case QUOTTERY_JOIN_BET:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
             break;
         case QUOTTERY_GET_BET_DETAIL:
@@ -181,6 +182,16 @@ int main(int argc, char *argv[])
         case QUOTTERY_GET_BET_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             quotteryPrintBetFees(g_nodeIp, g_nodePort);
+            break;
+        case QUOTTERY_PUBLISH_RESULT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            quotteryPublishResult(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_quottery_option_id, g_offsetScheduledTick);
+            break;
+        case QUOTTERY_CANCEL_BET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            quotteryCancelBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_offsetScheduledTick);
             break;
 		default:
 			printf("Unexpected command!\n");
