@@ -125,6 +125,7 @@ typedef struct
     unsigned int tick;
     unsigned short numberOfAlignedVotes;
     unsigned short numberOfMisalignedVotes;
+    unsigned int initialTick;
 } CurrentTickInfo;
 
 typedef struct

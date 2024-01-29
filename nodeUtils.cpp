@@ -53,7 +53,8 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
 		LOG("Tick: %u\n", curTickInfo.tick);
 		LOG("Epoch: %u\n", curTickInfo.epoch);
 		LOG("Number Of Aligned Votes: %u\n", curTickInfo.numberOfAlignedVotes);
-		LOG("Number Of Misaligned Votes: %u\n", curTickInfo.numberOfMisalignedVotes);	
+		LOG("Number Of Misaligned Votes: %u\n", curTickInfo.numberOfMisalignedVotes);
+        LOG("Initial tick: %u\n", curTickInfo.initialTick);
 	} else {
 		LOG("Error while getting tick info from %s:%d\n", nodeIp, nodePort);
 	}
