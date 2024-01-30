@@ -419,8 +419,111 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     memcpy(packet.signature, signature, 64);
     auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    auto response = qc->receivePacketAs<SpecialCommand>();
     delete qc;
-    LOG("Send command %d to node %s\n", command, nodeIp);
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
+        LOG("Successfully send special command\n");
+    } else{
+        LOG("Failed to send special command\n");
+    }
+}
+
+void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
+                   int command, std::string mode0, std::string mode1)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandToggleMainModeResquestAndResponse cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = time(NULL);
+    uint64_t commandByte = (uint64_t)(command) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    uint8_t flag = 0;
+    if (mode0 == "MAIN") flag |= 1;
+    if (mode1 == "MAIN") flag |= 2;
+    packet.cmd.mainModeFlag = flag;
+    memset(packet.cmd.padding, 0, 7);
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    auto response = qc->receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
+    delete qc;
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
+        if (response.mainModeFlag == packet.cmd.mainModeFlag){
+            LOG("Successfully set MAINAUX flag\n");
+        } else {
+            LOG("The packet is successfully sent but failed set MAINAUX flag\n");
+        }
+    } else{
+        LOG("Failed set MAINAUX flag\n");
+    }
+}
+
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
+                          int command, int epoch, int threshold)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandSetSolutionThresholdResquestAndResponse cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = time(NULL);
+    uint64_t commandByte = (uint64_t)(command) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    packet.cmd.epoch = epoch;
+    packet.cmd.threshold = threshold;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = new QubicConnection(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    auto response = qc->receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+    delete qc;
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
+        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
+            LOG("Successfully set solution threshold\n");
+        } else {
+            LOG("The packet is successfully sent but failed set solution threshold\n");
+        }
+    } else{
+        LOG("Failed set solution threshold\n");
+    }
 }
 
 BroadcastComputors readComputorListFromFile(const char* fileName)

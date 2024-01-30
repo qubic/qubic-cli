@@ -66,6 +66,17 @@ void print_help(){
     printf("\t\tShow current tick information of a node\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
     printf("\t\tPerform a special command to node, valid private key and node ip/port are required.\t\n");
+    printf("\t-tooglemainaux <MODE_0> <Mode_1> \n");
+    printf("\t\tRemotely toogle Main/Aux mode on node,valid private key and node ip/port are required.\t\n");
+    printf("\t\t<MODE_0> and <MODE_1> value are: MAIN or AUX\t\n");
+    printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> \n");
+    printf("\t\tRemotely set solution threshold for future epoch,valid private key and node ip/port are required.\t\n");
+    printf("\t-refreshpeerlist\n");
+    printf("\t\t(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid private key and node ip/port are required.\t\n");
+    printf("\t-forcenexttick\n");
+    printf("\t\t(equivalent to F5) Remotely force next tick on node to be empty, valid private key and node ip/port are required.\t\n");
+    printf("\t-reissuevote\n");
+    printf("\t\t(equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.\t\n");
     printf("\t-sendrawpacket <DATA_IN_HEX> <SIZE>\n");
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
     printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
@@ -376,6 +387,50 @@ void parseArgument(int argc, char** argv){
             g_cmd = SEND_SPECIAL_COMMAND;
             g_requestedSpecialCommand = int(charToNumber(argv[i+1]));
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-tooglemainaux") == 0)
+        {
+            g_cmd = TOOGLE_MAIN_AUX;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST;
+            g_toogle_main_aux_0 = argv[i+1];
+            g_toogle_main_aux_1 = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-setsolutionthreshold") == 0)
+        {
+            g_cmd = SET_SOLUTION_THRESHOLD;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_SET_SOLUTION_THRESHOLD_REQUEST;
+            g_set_solution_threshold_epoch = charToNumber(argv[i+1]);
+            g_set_solution_threshold_value = charToNumber(argv[i+2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-refreshpeerlist") == 0)
+        {
+            g_cmd = REFRESH_PEER_LIST;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_REFRESH_PEER_LIST;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-forcenexttick") == 0)
+        {
+            g_cmd = FORCE_NEXT_TICK;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_FORCE_NEXT_TICK;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-reissuevote") == 0)
+        {
+            g_cmd = REISSUE_VOTE;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_REISSUE_VOTE;
+            i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }

@@ -57,12 +57,6 @@ int main(int argc, char *argv[])
             sanityCheckTxHash(g_requestedTxId);
             checkTxOnTick(g_nodeIp, g_nodePort, g_requestedTxId, g_requestedTickNumber);
             break;
-		case SEND_SPECIAL_COMMAND:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            sanityCheckSpecialCommand(g_requestedSpecialCommand);
-            sendSpecialCommand(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
-			break;
 		case SEND_RAW_PACKET:
 			sanityCheckNode(g_nodeIp, g_nodePort);
 			sanityCheckRawPacketSize(g_rawPacketSize);
@@ -192,6 +186,30 @@ int main(int argc, char *argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             quotteryCancelBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_offsetScheduledTick);
+            break;
+        case TOOGLE_MAIN_AUX:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckMainAuxStatus(g_toogle_main_aux_0);
+            sanityCheckMainAuxStatus(g_toogle_main_aux_1);
+            toogleMainAux(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand, g_toogle_main_aux_0, g_toogle_main_aux_1);
+            break;
+        case SET_SOLUTION_THRESHOLD:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            checkValidEpoch(g_set_solution_threshold_epoch);
+            checkValidSolutionThreshold(g_set_solution_threshold_value);
+            setSolutionThreshold(g_nodeIp, g_nodePort, g_seed,
+                                 g_requestedSpecialCommand, g_set_solution_threshold_epoch, g_set_solution_threshold_value);
+            break;
+        case SEND_SPECIAL_COMMAND:
+        case REFRESH_PEER_LIST:
+        case FORCE_NEXT_TICK:
+        case REISSUE_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckSpecialCommand(g_requestedSpecialCommand);
+            sendSpecialCommand(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
             break;
 		default:
 			printf("Unexpected command!\n");

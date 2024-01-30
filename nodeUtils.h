@@ -12,3 +12,9 @@ void getNodeIpList(const char* nodeIp, const int nodePort);
 void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode);
 void dumpSpectrumToCSV(const char* input, const char* output);
 void dumpUniverseToCSV(const char* input, const char* output);
+
+// remote tools:
+void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
+                   int command, std::string mode0, std::string mode1);
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
+                          int command, int epoch, int threshold);

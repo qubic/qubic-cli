@@ -181,3 +181,43 @@ static void sanityCheckUnitofMeasurement(const char* str)
         exit(1);
     }
 }
+
+static void sanityCheckMainAuxStatus(const char* str)
+{
+    if (str == nullptr){
+        LOG("Invalid MAIN/AUX string\n");
+        exit(1);
+    }
+    int len = strlen(str);
+    if (len == 4){
+        if (memcmp(str, "MAIN", 4) != 0){
+            LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
+            exit(1);
+        }
+    } else if (len == 3){
+        if (memcmp(str, "AUX", 3) != 0){
+            LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
+            exit(1);
+        }
+    } else {
+        LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
+        exit(1);
+    }
+}
+
+static void checkValidEpoch(int epoch)
+{
+    if (epoch >= 0 &&  epoch < 1000){
+        return;
+    }
+    LOG("Invalid epoch number\n");
+    exit(1);
+}
+static void checkValidSolutionThreshold(int thres)
+{
+    if (thres >= 0){
+        return;
+    }
+    LOG("Invalid solution threshold\n");
+    exit(1);
+}

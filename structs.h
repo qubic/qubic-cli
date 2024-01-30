@@ -38,7 +38,12 @@ enum COMMAND
     QUOTTERY_GET_BET_FEE=31,
     QUOTTERY_PUBLISH_RESULT=32,
     QUOTTERY_CANCEL_BET=33,
-    TOTAL_COMMAND = 34
+    TOOGLE_MAIN_AUX = 34,
+    SET_SOLUTION_THRESHOLD=35,
+    REFRESH_PEER_LIST=36,
+    FORCE_NEXT_TICK=37,
+    REISSUE_VOTE=38,
+    TOTAL_COMMAND = 39
 };
 
 struct RequestResponseHeader {
@@ -195,6 +200,10 @@ typedef struct
 struct SpecialCommand
 {
     unsigned long long everIncreasingNonceAndCommandType;
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
 };
 
 #define EMPTY 0
@@ -380,3 +389,24 @@ typedef struct
     uint8_t publicKeys[NUMBER_OF_COMPUTORS][32];
     long long prices[NUMBER_OF_COMPUTORS];
 } RespondContractIPO;
+
+struct SpecialCommandToggleMainModeResquestAndResponse
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned char mainModeFlag;
+    unsigned char padding[7];
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+struct SpecialCommandSetSolutionThresholdResquestAndResponse
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned int epoch;
+    int threshold;
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};

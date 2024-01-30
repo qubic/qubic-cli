@@ -11,6 +11,7 @@ public:
 	int receiveData(uint8_t* buffer, int sz);
 	int sendData(uint8_t* buffer, int sz);
     void receiveDataAll(std::vector<uint8_t>& buffer);
+    template <typename T> T receivePacketAs();
 private:
 	char mNodeIp[32];
 	int mNodePort;

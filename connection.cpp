@@ -1,4 +1,5 @@
-#ifdef _MSC_VER 
+#include "structs.h"
+#ifdef _MSC_VER
 #pragma comment(lib, "Ws2_32.lib")
 #include <Winsock2.h>
 #include <Ws2tcpip.h>
@@ -94,6 +95,36 @@ void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
     }
 }
 
+template <typename T>
+T QubicConnection::receivePacketAs()
+{
+    std::vector<uint8_t> receivedData;
+    receivedData.resize(0);
+    uint8_t tmp[1024];
+    int recvByte = receiveData(tmp, 1024);
+    while (recvByte > 0)
+    {
+        receivedData.resize(recvByte + receivedData.size());
+        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
+        recvByte = receiveData(tmp, 1024);
+    }
+
+    recvByte = receivedData.size();
+    uint8_t* data = receivedData.data();
+    int ptr = 0;
+    T result;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == T::type()){
+            auto curTickData = (T*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *curTickData;
+        }
+        ptr+= header->size();
+    }
+    return result;
+}
+
 int QubicConnection::sendData(uint8_t* buffer, int sz)
 {
     int size = sz;
@@ -107,3 +138,7 @@ int QubicConnection::sendData(uint8_t* buffer, int sz)
     }
 	return sz - size;
 }
+
+template SpecialCommand QubicConnection::receivePacketAs<SpecialCommand>();
+template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
+template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
