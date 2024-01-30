@@ -26,42 +26,30 @@ void print_help(){
     printf("\t-scheduletick <TICK_OFFSET>\n");
     printf("\t\tOffset number of scheduled tick that will perform a transaction (default: 20)\n");
     printf("Command:\n");
+    printf("[WALLET COMMAND]\n");
     printf("\t-showkeys\n");
     printf("\t\tGenerating identity, pubkey key from private key. Private key must be passed either from params or configuration file.\n");
-    printf("\t-getcurrenttick\n");
-    printf("\t\tShow current tick information of a node\n");
+    printf("\t-getbalance <IDENTITY>\n");
+    printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
+    printf("\t-getasset <IDENTITY>\n");
+    printf("\t\tPrint a list of assets of an identity\n");
+    printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
+    printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.\n");
+    printf("\n[BLOCKCHAIN/PROTOCOL COMMAND]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
     printf("\t-getcomputorlist <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
     printf("\t-getnodeiplist\n");
     printf("\t\tPrint a list of node ip from a seed node ip. Valid node ip/port are required.\n");
-    printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
-    printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
     printf("\t-checktxontick <TICK_NUMBER> <TX_ID>\n");
     printf("\t\tCheck if a transaction is included in a tick. valid node ip/port are required.\n");
     printf("\t-checktxonfile <TX_ID> <TICK_DATA_FILE>\n");
     printf("\t\tCheck if a transaction is included in a tick (tick data from a file). valid node ip/port are required.\n");
     printf("\t-readtickdata <FILE_NAME> <COMPUTOR_LIST>\n");
     printf("\t\tRead tick data from a file, print the output on screen, COMPUTOR_LIST is required if you need to verify block data\n");
-    printf("\t-getbalance <IDENTITY>\n");
-    printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
-    printf("\t-getownedasset <IDENTITY>\n");
-    printf("\t\tPrint OWNED asset of an identity\n");
-    printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
-    printf("\t\tPerform a normal transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.\n");
     printf("\t-sendcustomtransaction <TARGET_IDENTITY> <TX_TYPE> <AMOUNT> <EXTRA_BYTE_SIZE> <EXTRA_BYTE_IN_HEX>\n");
     printf("\t\tPerform a custom transaction (IPO, querying smart contract), valid private key and node ip/port are required.\n");
-    printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
-    printf("\t\tPerform a special command to node, valid private key and node ip/port are required.\t\n");
-    printf("\t-sendrawpacket <DATA_IN_HEX> <SIZE>\n");
-    printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
-    printf("\t-publishproposal \n");
-    printf("\t\t(on development)\n");
-    printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
-    printf("\t\tCreate an asset via Qx contract.\n");
-    printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
-    printf("\t\tTransfer an asset via Qx contract.\n");
     printf("\t-dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
     printf("\t\tDump spectrum file into csv.\n");
     printf("\t-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
@@ -70,6 +58,46 @@ void print_help(){
     printf("\t\tParticipating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getipostatus <CONTRACT_INDEX>\n");
     printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
+    printf("\t-publishproposal \n");
+    printf("\t\t(on development)\n");
+
+    printf("\n[NODE COMMAND]\n");
+    printf("\t-getcurrenttick\n");
+    printf("\t\tShow current tick information of a node\n");
+    printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
+    printf("\t\tPerform a special command to node, valid private key and node ip/port are required.\t\n");
+    printf("\t-sendrawpacket <DATA_IN_HEX> <SIZE>\n");
+    printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
+    printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
+    printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
+
+    printf("\n[QX COMMAND]\n");
+    printf("\t-qxgetfee\n");
+    printf("\t\tShow current Qx fee.\n");
+    printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
+    printf("\t\tCreate an asset via Qx contract.\n");
+    printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <POSSESSED_IDENTITY> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
+    printf("\t\tTransfer an asset via Qx contract.\n");
+
+    printf("\n[QTRY COMMAND]\n");
+    printf("\t-qtrygetfee\n");
+    printf("\t\tShow current qtry fee.\n");
+    printf("\t-qtryissuebet\n");
+    printf("\t\tIssue a bet (prompt mode)\n");
+    printf("\t-qtrygetactivebet\n");
+    printf("\t\tShow all active bet id.\n");
+    printf("\t-qtrygetactivebetbycreator <BET_CREATOR_ID>\n");
+    printf("\t\tShow all active bet id of an ID.\n");
+    printf("\t-qtrygetbetinfo <BET_ID>\n");
+    printf("\t\tGet meta information of a bet\n");
+    printf("\t-qtrygetbetdetail <BET_ID> <OPTION_ID>\n");
+    printf("\t\tGet a list of IDs that bet on <OPTION_ID> of the bet <BET_ID>\n");
+    printf("\t-qtryjoinbet <BET_ID> <NUMBER_OF_BET_SLOT> <AMOUNT_PER_SLOT> <PICKED_OPTION>\n");
+    printf("\t\tJoin a bet\n");
+    printf("\t-qtrypublishresult <BET_ID> <WIN_OPTION>\n");
+    printf("\t\t(Oracle providers only) publish a result for a bet\n");
+    printf("\t-qtrycancelbet <BET_ID>\n");
+    printf("\t\t(Game operator only) cancel a bet\n");
 }
 
 static long long charToNumber(char* a)
@@ -140,12 +168,15 @@ void parseArgument(int argc, char** argv){
     // basic config:
     // -conf , -seed, -nodeip, -nodeport, -scheduletick
     // command:
-    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getownedasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal
+    // -showkeys, -getcurrenttick, -gettickdata, -checktxontick, -checktxontickfile, -readtickdata, -getbalance, -getasset, -sendtoaddress, -sendcustomtransaction, -sendspecialcommand, -sendrawpacket, -publishproposal
     int i = 1;
     g_cmd = TOTAL_COMMAND;
     while (i < argc)
     {
-        if(strcmp(argv[i], "-help") == 0) {print_help(); exit(0);}
+        /**********************
+         ******BASIC CONFIG****
+         **********************/
+        if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-h") == 0) {print_help(); exit(0);}
         if(strcmp(argv[i], "-conf") == 0)
         {
             g_configFile = argv[i+1];
@@ -176,6 +207,11 @@ void parseArgument(int argc, char** argv){
             i+=2;
             continue;
         }
+
+        /**********************
+         ****WALLET COMMAND****
+         **********************/
+
         if(strcmp(argv[i], "-showkeys") == 0)
         {
             g_cmd = SHOW_KEYS;
@@ -183,13 +219,38 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getcurrenttick") == 0)
+
+        if(strcmp(argv[i], "-getbalance") == 0)
         {
-            g_cmd = GET_CURRENT_TICK;
-            i++;
+            g_cmd = GET_BALANCE;
+            g_requestedIdentity = argv[i+1];
+            i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
+
+        if(strcmp(argv[i], "-getasset") == 0)
+        {
+            g_cmd = GET_ASSET;
+            g_requestedIdentity = argv[i+1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-sendtoaddress") == 0)
+        {
+            g_cmd = SEND_COIN;
+            g_targetIdentity = argv[i+1];
+            g_TxAmount = charToNumber(argv[i+2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        /********************************************
+         *********BLOCKCHAIN/PROTOCOL COMMAND********
+         ********************************************/
         if(strcmp(argv[i], "-gettickdata") == 0)
         {
             g_cmd = GET_TICK_DATA;
@@ -241,42 +302,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getbalance") == 0)
-        {
-            g_cmd = GET_BALANCE;
-            g_requestedIdentity = argv[i+1];
-            i+=2;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-getlogfromnode") == 0)
-        {
-            g_cmd = GET_LOG_FROM_NODE;
-            g_get_log_passcode[0] = charToUnsignedNumber(argv[i+1]);
-            g_get_log_passcode[1] = charToUnsignedNumber(argv[i+2]);
-            g_get_log_passcode[2] = charToUnsignedNumber(argv[i+3]);
-            g_get_log_passcode[3] = charToUnsignedNumber(argv[i+4]);
-            i+=5;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-getownedasset") == 0)
-        {
-            g_cmd = GET_ASSET;
-            g_requestedIdentity = argv[i+1];
-            i+=2;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-sendtoaddress") == 0)
-        {
-            g_cmd = SEND_COIN;
-            g_targetIdentity = argv[i+1];
-            g_TxAmount = charToNumber(argv[i+2]);
-            i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
+
         if(strcmp(argv[i], "-sendcustomtransaction") == 0)
         {
             g_cmd = SEND_CUSTOM_TX;
@@ -286,6 +312,62 @@ void parseArgument(int argc, char** argv){
             g_txExtraDataSize = int(charToNumber(argv[i+4]));
             hexToByte(argv[i+5], g_txExtraData, g_txExtraDataSize);
             i+=6;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-dumpspectrumfile") == 0)
+        {
+            g_cmd = DUMP_SPECTRUM_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-dumpuniversefile") == 0)
+        {
+            g_cmd = DUMP_UNIVERSE_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-makeipobid") == 0)
+        {
+            g_cmd = MAKE_IPO_BID;
+            g_ipo_contract_index = charToNumber(argv[i + 1]);
+            g_make_ipo_bid_number_of_share = charToNumber(argv[i+2]);
+            g_make_ipo_bid_price_per_share = charToNumber(argv[i+3]);
+            i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-getipostatus") == 0)
+        {
+            g_cmd = GET_IPO_STATUS;
+            g_ipo_contract_index = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-publishproposal") == 0)
+        {
+            LOG("On development\n");
+            exit(0);
+        }
+
+        /**********************
+         *****NODE COMMAND*****
+         **********************/
+        if(strcmp(argv[i], "-getcurrenttick") == 0)
+        {
+            g_cmd = GET_CURRENT_TICK;
+            i++;
             CHECK_OVER_PARAMETERS
             break;
         }
@@ -306,11 +388,23 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-publishproposal") == 0)
+
+        if(strcmp(argv[i], "-getlogfromnode") == 0)
         {
-            LOG("On development\n");
-            exit(0);
+            g_cmd = GET_LOG_FROM_NODE;
+            g_get_log_passcode[0] = charToUnsignedNumber(argv[i+1]);
+            g_get_log_passcode[1] = charToUnsignedNumber(argv[i+2]);
+            g_get_log_passcode[2] = charToUnsignedNumber(argv[i+3]);
+            g_get_log_passcode[3] = charToUnsignedNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
         }
+
+        /**********************
+         ******QX COMMAND******
+         **********************/
+
         if(strcmp(argv[i], "-qxissueasset") == 0)
         {
             g_cmd = QX_ISSUE_ASSET;
@@ -334,25 +428,8 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-dumpspectrumfile") == 0)
-        {
-            g_cmd = DUMP_SPECTRUM_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
-            i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-dumpuniversefile") == 0)
-        {
-            g_cmd = DUMP_UNIVERSE_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
-            i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-printqxfee") == 0)
+
+        if(strcmp(argv[i], "-qxgetfee") == 0)
         {
             g_cmd = PRINT_QX_FEE;
             i+=1;
@@ -360,32 +437,18 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        if(strcmp(argv[i], "-makeipobid") == 0)
-        {
-            g_cmd = MAKE_IPO_BID;
-            g_ipo_contract_index = charToNumber(argv[i + 1]);
-            g_make_ipo_bid_number_of_share = charToNumber(argv[i+2]);
-            g_make_ipo_bid_price_per_share = charToNumber(argv[i+3]);
-            i+=4;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-getipostatus") == 0)
-        {
-            g_cmd = GET_IPO_STATUS;
-            g_ipo_contract_index = charToNumber(argv[i + 1]);
-            i+=2;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if(strcmp(argv[i], "-quotteryissuebet") == 0)
+        /**********************
+         ******QTRY COMMAND****
+         **********************/
+
+        if(strcmp(argv[i], "-qtryissuebet") == 0)
         {
             g_cmd = QUOTTERY_ISSUE_BET;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotteryjoinbet") == 0)
+        if(strcmp(argv[i], "-qtryjoinbet") == 0)
         {
             g_cmd = QUOTTERY_JOIN_BET;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
@@ -396,7 +459,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterygetbetinfo") == 0)
+        if(strcmp(argv[i], "-qtrygetbetinfo") == 0)
         {
             g_cmd = QUOTTERY_GET_BET_INFO;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
@@ -404,7 +467,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterygetbetdetail") == 0)
+        if(strcmp(argv[i], "-qtrygetbetdetail") == 0)
         {
             g_cmd = QUOTTERY_GET_BET_DETAIL;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
@@ -413,14 +476,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterygetactivebet") == 0)
+        if(strcmp(argv[i], "-qtrygetactivebet") == 0)
         {
             g_cmd = QUOTTERY_GET_ACTIVE_BET;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterygetactivebetbycreator") == 0)
+        if(strcmp(argv[i], "-qtrygetactivebetbycreator") == 0)
         {
             g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
             g_quottery_creator_id = argv[i+1];
@@ -428,14 +491,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterygetbetfee") == 0)
+        if(strcmp(argv[i], "-qtrygetfee") == 0)
         {
             g_cmd = QUOTTERY_GET_BET_FEE;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterypublishresult") == 0)
+        if(strcmp(argv[i], "-qtrypublishresult") == 0)
         {
             g_cmd = QUOTTERY_PUBLISH_RESULT;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
@@ -444,7 +507,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-quotterycancelbet") == 0)
+        if(strcmp(argv[i], "-qtrycancelbet") == 0)
         {
             g_cmd = QUOTTERY_CANCEL_BET;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
