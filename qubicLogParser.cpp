@@ -76,6 +76,37 @@ std::string parseLogToString_type1(uint8_t* ptr){
                        + std::to_string(unit[6]);
     return result;
 }
+std::string parseLogToString_qutil(uint8_t* ptr){
+    std::string res = "";
+    char buffer[64] = {0};
+    getIdentityFromPublicKey(ptr, buffer, false);
+    res = "from " + std::string(buffer) + " to ";
+    getIdentityFromPublicKey(ptr+32, buffer, false);
+    res += std::string(buffer) + " Amount ";
+    int64_t amount;
+    memcpy(&amount, ptr+64, 8);
+    res += std::to_string(amount) + ": ";
+    uint32_t logtype;
+    memcpy(&logtype, ptr+72, 4);
+    switch(logtype){
+        case 0:
+            res += "Success";
+            break;
+        case 1:
+            res += "Invalid amount number";
+            break;
+        case 2:
+            res += "insufficient fund";
+            break;
+        case 3:
+            res += "Triggered SendToManyV1";
+            break;
+        case 4:
+            res += "send fund via SendToManyV1";
+            break;
+    }
+    return res;
+}
 std::string parseLogToString_type2_type3(uint8_t* ptr){
     char sourceIdentity[61] = {0};
     char dstIdentity[61] = {0};
@@ -133,7 +164,7 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
         std::string humanLog = "null";
         switch(messageType){
             case QU_TRANSFER:
-                if (messageSize == QU_TRANSFER_LOG_SIZE){
+                if (messageSize == QU_TRANSFER_LOG_SIZE || messageSize == (QU_TRANSFER_LOG_SIZE+8)){ // with or without transfer ID
                     humanLog = parseLogToString_type0(logBuffer);
                 } else {
                     LOG("Malfunction buffer size for QU_TRANSFER log\n");
@@ -161,9 +192,13 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
                 }
                 break;
             // TODO: stay up-to-date with core node contract logger
+            case CONTRACT_INFORMATION_MESSAGE:
+                if ( ((uint32_t*)logBuffer)[0] == 4 ) { // QUtil
+                    humanLog = parseLogToString_qutil(logBuffer+8); // padding issue, +8 instead of +4
+                }
+                break;
             case CONTRACT_ERROR_MESSAGE:
             case CONTRACT_WARNING_MESSAGE:
-            case CONTRACT_INFORMATION_MESSAGE:
             case CONTRACT_DEBUG_MESSAGE:
             case 255:
                 break;

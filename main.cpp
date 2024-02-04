@@ -9,6 +9,7 @@
 #include "sanityCheck.h"
 #include "SCUtils.h"
 #include "quottery.h"
+#include "qutil.h"
 
 int main(int argc, char *argv[])
 {
@@ -210,6 +211,12 @@ int main(int argc, char *argv[])
             sanityCheckSeed(g_seed);
             sanityCheckSpecialCommand(g_requestedSpecialCommand);
             sendSpecialCommand(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
+            break;
+        case QUTIL_SEND_TO_MANY_V1:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityFileExist(g_qutil_sendtomanyv1_payout_list_file);
+            qutilSendToManyV1(g_nodeIp, g_nodePort, g_seed, g_qutil_sendtomanyv1_payout_list_file, g_offsetScheduledTick);
             break;
 		default:
 			printf("Unexpected command!\n");

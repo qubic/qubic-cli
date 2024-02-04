@@ -570,6 +570,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+        if(strcmp(argv[i], "-qutilsendtomanyv1") == 0)
+        {
+            g_cmd = QUTIL_SEND_TO_MANY_V1;
+            g_qutil_sendtomanyv1_payout_list_file = argv[i + 1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         i++;
     }

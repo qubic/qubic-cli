@@ -9,6 +9,7 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/qubicLogParser.cpp
 		  ${CMAKE_SOURCE_DIR}/SCUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
+		  ${CMAKE_SOURCE_DIR}/qutil.cpp
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES})
 ADD_LIBRARY(fourq-qubic fourq-qubic.cpp)

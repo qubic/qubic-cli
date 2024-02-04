@@ -43,7 +43,8 @@ enum COMMAND
     REFRESH_PEER_LIST=36,
     FORCE_NEXT_TICK=37,
     REISSUE_VOTE=38,
-    TOTAL_COMMAND = 39
+    QUTIL_SEND_TO_MANY_V1=39,
+    TOTAL_COMMAND = 40
 };
 
 struct RequestResponseHeader {
