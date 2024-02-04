@@ -566,6 +566,11 @@ typedef struct
     f2elm_t y;
 } point_affine;
 typedef point_affine point_t[1];
+#define VOID_FUNC_DECL static void
+#define BOOL_FUNC_DECL static bool
+#else
+#define VOID_FUNC_DECL void
+#define BOOL_FUNC_DECL bool
 #endif
 
 typedef struct
@@ -1384,7 +1389,7 @@ static void eccmadd(point_precomp_t Q, point_extproj_t P)
     fp2mul1271(P->ta, t1, P->y);            // Yfinal = alpha*omega
 }
 
-void ecc_mul_fixed(unsigned long long* k, point_t Q)
+VOID_FUNC_DECL ecc_mul_fixed(unsigned long long* k, point_t Q)
 { // Fixed-base scalar multiplication Q = k*G, where G is the generator. FIXED_BASE_TABLE stores v*2^(w-1) = 80 multiples of G.
     unsigned int digits[250];
     unsigned long long scalar[4];
@@ -2084,7 +2089,7 @@ static bool ecc_mul(point_t P, unsigned long long* k, point_t Q)
     return true;
 }
 
-void encode(point_t P, uint8_t* Pencoded)
+VOID_FUNC_DECL encode(point_t P, uint8_t* Pencoded)
 { // Encode point P
     const unsigned long long temp1 = (P->x[1][1] & 0x4000000000000000) << 1;
     const unsigned long long temp2 = (P->x[0][1] & 0x4000000000000000) << 1;
@@ -2188,7 +2193,7 @@ static bool decode(const uint8_t* Pencoded, point_t P)
     return true;
 }
 
-void sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
+VOID_FUNC_DECL sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
 { // SchnorrQ signature generation
     // It produces the signature signature of a message messageDigest of size 32 in bytes
     // Inputs: 32-byte subseed, 32-byte publicKey, and messageDigest of size 32 in bytes
@@ -2224,7 +2229,7 @@ void sign(const unsigned char* subseed, const unsigned char* publicKey, const un
     }
 }
 
-bool verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
+BOOL_FUNC_DECL verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
 {
     point_t A;
     unsigned char temp[32 + 64];
