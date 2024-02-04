@@ -33,5 +33,6 @@ SET(HEADER_FILES
 	walletUtils.h
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
-ADD_LIBRARY(fourq-qubic fourq-qubic.cpp)
+ADD_LIBRARY(fourq-qubic SHARED fourq-qubic.cpp)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
+
