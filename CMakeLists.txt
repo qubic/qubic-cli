@@ -11,3 +11,5 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES})
+ADD_LIBRARY(fourq-qubic fourq-qubic.cpp)
+target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)

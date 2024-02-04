@@ -557,6 +557,7 @@ static void KangarooTwelve(const uint8_t *input, unsigned int inputByteLen, uint
 #define C2 0x59F95B0ADD276F6C
 #define C3 0x7DD2D17C4625FA78
 #define C4 0x6BC57DEF56CE8877
+#ifndef BUILD_4Q_LIB
 typedef unsigned long long felm_t[2]; // Datatype for representing 128-bit field elements
 typedef felm_t f2elm_t[2]; // Datatype for representing quadratic extension field elements
 typedef struct
@@ -565,6 +566,7 @@ typedef struct
     f2elm_t y;
 } point_affine;
 typedef point_affine point_t[1];
+#endif
 
 typedef struct
 { // Point representation in extended coordinates
@@ -1382,7 +1384,7 @@ static void eccmadd(point_precomp_t Q, point_extproj_t P)
     fp2mul1271(P->ta, t1, P->y);            // Yfinal = alpha*omega
 }
 
-static void ecc_mul_fixed(unsigned long long* k, point_t Q)
+void ecc_mul_fixed(unsigned long long* k, point_t Q)
 { // Fixed-base scalar multiplication Q = k*G, where G is the generator. FIXED_BASE_TABLE stores v*2^(w-1) = 80 multiples of G.
     unsigned int digits[250];
     unsigned long long scalar[4];
@@ -2082,7 +2084,7 @@ static bool ecc_mul(point_t P, unsigned long long* k, point_t Q)
     return true;
 }
 
-static void encode(point_t P, uint8_t* Pencoded)
+void encode(point_t P, uint8_t* Pencoded)
 { // Encode point P
     const unsigned long long temp1 = (P->x[1][1] & 0x4000000000000000) << 1;
     const unsigned long long temp2 = (P->x[0][1] & 0x4000000000000000) << 1;
@@ -2186,7 +2188,7 @@ static bool decode(const uint8_t* Pencoded, point_t P)
     return true;
 }
 
-static void sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
+void sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
 { // SchnorrQ signature generation
     // It produces the signature signature of a message messageDigest of size 32 in bytes
     // Inputs: 32-byte subseed, 32-byte publicKey, and messageDigest of size 32 in bytes
@@ -2222,7 +2224,7 @@ static void sign(const unsigned char* subseed, const unsigned char* publicKey, c
     }
 }
 
-static bool verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
+bool verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
 {
     point_t A;
     unsigned char temp[32 + 64];
