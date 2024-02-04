@@ -423,9 +423,13 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     auto response = qc->receivePacketAs<SpecialCommand>();
     delete qc;
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
-        LOG("Successfully send special command\n");
+        LOG("Node received special command\n");
     } else{
-        LOG("Failed to send special command\n");
+        if (command != REFRESH_PEER_LIST){
+            LOG("Failed to send special command\n");
+        } else {
+            LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
+        }
     }
 }
 
