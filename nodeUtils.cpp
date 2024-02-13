@@ -536,7 +536,7 @@ void logTime(const UtcTime& time)
     LOG("%u-%02u-%02u %02u:%02u:%02u.%09u", time.year, time.month, time.day, time.hour, time.minute, time.second, time.nanosecond);
 }
 
-UtcTime convertTime(std::chrono::system_clock::time_point & time)
+UtcTime convertTime(std::chrono::system_clock::time_point time)
 {
     using namespace std;
     using namespace std::chrono;
