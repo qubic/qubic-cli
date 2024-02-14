@@ -44,7 +44,8 @@ enum COMMAND
     FORCE_NEXT_TICK=37,
     REISSUE_VOTE=38,
     QUTIL_SEND_TO_MANY_V1=39,
-    TOTAL_COMMAND = 40
+    TOTAL_COMMAND = 40,
+    SYNC_TIME = 41,
 };
 
 struct RequestResponseHeader {
@@ -406,6 +407,28 @@ struct SpecialCommandSetSolutionThresholdResquestAndResponse
     unsigned long long everIncreasingNonceAndCommandType;
     unsigned int epoch;
     int threshold;
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+
+struct UtcTime
+{
+    unsigned short    year;              // 1900 - 9999
+    unsigned char     month;             // 1 - 12
+    unsigned char     day;               // 1 - 31
+    unsigned char     hour;              // 0 - 23
+    unsigned char     minute;            // 0 - 59
+    unsigned char     second;            // 0 - 59
+    unsigned char     pad1;
+    unsigned int      nanosecond;        // 0 - 999,999,999
+};
+
+struct SpecialCommandSendTime
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    UtcTime utcTime;
     static constexpr unsigned char type()
     {
         return 255;

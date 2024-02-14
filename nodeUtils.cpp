@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <algorithm>
+#include <chrono>
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -425,7 +426,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
     } else{
-        if (command != REFRESH_PEER_LIST){
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST){
             LOG("Failed to send special command\n");
         } else {
             LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
@@ -527,6 +528,153 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
         }
     } else{
         LOG("Failed set solution threshold\n");
+    }
+}
+
+void logTime(const UtcTime& time)
+{
+    LOG("%u-%02u-%02u %02u:%02u:%02u.%09u", time.year, time.month, time.day, time.hour, time.minute, time.second, time.nanosecond);
+}
+
+UtcTime convertTime(std::chrono::system_clock::time_point time)
+{
+    using namespace std;
+    using namespace std::chrono;
+
+    time_t tt = system_clock::to_time_t(time);
+    tm utc_tm = *gmtime(&tt);
+    UtcTime utcTime;
+    utcTime.year = utc_tm.tm_year + 1900;
+    utcTime.month = utc_tm.tm_mon + 1;
+    utcTime.day = utc_tm.tm_mday;
+    utcTime.hour = utc_tm.tm_hour;
+    utcTime.minute = utc_tm.tm_min;
+    utcTime.second = utc_tm.tm_sec;
+
+    // get nanoseconds
+    typedef duration<int, ratio_multiply<hours::period, ratio<24> >::type> days;
+    system_clock::duration tp = time.time_since_epoch();
+    days d = duration_cast<days>(tp);
+    tp -= d;
+    hours h = duration_cast<hours>(tp);
+    tp -= h;
+    minutes m = duration_cast<minutes>(tp);
+    tp -= m;
+    seconds s = duration_cast<seconds>(tp);
+    tp -= s;
+    utcTime.nanosecond = duration_cast<nanoseconds>(tp).count();
+
+    return utcTime;
+}
+
+void syncTime(const char* nodeIp, const int nodePort, const char* seed)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+
+    LOG("---------------------------------------------------------------------------------\n");
+    LOG("This sets the node clock to roughly be in sync with the local clock.\n");
+    LOG("CAUTION: MAKE SURE THAT YOUR LOCAL CLOCK IS SET CORRECTLY, FOR EXAMPLE USING NTP.\n");
+    LOG("---------------------------------------------------------------------------------\n\n");
+
+    // get time from node and measure round trip time
+    unsigned long long roundTripTimeNanosec = 0;
+    {
+        LOG("Querying node time ...\n\n");
+
+        struct {
+            RequestResponseHeader header;
+            SpecialCommand cmd;
+            uint8_t signature[64];
+        } queryTimeMsg;
+        queryTimeMsg.header.setSize(sizeof(queryTimeMsg));
+        queryTimeMsg.header.randomizeDejavu();
+        queryTimeMsg.header.setType(PROCESS_SPECIAL_COMMAND);
+        uint64_t curTime = time(NULL);
+        uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_QUERY_TIME) << 56;
+        queryTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+
+        KangarooTwelve((unsigned char*)&queryTimeMsg.cmd,
+            sizeof(queryTimeMsg.cmd),
+            digest,
+            32);
+        sign(subseed, sourcePublicKey, digest, signature);
+        memcpy(queryTimeMsg.signature, signature, 64);
+
+        auto qc = new QubicConnection(nodeIp, nodePort);
+        auto startTime = std::chrono::steady_clock::now();
+        qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
+        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto endTime = std::chrono::steady_clock::now();
+        auto nowLocal = std::chrono::system_clock::now();
+        delete qc;
+        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
+            LOG("Failed to query node time!\n");
+            return;
+        }
+
+        roundTripTimeNanosec = std::chrono::duration<unsigned long long, std::nano>(endTime - startTime).count();
+        LOG("Clock status before sync:\n");
+        LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
+        LOG("\tLocal time (UTC): "); logTime(convertTime(nowLocal)); LOG("\n\n");
+    }
+
+    if (roundTripTimeNanosec > 3000000000llu)
+    {
+        LOG("Round trip time is too large. Sync skipped, because it would be very inaccurate!");
+        return;
+    }
+
+    // set node clock to local UTC time + half round trip time (not very accurate but simple and sufficient for requirements of 5 seconds)
+    {
+        struct {
+            RequestResponseHeader header;
+            SpecialCommandSendTime cmd;
+            uint8_t signature[64];
+        } sendTimeMsg;
+        sendTimeMsg.header.setSize(sizeof(sendTimeMsg));
+        sendTimeMsg.header.randomizeDejavu();
+        sendTimeMsg.header.setType(PROCESS_SPECIAL_COMMAND);
+        uint64_t curTime = time(NULL);
+        uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SEND_TIME) << 56;
+        sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+
+        using namespace std::chrono;
+        auto now = system_clock::now();
+        auto halfRoudTripTime = duration_cast<system_clock::duration>(nanoseconds(roundTripTimeNanosec / 2));
+        UtcTime timeToSet = convertTime(now + halfRoudTripTime);
+        sendTimeMsg.cmd.utcTime = timeToSet;
+        LOG("Setting node time to "); logTime(timeToSet); LOG(" ...\n\n");
+
+        KangarooTwelve((unsigned char*)&sendTimeMsg.cmd,
+            sizeof(sendTimeMsg.cmd),
+            digest,
+            32);
+        sign(subseed, sourcePublicKey, digest, signature);
+        memcpy(sendTimeMsg.signature, signature, 64);
+
+        auto qc = new QubicConnection(nodeIp, nodePort);
+        auto startTime = std::chrono::steady_clock::now();
+        qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
+        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto endTime = std::chrono::steady_clock::now();
+        auto nowLocal = std::chrono::system_clock::now();
+        delete qc;
+        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) {
+            LOG("Failed to set node time!\n");
+            return;
+        }
+
+        roundTripTimeNanosec = std::chrono::duration<unsigned long long, std::nano>(endTime - startTime).count();
+        LOG("Clock status after sync:\n");
+        LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
+        LOG("\tLocal time (UTC): "); logTime(convertTime(nowLocal)); LOG("\n\n");
     }
 }
 

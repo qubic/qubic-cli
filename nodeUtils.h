@@ -18,3 +18,4 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
                    int command, std::string mode0, std::string mode1);
 void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
                           int command, int epoch, int threshold);
+void syncTime(const char* nodeIp, const int nodePort, const char* seed);

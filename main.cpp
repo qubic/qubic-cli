@@ -212,6 +212,11 @@ int main(int argc, char *argv[])
             sanityCheckSpecialCommand(g_requestedSpecialCommand);
             sendSpecialCommand(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
             break;
+        case SYNC_TIME:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            syncTime(g_nodeIp, g_nodePort, g_seed);
+            break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

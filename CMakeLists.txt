@@ -11,6 +11,27 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 		  ${CMAKE_SOURCE_DIR}/qutil.cpp
 )
-ADD_EXECUTABLE(qubic-cli main.cpp ${FILES})
+SET(HEADER_FILES
+	K12AndKeyUtil.h
+	SCUtils.h
+	argparser.h
+	assetUtil.h
+	connection.h
+	defines.h
+	fourq-qubic.h
+	global.h
+	keyUtils.h
+	logger.h
+	nodeUtils.h
+	prompt.h
+	qubicLogParser.h
+	quottery.h
+	qutil.h
+	sanityCheck.h
+	structs.h
+	utils.h
+	walletUtils.h
+)
+ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 ADD_LIBRARY(fourq-qubic fourq-qubic.cpp)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)

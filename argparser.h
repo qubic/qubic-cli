@@ -81,6 +81,8 @@ void print_help(){
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
     printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
     printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
+    printf("\t-synctime\n");
+    printf("\t\tSync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
 
     printf("\n[QX COMMAND]\n");
     printf("\t-qxgetfee\n");
@@ -431,6 +433,14 @@ void parseArgument(int argc, char** argv){
             g_cmd = REISSUE_VOTE;
             g_requestedSpecialCommand = SPECIAL_COMMAND_REISSUE_VOTE;
             i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-synctime") == 0)
+        {
+            g_cmd = SYNC_TIME;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_SEND_TIME;
+            i += 1;
             CHECK_OVER_PARAMETERS
             break;
         }
