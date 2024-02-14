@@ -426,7 +426,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
     } else{
-        if (command != REFRESH_PEER_LIST){
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST){
             LOG("Failed to send special command\n");
         } else {
             LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
