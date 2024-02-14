@@ -614,7 +614,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
         delete qc;
-        if (response.everIncreasingNonceAndCommandType != queryTimeMsg.cmd.everIncreasingNonceAndCommandType) {
+        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
             LOG("Failed to query node time!\n");
             return;
         }
