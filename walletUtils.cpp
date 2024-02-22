@@ -1,3 +1,5 @@
+#include <chrono>
+#include <thread>
 #include <cstdint>
 #include <cstring>
 #include "utils.h"
@@ -175,13 +177,17 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     LOG("Transaction has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
     if (waitUntilFinish){
-        // TODO: fill here
+        LOG("Waiting for tick:\n");
+        while (currentTick <= packet.transaction.tick){
+            LOG("%d/%d\n", currentTick, packet.transaction.tick);
+            Q_SLEEP(1000);
+            currentTick = getTickNumberFromNode(qc);
+        }
+        checkTxOnTick(nodeIp, nodePort, txHash, packet.transaction.tick);
     } else {
         LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
         LOG("to check your tx confirmation status\n");
     }
-
-
 }
 
 void makeCustomTransaction(const char* nodeIp, int nodePort,
