@@ -2,7 +2,8 @@
 void printWalletInfo(const char* seed);
 void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort);
 void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
-                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset);
+                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
+                             int waitUntilFinish);
 void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const char* seed,
                            const char* targetIdentity,

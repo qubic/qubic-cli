@@ -126,7 +126,8 @@ bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signatur
 }
 
 void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
-                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset)
+                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
+                             int waitUntilFinish)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -173,8 +174,14 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    if (waitUntilFinish){
+        // TODO: fill here
+    } else {
+        LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+        LOG("to check your tx confirmation status\n");
+    }
+
+    delete qc;
 }
 
 void makeCustomTransaction(const char* nodeIp, int nodePort,
