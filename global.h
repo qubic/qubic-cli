@@ -26,6 +26,7 @@ int g_set_solution_threshold_value = -1;
 
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;
+int g_waitUntilFinish = 0;
 uint8_t g_txExtraData[1024] = {0};
 uint8_t g_rawPacket[1024] = {0};
 
