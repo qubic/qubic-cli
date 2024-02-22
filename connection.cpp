@@ -113,6 +113,7 @@ T QubicConnection::receivePacketAs()
     uint8_t* data = receivedData.data();
     int ptr = 0;
     T result;
+    memset(&result, 0, sizeof(T));
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
