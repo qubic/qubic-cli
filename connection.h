@@ -12,6 +12,7 @@ public:
 	int sendData(uint8_t* buffer, int sz);
     void receiveDataAll(std::vector<uint8_t>& buffer);
     template <typename T> T receivePacketAs();
+    template <typename T> std::vector<T> getLatestVectorPacketAs();
 private:
 	char mNodeIp[32];
 	int mNodePort;
