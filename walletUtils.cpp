@@ -36,7 +36,7 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
     std::vector<uint8_t> buffer;
     buffer.resize(0);
     uint8_t tmp[1024] = {0};
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestedEntity req;
@@ -65,7 +65,7 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
         }
         ptr+= header->size();
     }
-    delete qc;
+
     return result;
 }
 void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
@@ -129,6 +129,7 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
                              const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
                              int waitUntilFinish)
 {
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -151,7 +152,7 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amount;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = 0;
@@ -164,7 +165,6 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet.header)+sizeof(packet.transaction) + 64);
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     KangarooTwelve((unsigned char*)&packet.transaction,
@@ -181,7 +181,7 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
         LOG("to check your tx confirmation status\n");
     }
 
-    delete qc;
+
 }
 
 void makeCustomTransaction(const char* nodeIp, int nodePort,
@@ -193,6 +193,7 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const uint8_t* extraData,
                            uint32_t scheduledTickOffset)
 {
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -215,7 +216,7 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     memcpy(temp_packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(temp_packet.transaction.destinationPublicKey, destPublicKey, 32);
     temp_packet.transaction.amount = amount;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     temp_packet.transaction.tick = currentTick + scheduledTickOffset;
     temp_packet.transaction.inputType = txType;
     temp_packet.transaction.inputSize = extraDataSize;
@@ -234,7 +235,6 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     temp_packet.header.zeroDejavu();
     temp_packet.header.setType(BROADCAST_TRANSACTION);
     memcpy(packet.data(), &temp_packet.header, sizeof(RequestResponseHeader));
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData(packet.data(), packet.size());
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
@@ -254,6 +254,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
                 uint64_t pricePerShare,
                 uint16_t numberOfShare,
                 uint32_t scheduledTickOffset){
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -284,7 +285,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = sizeof(packet.ipo);
@@ -299,7 +300,6 @@ void makeIPOBid(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(packet.ipo) + SIGNATURE_SIZE,
@@ -315,7 +315,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
 RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
     RespondContractIPO result;
     memset(&result, 0, sizeof(RespondContractIPO));
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractIPO req;
@@ -339,7 +339,7 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
         }
         ptr+= header->size();
     }
-    delete qc;
+
     return result;
 }
 static bool isZeroPubkey(uint8_t* pubkey){

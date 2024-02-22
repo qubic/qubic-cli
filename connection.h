@@ -1,7 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
-
+#include <memory>
 // Not thread safe
 class QubicConnection
 {
@@ -18,3 +18,8 @@ private:
 	int mNodePort;
 	int mSocket;
 };
+typedef std::shared_ptr<QubicConnection> QCPtr;
+static QCPtr make_qc(const char* nodeIp, int nodePort)
+{
+    return std::make_shared<QubicConnection>(nodeIp, nodePort);
+}
