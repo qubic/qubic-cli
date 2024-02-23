@@ -14,7 +14,7 @@ enum COMMAND
     SEND_RAW_PACKET = 7,
     PUBLISH_PROPOSAL = 8,
     VOTE_PROPOSAL = 9,
-    PLACE_HOLDER = 10,
+    GET_QUORUM_TICK = 10,
     GET_TICK_DATA=11,
     READ_TICK_DATA=12,
     CHECK_TX_ON_TICK=13,
@@ -100,6 +100,40 @@ typedef struct
     unsigned char publicKey[32];
 } RequestedEntity;
 
+struct Tick
+{
+    unsigned short computorIndex;
+    unsigned short epoch;
+    unsigned int tick;
+
+    unsigned short millisecond;
+    unsigned char second;
+    unsigned char minute;
+    unsigned char hour;
+    unsigned char day;
+    unsigned char month;
+    unsigned char year;
+
+    unsigned long long prevResourceTestingDigest;
+    unsigned long long saltedResourceTestingDigest;
+
+    uint8_t prevSpectrumDigest[32];
+    uint8_t prevUniverseDigest[32];
+    uint8_t prevComputerDigest[32];
+    uint8_t saltedSpectrumDigest[32];
+    uint8_t saltedUniverseDigest[32];
+    uint8_t saltedComputerDigest[32];
+
+    uint8_t transactionDigest[32];
+    uint8_t expectedNextTickTransactionDigest[32];
+
+    unsigned char signature[SIGNATURE_SIZE];
+    static constexpr unsigned char type()
+    {
+        return 3;
+    }
+};
+
 struct Entity
 {
     unsigned char publicKey[32];
@@ -178,7 +212,19 @@ typedef struct
 typedef struct
 {
     RequestedTickData requestedTickData;
+    enum {
+        type = 16,
+    };
 } RequestTickData;
+
+typedef struct
+{
+    unsigned int tick;
+    unsigned char voteFlags[(676 + 7) / 8];
+    enum {
+        type = 14,
+    };
+} RequestedQuorumTick;
 
 typedef struct
 {

@@ -174,3 +174,4 @@ template SpecialCommand QubicConnection::receivePacketAs<SpecialCommand>();
 template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
 template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 template SpecialCommandSendTime QubicConnection::receivePacketAs<SpecialCommandSendTime>();
+template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();

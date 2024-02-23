@@ -206,6 +206,140 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     return false;
 }
 
+static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
+    char hex[64];
+    if (dumpComputorIndex) LOG("Computor index: %d\n", A.computorIndex);
+    LOG("Epoch: %d\n", A.epoch);
+    LOG("Tick: %d\n", A.tick);
+    LOG("Time: %u:%u:%u %u:%u:%u.%u\n", A.year, A.month, A.day, A.hour, A.minute, A.second, A.millisecond);
+    LOG("prevResourceTestingDigest: %llu\n", A.prevResourceTestingDigest);
+    byteToHex(A.prevSpectrumDigest, hex, 32);
+    LOG("prevSpectrumDigest: %s\n", hex);
+    byteToHex(A.prevUniverseDigest, hex, 32);
+    LOG("prevUniverseDigest: %s\n", hex);
+    byteToHex(A.prevComputerDigest, hex, 32);
+    LOG("prevComputerDigest: %s\n", hex);
+    byteToHex(A.transactionDigest, hex, 32);
+    LOG("transactionDigest: %s\n", hex);
+    byteToHex(A.expectedNextTickTransactionDigest, hex, 32);
+    LOG("expectedNextTickTransactionDigest: %s\n", hex);
+}
+bool compareVote(const Tick&A, const Tick&B){
+    return (A.epoch == B.epoch) && (A.tick == B.tick) &&
+    (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
+    (A.millisecond == B.millisecond) &&
+    (A.prevResourceTestingDigest == B.prevResourceTestingDigest) &&
+    (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
+    (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
+    (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
+    (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
+    (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
+}
+
+std::string indexToAlphabet(int index){
+    std::string result = "";
+    result += char('A' + (index/26));
+    result += char('A' + (index%26));
+    return result;
+}
+
+void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* compFileName)
+{
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+    uint32_t currenTick = getTickNumberFromNode(qc);
+    if (currenTick <= requestedTick)
+    {
+        LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
+        return;
+    }
+    BroadcastComputors bc;
+    {
+        FILE* f = fopen(compFileName, "rb");
+        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors)){
+            LOG("Failed to read comp list\n");
+            fclose(f);
+            return;
+        }
+        fclose(f);
+    }
+
+    static struct
+    {
+        RequestResponseHeader header;
+        RequestedQuorumTick rqt;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestedQuorumTick::type); // REQUEST_TICK_DATA
+    packet.rqt.tick = requestedTick;
+    memset(packet.rqt.voteFlags, 0, (676 + 7) / 8);
+    qc->sendData(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
+    auto votes = qc->getLatestVectorPacketAs<Tick>();
+    LOG("Received %d quorum ticks (votes)\n", votes.size());
+    int N = votes.size();
+    if (N == 0){
+        return;
+    }
+
+    for (int i = 0; i < N; i++){
+        printf("%d\n", i);
+        uint8_t digest[64] = {0};
+        votes[i].computorIndex ^= Tick::type();
+        printf("K12 0\n");
+        KangarooTwelve((uint8_t*)&votes[i], sizeof(Tick) - SIGNATURE_SIZE, digest, 32);
+        printf("K12 1\n");
+        votes[i].computorIndex ^= Tick::type();
+        int comp_index = votes[i].computorIndex;
+        printf("verifying...\n");
+        if (!verify(bc.computors.publicKeys[comp_index], digest, votes[i].signature)){
+            LOG("Signature of vote %d is not correct\n", i);
+            dumpQuorumTick(votes[i]);
+            return;
+        }
+    }
+    std::vector<Tick> uniqueVote;
+    std::vector<std::vector<int>> voteIndices;
+    uniqueVote.push_back(votes[0]);
+    voteIndices.resize(1);
+    voteIndices[0].push_back(votes[0].computorIndex);
+    for (int i = 1; i < N; i++){
+        printf("%d\n", i);
+        int vote_indice = -1;
+        for (int j = 0; j < uniqueVote.size(); j++){
+            if (compareVote(votes[i], uniqueVote[j])){
+                vote_indice = j;
+                break;
+            }
+        }
+        if (vote_indice != -1){
+            voteIndices[vote_indice].push_back(votes[i].computorIndex);
+        } else {
+            uniqueVote.push_back(votes[i]);
+            voteIndices.resize(voteIndices.size() + 1);
+            int M = voteIndices.size() -1;
+            voteIndices[M].resize(0);
+            voteIndices[M].push_back(votes[i].computorIndex);
+        }
+    }
+    LOG("Number of unique votes: %d\n", uniqueVote.size());
+    for (int i = 0; i < uniqueVote.size(); i++){
+        LOG("Vote #%d: ", i);
+        const bool dumpComputorIndex = false;
+        dumpQuorumTick(uniqueVote[i], dumpComputorIndex);
+        LOG("Voted by: ");
+        std::sort(voteIndices.begin(), voteIndices.end());
+        for (int j = 0; j < voteIndices[i].size(); j++){
+            int index = voteIndices[i][j];
+            auto alphabet = indexToAlphabet(index);
+            if (j < voteIndices[i].size() - 1){
+                LOG("%d(%s), ", index, alphabet.c_str());
+            } else {
+                LOG("%d(%s)\n", index, alphabet.c_str());
+            }
+        }
+    }
+}
+
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);

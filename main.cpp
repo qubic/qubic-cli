@@ -67,6 +67,10 @@ int main(int argc, char *argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getTickDataToFile(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
             break;
+        case GET_QUORUM_TICK:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getQuorumTick(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
+            break;
         case READ_TICK_DATA:
             sanityFileExist(g_requestedFileName);
             sanityFileExist(g_requestedFileName2);
