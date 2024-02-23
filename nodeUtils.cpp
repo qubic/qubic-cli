@@ -211,8 +211,8 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
     if (dumpComputorIndex) LOG("Computor index: %d\n", A.computorIndex);
     LOG("Epoch: %d\n", A.epoch);
     LOG("Tick: %d\n", A.tick);
-    LOG("Time: %u:%u:%u %u:%u:%u.%u\n", A.year, A.month, A.day, A.hour, A.minute, A.second, A.millisecond);
-    LOG("prevResourceTestingDigest: %llu\n", A.prevResourceTestingDigest);
+    LOG("Time: 20%02u-%02u-%02u %02u:%02u:%02u.%04u\n", A.year, A.month, A.day, A.hour, A.minute, A.second, A.millisecond);
+    LOG("prevResourceTestingDigest: %016lx\n", A.prevResourceTestingDigest);
     byteToHex(A.prevSpectrumDigest, hex, 32);
     LOG("prevSpectrumDigest: %s\n", hex);
     byteToHex(A.prevUniverseDigest, hex, 32);
@@ -282,15 +282,11 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     }
 
     for (int i = 0; i < N; i++){
-        printf("%d\n", i);
         uint8_t digest[64] = {0};
         votes[i].computorIndex ^= Tick::type();
-        printf("K12 0\n");
         KangarooTwelve((uint8_t*)&votes[i], sizeof(Tick) - SIGNATURE_SIZE, digest, 32);
-        printf("K12 1\n");
         votes[i].computorIndex ^= Tick::type();
         int comp_index = votes[i].computorIndex;
-        printf("verifying...\n");
         if (!verify(bc.computors.publicKeys[comp_index], digest, votes[i].signature)){
             LOG("Signature of vote %d is not correct\n", i);
             dumpQuorumTick(votes[i]);
@@ -303,7 +299,6 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     voteIndices.resize(1);
     voteIndices[0].push_back(votes[0].computorIndex);
     for (int i = 1; i < N; i++){
-        printf("%d\n", i);
         int vote_indice = -1;
         for (int j = 0; j < uniqueVote.size(); j++){
             if (compareVote(votes[i], uniqueVote[j])){
@@ -323,11 +318,11 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     }
     LOG("Number of unique votes: %d\n", uniqueVote.size());
     for (int i = 0; i < uniqueVote.size(); i++){
-        LOG("Vote #%d: ", i);
+        LOG("Vote #%d (voted by %d computors ID) ", i, voteIndices[i].size());
         const bool dumpComputorIndex = false;
         dumpQuorumTick(uniqueVote[i], dumpComputorIndex);
         LOG("Voted by: ");
-        std::sort(voteIndices.begin(), voteIndices.end());
+        std::sort(voteIndices[i].begin(), voteIndices[i].end());
         for (int j = 0; j < voteIndices[i].size(); j++){
             int index = voteIndices[i][j];
             auto alphabet = indexToAlphabet(index);
