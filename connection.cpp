@@ -113,16 +113,47 @@ T QubicConnection::receivePacketAs()
     uint8_t* data = receivedData.data();
     int ptr = 0;
     T result;
+    memset(&result, 0, sizeof(T));
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == T::type()){
-            auto curTickData = (T*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curTickData;
+            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *dataT;
         }
         ptr+= header->size();
     }
     return result;
+}
+
+template <typename T>
+std::vector<T> QubicConnection::getLatestVectorPacketAs()
+{
+    std::vector<uint8_t> receivedData;
+    receivedData.resize(0);
+    uint8_t tmp[1024];
+    int recvByte = receiveData(tmp, 1024);
+    while (recvByte > 0)
+    {
+        receivedData.resize(recvByte + receivedData.size());
+        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
+        recvByte = receiveData(tmp, 1024);
+    }
+
+    recvByte = receivedData.size();
+    uint8_t* data = receivedData.data();
+    int ptr = 0;
+    std::vector<T> results;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == T::type()){
+            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
+            results.push_back(*dataT);
+        }
+        ptr+= header->size();
+    }
+    return results;
 }
 
 int QubicConnection::sendData(uint8_t* buffer, int sz)

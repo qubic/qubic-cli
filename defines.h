@@ -39,3 +39,5 @@
 
 #define QX_CONTRACT_INDEX 1
 #define QX_FEE_FUNCTION_INDEX 1
+
+#define Q_SLEEP(X) std::this_thread::sleep_for (std::chrono::milliseconds(X));

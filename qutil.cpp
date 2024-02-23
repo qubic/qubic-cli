@@ -38,13 +38,13 @@ void readPayoutList(const char* payoutListFile, std::vector<std::string>& addres
 }
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
 {
+    auto qc = make_qc(nodeIp, nodePort);
     std::vector<std::string> addresses;
     std::vector<int64_t> amounts;
     readPayoutList(payoutListFile, addresses, amounts);
     if (addresses.size() > 25){
         LOG("WARNING: payout list has more than 25 addresses, only the first 25 addresses will be paid\n");
     }
-
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -78,7 +78,7 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     }
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = qutilFuncId::SendToManyV1;
     packet.transaction.inputSize = sizeof(SendToManyV1_input);
@@ -91,7 +91,7 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(SendToManyV1_input) + SIGNATURE_SIZE,

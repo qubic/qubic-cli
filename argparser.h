@@ -221,6 +221,13 @@ void parseArgument(int argc, char** argv){
             continue;
         }
 
+        if(strcmp(argv[i], "-waituntilfinish") == 0)
+        {
+            g_waitUntilFinish = int(charToNumber(argv[i+1]));
+            i+=2;
+            continue;
+        }
+
         /**********************
          ****WALLET COMMAND****
          **********************/

@@ -29,7 +29,7 @@ enum quotteryFuncId{
 
 
 void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output& result){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -55,7 +55,7 @@ void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 
 void quotteryPrintBetFees(const char* nodeIp, const int nodePort){
@@ -109,6 +109,7 @@ static uint64_t diffDate(uint8_t A[4], uint8_t B[4]) {
 }
 
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset){
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -208,7 +209,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     }
 
 
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = quotteryFuncId::issue;
     packet.transaction.inputSize = sizeof(QuotteryissueBet_input);
@@ -221,7 +222,6 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryissueBet_input) + SIGNATURE_SIZE,
@@ -235,6 +235,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
 }
 
 void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_t betId, int numberOfBetSlot, uint64_t amountPerSlot, uint8_t option, uint32_t scheduledTickOffset){
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -266,7 +267,7 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amountPerSlot*numberOfBetSlot;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = quotteryFuncId::join;
     packet.transaction.inputSize = sizeof(QuotteryjoinBet_input);
@@ -279,7 +280,6 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryjoinBet_input) + SIGNATURE_SIZE,
@@ -292,7 +292,7 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     LOG("to check your tx confirmation status\n");
 }
 void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBetInfo_output& result){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -320,7 +320,7 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 static bool isArrayZero(uint8_t* ptr, int len){
     for (int i = 0; i < len; i++){
@@ -388,7 +388,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
 
 //  getBetOptionDetail 3
 void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -417,7 +417,7 @@ void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 // showing which ID bet for an option
 void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption){
@@ -440,7 +440,7 @@ void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32
 }
 //getActiveBet 4
 void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_output& result){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -466,7 +466,7 @@ void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_o
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 // showing which ID bet for an option
 void quotteryPrintActiveBet(const char* nodeIp, const int nodePort){
@@ -482,7 +482,7 @@ void quotteryPrintActiveBet(const char* nodeIp, const int nodePort){
 //getBetByCreator 5
 //getActiveBet 4
 void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getActiveBetByCreator_output& result, const uint8_t* creator){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -510,7 +510,7 @@ void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getAc
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 
 void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, const char* identity){
@@ -527,6 +527,7 @@ void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, con
 }
 
 void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t scheduledTickOffset){
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -555,7 +556,7 @@ void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = quotteryFuncId::cancelBet;
     packet.transaction.inputSize = sizeof(cancelBet_input);
@@ -568,7 +569,6 @@ void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(cancelBet_input) + SIGNATURE_SIZE,
@@ -581,6 +581,7 @@ void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed,
     LOG("to check your tx confirmation status\n");
 }
 void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t winOption, const uint32_t scheduledTickOffset){
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -610,7 +611,7 @@ void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* s
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;
-    uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = quotteryFuncId::publishResult;
     packet.transaction.inputSize = sizeof(publishResult_input);
@@ -623,7 +624,6 @@ void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* s
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(publishResult_input) + SIGNATURE_SIZE,

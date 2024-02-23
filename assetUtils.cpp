@@ -22,7 +22,7 @@ std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nod
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_OWNED_ASSETS);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -53,7 +53,7 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_POSSESSED_ASSETS);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -127,6 +127,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
                      char numberOfDecimalPlaces,
                      uint32_t scheduledTickOffset)
 {
+    auto qc = make_qc(nodeIp, nodePort);
     char assetNameS1[8] = {0};
     char UoMS1[8] = {0};
     memcpy(assetNameS1, assetName, strlen(assetName));
@@ -154,7 +155,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     packet.transaction.amount = 1000000000;
     uint32_t scheduledTick = 0;
     if (scheduledTickOffset < 50000){
-        uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+        uint32_t currentTick = getTickNumberFromNode(qc);
         scheduledTick = currentTick + scheduledTickOffset;
     } else {
         scheduledTick = scheduledTickOffset;
@@ -179,7 +180,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(IssueAsset_input)+ SIGNATURE_SIZE);
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(IssueAsset_input)+ SIGNATURE_SIZE,
@@ -190,7 +191,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ia));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
-    delete qc;
+
 }
 
 void qxTransferAsset(const char* nodeIp, int nodePort,
@@ -202,6 +203,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
                      long long numberOfUnits,
                      uint32_t scheduledTickOffset)
 {
+    auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -234,7 +236,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     packet.transaction.amount = 1000000;
     uint32_t scheduledTick = 0;
     if (scheduledTickOffset < 50000){
-        uint32_t currentTick = getTickNumberFromNode(nodeIp, nodePort);
+        uint32_t currentTick = getTickNumberFromNode(qc);
         scheduledTick = currentTick + scheduledTickOffset;
     } else {
         scheduledTick = scheduledTickOffset;
@@ -260,7 +262,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE);
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE,
@@ -271,5 +272,5 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ta));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
-    delete qc;
+
 }

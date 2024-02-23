@@ -4,6 +4,7 @@
 #include <ctime>
 #include <algorithm>
 #include <chrono>
+#include <memory>
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -13,11 +14,10 @@
 #include "walletUtils.h"
 #include "qubicLogParser.h"
 
-static CurrentTickInfo getTickInfoFromNode(const char* nodeIp, int nodePort)
+static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
 	CurrentTickInfo result;
 	memset(&result, 0, sizeof(CurrentTickInfo));
-	auto qc = new QubicConnection(nodeIp, nodePort);
 	struct {
         RequestResponseHeader header;
     } packet;
@@ -39,17 +39,17 @@ static CurrentTickInfo getTickInfoFromNode(const char* nodeIp, int nodePort)
     	}
         ptr+= header->size();
     }
-    delete qc;
 	return result;
 }
-uint32_t getTickNumberFromNode(const char* nodeIp, int nodePort)
+uint32_t getTickNumberFromNode(QCPtr qc)
 {
-    auto curTickInfo = getTickInfoFromNode(nodeIp, nodePort);
+    auto curTickInfo = getTickInfoFromNode(qc);
     return curTickInfo.tick;
 }
 void printTickInfoFromNode(const char* nodeIp, int nodePort)
 {
-	auto curTickInfo = getTickInfoFromNode(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
+	auto curTickInfo = getTickInfoFromNode(qc);
 	if (curTickInfo.epoch != 0){
 		LOG("Tick: %u\n", curTickInfo.tick);
 		LOG("Epoch: %u\n", curTickInfo.epoch);
@@ -60,7 +60,7 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
 		LOG("Error while getting tick info from %s:%d\n", nodeIp, nodePort);
 	}
 }
-static void getTickTransactions(const char* nodeIp, const int nodePort, const uint32_t requestedTick, int nTx,
+static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTick, int nTx,
                                 std::vector<Transaction>& txs, //out
                                 std::vector<TxhashStruct>* hashes, //out
                                 std::vector<extraDataStruct>* extraData, // out
@@ -91,7 +91,6 @@ static void getTickTransactions(const char* nodeIp, const int nodePort, const ui
     packet.txs.tick = requestedTick;
     for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
     for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
-    auto qc = new QubicConnection(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -132,7 +131,7 @@ static void getTickTransactions(const char* nodeIp, const int nodePort, const ui
         }
         ptr+= header->size();
     }
-    delete qc;
+    
 }
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
@@ -146,7 +145,7 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_TICK_DATA);
     packet.requestTickData.requestedTickData.tick = tick;
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -162,15 +161,16 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
         }
         ptr+= header->size();
     }
-    delete qc;
+    
 }
 bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick)
 {
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     // conditions:
     // - current Tick is higher than requested tick
     // - has tick data
     // - has txHash in tick transactions
-    uint32_t currenTick = getTickNumberFromNode(nodeIp, nodePort);
+    uint32_t currenTick = getTickNumberFromNode(qc);
     if (currenTick <= requestedTick)
     {
         LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
@@ -192,7 +192,7 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     std::vector<TxhashStruct> txHashesFromTick;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(nodeIp, nodePort, requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    getTickTransactions(qc.get(), requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
     for (int i = 0; i < txHashesFromTick.size(); i++)
     {
         if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
@@ -208,7 +208,8 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
 
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
 {
-    uint32_t currenTick = getTickNumberFromNode(nodeIp, nodePort);
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+    uint32_t currenTick = getTickNumberFromNode(qc);
     if (currenTick <= requestedTick)
     {
         LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
@@ -229,7 +230,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatures;
-    getTickTransactions(nodeIp, nodePort, requestedTick, numTx, txs, nullptr, &extraData, &signatures);
+    getTickTransactions(qc.get(), requestedTick, numTx, txs, nullptr, &extraData, &signatures);
 
     FILE* f = fopen(fileName, "wb");
     fwrite(&td, 1, sizeof(TickData), f);
@@ -377,7 +378,7 @@ bool checkTxOnFile(const char* txHash, const char* fileName)
 void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, uint8_t* rawPacket)
 {
     std::vector<uint8_t> buffer;
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData(rawPacket, rawPacketSize);
     LOG("Sent %d bytes\n", rawPacketSize);
     qc->receiveDataAll(buffer);
@@ -386,7 +387,7 @@ void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, ui
         LOG("%02x", buffer[i]);
     }
     LOG("\n");
-    delete qc;
+    
 }
 
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command)
@@ -418,11 +419,11 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     auto response = qc->receivePacketAs<SpecialCommand>();
-    delete qc;
+    
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
     } else{
@@ -469,10 +470,10 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     auto response = qc->receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
-    delete qc;
+    
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.mainModeFlag == packet.cmd.mainModeFlag){
             LOG("Successfully set MAINAUX flag\n");
@@ -516,10 +517,10 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     auto response = qc->receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
-    delete qc;
+    
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
             LOG("Successfully set solution threshold\n");
@@ -607,13 +608,13 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(queryTimeMsg.signature, signature, 64);
 
-        auto qc = new QubicConnection(nodeIp, nodePort);
+        auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
         auto response = qc->receivePacketAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
-        delete qc;
+        
         if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
             LOG("Failed to query node time!\n");
             return;
@@ -659,13 +660,13 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(sendTimeMsg.signature, signature, 64);
 
-        auto qc = new QubicConnection(nodeIp, nodePort);
+        auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
         auto response = qc->receivePacketAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
-        delete qc;
+        
         if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) {
             LOG("Failed to set node time!\n");
             return;
@@ -709,7 +710,7 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_COMPUTORS);
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -727,7 +728,7 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
         }
         ptr+= header->size();
     }
-    delete qc;
+    
     return okay;
 }
 
@@ -769,7 +770,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
     memset(&result, 0, sizeof(CurrentTickInfo));
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
     } packet;
@@ -794,7 +795,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
         }
         ptr+= header->size();
     }
-    delete qc;
+    
     return result;
 }
 void getNodeIpList(const char* nodeIp, const int nodePort)
@@ -824,7 +825,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     packet.header.randomizeDejavu();
     packet.header.setType(RequestLog::type());
     memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -840,7 +841,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
         }
         ptr+= header->size();
     }
-    delete qc;
+    
 }
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;

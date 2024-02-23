@@ -5,7 +5,7 @@
 #include "logger.h"
 
 void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
-    auto qc = new QubicConnection(nodeIp, nodePort);
+    auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -31,7 +31,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
         }
         ptr+= header->size();
     }
-    delete qc;
+
 }
 
 void printQxFee(const char* nodeIp, const int nodePort){

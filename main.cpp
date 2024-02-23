@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
             sanityCheckSeed(g_seed);
 			sanityCheckIdentity(g_targetIdentity);
 			sanityCheckTxAmount(g_TxAmount);
-			makeStandardTransaction(g_nodeIp, g_nodePort, g_seed, g_targetIdentity, g_TxAmount, g_offsetScheduledTick);
+			makeStandardTransaction(g_nodeIp, g_nodePort, g_seed, g_targetIdentity, g_TxAmount, g_offsetScheduledTick, g_waitUntilFinish);
 			break;
 		case SEND_CUSTOM_TX:
 			sanityCheckNode(g_nodeIp, g_nodePort);
