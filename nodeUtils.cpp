@@ -333,7 +333,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     uint32_t currenTick = getTickNumberFromNode(qc);
-    if (currenTick <= requestedTick)
+    if (currenTick < requestedTick)
     {
         LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
         return;
