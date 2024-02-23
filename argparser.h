@@ -38,6 +38,8 @@ void print_help(){
     printf("\n[BLOCKCHAIN/PROTOCOL COMMAND]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
+    printf("\t-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>\n");
+    printf("\t\tGet quorum tick data, the summary of quorum tick will be printed, <COMP_LIST_FILE> is fetched by command -getcomputorlist. valid node ip/port are required.\n");
     printf("\t-getcomputorlist <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
     printf("\t-getnodeiplist\n");
@@ -276,6 +278,15 @@ void parseArgument(int argc, char** argv){
             g_cmd = GET_TICK_DATA;
             g_requestedTickNumber = charToNumber(argv[i+1]);
             g_requestedFileName = argv[i + 2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-getquorumtick") == 0)
+        {
+            g_cmd = GET_QUORUM_TICK;
+            g_requestedFileName = argv[i + 1];
+            g_requestedTickNumber = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
