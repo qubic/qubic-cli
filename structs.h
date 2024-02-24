@@ -417,6 +417,15 @@ struct QxFees_output
     uint32_t transferFee; // Amount of qus
     uint32_t tradeFee; // Number of billionths
 };
+struct GetSendToManyV1Fee_output
+{
+    long long fee; // Number of billionths
+    static constexpr unsigned char type()
+    {
+        return 43;
+    }
+};
+
 struct ContractIPOBid
 {
     long long price;

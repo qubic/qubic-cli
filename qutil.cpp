@@ -13,7 +13,10 @@
 #include <cstring>
 
 constexpr int QUTIL_CONTRACT_ID = 4;
-enum qutilFuncId{
+enum qutilFunctionId{
+    GetSendToManyV1Fee = 1,
+};
+enum qutilProcedureId{
     SendToManyV1 = 1,
 };
 struct SendToManyV1_input {
@@ -36,9 +39,28 @@ void readPayoutList(const char* payoutListFile, std::vector<std::string>& addres
         amounts.push_back(b);
     }
 }
+
+long long getSendToManyV1Fee(QCPtr qc)
+{
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = 0;
+    packet.rcf.inputType = qutilFunctionId::GetSendToManyV1Fee;
+    packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    auto fee = qc->receivePacketAs<GetSendToManyV1Fee_output>();
+    return fee.fee;
+}
+
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
+
     std::vector<std::string> addresses;
     std::vector<int64_t> amounts;
     readPayoutList(payoutListFile, addresses, amounts);
@@ -76,11 +98,14 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
         packet.stm.amounts[i] = amounts[i];
         packet.transaction.amount += amounts[i];
     }
+    long long fee = getSendToManyV1Fee(qc);
+    LOG("Send to many V1 fee: %lld\n", fee);
+    packet.transaction.amount += fee; // fee
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = qutilFuncId::SendToManyV1;
+    packet.transaction.inputType = qutilProcedureId::SendToManyV1;
     packet.transaction.inputSize = sizeof(SendToManyV1_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(SendToManyV1_input),
