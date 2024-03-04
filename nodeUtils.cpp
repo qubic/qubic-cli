@@ -102,7 +102,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         LOG("NumberOfTransactions: %u\n", curSystemInfo.numberOfTransactions);
         char hex[64];
         byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
-        LOG("RandomMiningSeed: %s\n", randomMiningSeed);
+        LOG("RandomMiningSeed: %s\n", hex);
 
         // todo: add initial time
 
