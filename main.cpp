@@ -23,6 +23,10 @@ int main(int argc, char *argv[])
 			sanityCheckNode(g_nodeIp, g_nodePort);
 			printTickInfoFromNode(g_nodeIp, g_nodePort);
 			break;
+        case GET_SYSTEM_INFO:
+			sanityCheckNode(g_nodeIp, g_nodePort);
+			printSystemInfoFromNode(g_nodeIp, g_nodePort);
+			break;
 		case GET_BALANCE:
 			sanityCheckIdentity(g_requestedIdentity);
 			sanityCheckNode(g_nodeIp, g_nodePort);

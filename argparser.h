@@ -60,6 +60,8 @@ void print_help(){
     printf("\t\tParticipating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getipostatus <CONTRACT_INDEX>\n");
     printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
+    printf("\t-getsysteminfo\n");
+    printf("\t\tView Current System Status. Includes initial tick, random mining seed, epoch info.\n");
     printf("\t-publishproposal \n");
     printf("\t\t(on development)\n");
 
@@ -230,7 +232,7 @@ void parseArgument(int argc, char** argv){
             continue;
         }
 
-        /**********************
+         /**********************
          ****WALLET COMMAND****
          **********************/
 
@@ -395,6 +397,14 @@ void parseArgument(int argc, char** argv){
         /**********************
          *****NODE COMMAND*****
          **********************/
+
+        if(strcmp(argv[i], "-getsysteminfo") == 0)
+        {
+            g_cmd = GET_SYSTEM_INFO;
+            i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if(strcmp(argv[i], "-getcurrenttick") == 0)
         {
             g_cmd = GET_CURRENT_TICK;
