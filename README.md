@@ -56,6 +56,8 @@ Command:
 		(on development)
 
 [NODE COMMAND]
+	-getsysteminfo
+		Show current system information of a node (e.g. epoch, initial tick, random mining seed)
 	-getcurrenttick
 		Show current tick information of a node
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
