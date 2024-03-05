@@ -46,6 +46,7 @@ enum COMMAND
     QUTIL_SEND_TO_MANY_V1=39,
     TOTAL_COMMAND = 40,
     SYNC_TIME = 41,
+    GET_SYSTEM_INFO = 42,
 };
 
 struct RequestResponseHeader {
@@ -168,6 +169,28 @@ typedef struct
     unsigned short numberOfMisalignedVotes;
     unsigned int initialTick;
 } CurrentTickInfo;
+
+typedef struct
+{
+    short version;
+    unsigned short epoch;
+    unsigned int tick;
+    unsigned int initialTick;
+    unsigned int latestCreatedTick;
+
+    unsigned short initialMillisecond;
+    unsigned char initialSecond;
+    unsigned char initialMinute;
+    unsigned char initialHour;
+    unsigned char initialDay;
+    unsigned char initialMonth;
+    unsigned char initialYear;
+
+    unsigned int numberOfEntities;
+    unsigned int numberOfTransactions;
+
+    uint8_t randomMiningSeed[32];
+} CurrentSystemInfo;
 
 typedef struct
 {

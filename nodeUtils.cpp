@@ -16,9 +16,9 @@
 
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
-	CurrentTickInfo result;
-	memset(&result, 0, sizeof(CurrentTickInfo));
-	struct {
+    CurrentTickInfo result;
+    memset(&result, 0, sizeof(CurrentTickInfo));
+    struct {
         RequestResponseHeader header;
     } packet;
     packet.header.setSize(sizeof(packet));
@@ -32,14 +32,14 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     int ptr = 0;
     while (ptr < recvByte)
     {
-    	auto header = (RequestResponseHeader*)(data+ptr);
-    	if (header->type() == RESPOND_CURRENT_TICK_INFO){
-    		auto curTickInfo = (CurrentTickInfo*)(data + ptr + sizeof(RequestResponseHeader));
-    		result = *curTickInfo;
-    	}
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RESPOND_CURRENT_TICK_INFO){
+            auto curTickInfo = (CurrentTickInfo*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *curTickInfo;
+        }
         ptr+= header->size();
     }
-	return result;
+    return result;
 }
 uint32_t getTickNumberFromNode(QCPtr qc)
 {
@@ -49,17 +49,68 @@ uint32_t getTickNumberFromNode(QCPtr qc)
 void printTickInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
-	auto curTickInfo = getTickInfoFromNode(qc);
-	if (curTickInfo.epoch != 0){
-		LOG("Tick: %u\n", curTickInfo.tick);
-		LOG("Epoch: %u\n", curTickInfo.epoch);
-		LOG("Number Of Aligned Votes: %u\n", curTickInfo.numberOfAlignedVotes);
-		LOG("Number Of Misaligned Votes: %u\n", curTickInfo.numberOfMisalignedVotes);
+    auto curTickInfo = getTickInfoFromNode(qc);
+    if (curTickInfo.epoch != 0){
+        LOG("Tick: %u\n", curTickInfo.tick);
+        LOG("Epoch: %u\n", curTickInfo.epoch);
+        LOG("Number Of Aligned Votes: %u\n", curTickInfo.numberOfAlignedVotes);
+        LOG("Number Of Misaligned Votes: %u\n", curTickInfo.numberOfMisalignedVotes);
         LOG("Initial tick: %u\n", curTickInfo.initialTick);
-	} else {
-		LOG("Error while getting tick info from %s:%d\n", nodeIp, nodePort);
-	}
+    } else {
+        LOG("Error while getting tick info from %s:%d\n", nodeIp, nodePort);
+    }
 }
+
+static CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
+{
+    CurrentSystemInfo result;
+    memset(&result, 0, sizeof(CurrentSystemInfo));
+    struct {
+        RequestResponseHeader header;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_SYSTEM_INFO);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RESPOND_SYSTEM_INFO){
+            auto curSystemInfo = (CurrentSystemInfo*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *curSystemInfo;
+        }
+        ptr+= header->size();
+    }
+    return result;
+}
+void printSystemInfoFromNode(const char* nodeIp, int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    auto curSystemInfo = getSystemInfoFromNode(qc);
+    if (curSystemInfo.epoch != 0){
+        LOG("Version: %u\n", curSystemInfo.version);
+        LOG("Epoch: %u\n", curSystemInfo.epoch);
+        LOG("Tick: %u\n", curSystemInfo.tick);
+        LOG("InitialTick: %u\n", curSystemInfo.initialTick);
+        LOG("LatestCreatedTick: %u\n", curSystemInfo.latestCreatedTick);
+        LOG("NumberOfEntities: %u\n", curSystemInfo.numberOfEntities);
+        LOG("NumberOfTransactions: %u\n", curSystemInfo.numberOfTransactions);
+        char hex[64];
+        byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
+        LOG("RandomMiningSeed: %s\n", hex);
+
+        // todo: add initial time
+
+    } else {
+        LOG("Error while getting system info from %s:%d\n", nodeIp, nodePort);
+    }
+}
+
 static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTick, int nTx,
                                 std::vector<Transaction>& txs, //out
                                 std::vector<TxhashStruct>* hashes, //out

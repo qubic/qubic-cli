@@ -1,6 +1,7 @@
 #pragma once
 #include "connection.h"
 void printTickInfoFromNode(const char* nodeIp, int nodePort);
+void printSystemInfoFromNode(const char* nodeIp, int nodePort);
 uint32_t getTickNumberFromNode(QCPtr qc);
 bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick);
 void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* compFileName);
