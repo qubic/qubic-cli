@@ -448,7 +448,7 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N);
     if (votes_next.size() < 451)
     {
-        printf("Failed to get votes for tick %d, this will not perform salt check", requestedTick+1);
+        printf("Failed to get votes for tick %d, this will not perform salt check\n", requestedTick+1);
         getUniqueVotes(votes, uniqueVote, voteIndices, N);
     }
     else
