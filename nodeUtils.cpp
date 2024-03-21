@@ -346,6 +346,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
                     const uint8_t* prevComputerDigest = nullptr
                     )
 {
+    if (votes.size() == 0) return;
     if (verifySalt)
     {
         std::vector<Tick> new_votes;
