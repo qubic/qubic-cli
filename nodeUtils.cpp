@@ -287,11 +287,108 @@ bool compareVote(const Tick&A, const Tick&B){
     (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
 }
 
+bool verifyVoteWithSalt(const Tick&A,
+                        const BroadcastComputors& bc,
+                        const long long prevResourceDigest,
+                        const uint8_t* prevSpectrumDigest,
+                         const uint8_t* prevUniverseDigest,
+                         const uint8_t* prevComputerDigest){
+    int cid = A.computorIndex;
+    uint8_t saltedData[64];
+    uint8_t saltedDigest[32];
+    memset(saltedData, 0, 64);
+    memcpy(saltedData, bc.computors.publicKeys[cid], 32);
+    memcpy(saltedData+32, &prevResourceDigest, 8);
+    KangarooTwelve(saltedData, 40, saltedDigest, 8);
+    if (A.saltedResourceTestingDigest != *((unsigned long long*)(saltedDigest))){
+        LOG("Mismatched saltedResourceTestingDigest. Computor index: %d\n", cid);
+        return false;
+    }
+    memcpy(saltedData+32, prevSpectrumDigest, 32);
+    KangarooTwelve(saltedData, 64, saltedDigest, 32);
+    if (memcmp(saltedDigest, A.saltedSpectrumDigest, 32) != 0)
+    {
+        LOG("Mismatched saltedSpectrumDigest. Computor index: %d\n", cid);
+        return false;
+    }
+
+    memcpy(saltedData+32, prevUniverseDigest, 32);
+    KangarooTwelve(saltedData, 64, saltedDigest, 32);
+    if (memcmp(saltedDigest, A.saltedUniverseDigest, 32) != 0)
+    {
+        LOG("Mismatched saltedUniverseDigest. Computor index: %d\n", cid);
+        return false;
+    }
+
+    memcpy(saltedData+32, prevComputerDigest, 32);
+    KangarooTwelve(saltedData, 64, saltedDigest, 32);
+    if (memcmp(saltedDigest, A.saltedComputerDigest, 32) != 0)
+    {
+        LOG("Mismatched saltedComputerDigest. Computor index: %d\n", cid);
+        return false;
+    }
+    return true;
+}
+
 std::string indexToAlphabet(int index){
     std::string result = "";
     result += char('A' + (index/26));
     result += char('A' + (index%26));
     return result;
+}
+
+void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std::vector<std::vector<int>>& voteIndices, int N,
+                    bool verifySalt = false,
+                    BroadcastComputors* pBC = nullptr,
+                    const long long prevResourceDigest = 0,
+                    const uint8_t* prevSpectrumDigest = nullptr,
+                    const uint8_t* prevUniverseDigest = nullptr,
+                    const uint8_t* prevComputerDigest = nullptr
+                    )
+{
+    if (verifySalt)
+    {
+        std::vector<Tick> new_votes;
+        LOG("Performing salt check...\n");
+        bool all_passed = true;
+        for (int i = 0; i < N; i++)
+        {
+            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest)){
+                LOG("Vote %d failed to pass salt check\n", i);
+                dumpQuorumTick(votes[i]);
+                all_passed = false;
+            } else {
+                new_votes.push_back(votes[i]);
+            }
+        }
+        if (all_passed){
+            LOG("ALL votes PASSED salts check\n");
+        } else {
+            votes = new_votes;
+        }
+    }
+    uniqueVote.resize(0);
+    uniqueVote.push_back(votes[0]);
+    voteIndices.resize(1);
+    voteIndices[0].push_back(votes[0].computorIndex);
+    for (int i = 1; i < N; i++){
+        int vote_indice = -1;
+        for (int j = 0; j < uniqueVote.size(); j++){
+            if (compareVote(votes[i], uniqueVote[j])){
+                vote_indice = j;
+                break;
+            }
+        }
+        if (vote_indice != -1){
+            voteIndices[vote_indice].push_back(votes[i].computorIndex);
+        } else {
+            uniqueVote.push_back(votes[i]);
+            voteIndices.resize(voteIndices.size() + 1);
+            int M = voteIndices.size() -1;
+            voteIndices[M].resize(0);
+            voteIndices[M].push_back(votes[i].computorIndex);
+        }
+    }
 }
 
 void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* compFileName)
@@ -320,7 +417,14 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     memset(packet.rqt.voteFlags, 0, (676 + 7) / 8);
     qc->sendData(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
     auto votes = qc->getLatestVectorPacketAs<Tick>();
-    LOG("Received %d quorum ticks (votes)\n", votes.size());
+    LOG("Received %d quorum tick #%u (votes)\n", votes.size(), requestedTick);
+
+    packet.rqt.tick = requestedTick+1;
+    memset(packet.rqt.voteFlags, 0, (676 + 7) / 8);
+    qc->sendData(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
+    auto votes_next = qc->getLatestVectorPacketAs<Tick>();
+    LOG("Received %d quorum tick #%u (votes)\n", votes_next.size(), requestedTick+1);
+
     int N = votes.size();
     if (N == 0){
         return;
@@ -338,29 +442,32 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
             return;
         }
     }
-    std::vector<Tick> uniqueVote;
-    std::vector<std::vector<int>> voteIndices;
-    uniqueVote.push_back(votes[0]);
-    voteIndices.resize(1);
-    voteIndices[0].push_back(votes[0].computorIndex);
-    for (int i = 1; i < N; i++){
-        int vote_indice = -1;
-        for (int j = 0; j < uniqueVote.size(); j++){
-            if (compareVote(votes[i], uniqueVote[j])){
-                vote_indice = j;
-                break;
+    std::vector<Tick> uniqueVote, uniqueVoteNext;
+    std::vector<std::vector<int>> voteIndices, voteIndicesNext;
+    getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N);
+    if (votes_next.size() < 451)
+    {
+        printf("Failed to get votes for tick %d, this will not perform salt check", votes_next.size());
+        getUniqueVotes(votes, uniqueVote, voteIndices, N);
+    }
+    else
+    {
+        int max_id = 0;
+        for (int i = 1; i < uniqueVote.size(); i++){
+            if (voteIndicesNext[max_id].size() < voteIndicesNext[i].size()){
+                max_id = i;
             }
         }
-        if (vote_indice != -1){
-            voteIndices[vote_indice].push_back(votes[i].computorIndex);
-        } else {
-            uniqueVote.push_back(votes[i]);
-            voteIndices.resize(voteIndices.size() + 1);
-            int M = voteIndices.size() -1;
-            voteIndices[M].resize(0);
-            voteIndices[M].push_back(votes[i].computorIndex);
-        }
+        auto vote_next = uniqueVoteNext[max_id];
+        getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
+                       vote_next.prevResourceTestingDigest,
+                       vote_next.prevSpectrumDigest,
+                       vote_next.prevUniverseDigest,
+                       vote_next.prevComputerDigest);
     }
+
+
+
     LOG("Number of unique votes: %d\n", uniqueVote.size());
     for (int i = 0; i < uniqueVote.size(); i++){
         LOG("Vote #%d (voted by %d computors ID) ", i, voteIndices[i].size());
