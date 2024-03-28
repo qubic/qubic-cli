@@ -111,15 +111,13 @@ int main(int argc, char *argv[])
             sanityCheckNumberOfUnit(g_qx_asset_transfer_amount);
             sanityCheckValidString(g_qx_asset_transfer_asset_name);
             sanityCheckValidString(g_qx_asset_transfer_issuer_in_hex);
-            sanityCheckIdentity(g_qx_asset_transfer_possessed_identity);
             sanityCheckIdentity(g_qx_asset_transfer_new_owner_identity);
             qxTransferAsset(g_nodeIp, g_nodePort, g_seed,
                             g_qx_asset_transfer_asset_name,
                             g_qx_asset_transfer_issuer_in_hex,
-                            g_qx_asset_transfer_possessed_identity,
                             g_qx_asset_transfer_new_owner_identity,
                             g_qx_asset_transfer_amount,
-                         g_offsetScheduledTick);
+                            g_offsetScheduledTick);
             break;
         case GET_COMP_LIST:
             sanityCheckNode(g_nodeIp, g_nodePort);
