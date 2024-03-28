@@ -20,7 +20,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* pAssetName,
                      const char* pIssuer,
-                     const char* possessorIdentity,
                      const char* newOwnerIdentity,
                      long long numberOfUnits,
                      uint32_t scheduledTickOffset);

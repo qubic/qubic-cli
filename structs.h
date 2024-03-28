@@ -359,8 +359,7 @@ typedef struct
 typedef struct
 {
     uint8_t issuer[32];
-    uint8_t possessor[32];
-    uint8_t newOwner[32];
+    uint8_t newOwnerAndPossessor[32];
     unsigned long long assetName;
     long long numberOfUnits;
 } TransferAssetOwnershipAndPossession_input;

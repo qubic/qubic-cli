@@ -198,7 +198,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* pAssetName,
                      const char* pIssuer,
-                     const char* possessorIdentity,
                      const char* newOwnerIdentity,
                      long long numberOfUnits,
                      uint32_t scheduledTickOffset)
@@ -211,7 +210,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     uint8_t digest[32] = {0};
     uint8_t signature[64] = {0};
     uint8_t issuer[32] = {0};
-    uint8_t possessorPublicKey[32] = {0};
     uint8_t newOwnerPublicKey[32] = {0};
     char txHash[128] = {0};
     char assetNameU1[8] = {0};
@@ -223,7 +221,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getPublicKeyFromIdentity(QX_ADDRESS, destPublicKey);
-    getPublicKeyFromIdentity(possessorIdentity, possessorPublicKey);
     getPublicKeyFromIdentity(newOwnerIdentity, newOwnerPublicKey);
     struct {
         RequestResponseHeader header;
@@ -248,8 +245,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     // fill the input
     memcpy(&packet.ta.assetName, assetNameU1, 8);
     memcpy(packet.ta.issuer, issuer, 32);
-    memcpy(packet.ta.possessor, possessorPublicKey, 32);
-    memcpy(packet.ta.newOwner, newOwnerPublicKey, 32);
+    memcpy(packet.ta.newOwnerAndPossessor, newOwnerPublicKey, 32);
     packet.ta.numberOfUnits = numberOfUnits;
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
