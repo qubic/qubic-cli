@@ -548,7 +548,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qxgetorder") == 0)
         {
-            g_cmd = QX_ORDER;
+            g_cmd = QX_GET_ORDER;
             g_qx_command_1 = argv[i+1];
             g_qx_command_2 = argv[i+2];
             g_qx_issuer = argv[i+3];
