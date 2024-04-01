@@ -269,6 +269,15 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     packet.transaction.inputType = functionNumber;
     packet.transaction.inputSize = sizeof(qxOrderAction_input);
 
+    // DEBUG LOG
+    LOG("\n-------------------------------------\n\n");
+    LOG("Sending QX action - functionNumber: %d\n", functionNumber);
+    LOG("Issuer: %s\n", pIssuerInQubicFormat);
+    LOG("assetName: %s\n", assetNameU1);
+    LOG("price: %lld\n", price);
+    LOG("numberOfShares: %lld\n", numberOfShares);
+    LOG("\n-------------------------------------\n\n");
+
     // fill the input
     memcpy(&packet.qoa.assetName, assetNameU1, 8);
     memcpy(packet.qoa.issuer, issuer, 32);
