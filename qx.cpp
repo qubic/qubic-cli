@@ -424,17 +424,15 @@ void printEntityOrders(qxGetEntityOrder_output& orders)
     int N = sizeof(orders) /sizeof(orders.orders[0]);
     LOG("Issuer\t\tAssetName\tPrice\tNumberOfShares\n");
     for (int i = 0; i < N; i++){
-        if (!isZeroPubkey(orders.orders[i].issuer) ||
-            !orders.orders[i].assetName ||
-                !orders.orders[i].price ||
-                !orders.orders[i].numberOfShares)
+        if (!orders.orders[i].price ||
+            !orders.orders[i].numberOfShares)
         {
             char iden[120];
             char assetName[8];
             memset(iden, 0, 120);
-            memcpy(assetName, 0, 8);
+            memset(assetName, 0, 8);
             getIdentityFromPublicKey(orders.orders[i].issuer, iden, false);
-            memcpy(assetName, &orders.orders[i].issuer, 8);
+            memcpy(assetName, &orders.orders[i].assetName, 8);
             LOG("%s\t%s\t%lld\t%lld\n", iden, assetName, orders.orders[i].price, orders.orders[i].numberOfShares);
         }
     }
