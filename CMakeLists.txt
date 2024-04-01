@@ -10,6 +10,7 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/SCUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 		  ${CMAKE_SOURCE_DIR}/qutil.cpp
+		  ${CMAKE_SOURCE_DIR}/qx.cpp
 )
 SET(HEADER_FILES
 	K12AndKeyUtil.h

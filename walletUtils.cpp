@@ -15,8 +15,8 @@ void printWalletInfo(const char* seed)
 	uint8_t privateKey[32] = {0};
 	uint8_t publicKey[32] = {0};
     uint8_t subseed[32] = {0};
-	char privateKeyHex[128] = {0};
-	char publicKeyHex[128] = {0};
+	char privateKeyQubicFormat[128] = {0};
+	char publicKeyQubicFormat[128] = {0};
     char publicIdentity[128] = {0};
     getSubseedFromSeed((uint8_t*)seed, subseed);
     getPrivateKeyFromSubSeed(subseed, privateKey);
@@ -24,11 +24,11 @@ void printWalletInfo(const char* seed)
     const bool isLowerCase = false;
     getIdentityFromPublicKey(publicKey, publicIdentity, isLowerCase);
 
-    byteToHex(privateKey, privateKeyHex, 32);
-    byteToHex(publicKey, publicKeyHex, 32);
+    getIdentityFromPublicKey(privateKey, privateKeyQubicFormat, true);
+    getIdentityFromPublicKey(publicKey, publicKeyQubicFormat, true);
     LOG("Seed: %s\n", seed);
-    LOG("Private key: %s\n", privateKeyHex);
-    LOG("Public key: %s\n", publicKeyHex);
+    LOG("Private key: %s\n", privateKeyQubicFormat);
+    LOG("Public key: %s\n", publicKeyQubicFormat);
     LOG("Identity: %s\n", publicIdentity);
 }
 RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t* publicKey)
@@ -347,14 +347,6 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     }
 
     return result;
-}
-static bool isZeroPubkey(uint8_t* pubkey){
-    for (int i = 0; i < 32; i++){
-        if (pubkey[i] != 0){
-            return false;
-        }
-    }
-    return true;
 }
 void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
     RespondContractIPO status = _getIPOStatus(nodeIp, nodePort, contractIndex);

@@ -10,6 +10,7 @@
 #include "SCUtils.h"
 #include "quottery.h"
 #include "qutil.h"
+#include "qx.h"
 
 int main(int argc, char *argv[])
 {

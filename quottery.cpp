@@ -322,15 +322,6 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     }
 
 }
-static bool isArrayZero(uint8_t* ptr, int len){
-    for (int i = 0; i < len; i++){
-        if (ptr[i] != 0) return false;
-    }
-    return true;
-}
-static bool isZeroPubkey(uint8_t* pubkey){
-    return isArrayZero(pubkey, 32);
-}
 void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
 
     getBetInfo_output result;
@@ -348,7 +339,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
     char buf[128] = {0};
     LOG("Bet Id: %u\n", result.betId); //    uint32_t betId;
     LOG("Number of options: %u\n", result.nOption); //    uint8_t nOption;      // options number
-    byteToHex(result.creator, buf, 32);
+    getIdentityFromPublicKey(result.creator, buf, false);
     LOG("Creator: %s\n", buf);
     {
         memset(buf, 0 , 128);

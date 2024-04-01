@@ -358,22 +358,6 @@ typedef struct
 
 typedef struct
 {
-    uint8_t issuer[32];
-    uint8_t newOwnerAndPossessor[32];
-    unsigned long long assetName;
-    long long numberOfUnits;
-} TransferAssetOwnershipAndPossession_input;
-
-struct IssueAsset_input
-{
-    uint64_t name;
-    int64_t numberOfUnits;
-    uint64_t unitOfMeasurement;
-    char numberOfDecimalPlaces;
-};
-
-typedef struct
-{
     // TODO: Padding
     unsigned short epoch;
     unsigned char publicKeys[NUMBER_OF_COMPUTORS][32];
