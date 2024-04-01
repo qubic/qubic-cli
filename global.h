@@ -35,6 +35,14 @@ char* g_qx_issue_unit_of_measurement = nullptr;
 int64_t g_qx_issue_asset_number_of_unit = -1;
 char g_qx_issue_asset_num_decimal = 0;
 
+char* g_qx_command_1 = nullptr;
+char* g_qx_command_2 = nullptr;
+char* g_qx_issuer = nullptr;
+char* g_qx_asset_name = nullptr;
+long long g_qx_offset = -1;
+long long g_qx_price = -1;
+long long g_qx_number_of_share = -1;
+
 char* g_qx_asset_transfer_possessed_identity = nullptr;
 char* g_qx_asset_transfer_new_owner_identity = nullptr;
 int64_t g_qx_asset_transfer_amount = -1;

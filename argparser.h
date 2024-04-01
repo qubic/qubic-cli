@@ -95,6 +95,10 @@ void print_help(){
     printf("\t\tCreate an asset via Qx contract.\n");
     printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset via Qx contract.\n");
+    printf("\t-qxorder add/remove bid/ask [ISSUER] [ASSET_NAME] [PRICE] [NUMBER_OF_SHARE]\n");
+    printf("\t\tSet order on Qx.\n");
+    printf("\t-qxgetorder entity/asset bid/ask [ISSUER/ENTITY] [ASSET_NAME (NULL for requesting entity)] [OFFSET]\n");
+    printf("\t\tGet orders on Qx\n");
 
     printf("\n[QTRY COMMAND]\n");
     printf("\t-qtrygetfee\n");
@@ -525,6 +529,32 @@ void parseArgument(int argc, char** argv){
         {
             g_cmd = PRINT_QX_FEE;
             i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if(strcmp(argv[i], "-qxorder") == 0)
+        {
+            g_cmd = QX_ORDER;
+            g_qx_command_1 = argv[i+1];
+            g_qx_command_2 = argv[i+2];
+            g_qx_issuer = argv[i+3];
+            g_qx_asset_name = argv[i+4];
+            g_qx_price = charToNumber(argv[i+5]);
+            g_qx_number_of_share = charToNumber(argv[i+6]);
+            i+=7;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qxgetorder") == 0)
+        {
+            g_cmd = QX_ORDER;
+            g_qx_command_1 = argv[i+1];
+            g_qx_command_2 = argv[i+2];
+            g_qx_issuer = argv[i+3];
+            g_qx_asset_name = argv[i+4];
+            g_qx_offset = charToNumber(argv[i+5]);
+            i+=6;
             CHECK_OVER_PARAMETERS
             break;
         }

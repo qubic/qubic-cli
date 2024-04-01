@@ -47,6 +47,8 @@ enum COMMAND
     TOTAL_COMMAND = 40,
     SYNC_TIME = 41,
     GET_SYSTEM_INFO = 42,
+    QX_ORDER=43,
+    QX_GET_ORDER=44,
 };
 
 struct RequestResponseHeader {
