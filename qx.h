@@ -28,7 +28,7 @@ void qxAddToAskOrder(const char* nodeIp, int nodePort,
 void qxAddToBidOrder(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* pAssetName,
-                     const char* pHexIssuer,
+                     const char* pIssuerInQubicFormat,
                      const long long price,
                      const long long numberOfShares,
                      uint32_t scheduledTickOffset);
@@ -50,13 +50,11 @@ void qxRemoveToBidOrder(const char* nodeIp, int nodePort,
                         uint32_t scheduledTickOffset);
 
 void qxGetAssetAskOrder(const char* nodeIp, int nodePort,
-                        const char* seed,
                         const char* pAssetName,
                         const char* pHexIssuer,
                         const long long offset);
 
 void qxGetAssetBidOrder(const char* nodeIp, int nodePort,
-                        const char* seed,
                         const char* pAssetName,
                         const char* pHexIssuer,
                         const long long offset);

@@ -95,9 +95,9 @@ void print_help(){
     printf("\t\tCreate an asset via Qx contract.\n");
     printf("\t-qxtransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset via Qx contract.\n");
-    printf("\t-qxorder add/remove bid/ask [ISSUER] [ASSET_NAME] [PRICE] [NUMBER_OF_SHARE]\n");
+    printf("\t-qxorder add/remove bid/ask [ISSUER (in qubic format)] [ASSET_NAME] [PRICE] [NUMBER_OF_SHARE]\n");
     printf("\t\tSet order on Qx.\n");
-    printf("\t-qxgetorder entity/asset bid/ask [ISSUER/ENTITY] [ASSET_NAME (NULL for requesting entity)] [OFFSET]\n");
+    printf("\t-qxgetorder entity/asset bid/ask [ISSUER/ENTITY (in qubic format)] [ASSET_NAME (NULL for requesting entity)] [OFFSET]\n");
     printf("\t\tGet orders on Qx\n");
 
     printf("\n[QTRY COMMAND]\n");
