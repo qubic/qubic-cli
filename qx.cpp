@@ -344,7 +344,7 @@ void qxRemoveToBidOrder(const char* nodeIp, int nodePort,
 void printAssetOrders(qxGetAssetOrder_output& orders)
 {
     int N = sizeof(orders) /sizeof(orders.orders[0]);
-    LOG("Entity\t\tPrice\tNumberOfShares");
+    LOG("Entity\t\tPrice\tNumberOfShares\n");
     for (int i = 0; i < N; i++){
         if (!isZeroPubkey(orders.orders[i].entity))
         {
@@ -422,7 +422,7 @@ void qxGetAssetBidOrder(const char* nodeIp, int nodePort,
 void printEntityOrders(qxGetEntityOrder_output& orders)
 {
     int N = sizeof(orders) /sizeof(orders.orders[0]);
-    LOG("Issuer\t\tAssetName\tPrice\tNumberOfShares");
+    LOG("Issuer\t\tAssetName\tPrice\tNumberOfShares\n");
     for (int i = 0; i < N; i++){
         if (!isZeroPubkey(orders.orders[i].issuer) ||
             !orders.orders[i].assetName ||
