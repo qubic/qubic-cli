@@ -73,7 +73,7 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
 }
 static void printOwnedAsset(Asset owned, Asset iss)
 {
-    char issuer[128];
+    char issuer[128] = {0};
     char name[8] = {0};
     char unitOfMeasurement[7] = {0};
     memcpy(name, iss.varStruct.issuance.name, 7);
@@ -87,7 +87,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
 }
 static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
 {
-    char issuer[128];
+    char issuer[128] = {0};
     char name[8] = {0};
     char ownerId[128] = {0};
     getIdentityFromPublicKey(owner.varStruct.ownership.publicKey, ownerId, false);
