@@ -258,7 +258,7 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 0; // free
+    packet.transaction.amount = 1; // free
     if (functionNumber == QX_ADD_BID_ORDER_FN){
         packet.transaction.amount = price * numberOfShares;
     }
@@ -352,6 +352,8 @@ void printAssetOrders(qxGetAssetOrder_output& orders)
             memset(iden, 0, 120);
             getIdentityFromPublicKey(orders.orders[i].entity, iden, false);
             LOG("%s\t%lld\t%lld\n", iden, orders.orders[i].price, orders.orders[i].numberOfShares);
+        } else {
+            break;
         }
     }
 }
@@ -396,8 +398,10 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto orders = (qxGetAssetOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
-            printAssetOrders(*orders);
+            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(qxGetAssetOrder_output)){
+                auto orders = (qxGetAssetOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
+                printAssetOrders(*orders);
+            }
         }
         ptr+= header->size();
     }
@@ -424,16 +428,18 @@ void printEntityOrders(qxGetEntityOrder_output& orders)
     int N = sizeof(orders) /sizeof(orders.orders[0]);
     LOG("Issuer\t\tAssetName\tPrice\tNumberOfShares\n");
     for (int i = 0; i < N; i++){
-        if (!orders.orders[i].price ||
-            !orders.orders[i].numberOfShares)
+        if (orders.orders[i].price ||
+            orders.orders[i].numberOfShares)
         {
             char iden[120];
-            char assetName[8];
+            char assetName[8] = {'N','O',' ', 'N','A','M','E', 0};
             memset(iden, 0, 120);
-            memset(assetName, 0, 8);
             getIdentityFromPublicKey(orders.orders[i].issuer, iden, false);
-            memcpy(assetName, &orders.orders[i].assetName, 8);
+            if (orders.orders[i].assetName)
+                memcpy(assetName, &orders.orders[i].assetName, 8);
             LOG("%s\t%s\t%lld\t%lld\n", iden, assetName, orders.orders[i].price, orders.orders[i].numberOfShares);
+        } else {
+            break;
         }
     }
 }
@@ -474,8 +480,10 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto orders = (qxGetEntityOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
-            printEntityOrders(*orders);
+            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(qxGetEntityOrder_output)){
+                auto orders = (qxGetEntityOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
+                printEntityOrders(*orders);
+            }
         }
         ptr+= header->size();
     }
