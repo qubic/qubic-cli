@@ -474,7 +474,7 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(qxGetAssetOrder_input);
+    packet.rcf.inputSize = sizeof(qxGetEntityOrder_input);
     packet.rcf.inputType = procedureNumber;
     packet.rcf.contractIndex = QX_CONTRACT_INDEX;
     memcpy(packet.qgeo.entity, entity, 32);
