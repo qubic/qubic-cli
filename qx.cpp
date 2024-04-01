@@ -259,6 +259,10 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0; // free
+    if (functionNumber == QX_ADD_BID_ORDER_FN){
+        packet.transaction.amount = price * numberOfShares;
+    }
+
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
