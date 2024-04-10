@@ -48,6 +48,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
+    memset(&result, 0, sizeof(result));
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
