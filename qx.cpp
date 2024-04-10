@@ -52,7 +52,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(QxFees_output)){
+            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(QxFees_output)){
                 auto fees = (QxFees_output*)(data + ptr + sizeof(RequestResponseHeader));
                 result = *fees;
             }
@@ -409,7 +409,7 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(qxGetAssetOrder_output)){
+            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(qxGetAssetOrder_output)){
                 auto orders = (qxGetAssetOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
                 printAssetOrders(*orders);
             }
@@ -491,7 +491,7 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(qxGetEntityOrder_output)){
+            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(qxGetEntityOrder_output)){
                 auto orders = (qxGetEntityOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
                 printEntityOrders(*orders);
             }
