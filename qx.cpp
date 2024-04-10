@@ -52,8 +52,10 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto fees = (QxFees_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *fees;
+            if (recvByte - ptr + sizeof(RequestResponseHeader) >= sizeof(QxFees_output)){
+                auto fees = (QxFees_output*)(data + ptr + sizeof(RequestResponseHeader));
+                result = *fees;
+            }
         }
         ptr+= header->size();
     }
