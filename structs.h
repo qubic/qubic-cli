@@ -192,6 +192,7 @@ typedef struct
     unsigned int numberOfTransactions;
 
     uint8_t randomMiningSeed[32];
+    int solutionThreshold;
 } CurrentSystemInfo;
 
 typedef struct

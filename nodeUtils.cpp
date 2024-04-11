@@ -103,6 +103,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         char hex[64];
         byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
         LOG("RandomMiningSeed: %s\n", hex);
+        LOG("SolutionThreshold: %u\n", curSystemInfo.solutionThreshold);
 
         // todo: add initial time
 
