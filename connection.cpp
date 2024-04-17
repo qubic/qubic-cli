@@ -72,6 +72,8 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 	memcpy(mNodeIp, nodeIp, strlen(nodeIp));
 	mNodePort = nodePort;
 	mSocket = connect(nodeIp, nodePort);
+    if (mSocket < 0)
+        throw std::exception("No connection.");
 }
 QubicConnection::~QubicConnection()
 {
@@ -92,6 +94,10 @@ void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
         receivedData.resize(recvByte + receivedData.size());
         memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
         recvByte = receiveData(tmp, 1024);
+    }
+    if (receivedData.size() == 0)
+    {
+        throw std::exception("Error: Did not receive any response from node.");
     }
 }
 

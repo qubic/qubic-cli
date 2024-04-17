@@ -12,7 +12,7 @@
 #include "qutil.h"
 #include "qx.h"
 
-int main(int argc, char *argv[])
+int run(int argc, char* argv[])
 {
     parseArgument(argc, argv);
     switch (g_cmd){
@@ -272,4 +272,17 @@ int main(int argc, char *argv[])
             break;
     }
     return 0;
+}
+
+int main(int argc, char* argv[])
+{
+    try
+    {
+        return run(argc, argv);
+    }
+    catch (std::exception & ex)
+    {
+        printf("%s\n", ex.what());
+        return -1;
+    }
 }
