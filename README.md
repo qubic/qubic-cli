@@ -169,7 +169,7 @@ When building the project, you may encounter the following exception under Linux
 
 `$ No CMAKE_CXX_COMPILER could be found.`
 
-This exception can be resolved by installing the following package `build-essential`:
+This error can be resolved by installing the following package `build-essential`:
 
 `sudo apt-get install build-essential`
 
