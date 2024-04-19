@@ -1,4 +1,5 @@
 #include "structs.h"
+#include <stdexcept>
 #ifdef _MSC_VER
 #pragma comment(lib, "Ws2_32.lib")
 #include <Winsock2.h>
@@ -73,7 +74,7 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 	mNodePort = nodePort;
 	mSocket = connect(nodeIp, nodePort);
     if (mSocket < 0)
-        throw std::exception("No connection.");
+        throw std::logic_error("No connection.");
 }
 QubicConnection::~QubicConnection()
 {
@@ -97,7 +98,7 @@ void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
     }
     if (receivedData.size() == 0)
     {
-        throw std::exception("Error: Did not receive any response from node.");
+        throw std::logic_error("Error: Did not receive any response from node.");
     }
 }
 
