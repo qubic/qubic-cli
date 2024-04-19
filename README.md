@@ -164,7 +164,7 @@ Check tx on online:
 
 `./qubic-cli -nodeip 127.0.0.1 -checktxontick 10600000 TX_HASH`
 
-### Possible exceptions encountered during build on Linux
+### Possible errors encountered during build on Linux
 When building the project, you may encounter the following exception under Linux: 
 
 `$ No CMAKE_CXX_COMPILER could be found.`
