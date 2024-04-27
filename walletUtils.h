@@ -13,7 +13,7 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const uint8_t* extraData,
                            uint32_t scheduledTickOffset);
 
-void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr);
+void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1);
 bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signature);
 void makeIPOBid(const char* nodeIp, int nodePort,
                 const char* seed,

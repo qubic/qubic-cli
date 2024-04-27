@@ -215,6 +215,55 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     }
     
 }
+
+int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
+{
+    struct {
+        RequestResponseHeader header;
+        RequestTxStatus rts;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_TX_STATUS); // REQUEST_TX_STATUS
+    packet.rts.tick = requestedTick;
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    RespondTxStatus result;
+    memset(&result, 0, sizeof(result));
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data+ptr);
+        if (header->type() == RESPOND_TX_STATUS){
+            // notice: the node not always return full size of RESPOND_TX_STATUS
+            // it only returns enough digests
+            auto ptr_rts = (RespondTxStatus *)(data + ptr + sizeof(RequestResponseHeader));
+            size_t received_size = ptr_rts->size();
+            memcpy(&result, ptr_rts, received_size);
+            break;
+        }
+        ptr+= header->size();
+    }
+
+    int tx_id = -1;
+    for (int i = 0; i < result.txCount; i++){
+        char tx_hash[60];
+        memset(tx_hash, 0, 60);
+        getIdentityFromPublicKey(result.txDigests[i], tx_hash, true);
+        if (memcmp(tx_hash, txHash, 60) == 0){
+            tx_id = i;
+            break;
+        }
+    }
+    if (tx_id == -1){
+        return -1; // not found !?
+    }
+    return (result.moneyFlew[tx_id >> 3] & (1<<(tx_id & 7))) ? 1 : 0;
+}
+
 bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
@@ -250,7 +299,9 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
         if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
         {
             LOG("Found tx %s on tick %u\n", txHash, requestedTick);
-            printReceipt(txs[i], txHash, extraData[i].vecU8.data());
+            // check for moneyflew status
+            int moneyFlew = getMoneyFlewStatus(qc.get(), txHash, requestedTick);
+            printReceipt(txs[i], txHash, extraData[i].vecU8.data(), moneyFlew);
             return true;
         }
     }

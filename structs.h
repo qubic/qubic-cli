@@ -498,3 +498,34 @@ struct SpecialCommandSendTime
         return 255;
     }
 };
+
+
+#define REQUEST_TX_STATUS 201
+
+struct RequestTxStatus
+{
+    unsigned int tick;
+};
+
+static_assert(sizeof(RequestTxStatus) == 4, "unexpected size");
+
+#define RESPOND_TX_STATUS 202
+
+#pragma pack(push, 1)
+struct RespondTxStatus
+{
+    unsigned int currentTickOfNode;
+    unsigned int tick;
+    unsigned int txCount;
+    unsigned char moneyFlew[(NUMBER_OF_TRANSACTIONS_PER_TICK + 7) / 8];
+
+    // only txCount digests are sent with this message, so only read the first txCount digests when using this as a view to the received data
+    uint8_t txDigests[NUMBER_OF_TRANSACTIONS_PER_TICK][32];
+
+    // return size of this struct to be sent (last txDigests are 0 and do not need to be sent)
+    unsigned int size() const
+    {
+        return offsetof(RespondTxStatus, txDigests) + txCount * 32;
+    }
+};
+#pragma pack(pop)

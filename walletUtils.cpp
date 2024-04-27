@@ -85,7 +85,7 @@ void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
     LOG("Latest Outgoing Transfer Tick: %u\n", entity.entity.latestOutgoingTransferTick);
 }
 
-void printReceipt(Transaction& tx, const char* txHash, const uint8_t* extraData)
+void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1)
 {
     char sourceIdentity[128] = {0};
     char dstIdentity[128] = {0};
@@ -110,6 +110,12 @@ void printReceipt(Transaction& tx, const char* txHash, const uint8_t* extraData)
             sprintf(hex_tring + i * 2, "%02x", extraData[i]);
 
         LOG("Extra data: %s\n", hex_tring);
+    }
+    if (moneyFlew != -1){
+        if (moneyFlew) LOG("MoneyFlew: Yes\n");
+        else LOG("MoneyFlew: No\n");
+    } else {
+        LOG("MoneyFlew: N/A\n");
     }
     LOG("~~~~~END-RECEIPT~~~~~\n");
 }
