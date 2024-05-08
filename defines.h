@@ -38,6 +38,7 @@
 #define SPECIAL_COMMAND_REISSUE_VOTE 11ULL // F9
 #define SPECIAL_COMMAND_QUERY_TIME 12ULL    // send this to node to query time, responds with time read from clock
 #define SPECIAL_COMMAND_SEND_TIME 13ULL     // send this to node to set time, responds with time read from clock after setting
+#define SPECIAL_COMMAND_GET_MINING_SCORE_RANKING 14ULL // get the ranking of miners connect to node
 
 #define QX_CONTRACT_INDEX 1
 #define QX_FEE_FUNCTION_INDEX 1

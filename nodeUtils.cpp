@@ -183,7 +183,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
         }
         ptr+= header->size();
     }
-    
+
 }
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
@@ -213,7 +213,7 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
         }
         ptr+= header->size();
     }
-    
+
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -721,7 +721,7 @@ void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, ui
         LOG("%02x", buffer[i]);
     }
     LOG("\n");
-    
+
 }
 
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command)
@@ -757,7 +757,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     auto response = qc->receivePacketAs<SpecialCommand>();
-    
+
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
     } else{
@@ -807,7 +807,7 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     auto response = qc->receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
-    
+
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.mainModeFlag == packet.cmd.mainModeFlag){
             LOG("Successfully set MAINAUX flag\n");
@@ -854,7 +854,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     auto response = qc->receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
-    
+
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
             LOG("Successfully set solution threshold\n");
@@ -948,7 +948,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto response = qc->receivePacketAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
-        
+
         if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
             LOG("Failed to query node time!\n");
             return;
@@ -1000,7 +1000,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto response = qc->receivePacketAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
-        
+
         if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) {
             LOG("Failed to set node time!\n");
             return;
@@ -1062,7 +1062,7 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
         }
         ptr+= header->size();
     }
-    
+
     return okay;
 }
 
@@ -1129,7 +1129,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
         }
         ptr+= header->size();
     }
-    
+
     return result;
 }
 void getNodeIpList(const char* nodeIp, const int nodePort)
@@ -1175,7 +1175,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
         }
         ptr+= header->size();
     }
-    
+
 }
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;
@@ -1313,4 +1313,86 @@ void dumpUniverseToCSV(const char* input, const char* output){
     }
     free(asset);
     fclose(f);
+}
+
+void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed, int command)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommand cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = time(NULL);
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_GET_MINING_SCORE_RANKING) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    SpecialCommandGetMiningScoreRanking response;
+
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+
+    auto header = (RequestResponseHeader*)(data);
+    data = data + sizeof(RequestResponseHeader) + header->size();
+
+    // Get data out
+    unsigned char* ptr = data;
+    // get back the mining score ranking
+    response.everIncreasingNonceAndCommandType = *(unsigned long long*)ptr;
+    ptr += 8;
+
+    response.numRankings = *(unsigned int*)ptr;
+    ptr += 4;
+
+    if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
+        LOG("Failed to get mining score ranking!\n");
+        return;
+    }
+
+    // Get the number of miners
+    LOG("Total miner: %u\n", response.numRankings);
+    response.rankings.resize(response.numRankings);
+
+    // Get detail ranking score of miners
+    unsigned int total_score = 0;
+    if (response.numRankings > 0)
+    {
+        memcpy(response.rankings.data(), ptr, response.numRankings * sizeof(SpecialCommandGetMiningScoreRanking::ScoreEntry));
+        LOG("%-8s%-64s%s\n", "Rank", "Identity", "Score");
+        for (unsigned int i = 0; i < response.numRankings ; i++)
+        {
+            SpecialCommandGetMiningScoreRanking::ScoreEntry miner = response.rankings[i];
+            char publicIdentity[128] = {0};
+            getIdentityFromPublicKey(miner.minerPublicKey, publicIdentity, false);
+            unsigned char score = miner.minerScore;
+            LOG("%-8u%-64s%u\n", i + 1, publicIdentity, score);
+            total_score += score;
+        }
+    }
+    else
+    {
+        LOG("No updated yet.\n");
+    }
+    LOG("Total score: %u\n", total_score);
 }

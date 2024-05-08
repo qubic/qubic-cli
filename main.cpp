@@ -256,6 +256,12 @@ int run(int argc, char* argv[])
             sanityCheckSpecialCommand(g_requestedSpecialCommand);
             sendSpecialCommand(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
             break;
+        case GET_MINING_SCORE_RANKING:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckSpecialCommand(g_requestedSpecialCommand);
+            sendSpecialCommandGetMiningScoreRanking(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
+            break;
         case SYNC_TIME:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

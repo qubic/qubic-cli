@@ -2,6 +2,7 @@
 #include "defines.h"
 #include "utils.h"
 #include <cstddef>
+#include <cstring>
 enum COMMAND
 {
     SHOW_KEYS = 0,
@@ -49,6 +50,7 @@ enum COMMAND
     GET_SYSTEM_INFO = 42,
     QX_ORDER=43,
     QX_GET_ORDER=44,
+    GET_MINING_SCORE_RANKING=45,
 };
 
 struct RequestResponseHeader {
@@ -499,6 +501,23 @@ struct SpecialCommandSendTime
     }
 };
 
+#pragma pack(push, 1)
+struct SpecialCommandGetMiningScoreRanking
+{
+    struct ScoreEntry
+    {
+        unsigned char minerPublicKey[32];
+        unsigned int minerScore;
+    };
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned int numRankings;
+    std::vector<ScoreEntry> rankings;
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+#pragma pack(pop)
 
 #define REQUEST_TX_STATUS 201
 
