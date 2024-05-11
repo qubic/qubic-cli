@@ -70,6 +70,34 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
 
     return result;
 }
+
+void getSpectrumDigest(RespondedEntity& respondedEntity, uint8_t* spectrumDigest)
+{
+    // Check if the size of entity is good
+    const size_t entity_size = sizeof(respondedEntity.entity);
+    if (entity_size != 64)
+    {
+        LOG("Size of entity is unexpected: %lu\n", sizeof(entity_size));
+        return;
+    }
+
+    // Compute the root hash from the entity and siblings
+    if (respondedEntity.spectrumIndex < 0 )
+    {
+        LOG("Spectrum index is invalid: %d\n", respondedEntity.spectrumIndex);
+        return;
+    }
+
+    // Compute the spectrum digest
+    getDigestFromSiblings<32>(
+        SPECTRUM_DEPTH,
+        (uint8_t*)(&respondedEntity.entity),
+        entity_size,
+        respondedEntity.spectrumIndex,
+        respondedEntity.siblings,
+        spectrumDigest);
+}
+
 void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
 {
     uint8_t publicKey[32] = {0};
@@ -83,6 +111,14 @@ void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
     LOG("Number Of Outgoing Transfers: %ld\n", entity.entity.numberOfOutgoingTransfers);
     LOG("Latest Incoming Transfer Tick: %u\n", entity.entity.latestIncomingTransferTick);
     LOG("Latest Outgoing Transfer Tick: %u\n", entity.entity.latestOutgoingTransferTick);
+
+    // Get the spectrum digest from entity
+    uint8_t spectumDigest[32] = {0};
+    getSpectrumDigest(entity, spectumDigest);
+    char hex[64];
+    LOG("Tick: %u\n", entity.tick);
+    byteToHex(spectumDigest, hex, 32);
+    LOG("Spectum Digest: %s\n", hex);
 }
 
 void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1)
