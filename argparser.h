@@ -498,6 +498,15 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
+        if(strcmp(argv[i], "-getminingscoreranking") == 0)
+        {
+            g_cmd = GET_MINING_SCORE_RANKING;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_GET_MINING_SCORE_RANKING;
+            i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
         /**********************
          ******QX COMMAND******
          **********************/

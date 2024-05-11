@@ -52,7 +52,7 @@ Command:
         Participating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.
     -getipostatus <CONTRACT_INDEX>
         View IPO status. valid node ip/port, CONTRACT_INDEX are required.
-    -publishproposal 
+    -publishproposal
         (on development)
 
 [NODE COMMAND]
@@ -60,24 +60,25 @@ Command:
         Show current system information of a node (e.g. epoch, initial tick, random mining seed)
     -getcurrenttick
         Show current tick information of a node
-    -sendspecialcommand <COMMAND_IN_NUMBER> 
-        Perform a special command to node, valid private key and node ip/port are required.	
-    -tooglemainaux <MODE_0> <Mode_1> 
-        Remotely toogle Main/Aux mode on node,valid private key and node ip/port are required.	
-        <MODE_0> and <MODE_1> value are: MAIN or AUX	
-    -setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> 
-        Remotely set solution threshold for future epoch,valid private key and node ip/port are required.	
+    -sendspecialcommand <COMMAND_IN_NUMBER>
+        Perform a special command to node, valid private key and node ip/port are required.
+    -tooglemainaux <MODE_0> <Mode_1>
+        Remotely toogle Main/Aux mode on node,valid private key and node ip/port are required.
+        <MODE_0> and <MODE_1> value are: MAIN or AUX
+    -setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD>
+        Remotely set solution threshold for future epoch,valid private key and node ip/port are required.
     -refreshpeerlist
-        (equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid private key and node ip/port are required.	
+        (equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid private key and node ip/port are required.
     -forcenexttick
-        (equivalent to F5) Remotely force next tick on node to be empty, valid private key and node ip/port are required.	
+        (equivalent to F5) Remotely force next tick on node to be empty, valid private key and node ip/port are required.
     -reissuevote
-        (equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.	
+        (equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.
     -sendrawpacket <DATA_IN_HEX> <SIZE>
         Send a raw packet to nodeip. Valid node ip/port are required.
     -getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>
         Fetch a single log line from the node. Valid node ip/port, passcodes are required.
-
+    -getminingscoreranking
+        Show current mining ranking and scores, valid private key and node ip/port are required
 [QX COMMAND]
     -qxgetfee
         Show current Qx fee.
