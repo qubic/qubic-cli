@@ -228,7 +228,14 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    try{
+        qc->receiveDataAll(buffer);
+    }
+    catch (std::logic_error& e) {
+        // it's expected to catch this error on some node that not turn on tx status
+        return 0;
+    }
+
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
