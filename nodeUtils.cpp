@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <chrono>
 #include <memory>
+#include <stdexcept>
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
