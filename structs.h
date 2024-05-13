@@ -331,7 +331,8 @@ typedef struct
 {
     Asset asset;
     unsigned int tick;
-    // TODO: Add siblings
+    unsigned int universeIndex;
+    unsigned char siblings[ASSETS_DEPTH][32];
 } RespondIssuedAssets;
 
 typedef struct
@@ -344,7 +345,8 @@ typedef struct
     Asset asset;
     Asset issuanceAsset;
     unsigned int tick;
-    // TODO: Add siblings
+    unsigned int universeIndex;
+    unsigned char siblings[ASSETS_DEPTH][32];
 } RespondOwnedAssets;
 
 typedef struct
@@ -358,7 +360,8 @@ typedef struct
     Asset ownershipAsset;
     Asset issuanceAsset;
     unsigned int tick;
-    // TODO: Add siblings
+    unsigned int universeIndex;
+    unsigned char siblings[ASSETS_DEPTH][32];
 } RespondPossessedAssets;
 
 typedef struct
