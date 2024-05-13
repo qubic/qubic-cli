@@ -1,7 +1,11 @@
 #pragma once
 
 #include <cstring>
+#ifdef __aarch64__
+
+#else
 #include <immintrin.h>
+#endif
 #include <cstdint>
 #include <string>
 
@@ -1033,6 +1037,22 @@ static const unsigned long long DOUBLE_SCALAR_TABLE[3072] = {
         , 0x44d770a210105739, 0x7f1de74a022958a0, 0xfbe4c91bd1e8f732, 0x204fbacb13586460, 0x97d79097d62e3cf8, 0x541ad5591934b114, 0xfdfb47919c141909, 0x354926e5244fdecf, 0x6291b0a0e2e994b0, 0x2b9a9a69d3a6c3d1, 0x8189be54302371e7, 0x3645c65df1a881cd
         , 0xdf0460f445e3877b, 0x7ea384dc52d0d26e, 0x0c2e5f768d46b6b0, 0x1f6e62daa7c5d4e6, 0xf8b026b33b2343ee, 0x2b7183c8767d372c, 0xbd45d1b6b6731517, 0x4ddb3d287c470d60, 0x1031dba40263ece2, 0x4e737fa0d659045f, 0x8cbc98d07d09b455, 0x34a35128a2bcb7f5 };
 
+#if __aarch64__
+static inline unsigned char _subborrow_u64(unsigned char b_in, unsigned long long src1, unsigned long long src2, unsigned long long *diff_out)
+{
+    *diff_out = src1 - (src2 + (b_in !=0 ? 1 : 0));
+    if (src1 < src2+(b_in !=0 ? 1 : 0)) return 1;
+    return 0;
+}
+static inline unsigned char _addcarry_u64(unsigned char b_in, unsigned long long src1, unsigned long long src2, unsigned long long *sum_out)
+{
+    *sum_out = src1 + (src2 + (b_in !=0 ? 1 : 0));
+
+    if (UINT64_MAX-src1 < src2+(b_in !=0 ? 1 : 0)) return 1;
+    return 0;
+}
+#endif
+
 static void mod1271(felm_t a)
 { // Modular correction, a = a mod (2^127-1)
     _subborrow_u64(_subborrow_u64(0, a[0], 0xFFFFFFFFFFFFFFFF, &a[0]), a[1], 0x7FFFFFFFFFFFFFFF, &a[1]);
@@ -1057,7 +1077,7 @@ static void fpneg1271(felm_t a)
     a[0] = ~a[0];
     a[1] = 0x7FFFFFFFFFFFFFFF - a[1];
 }
-#ifndef _MSC_VER 
+#ifndef _MSC_VER
 static uint64_t _umul128(uint64_t a, uint64_t b, long long unsigned int *hi)
 {
     union { unsigned __int128 v; uint64_t sv[2]; } var;
@@ -1070,26 +1090,35 @@ static uint64_t _umul128(uint64_t a, uint64_t b, long long unsigned int *hi)
 
 static uint64_t __shiftleft128 (uint64_t  LowPart, uint64_t HighPart, uint8_t Shift)
 {
+#if __aarch64__
+    __uint128_t a = (((__uint128_t)(HighPart)) << 64) | LowPart;
+    a = a << Shift;
+    return (a>>64) & 0xFFFFFFFFFFFFFFFFULL;
+#else
     uint64_t ret;
-
     __asm__ ("shld {%[Shift],%[LowPart],%[HighPart]|%[HighPart], %[LowPart], %[Shift]}"
             : [ret] "=r" (ret)
     : [LowPart] "r" (LowPart), [HighPart] "0" (HighPart), [Shift] "Jc" (Shift)
     : "cc");
-
     return ret;
+#endif
 }
 
 static uint64_t __shiftright128 (uint64_t  LowPart, uint64_t HighPart, uint8_t Shift)
 {
+#if __aarch64__
+    __uint128_t a = (((__uint128_t)(HighPart)) << 64) | LowPart;
+    a = a >> Shift;
+    return a & 0xFFFFFFFFFFFFFFFFULL;
+#else
     uint64_t ret;
-
     __asm__ ("shrd {%[Shift],%[HighPart],%[LowPart]|%[LowPart], %[HighPart], %[Shift]}"
             : [ret] "=r" (ret)
     : [LowPart] "0" (LowPart), [HighPart] "r" (HighPart), [Shift] "Jc" (Shift)
     : "cc");
 
     return ret;
+#endif
 }
 #endif
 
@@ -1224,12 +1253,17 @@ static void fp2addsub1271(f2elm_t a, f2elm_t b, f2elm_t c)
     fp2sub1271(a, b, c);
 }
 
+static inline void copy32(unsigned char* dst, const unsigned char* src)
+{
+    memcpy(dst, src, 32);
+}
+
 static void table_lookup_fixed_base(point_precomp_t P, unsigned int digit, unsigned int sign)
 { // Table lookup to extract a point represented as (x+y,y-x,2t) corresponding to extended twisted Edwards coordinates (X:Y:Z:T) with Z=1
     if (sign)
     {
-        *((__m256i*)P->xy) = *((__m256i*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->yx);
-        *((__m256i*)P->yx) = *((__m256i*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->xy);
+        copy32((uint8_t*)P->xy, (uint8_t*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->yx);
+        copy32((uint8_t*)P->yx, (uint8_t*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->xy);
         P->t2[0][0] = ~(((point_precomp_t*)FIXED_BASE_TABLE)[digit])->t2[0][0];
         P->t2[0][1] = 0x7FFFFFFFFFFFFFFF - (((point_precomp_t*)FIXED_BASE_TABLE)[digit])->t2[0][1];
         P->t2[1][0] = ~(((point_precomp_t*)FIXED_BASE_TABLE)[digit])->t2[1][0];
@@ -1237,9 +1271,9 @@ static void table_lookup_fixed_base(point_precomp_t P, unsigned int digit, unsig
     }
     else
     {
-        *((__m256i*)P->xy) = *((__m256i*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->xy);
-        *((__m256i*)P->yx) = *((__m256i*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->yx);
-        *((__m256i*)P->t2) = *((__m256i*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->t2);
+        copy32((uint8_t*)P->xy, (uint8_t*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->xy);
+        copy32((uint8_t*)P->yx, (uint8_t*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->yx);
+        copy32((uint8_t*)P->t2, (uint8_t*)((point_precomp_t*)FIXED_BASE_TABLE)[digit]->t2);
     }
 }
 
@@ -1348,14 +1382,14 @@ static void R1_to_R3(point_extproj_t P, point_extproj_precomp_t Q)
     fp2add1271(P->x, P->y, Q->xy);         // XQ = (X1+Y1)
     fp2sub1271(P->y, P->x, Q->yx);         // YQ = (Y1-X1)
     fp2mul1271(P->ta, P->tb, Q->t2);       // TQ = T1
-    *((__m256i*) & Q->z2) = *((__m256i*) & P->z);              // ZQ = Z1
+    copy32((uint8_t*)Q->z2, (uint8_t*)&P->z);
 }
 
 static void R2_to_R4(point_extproj_precomp_t P, point_extproj_t Q)
 { // Conversion from representation (X+Y,Y-X,2Z,2dT) to (2X,2Y,2Z,2dT)
     fp2sub1271(P->xy, P->yx, Q->x);        // XQ = 2*X1
     fp2add1271(P->xy, P->yx, Q->y);        // YQ = 2*Y1
-    *((__m256i*) & Q->z) = *((__m256i*) & P->z2);              // ZQ = 2*Z1
+    copy32((uint8_t*)Q->z, (uint8_t*)&P->z2);
 }
 
 static void eccdouble(point_extproj_t P)
@@ -1403,10 +1437,10 @@ static void eccadd(point_extproj_precomp_t Q, point_extproj_t P)
 
 static void point_setup(point_t P, point_extproj_t Q)
 { // Point conversion to representation (X,Y,Z,Ta,Tb)
-    *((__m256i*) & Q->x) = *((__m256i*) & P->x);
-    *((__m256i*) & Q->y) = *((__m256i*) & P->y);
-    *((__m256i*) & Q->ta) = *((__m256i*) & Q->x);  // Ta = X1
-    *((__m256i*) & Q->tb) = *((__m256i*) & Q->y);  // Tb = Y1
+    copy32((uint8_t*)Q->x, (uint8_t*)&P->x);
+    copy32((uint8_t*)Q->y, (uint8_t*)&P->y);
+    copy32((uint8_t*)Q->ta, (uint8_t*)&Q->x);
+    copy32((uint8_t*)Q->tb, (uint8_t*)&Q->y);
     Q->z[0][0] = 1; Q->z[0][1] = 0; Q->z[1][0] = 0; Q->z[1][1] = 0; // Z1 = 1
 }
 
@@ -1514,8 +1548,8 @@ VOID_FUNC_DECL ecc_mul_fixed(unsigned long long* k, point_t Q)
     fp2div1271(R->x);                                               // XQ = x1
     fp2div1271(R->y);                                               // YQ = y1
     R->z[0][0] = 1; R->z[0][1] = 0; R->z[1][0] = 0; R->z[1][1] = 0; // ZQ = 1
-    *((__m256i*) & R->ta) = *((__m256i*) & R->x);     // TaQ = x1
-    *((__m256i*) & R->tb) = *((__m256i*) & R->y);     // TbQ = y1
+    copy32((uint8_t*)R->ta, (uint8_t*)&R->x);
+    copy32((uint8_t*)R->tb, (uint8_t*)&R->y);
 
     table_lookup_fixed_base(S, 48 + (((((digits[239] << 1) + digits[189]) << 1) + digits[139]) << 1) + digits[89], digits[39]);
     eccmadd(S, R);
@@ -1759,18 +1793,18 @@ static void ecc_phi(point_extproj_t P)
 
 static void eccneg_extproj_precomp(point_extproj_precomp_t P, point_extproj_precomp_t Q)
 { // Point negation
-    *((__m256i*) & Q->t2) = *((__m256i*) & P->t2);
-    *((__m256i*) & Q->yx) = *((__m256i*) & P->xy);
-    *((__m256i*) & Q->xy) = *((__m256i*) & P->yx);
-    *((__m256i*) & Q->z2) = *((__m256i*) & P->z2);
+    copy32((uint8_t*)Q->t2, (uint8_t*)&P->t2);
+    copy32((uint8_t*)Q->yx, (uint8_t*)&P->xy);
+    copy32((uint8_t*)Q->xy, (uint8_t*)&P->yx);
+    copy32((uint8_t*)Q->z2, (uint8_t*)&P->z2);
     fp2neg1271(Q->t2);
 }
 
 static void eccneg_precomp(point_precomp_t P, point_precomp_t Q)
 { // Point negation
-    *((__m256i*) & Q->t2) = *((__m256i*) & P->t2);
-    *((__m256i*) & Q->yx) = *((__m256i*) & P->xy);
-    *((__m256i*) & Q->xy) = *((__m256i*) & P->yx);
+    copy32((uint8_t*)Q->t2, (uint8_t*)&P->t2);
+    copy32((uint8_t*)Q->yx, (uint8_t*)&P->xy);
+    copy32((uint8_t*)Q->xy, (uint8_t*)&P->yx);
     fp2neg1271(Q->t2);
 }
 
@@ -1902,23 +1936,23 @@ static bool ecc_mul_double(unsigned long long* k, unsigned long long* l, point_t
     }
 
     // Computing endomorphisms over point Q
-    *((__m256i*) & Q2->x) = *((__m256i*) & Q1->x);
-    *((__m256i*) & Q2->y) = *((__m256i*) & Q1->y);
-    *((__m256i*) & Q2->z) = *((__m256i*) & Q1->z);
-    *((__m256i*) & Q2->ta) = *((__m256i*) & Q1->ta);
-    *((__m256i*) & Q2->tb) = *((__m256i*) & Q1->tb);
+    copy32((uint8_t*)Q2->x, (uint8_t*)&Q1->x);
+    copy32((uint8_t*)Q2->y, (uint8_t*)&Q1->y);
+    copy32((uint8_t*)Q2->z, (uint8_t*)&Q1->z);
+    copy32((uint8_t*)Q2->ta, (uint8_t*)&Q1->ta);
+    copy32((uint8_t*)Q2->tb, (uint8_t*)&Q1->tb);
     ecc_phi(Q2);
-    *((__m256i*) & Q3->x) = *((__m256i*) & Q1->x);
-    *((__m256i*) & Q3->y) = *((__m256i*) & Q1->y);
-    *((__m256i*) & Q3->z) = *((__m256i*) & Q1->z);
-    *((__m256i*) & Q3->ta) = *((__m256i*) & Q1->ta);
-    *((__m256i*) & Q3->tb) = *((__m256i*) & Q1->tb);
+    copy32((uint8_t*)Q3->x, (uint8_t*)&Q1->x);
+    copy32((uint8_t*)Q3->y, (uint8_t*)&Q1->y);
+    copy32((uint8_t*)Q3->z, (uint8_t*)&Q1->z);
+    copy32((uint8_t*)Q3->ta, (uint8_t*)&Q1->ta);
+    copy32((uint8_t*)Q3->tb, (uint8_t*)&Q1->tb);
     ecc_psi(Q3);
-    *((__m256i*) & Q4->x) = *((__m256i*) & Q2->x);
-    *((__m256i*) & Q4->y) = *((__m256i*) & Q2->y);
-    *((__m256i*) & Q4->z) = *((__m256i*) & Q2->z);
-    *((__m256i*) & Q4->ta) = *((__m256i*) & Q2->ta);
-    *((__m256i*) & Q4->tb) = *((__m256i*) & Q2->tb);
+    copy32((uint8_t*)Q4->x, (uint8_t*)&Q2->x);
+    copy32((uint8_t*)Q4->y, (uint8_t*)&Q2->y);
+    copy32((uint8_t*)Q4->z, (uint8_t*)&Q2->z);
+    copy32((uint8_t*)Q4->ta, (uint8_t*)&Q2->ta);
+    copy32((uint8_t*)Q4->tb, (uint8_t*)&Q2->tb);
     ecc_psi(Q4);
 
     decompose((unsigned long long*)k, k_scalars);                   // Scalar decomposition
@@ -2036,11 +2070,11 @@ static void ecc_precomp(point_extproj_t P, point_extproj_precomp_t* T)
     point_extproj_t PP;
 
     // Generating Q = phi(P) = (XQ+YQ,YQ-XQ,ZQ,TQ)
-    *((__m256i*) & PP->x) = *((__m256i*) & P->x);
-    *((__m256i*) & PP->y) = *((__m256i*) & P->y);
-    *((__m256i*) & PP->z) = *((__m256i*) & P->z);
-    *((__m256i*) & PP->ta) = *((__m256i*) & P->ta);
-    *((__m256i*) & PP->tb) = *((__m256i*) & P->tb);
+    copy32((uint8_t*)PP->x, (uint8_t*)&P->x);
+    copy32((uint8_t*)PP->y, (uint8_t*)&P->y);
+    copy32((uint8_t*)PP->z, (uint8_t*)&P->z);
+    copy32((uint8_t*)PP->ta, (uint8_t*)&P->ta);
+    copy32((uint8_t*)PP->tb, (uint8_t*)&P->tb);
     ecc_phi(PP);
     R1_to_R3(PP, Q);                       // Converting from (X,Y,Z,Ta,Tb) to (X+Y,Y-X,Z,T)
 
@@ -2129,10 +2163,10 @@ static bool ecc_mul(point_t P, unsigned long long* k, point_t Q)
     ecc_precomp(R, Table[1]);                                 // Precomputation
     for (unsigned int i = 0; i < 8; i++)
     {
-        *((__m256i*)Table[0][i]->xy) = *((__m256i*)Table[1][i]->yx);
-        *((__m256i*)Table[0][i]->yx) = *((__m256i*)Table[1][i]->xy);
-        *((__m256i*)Table[0][i]->t2) = *((__m256i*)Table[1][i]->t2);
-        *((__m256i*)Table[0][i]->z2) = *((__m256i*)Table[1][i]->z2);
+        copy32((uint8_t*)Table[0][i]->xy, (uint8_t*)Table[1][i]->yx);
+        copy32((uint8_t*)Table[0][i]->yx, (uint8_t*)Table[1][i]->xy);
+        copy32((uint8_t*)Table[0][i]->t2, (uint8_t*)Table[1][i]->t2);
+        copy32((uint8_t*)Table[0][i]->z2, (uint8_t*)Table[1][i]->z2);
         fp2neg1271(Table[0][i]->t2);
     }
     R2_to_R4(Table[1][scalars[1] + (scalars[2] << 1) + (scalars[3] << 2)], R);
@@ -2152,7 +2186,7 @@ VOID_FUNC_DECL encode(point_t P, uint8_t* Pencoded)
     const unsigned long long temp1 = (P->x[1][1] & 0x4000000000000000) << 1;
     const unsigned long long temp2 = (P->x[0][1] & 0x4000000000000000) << 1;
 
-    *((__m256i*)Pencoded) = *((__m256i*)P->y);
+    copy32(Pencoded, (uint8_t*)P->y);
     if (!P->x[0][0] && !P->x[0][1])
     {
         ((unsigned long long*)Pencoded)[3] |= temp1;
@@ -2259,15 +2293,15 @@ VOID_FUNC_DECL signWithNonceK(const unsigned char* k, const unsigned char* publi
     unsigned char h[64] , temp[32 + 64];
     unsigned long long r[8];
 
-    *((__m256i*)(temp + 32)) = *((__m256i*)(k + 32));
-    *((__m256i*)(temp + 64)) = *((__m256i*)messageDigest);
+    copy32(temp + 32, k+32);
+    copy32(temp + 64, (uint8_t*)messageDigest);
 
     KangarooTwelve(temp + 32, 32 + 32, (unsigned char*)r, 64);
 
     ecc_mul_fixed(r, R);
     encode(R, signature); // Encode lowest 32 bytes of signature
-    *((__m256i*)temp) = *((__m256i*)signature);
-    *((__m256i*)(temp + 32)) = *((__m256i*)publicKey);
+    copy32(temp, signature);
+    copy32(temp + 32, (uint8_t*)publicKey);
 
     KangarooTwelve(temp, 32 + 64, h, 64);
     Montgomery_multiply_mod_order(r, Montgomery_Rprime, r);
