@@ -28,6 +28,8 @@ Command:
                 Print a list of assets of an identity
         -sendtoaddress <TARGET_IDENTITY> <AMOUNT>
                 Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.
+        -qutilsendtomanyv1 <FILE>
+                Performs multiple transaction within in one tick. <FILE> can specify up to 25 IDs and amounts (space seperated). Single ID/Amount per line. Fees apply! A valid private key and node ip/port are required.
 
 [BLOCKCHAIN/PROTOCOL COMMAND]
         -gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>

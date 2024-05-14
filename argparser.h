@@ -35,6 +35,8 @@ void print_help(){
     printf("\t\tPrint a list of assets of an identity\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. valid private key and node ip/port are required.\n");
+    printf("\t-qutilsendtomanyv1 <FILE>\n");
+    printf("\t\tPerforms multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.\n");
     printf("\n[BLOCKCHAIN/PROTOCOL COMMAND]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
