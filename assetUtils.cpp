@@ -71,6 +71,45 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
     }
     return result;
 }
+
+template<typename T>
+void getAssetDigest(T& respondedAsset, uint8_t* assetDigest)
+{
+    // Check if the size of entity is good
+    const size_t asset_size = sizeof(respondedAsset.asset);
+    if (asset_size != 48)
+    {
+        LOG("Size of asset is unexpected: %lu\n", sizeof(asset_size));
+        return;
+    }
+
+    // Compute the root hash from the entity and siblings
+    if (respondedAsset.universeIndex < 0 )
+    {
+        LOG("Universe index is invalid: %d\n", respondedAsset.universeIndex);
+        return;
+    }
+
+    // Compute the spectrum digest
+    getDigestFromSiblings<32>(
+        ASSETS_DEPTH,
+        (uint8_t*)(&respondedAsset.asset),
+        asset_size,
+        respondedAsset.universeIndex,
+        respondedAsset.siblings,
+        assetDigest);
+}
+
+template<typename T>
+void printAssetDigest(T& respondedAsset)
+{
+    uint8_t assetDigest[32];
+    getAssetDigest(respondedAsset, assetDigest);
+    char hex_digest[64];
+    byteToHex(assetDigest, hex_digest, 32);
+    LOG("Asset Digest: %s\n", hex_digest);
+}
+
 static void printOwnedAsset(Asset owned, Asset iss)
 {
     char issuer[128] = {0};
@@ -106,7 +145,8 @@ void printOwnedAsset(const char * nodeIp, const int nodePort, const char* reques
     auto vroa = getOwnedAsset(nodeIp, nodePort, requestedIdentity);
     for (auto& roa : vroa){
         printOwnedAsset(roa.asset, roa.issuanceAsset);
-        LOG("Tick: %u\n", roa.tick);
+        printAssetDigest(roa);
+        LOG("Tick: %u\n\n", roa.tick);
     }
 }
 void printPossessionAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
@@ -115,6 +155,7 @@ void printPossessionAsset(const char * nodeIp, const int nodePort, const char* r
     auto vrpa = getPossessionAsset(nodeIp, nodePort, requestedIdentity);
     for (auto& rpa : vrpa){
         printPossessionAsset(rpa.ownershipAsset, rpa.asset, rpa.issuanceAsset);
-        LOG("Tick: %u\n", rpa.tick);
+        printAssetDigest(rpa);
+        LOG("Tick: %u\n\n", rpa.tick);
     }
 }
