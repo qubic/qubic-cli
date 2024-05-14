@@ -51,6 +51,7 @@ enum COMMAND
     QX_ORDER=43,
     QX_GET_ORDER=44,
     GET_MINING_SCORE_RANKING=45,
+    SEND_COIN_IN_TICK = 46
 };
 
 struct RequestResponseHeader {

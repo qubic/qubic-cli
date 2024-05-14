@@ -169,8 +169,10 @@ bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signatur
     return verify(tx.sourcePublicKey, digest, signature);
 }
 
-void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
-                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
+
+
+void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char* seed,
+                             const char* targetIdentity, const uint64_t amount, uint32_t txTick,
                              int waitUntilFinish)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -197,7 +199,7 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amount;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.tick = txTick;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = 0;
     KangarooTwelve((unsigned char*)&packet.transaction,
@@ -227,10 +229,22 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
         }
         checkTxOnTick(nodeIp, nodePort, txHash, packet.transaction.tick);
     } else {
-        LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+        LOG("run ./qubic-cli [...] -checktxontick %u %s\n", txTick, txHash);
         LOG("to check your tx confirmation status\n");
     }
 }
+
+
+void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
+                             const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
+                             int waitUntilFinish)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    uint32_t txTick = currentTick + scheduledTickOffset;
+    makeStandardTransactionInTick(nodeIp, nodePort, seed, targetIdentity, amount, txTick, waitUntilFinish); 
+}
+
 
 void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const char* seed,

@@ -14,6 +14,7 @@ int64_t g_qx_share_transfer_amount = 0;
 
 int64_t g_TxAmount = 0;
 uint16_t g_TxType = 0;
+uint32_t g_TxTick = 0;
 int g_nodePort = DEFAULT_NODE_PORT;
 int g_txExtraDataSize = 0;
 int g_rawPacketSize = 0;
