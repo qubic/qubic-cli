@@ -280,6 +280,12 @@ int run(int argc, char* argv[])
             sanityFileExist(g_qutil_sendtomanyv1_payout_list_file);
             qutilSendToManyV1(g_nodeIp, g_nodePort, g_seed, g_qutil_sendtomanyv1_payout_list_file, g_offsetScheduledTick);
             break;
+        case QUTIL_BURN_QUBIC:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qutilBurnQubic(g_nodeIp, g_nodePort, g_seed, g_TxAmount, g_offsetScheduledTick);
+            break;
+
         default:
             printf("Unexpected command!\n");
             break;
