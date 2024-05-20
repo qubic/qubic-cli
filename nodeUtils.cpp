@@ -1383,7 +1383,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
     response.rankings.resize(response.numRankings);
 
     // Get detail ranking score of miners
-    unsigned int total_score = 0;
+    unsigned long long total_score = 0;
     if (response.numRankings > 0)
     {
         memcpy(response.rankings.data(), ptr, response.numRankings * sizeof(SpecialCommandGetMiningScoreRanking::ScoreEntry));
@@ -1393,14 +1393,13 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
             SpecialCommandGetMiningScoreRanking::ScoreEntry miner = response.rankings[i];
             char publicIdentity[128] = {0};
             getIdentityFromPublicKey(miner.minerPublicKey, publicIdentity, false);
-            unsigned char score = miner.minerScore;
-            LOG("%-8u%-64s%u\n", i + 1, publicIdentity, score);
-            total_score += score;
+            LOG("%-8u%-64s%u\n", i + 1, publicIdentity, miner.minerScore);
+            total_score += miner.minerScore;
         }
     }
     else
     {
         LOG("No updated yet.\n");
     }
-    LOG("Total score: %u\n", total_score);
+    LOG("Total score: %llu\n", total_score);
 }
