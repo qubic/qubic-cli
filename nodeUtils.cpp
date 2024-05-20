@@ -118,7 +118,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                                 std::vector<TxhashStruct>* hashes, //out
                                 std::vector<extraDataStruct>* extraData, // out
                                 std::vector<SignatureStruct>* sigs // out
-                                )
+)
 {
     txs.resize(0);
     if (hashes != nullptr)
@@ -337,22 +337,22 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
 }
 bool compareVote(const Tick&A, const Tick&B){
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
-    (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
-    (A.millisecond == B.millisecond) &&
-    (A.prevResourceTestingDigest == B.prevResourceTestingDigest) &&
-    (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
-    (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
-    (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
-    (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
-    (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
+           (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
+           (A.millisecond == B.millisecond) &&
+           (A.prevResourceTestingDigest == B.prevResourceTestingDigest) &&
+           (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
+           (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
+           (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
+           (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
+           (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
 }
 
 bool verifyVoteWithSalt(const Tick&A,
                         const BroadcastComputors& bc,
                         const long long prevResourceDigest,
                         const uint8_t* prevSpectrumDigest,
-                         const uint8_t* prevUniverseDigest,
-                         const uint8_t* prevComputerDigest){
+                        const uint8_t* prevUniverseDigest,
+                        const uint8_t* prevComputerDigest){
     int cid = A.computorIndex;
     uint8_t saltedData[64];
     uint8_t saltedDigest[32];
@@ -404,7 +404,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
                     const uint8_t* prevSpectrumDigest = nullptr,
                     const uint8_t* prevUniverseDigest = nullptr,
                     const uint8_t* prevComputerDigest = nullptr
-                    )
+)
 {
     if (votes.size() == 0) return;
     if (verifySalt)
@@ -944,9 +944,9 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         queryTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
 
         KangarooTwelve((unsigned char*)&queryTimeMsg.cmd,
-            sizeof(queryTimeMsg.cmd),
-            digest,
-            32);
+                       sizeof(queryTimeMsg.cmd),
+                       digest,
+                       32);
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(queryTimeMsg.signature, signature, 64);
 
@@ -996,9 +996,9 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         LOG("Setting node time to "); logTime(timeToSet); LOG(" ...\n\n");
 
         KangarooTwelve((unsigned char*)&sendTimeMsg.cmd,
-            sizeof(sendTimeMsg.cmd),
-            digest,
-            32);
+                       sizeof(sendTimeMsg.cmd),
+                       digest,
+                       32);
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(sendTimeMsg.signature, signature, 64);
 
@@ -1095,9 +1095,9 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     }
     LOG("Epoch: %u\n", bc.computors.epoch);
     KangarooTwelve(reinterpret_cast<const uint8_t *>(&bc),
-                  sizeof(BroadcastComputors) - SIGNATURE_SIZE,
-                  digest,
-                  32);
+                   sizeof(BroadcastComputors) - SIGNATURE_SIZE,
+                   digest,
+                   32);
     if (verify(arbPubkey, digest, bc.computors.signature)){
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
     } else {
@@ -1217,10 +1217,10 @@ void dumpSpectrumToCSV(const char* input, const char* output){
             getIdentityFromPublicKey(spectrum[i].publicKey, buffer, false);
             std::string id = buffer;
             std::string line = id + "," + std::to_string(spectrum[i].latestIncomingTransferTick)
-                                  + "," + std::to_string(spectrum[i].latestOutgoingTransferTick)
-                                  + "," + std::to_string(spectrum[i].incomingAmount)
-                                  + "," + std::to_string(spectrum[i].outgoingAmount)
-                                  + "," + std::to_string(spectrum[i].incomingAmount-spectrum[i].outgoingAmount) + "\n";
+                               + "," + std::to_string(spectrum[i].latestOutgoingTransferTick)
+                               + "," + std::to_string(spectrum[i].incomingAmount)
+                               + "," + std::to_string(spectrum[i].outgoingAmount)
+                               + "," + std::to_string(spectrum[i].incomingAmount-spectrum[i].outgoingAmount) + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
     }
@@ -1262,10 +1262,10 @@ void dumpUniverseToCSV(const char* input, const char* output){
                 issuerID = buffer;
             }
             std::string line = std::to_string(i) + ",OWNERSHIP,"+ id
-                                + "," + std::to_string(i) + ","
-                                + std::to_string(asset[i].varStruct.ownership.managingContractIndex) + "," + asset_name
-                                + "," + issuerID
-                                + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
+                               + "," + std::to_string(i) + ","
+                               + std::to_string(asset[i].varStruct.ownership.managingContractIndex) + "," + asset_name
+                               + "," + issuerID
+                               + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
         if (asset[i].varStruct.ownership.type == POSSESSION){
@@ -1291,7 +1291,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
                 issuerID = buffer;
             }
             std::string line = str_index + ",POSSESSION," + id + "," + str_owner_index + "," +
-                    str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
+                               str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
         if (asset[i].varStruct.ownership.type == ISSUANCE){
@@ -1387,7 +1387,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
     if (response.numRankings > 0)
     {
         memcpy(response.rankings.data(), ptr, response.numRankings * sizeof(SpecialCommandGetMiningScoreRanking::ScoreEntry));
-        LOG("%-8s%-64s%s\n", "Rank", "Identity", "Score");
+        LOG("%-8s%-64s%s\n", "ArrayIndex", "Identity", "Score");
         for (unsigned int i = 0; i < response.numRankings ; i++)
         {
             SpecialCommandGetMiningScoreRanking::ScoreEntry miner = response.rankings[i];
@@ -1396,6 +1396,8 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
             LOG("%-8u%-64s%u\n", i + 1, publicIdentity, miner.minerScore);
             total_score += miner.minerScore;
         }
+        LOG("WARNING: This is raw miner score data from the node and is NOT the final ranking list.\n");
+        LOG("Check processTick function in core node to have the latest ranking logic\n");
     }
     else
     {
