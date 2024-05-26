@@ -318,22 +318,22 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
 }
 
 static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
-    char hex[64];
+    char digest[64] = {0};
     if (dumpComputorIndex) LOG("Computor index: %d\n", A.computorIndex);
     LOG("Epoch: %d\n", A.epoch);
     LOG("Tick: %d\n", A.tick);
     LOG("Time: 20%02u-%02u-%02u %02u:%02u:%02u.%04u\n", A.year, A.month, A.day, A.hour, A.minute, A.second, A.millisecond);
-    LOG("prevResourceTestingDigest: %016lx\n", A.prevResourceTestingDigest);
-    byteToHex(A.prevSpectrumDigest, hex, 32);
-    LOG("prevSpectrumDigest: %s\n", hex);
-    byteToHex(A.prevUniverseDigest, hex, 32);
-    LOG("prevUniverseDigest: %s\n", hex);
-    byteToHex(A.prevComputerDigest, hex, 32);
-    LOG("prevComputerDigest: %s\n", hex);
-    byteToHex(A.transactionDigest, hex, 32);
-    LOG("transactionDigest: %s\n", hex);
-    byteToHex(A.expectedNextTickTransactionDigest, hex, 32);
-    LOG("expectedNextTickTransactionDigest: %s\n", hex);
+    LOG("prevResourceTestingDigest: %llu\n", A.prevResourceTestingDigest);
+    getIdentityFromPublicKey(A.prevSpectrumDigest, digest, true);
+    LOG("prevSpectrumDigest: %s\n", digest);
+    getIdentityFromPublicKey(A.prevUniverseDigest, digest, true);
+    LOG("prevUniverseDigest: %s\n", digest);
+    getIdentityFromPublicKey(A.prevComputerDigest, digest, true);
+    LOG("prevComputerDigest: %s\n", digest);
+    getIdentityFromPublicKey(A.transactionDigest, digest, true);
+    LOG("transactionDigest: %s\n", digest);
+    getIdentityFromPublicKey(A.expectedNextTickTransactionDigest, digest, true);
+    LOG("expectedNextTickTransactionDigest: %s\n", digest);
 }
 bool compareVote(const Tick&A, const Tick&B){
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
