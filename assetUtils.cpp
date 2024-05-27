@@ -122,7 +122,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
     LOG("Asset name: %s\n", name);
     LOG("Managing contract index: %d\n", owned.varStruct.ownership.managingContractIndex);
     LOG("Issuance Index: %d\n", owned.varStruct.ownership.issuanceIndex);
-    LOG("Number Of Units: %d\n", owned.varStruct.ownership.numberOfUnits);
+    LOG("Number Of Units: %lld\n", owned.varStruct.ownership.numberOfUnits);
 }
 static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
 {
@@ -137,7 +137,7 @@ static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
     LOG("Managing contract index: %d\n", possession.varStruct.possession.managingContractIndex);
     LOG("Owner index: %u\n", possession.varStruct.possession.ownershipIndex);
     LOG("Owner ID: %s\n", ownerId);
-    LOG("Number Of Units: %d\n", possession.varStruct.possession.numberOfUnits);
+    LOG("Number Of Units: %lld\n", possession.varStruct.possession.numberOfUnits);
 }
 void printOwnedAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
