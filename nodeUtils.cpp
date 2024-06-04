@@ -432,7 +432,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
     uniqueVote.push_back(votes[0]);
     voteIndices.resize(1);
     voteIndices[0].push_back(votes[0].computorIndex);
-    for (int i = 1; i < N; i++){
+    for (int i = 1; i < votes.size(); i++){
         int vote_indice = -1;
         for (int j = 0; j < uniqueVote.size(); j++){
             if (compareVote(votes[i], uniqueVote[j])){
