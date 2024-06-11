@@ -234,7 +234,7 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     }
     catch (std::logic_error& e) {
         // it's expected to catch this error on some node that not turn on tx status
-        return 0;
+        return -1;
     }
 
     uint8_t* data = buffer.data();
