@@ -1111,7 +1111,6 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
 std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
-    memset(&result, 0, sizeof(CurrentTickInfo));
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
