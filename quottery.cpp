@@ -75,6 +75,7 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
     LOG("moneyFlow through finalizeBet: %lld\n", result.moneyFlowThroughFinalizeBet);
     LOG("================\n");
     LOG("earned amount for shareholders: %lld\n", result.earnedAmountForShareHolder);
+    LOG("earned amount for winners: %lld\n", result.earnedAmountForBetWinner);
     LOG("distributed amount: %lld\n", result.distributedAmount);
     LOG("burned amount: %lld\n", result.burnedAmount);
     char buf[64] = {0};
