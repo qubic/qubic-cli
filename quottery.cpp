@@ -77,17 +77,6 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
     LOG("earned amount for shareholders: %lld\n", result.earnedAmountForShareHolder);
     LOG("distributed amount: %lld\n", result.distributedAmount);
     LOG("burned amount: %lld\n", result.burnedAmount);
-    //    uint64_t burnFee; // percentage
-    //    uint64_t nIssuedBet; // number of issued bet
-    //    uint64_t moneyFlow;
-    //    uint64_t moneyFlowThroughIssueBet;
-    //    uint64_t moneyFlowThroughJoinBet;
-    //    uint64_t moneyFlowThroughFinalizeBet;
-    //    uint64_t earnedAmountForShareHolder;
-    //    uint64_t paidAmountForShareHolder;
-    //    uint64_t earnedAmountForBetWinner;
-    //    uint64_t distributedAmount;
-    //    uint64_t burnedAmount;
     char buf[64] = {0};
     getIdentityFromPublicKey(result.gameOperator, buf, false);
     LOG("Game operator ID: %s\n", buf);
