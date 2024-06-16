@@ -28,7 +28,7 @@ enum quotteryFuncId{
 };
 
 
-void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output& result){
+void quotteryGetBasicInfo(const char* nodeIp, const int nodePort, qtryBasicInfo_output& result){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -50,24 +50,46 @@ void quotteryGetFees(const char* nodeIp, const int nodePort, QuotteryFees_output
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto fees = (QuotteryFees_output *)(data + ptr + sizeof(RequestResponseHeader));
-            result = *fees;
+            auto info = (qtryBasicInfo_output *)(data + ptr + sizeof(RequestResponseHeader));
+            result = *info;
         }
         ptr+= header->size();
     }
 
 }
 
-void quotteryPrintBetFees(const char* nodeIp, const int nodePort){
-    QuotteryFees_output result;
-    memset(&result, 1, sizeof(QuotteryFees_output));
-    quotteryGetFees(nodeIp, nodePort, result);
+void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
+    qtryBasicInfo_output result;
+    memset(&result, 1, sizeof(qtryBasicInfo_output));
+    quotteryGetBasicInfo(nodeIp, nodePort, result);
     LOG("Fee per slot per day: %llu qu\n", result.feePerSlotPerDay);
     LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
     LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
     LOG("Shareholders fee: %.2f%%\n", result.shareholderFee/100.0);
+    LOG("Burn fee: %.2f%%\n", result.burnFee/100.0);
+    LOG("================\n");
+    LOG("Number of issued bet: %lld\n", result.nIssuedBet);
+    LOG("moneyFlow: %lld\n", result.moneyFlow);
+    LOG("moneyFlow through issueBet: %lld\n", result.moneyFlowThroughIssueBet);
+    LOG("moneyFlow through joinBet: %lld\n", result.moneyFlowThroughJoinBet);
+    LOG("moneyFlow through finalizeBet: %lld\n", result.moneyFlowThroughFinalizeBet);
+    LOG("================\n");
+    LOG("earned amount for shareholders: %lld\n", result.earnedAmountForShareHolder);
+    LOG("distributed amount: %lld\n", result.distributedAmount);
+    LOG("burned amount: %lld\n", result.burnedAmount);
+    //    uint64_t burnFee; // percentage
+    //    uint64_t nIssuedBet; // number of issued bet
+    //    uint64_t moneyFlow;
+    //    uint64_t moneyFlowThroughIssueBet;
+    //    uint64_t moneyFlowThroughJoinBet;
+    //    uint64_t moneyFlowThroughFinalizeBet;
+    //    uint64_t earnedAmountForShareHolder;
+    //    uint64_t paidAmountForShareHolder;
+    //    uint64_t earnedAmountForBetWinner;
+    //    uint64_t distributedAmount;
+    //    uint64_t burnedAmount;
     char buf[64] = {0};
-    getIdentityFromPublicKey(result.gameOperatorPubkey, buf, false);
+    getIdentityFromPublicKey(result.gameOperator, buf, false);
     LOG("Game operator ID: %s\n", buf);
 }
 
@@ -196,8 +218,8 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     {
-        QuotteryFees_output quotteryFee;
-        quotteryGetFees(nodeIp, nodePort, quotteryFee);
+        qtryBasicInfo_output quotteryBasicInfo;
+        quotteryGetBasicInfo(nodeIp, nodePort, quotteryBasicInfo);
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
         uint8_t year = gmtm->tm_year % 100;
@@ -205,7 +227,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         uint8_t day = gmtm->tm_mday;
         uint8_t curDate[4] = {year, month, day, 0};
         uint64_t diffday = diffDate(curDate, packet.ibi.endDate) + 1;
-        packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryFee.feePerSlotPerDay * diffday;
+        packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryBasicInfo.feePerSlotPerDay * diffday;
     }
 
 

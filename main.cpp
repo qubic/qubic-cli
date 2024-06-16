@@ -225,9 +225,9 @@ int run(int argc, char* argv[])
             sanityCheckIdentity(g_quottery_creator_id);
             quotteryPrintActiveBetByCreator(g_nodeIp, g_nodePort, g_quottery_creator_id);
             break;
-        case QUOTTERY_GET_BET_FEE:
+        case QUOTTERY_GET_BASIC_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintBetFees(g_nodeIp, g_nodePort);
+            quotteryPrintBasicInfo(g_nodeIp, g_nodePort);
             break;
         case QUOTTERY_PUBLISH_RESULT:
             sanityCheckNode(g_nodeIp, g_nodePort);

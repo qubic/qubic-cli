@@ -107,8 +107,8 @@ void print_help(){
     printf("\t\tGet orders on Qx\n");
 
     printf("\n[QTRY COMMAND]\n");
-    printf("\t-qtrygetfee\n");
-    printf("\t\tShow current qtry fee.\n");
+    printf("\t-qtrygetbasicinfo\n");
+    printf("\t\tShow qtry basic info from a node.\n");
     printf("\t-qtryissuebet\n");
     printf("\t\tIssue a bet (prompt mode)\n");
     printf("\t-qtrygetactivebet\n");
@@ -639,9 +639,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetfee") == 0)
+        if(strcmp(argv[i], "-qtrygetbasicinfo") == 0)
         {
-            g_cmd = QUOTTERY_GET_BET_FEE;
+            g_cmd = QUOTTERY_GET_BASIC_INFO;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
