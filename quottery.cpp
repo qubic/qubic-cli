@@ -378,13 +378,23 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
         LOG("EndDate: %02u-%02u-%02u 23:59:59\n", result.endDate[0], result.endDate[1], result.endDate[2]);
     }
     LOG("Oracle IDs\n");
+    int nOP = 0;
     for (int i = 0; i < 8; i++){
         if (!isZeroPubkey(result.oracleProviderId+i*32)){
+            nOP++;
             memset(buf, 0 , 128);
             getIdentityFromPublicKey(result.oracleProviderId+i*32, buf, false);
             uint32_t fee_u32 = result.oracleFees[i];
             double fee = (fee_u32)/100.0;
             LOG("%s\tFee: %.2f%%\n", buf, fee);
+        }
+    }
+    LOG("Current votes result:\n");
+    for (int i = 0; i < 8; i++)
+    {
+        if (result.betResultWonOption[i] != -1 && result.betResultOPId[i] != -1)
+        {
+            LOG("OP #%d: voted for option #%d\n", result.betResultOPId[i], result.betResultWonOption[i]);
         }
     }
 }

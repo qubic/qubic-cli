@@ -59,6 +59,8 @@ struct getBetInfo_output {
     uint64_t minBetAmount;
     uint32_t maxBetSlotPerOption;
     uint32_t currentBetState[8]; // how many bet slots have been filled on each option
+    char betResultWonOption[8];
+    char betResultOPId[8];
 };
 
 struct getBetOptionDetail_input {
