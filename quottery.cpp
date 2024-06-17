@@ -213,7 +213,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
         uint8_t year = gmtm->tm_year % 100;
-        uint8_t month = gmtm->tm_mon;
+        uint8_t month = gmtm->tm_mon + 1; // NOTE: tm_mon is zero-based [0-11] => [Jan-Dec]. Ref: https://cplusplus.com/reference/ctime/tm/
         uint8_t day = gmtm->tm_mday;
         uint8_t curDate[4] = {year, month, day, 0};
         uint64_t diffday = diffDate(curDate, packet.ibi.endDate) + 1;
