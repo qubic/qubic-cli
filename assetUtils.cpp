@@ -47,7 +47,7 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
     getPublicKeyFromIdentity(requestedIdentity, publicKey);
     struct {
         RequestResponseHeader header;
-        RequestOwnedAssets req;
+        RequestPossessedAssets req;
     } packet;
     memcpy(packet.req.publicKey, publicKey, 32);
     packet.header.setSize(sizeof(packet));
