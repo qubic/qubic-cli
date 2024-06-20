@@ -2193,7 +2193,7 @@ static bool decode(const uint8_t* Pencoded, point_t P)
     return true;
 }
 
-VOID_FUNC_DECL signCustom(const unsigned char* k, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
+VOID_FUNC_DECL signWithNonceK(const unsigned char* k, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
 {
     // Requires correctly precalculated k as input!
     // Inputs: 64-byte input (k precomputed), 32-byte publicKey, and messageDigest of size 32 in bytes
@@ -2235,7 +2235,7 @@ VOID_FUNC_DECL sign(const unsigned char* subseed, const unsigned char* publicKey
     // Output: 64-byte signature
     unsigned char k[64];
     KangarooTwelve((unsigned char*)subseed, 32, k, 64);
-    signCustom(k, publicKey, messageDigest, signature);
+    signWithNonceK(k, publicKey, messageDigest, signature);
 }
 
 BOOL_FUNC_DECL verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
