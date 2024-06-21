@@ -2193,16 +2193,14 @@ static bool decode(const uint8_t* Pencoded, point_t P)
     return true;
 }
 
-VOID_FUNC_DECL sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
-{ // SchnorrQ signature generation
-    // It produces the signature signature of a message messageDigest of size 32 in bytes
-    // Inputs: 32-byte subseed, 32-byte publicKey, and messageDigest of size 32 in bytes
+VOID_FUNC_DECL signWithNonceK(const unsigned char* k, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature)
+{
+    // Requires correctly precalculated k as input!
+    // Inputs: 64-byte input (k precomputed), 32-byte publicKey, and messageDigest of size 32 in bytes
     // Output: 64-byte signature
     point_t R;
-    unsigned char k[64] , h[64]  , temp[32 + 64] ;
-    unsigned long long r[8] ;
-
-    KangarooTwelve((unsigned char*)subseed, 32, k, 64);
+    unsigned char h[64] , temp[32 + 64];
+    unsigned long long r[8];
 
     *((__m256i*)(temp + 32)) = *((__m256i*)(k + 32));
     *((__m256i*)(temp + 64)) = *((__m256i*)messageDigest);
@@ -2227,6 +2225,17 @@ VOID_FUNC_DECL sign(const unsigned char* subseed, const unsigned char* publicKey
     {
         _addcarry_u64(_addcarry_u64(_addcarry_u64(_addcarry_u64(0, ((unsigned long long*)signature)[4], CURVE_ORDER_0, &((unsigned long long*)signature)[4]), ((unsigned long long*)signature)[5], CURVE_ORDER_1, &((unsigned long long*)signature)[5]), ((unsigned long long*)signature)[6], CURVE_ORDER_2, &((unsigned long long*)signature)[6]), ((unsigned long long*)signature)[7], CURVE_ORDER_3, &((unsigned long long*)signature)[7]);
     }
+}
+
+VOID_FUNC_DECL sign(const unsigned char* subseed, const unsigned char* publicKey, const unsigned char* messageDigest, unsigned char* signature) 
+{
+    // SchnorrQ signature generation
+    // It produces the signature signature of a message messageDigest of size 32 in bytes
+    // Inputs: 32-byte subseed, 32-byte publicKey, and messageDigest of size 32 in bytes
+    // Output: 64-byte signature
+    unsigned char k[64];
+    KangarooTwelve((unsigned char*)subseed, 32, k, 64);
+    signWithNonceK(k, publicKey, messageDigest, signature);
 }
 
 BOOL_FUNC_DECL verify(const unsigned char* publicKey, const unsigned char* messageDigest, const unsigned char* signature)
