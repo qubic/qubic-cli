@@ -122,6 +122,7 @@ static uint64_t diffDate(uint8_t A[4], uint8_t B[4]) {
 
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset){
     auto qc = make_qc(nodeIp, nodePort);
+    LOG("Established connection...\n");
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -204,12 +205,14 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         promptStdin("Enter max number of bet slot per option", buff, 16);
         packet.ibi.maxBetSlotPerOption = std::atoi(buff);
     }
-
+    LOG("Crafting transaction...\n");
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     {
         qtryBasicInfo_output quotteryBasicInfo;
+        LOG("Getting QTRY info...\n");
         quotteryGetBasicInfo(nodeIp, nodePort, quotteryBasicInfo);
+        LOG("feePerSlotPerDay: %lld\n", quotteryBasicInfo.feePerSlotPerDay);
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
         uint8_t year = gmtm->tm_year % 100;
@@ -220,8 +223,8 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryBasicInfo.feePerSlotPerDay * diffday;
     }
 
-
     uint32_t currentTick = getTickNumberFromNode(qc);
+    LOG("Getting tick info, latest tick is: %u\n", currentTick);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = quotteryFuncId::issue;
     packet.transaction.inputSize = sizeof(QuotteryissueBet_input);
@@ -229,11 +232,13 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
                    sizeof(packet.transaction) + sizeof(QuotteryissueBet_input),
                    digest,
                    32);
+    LOG("Signing tx packet...\n");
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
+    LOG("Sending data...\n");
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryissueBet_input) + SIGNATURE_SIZE,
