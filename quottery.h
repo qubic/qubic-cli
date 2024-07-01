@@ -11,15 +11,15 @@ struct QuotteryissueBet_input {
     uint8_t optionDesc[32*8];
     uint8_t oracleProviderId[32*8];
     uint32_t oracleFees[8];
-    uint8_t closeDate[4];
-    uint8_t endDate[4];
+    uint32_t closeDate;
+    uint32_t endDate;
     uint64_t amountPerSlot;
     uint32_t maxBetSlotPerOption;
     uint32_t numberOfOption;
 };
 struct qtryBasicInfo_output
 {
-    uint64_t feePerSlotPerDay; // Amount of qus
+    uint64_t feePerSlotPerHour; // Amount of qus
     uint64_t gameOperatorFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
     uint64_t shareholderFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
     uint64_t minBetSlotAmount; // amount of qus
@@ -52,9 +52,9 @@ struct getBetInfo_output {
     uint8_t oracleProviderId[8*32]; // 256x8=2048bytes
     uint32_t oracleFees[8];   // 4x8 = 32 bytes
 
-    uint8_t openDate[4];     // creation date, start to receive bet
-    uint8_t closeDate[4];    // stop receiving bet date
-    uint8_t endDate[4];       // result date
+    uint32_t openDate;     // creation date, start to receive bet
+    uint32_t closeDate;    // stop receiving bet date
+    uint32_t endDate;       // result date
     // Amounts and numbers
     uint64_t minBetAmount;
     uint32_t maxBetSlotPerOption;

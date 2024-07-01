@@ -62,7 +62,7 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
     qtryBasicInfo_output result;
     memset(&result, 1, sizeof(qtryBasicInfo_output));
     quotteryGetBasicInfo(nodeIp, nodePort, result);
-    LOG("Fee per slot per day: %llu qu\n", result.feePerSlotPerDay);
+    LOG("Fee per slot per hour: %llu qu\n", result.feePerSlotPerHour);
     LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
     LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
     LOG("Shareholders fee: %.2f%%\n", result.shareholderFee/100.0);
@@ -83,9 +83,36 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
     LOG("Game operator ID: %s\n", buf);
 }
 
-static int accumulatedDay(int month)
+/**
+ * @return pack qtry datetime data from year, month, day, hour, minute, second to a uint32_t
+ * year is counted from 24 (2024)
+ */
+static void packQuotteryDate(uint32_t _year, uint32_t _month, uint32_t _day, uint32_t _hour, uint32_t _minute, uint32_t _second, uint32_t& res)
 {
-    int res = 0;
+    res = ((_year - 24) << 26) | (_month << 22) | (_day << 17) | (_hour << 12) | (_minute << 6) | (_second);
+}
+
+#define QTRY_GET_YEAR(data) ((data >> 26)+24)
+#define QTRY_GET_MONTH(data) ((data >> 22) & 0b1111)
+#define QTRY_GET_DAY(data) ((data >> 17) & 0b11111)
+#define QTRY_GET_HOUR(data) ((data >> 12) & 0b11111)
+#define QTRY_GET_MINUTE(data) ((data >> 6) & 0b111111)
+#define QTRY_GET_SECOND(data) ((data) & 0b111111)
+/*
+* @return unpack qtry datetime from uin32 to year, month, day, hour, minute, secon
+*/
+static void unpackQuotteryDate(uint8_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _hour, uint8_t& _minute, uint8_t& _second, uint32_t data)
+{
+    _year = QTRY_GET_YEAR(data); // 6 bits
+    _month = QTRY_GET_MONTH(data); //4bits
+    _day = QTRY_GET_DAY(data); //5bits
+    _hour = QTRY_GET_HOUR(data); //5bits
+    _minute = QTRY_GET_MINUTE(data); //6bits
+    _second = QTRY_GET_SECOND(data); //6bits
+}
+
+static void accumulatedDay(int month, uint64_t& res)
+{
     switch (month)
     {
         case 1: res = 0; break;
@@ -99,25 +126,39 @@ static int accumulatedDay(int month)
         case 9: res = 243; break;
         case 10:res = 273; break;
         case 11:res = 304; break;
-        case 12:res = 334; break;;
+        case 12:res = 334; break;
     }
-    return res;
+}
+static int dateCompare(uint32_t& A, uint32_t& B, int& i)
+{
+    if (A == B) return 0;
+    if (A < B) return -1;
+    return 1;
 }
 
-// return diff in number of day, A must be smaller than or equal B to have valid value
-static uint64_t diffDate(uint8_t A[4], uint8_t B[4]) {
-    int baseYear = A[0];
-    uint64_t dayA = accumulatedDay(A[1]) + A[2];
-    uint64_t dayB = (B[0]-baseYear)*365ULL + accumulatedDay(B[1]) + B[2];
+// return diff in number of second, A must be smaller than or equal B to have valid value
+static void diffDate(uint32_t& A, uint32_t& B, int& i, uint64_t& dayA, uint64_t& dayB, uint64_t& res) {
+    if (dateCompare(A, B, i) >= 0) {
+        res = 0;
+        return;
+    }
+    //TODO: convert local variables to locals struct when finalizing
+    accumulatedDay(QTRY_GET_MONTH(A), dayA);
+    dayA += QTRY_GET_DAY(A);
+    accumulatedDay(QTRY_GET_MONTH(B), dayB);
+    dayB += (QTRY_GET_YEAR(B) - QTRY_GET_YEAR(A)) * 365ULL + QTRY_GET_DAY(B);
 
     // handling leap-year: only store last 2 digits of year here, don't care about mod 100 & mod 400 case
-    for (int i = baseYear; i < B[0]; i++) {
-        if (i % 4 == 0) {
+    for (i = QTRY_GET_YEAR(A); i < QTRY_GET_YEAR(B); i++) {
+        if (i%4 == 0) {
             dayB++;
         }
     }
-    if (B[0] % 4 == 0 && B[1] > 2) dayB++;
-    return dayB-dayA;
+    if (int(QTRY_GET_YEAR(A))% 4 == 0 && (QTRY_GET_MONTH(A) > 2)) dayA++;
+    if (int(QTRY_GET_YEAR(B))% 4 == 0 && (QTRY_GET_MONTH(B) > 2)) dayB++;
+    res = (dayB - dayA)*3600ULL*24;
+    res += (QTRY_GET_HOUR(B) * 3600 + QTRY_GET_MINUTE(B) * 60 + QTRY_GET_SECOND(B));
+    res -= (QTRY_GET_HOUR(A) * 3600 + QTRY_GET_MINUTE(A) * 60 + QTRY_GET_SECOND(A));
 }
 
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset){
@@ -178,24 +219,26 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         packet.ibi.oracleFees[i] = op_fee;
     }
     {
-        promptStdin("Enter bet close date (stop receiving bet date) (Format: YY-MM-DD)", buff, 8);
+        promptStdin("Enter bet close date (stop receiving bet date) (Format: YY-MM-DD hh:mm:ss)", buff, 17);
         uint8_t year = (buff[0]-48)*10 + (buff[1]-48);
         uint8_t month = (buff[3]-48)*10 + (buff[4]-48);
         uint8_t day = (buff[6]-48)*10 + (buff[7]-48);
-        packet.ibi.closeDate[0] = year;
-        packet.ibi.closeDate[1] = month;
-        packet.ibi.closeDate[2] = day;
-        packet.ibi.closeDate[3] = 0;
+
+        uint8_t hour = (buff[9]-48)*10 + (buff[10]-48);
+        uint8_t minute = (buff[12]-48)*10 + (buff[13]-48);
+        uint8_t sec = (buff[15]-48)*10 + (buff[16]-48);
+        packQuotteryDate(year, month, day, hour, minute, sec, packet.ibi.closeDate);
     }
     {
-        promptStdin("Enter bet end date (finalize bet date) (Format: YY-MM-DD)", buff, 8);
+        promptStdin("Enter bet end date (finalize bet date) (Format: YY-MM-DD hh:mm:ss)", buff, 17);
         uint8_t year = (buff[0]-48)*10 + (buff[1]-48);
         uint8_t month = (buff[3]-48)*10 + (buff[4]-48);
         uint8_t day = (buff[6]-48)*10 + (buff[7]-48);
-        packet.ibi.endDate[0] = year;
-        packet.ibi.endDate[1] = month;
-        packet.ibi.endDate[2] = day;
-        packet.ibi.endDate[3] = 0;
+
+        uint8_t hour = (buff[9]-48)*10 + (buff[10]-48);
+        uint8_t minute = (buff[12]-48)*10 + (buff[13]-48);
+        uint8_t sec = (buff[15]-48)*10 + (buff[16]-48);
+        packQuotteryDate(year, month, day, hour, minute, sec, packet.ibi.endDate);
     }
     {
         promptStdin("Enter amount of qus per bet slot", buff, 16);
@@ -212,15 +255,22 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         qtryBasicInfo_output quotteryBasicInfo;
         LOG("Getting QTRY info...\n");
         quotteryGetBasicInfo(nodeIp, nodePort, quotteryBasicInfo);
-        LOG("feePerSlotPerDay: %lld\n", quotteryBasicInfo.feePerSlotPerDay);
+        LOG("feePerSlotPerHour: %lld\n", quotteryBasicInfo.feePerSlotPerHour);
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
         uint8_t year = gmtm->tm_year % 100;
         uint8_t month = gmtm->tm_mon + 1; // NOTE: tm_mon is zero-based [0-11] => [Jan-Dec]. Ref: https://cplusplus.com/reference/ctime/tm/
         uint8_t day = gmtm->tm_mday;
-        uint8_t curDate[4] = {year, month, day, 0};
-        uint64_t diffday = diffDate(curDate, packet.ibi.endDate) + 1;
-        packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryBasicInfo.feePerSlotPerDay * diffday;
+        uint8_t hour = gmtm->tm_hour;
+        uint8_t minute = gmtm->tm_min;
+        uint8_t second = gmtm->tm_sec;
+        uint32_t curDate;
+        packQuotteryDate(year, month, day, hour, minute, second, curDate);
+        uint64_t diffhour = 0, tmp0, tmp1;
+        int tmp;
+        diffDate(curDate, packet.ibi.endDate, tmp, tmp0, tmp1, diffhour);
+        diffhour = (diffhour+3599)/3600;
+        packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryBasicInfo.feePerSlotPerHour * diffhour;
     }
 
     uint32_t currentTick = getTickNumberFromNode(qc);
@@ -378,9 +428,13 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
     {
         LOG("Minimum bet amount: %llu\n", result.minBetAmount);
         LOG("Maximum slot per option: %llu\n", result.maxBetSlotPerOption);
-        LOG("OpenDate: %02u-%02u-%02u 00:00:00\n", result.openDate[0], result.openDate[1], result.openDate[2]);
-        LOG("CloseDate: %02u-%02u-%02u 23:59:59\n", result.closeDate[0], result.closeDate[1], result.closeDate[2]);
-        LOG("EndDate: %02u-%02u-%02u 23:59:59\n", result.endDate[0], result.endDate[1], result.endDate[2]);
+        uint8_t year, month, day, hour, minute, second;
+        unpackQuotteryDate(year, month, day, hour, minute, second, result.openDate);
+        LOG("OpenDate: %02u-%02u-%02u %02u:%02u:%02u\n", year, month, day, hour, minute, second);
+        unpackQuotteryDate(year, month, day, hour, minute, second, result.closeDate);
+        LOG("CloseDate: %02u-%02u-%02u %02u:%02u:%02u\n", year, month, day, hour, minute, second);
+        unpackQuotteryDate(year, month, day, hour, minute, second, result.endDate);
+        LOG("EndDate: %02u-%02u-%02u %02u:%02u:%02u\n", year, month, day, hour, minute, second);
     }
     LOG("Oracle IDs\n");
     int nOP = 0;
