@@ -118,3 +118,6 @@ void quotteryGetBetInfo(
     getBetInfo_output& result);
 
 void unpackQuotteryDate(uint8_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _hour, uint8_t& _minute, uint8_t& _second, uint32_t data);
+
+// Get options detail
+void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result);
