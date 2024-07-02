@@ -103,3 +103,18 @@ void quotteryPrintActiveBet(const char* nodeIp, const int nodePort);
 void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, const char* identity);
 void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t scheduledTickOffset);
 void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t winOption, const uint32_t scheduledTickOffset);
+
+// Get the basic infomation of quoterry
+void quotteryGetBasicInfo(const char* nodeIp, const int nodePort, qtryBasicInfo_output& result);
+
+// Core function
+void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_output& result);
+
+// Get detail information of a bet ID
+void quotteryGetBetInfo(
+    const char* nodeIp,
+    const int nodePort,
+    int betId,
+    getBetInfo_output& result);
+
+void unpackQuotteryDate(uint8_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _hour, uint8_t& _minute, uint8_t& _second, uint32_t data);
