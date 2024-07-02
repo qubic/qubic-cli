@@ -101,7 +101,7 @@ static void packQuotteryDate(uint32_t _year, uint32_t _month, uint32_t _day, uin
 /*
 * @return unpack qtry datetime from uin32 to year, month, day, hour, minute, secon
 */
-static void unpackQuotteryDate(uint8_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _hour, uint8_t& _minute, uint8_t& _second, uint32_t data)
+void unpackQuotteryDate(uint8_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _hour, uint8_t& _minute, uint8_t& _second, uint32_t data)
 {
     _year = QTRY_GET_YEAR(data); // 6 bits
     _month = QTRY_GET_MONTH(data); //4bits
