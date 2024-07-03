@@ -141,7 +141,7 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     LOG("Tick: %u\n", tx.tick);
     LOG("Extra data size: %u\n", tx.inputSize);
     if (extraData != nullptr && tx.inputSize){
-        char hex_tring[1024] = {0};
+        char hex_tring[1024*2] = {0};
         for (int i = 0; i < tx.inputSize; i++)
             sprintf(hex_tring + i * 2, "%02x", extraData[i]);
 

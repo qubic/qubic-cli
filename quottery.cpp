@@ -28,8 +28,7 @@ enum quotteryFuncId{
 };
 
 
-void quotteryGetBasicInfo(const char* nodeIp, const int nodePort, qtryBasicInfo_output& result){
-    auto qc = make_qc(nodeIp, nodePort);
+void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result){
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -61,7 +60,8 @@ void quotteryGetBasicInfo(const char* nodeIp, const int nodePort, qtryBasicInfo_
 void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
     qtryBasicInfo_output result;
     memset(&result, 1, sizeof(qtryBasicInfo_output));
-    quotteryGetBasicInfo(nodeIp, nodePort, result);
+    auto qc = make_qc(nodeIp, nodePort);
+    quotteryGetBasicInfo(qc, result);
     LOG("Fee per slot per hour: %llu qu\n", result.feePerSlotPerHour);
     LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
     LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
@@ -162,8 +162,6 @@ static void diffDate(uint32_t& A, uint32_t& B, int& i, uint64_t& dayA, uint64_t&
 }
 
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset){
-    auto qc = make_qc(nodeIp, nodePort);
-    LOG("Established connection...\n");
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
     uint8_t destPublicKey[32] = {0};
@@ -251,10 +249,12 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     LOG("Crafting transaction...\n");
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    auto qc = make_qc(nodeIp, nodePort);
+    LOG("Established connection...\n");
     {
         qtryBasicInfo_output quotteryBasicInfo;
         LOG("Getting QTRY info...\n");
-        quotteryGetBasicInfo(nodeIp, nodePort, quotteryBasicInfo);
+        quotteryGetBasicInfo(qc, quotteryBasicInfo);
         LOG("feePerSlotPerHour: %lld\n", quotteryBasicInfo.feePerSlotPerHour);
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
@@ -290,6 +290,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     packet.header.setType(BROADCAST_TRANSACTION);
     LOG("Sending data...\n");
     qc->sendData((uint8_t *) &packet, packet.header.size());
+    LOG("Sent data...\n");
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(QuotteryissueBet_input) + SIGNATURE_SIZE,
                    digest,
