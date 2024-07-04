@@ -552,11 +552,6 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     uint32_t currenTick = getTickNumberFromNode(qc);
-    if (currenTick < requestedTick)
-    {
-        LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
-        return;
-    }
     TickData td;
     getTickData(nodeIp, nodePort, requestedTick, td);
     if (td.epoch == 0)
@@ -604,9 +599,17 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     fread(&td, 1, sizeof(TickData), f);
     int numTx = 0;
     uint8_t all_zero[32] = {0};
+    LOG("List of transactions on tickData (correct order):\n");
     for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++){
-        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0) numTx++;
+        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0){
+            numTx++;
+            char digestHex[64];
+            byteToHex(td.transactionDigests[i], digestHex, 32);
+            LOG("%s\n", digestHex);
+        }
     }
+    std::vector<uint8_t> vDigests;
+    vDigests.resize(32*numTx);
     for (int i = 0; i < numTx; i++){
         Transaction tx;
         fread(&tx, 1, sizeof(Transaction), f);
@@ -627,7 +630,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
             memcpy(sig.sig, signatureBuffer, SIGNATURE_SIZE);
             signatures->push_back(sig);
         }
-        if (txHashes != nullptr){
+        {
             std::vector<uint8_t> raw_data;
             raw_data.resize(sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
             auto ptr = raw_data.data();
@@ -638,6 +641,9 @@ void readTickDataFromFile(const char* fileName, TickData& td,
                            raw_data.size(),
                            digest,
                            32);
+            memcpy(vDigests.data() + i * 32, digest, 32);
+        }
+        if (txHashes != nullptr){
             TxhashStruct tx_hash;
             getTxHashFromDigest(digest, txHashBuffer);
             memcpy(tx_hash.hash, txHashBuffer, 60);
@@ -645,6 +651,31 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         }
         txs.push_back(tx);
     }
+
+    // put in correct order by tickdata
+    std::vector<Transaction> _txs; _txs.resize(numTx);
+    std::vector<extraDataStruct> _extraData;
+    std::vector<SignatureStruct> _signatures;
+    std::vector<TxhashStruct> _txHashes;
+    if (extraData != nullptr) _extraData.resize(numTx);
+    if (signatures != nullptr) _signatures.resize(numTx);
+    if (txHashes != nullptr) _txHashes.resize(numTx);
+    for (int i = 0; i < numTx; i++){
+        for (int j = 0; j < numTx; j++){
+            // guaranteed by the protocol, if any duplicated here it's a bug on core side
+            if (memcmp(vDigests.data() + j * 32, td.transactionDigests[i], 32) == 0)
+            {
+                _txs[i] = txs[j];
+                if (extraData != nullptr) _extraData[i] =  (*extraData)[j];
+                if (signatures != nullptr) _signatures[i] = (*signatures)[j];
+                if (txHashes != nullptr) _txHashes[i] = (*txHashes)[j];
+            }
+        }
+    }
+    txs = _txs;
+    if (extraData != nullptr) (*extraData) = _extraData;
+    if (signatures != nullptr) (*signatures) = _signatures;
+    if (txHashes != nullptr) (*txHashes) = _txHashes;
     fclose(f);
 }
 
@@ -665,6 +696,12 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     if (bc.computors.epoch != td.epoch){
         LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td.epoch);
     }
+    KangarooTwelve((uint8_t*)&td, sizeof(TickData), digest, 32);
+    {
+        char tddigest[61]={0};
+        getIdentityFromPublicKey(digest, tddigest, true);
+        LOG("Tickdata: %s\n", tddigest);
+    }
     int computorIndex = td.computorIndex;
     td.computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
     KangarooTwelve(reinterpret_cast<const uint8_t *>(&td),
@@ -673,7 +710,10 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
                    32);
     uint8_t* computorOfThisTick = bc.computors.publicKeys[computorIndex];
     if (verify(computorOfThisTick, digest, td.signature)){
+        char computorID[61] = {0};
+        getIdentityFromPublicKey(computorOfThisTick, computorID, false);
         LOG("Tick is VERIFIED (signed by correct computor).\n");
+        LOG("Comp ID: %s\n", computorID);
     } else {
         LOG("Tick is NOT verified (not signed by correct computor).\n");
     }
