@@ -181,3 +181,7 @@ Check tx on online:
 More information, please read the help. `./qubic-cli -help`
 
 #### NOTE: PROPER ACTIONS are needed if you use this tool as a replacement for qubic wallet. Please use it with caution.
+
+### LICENSE
+
+This project is licensed under the anti-military license. See [COPYING](COPYING.md) for details.
