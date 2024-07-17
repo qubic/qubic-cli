@@ -35,5 +35,7 @@ SET(HEADER_FILES
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 ADD_LIBRARY(fourq-qubic SHARED fourq-qubic.cpp)
+set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
+install(TARGETS fourq-qubic LIBRARY)
 
