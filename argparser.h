@@ -96,7 +96,7 @@ void print_help(){
     printf("\t-getminingscoreranking\n");
     printf("\t\tGet current mining score ranking. Valid private key and node ip/port are required.\t\n");
     printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
-    printf("\t\tGet vote counter transaction of a tick\t\n");
+    printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
 
     printf("\n[QX COMMAND]\n");
     printf("\t-qxgetfee\n");
