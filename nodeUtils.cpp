@@ -1444,3 +1444,65 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
     }
     LOG("Total score: %llu\n", total_score);
 }
+
+unsigned int extract10Bit(const unsigned char* data, unsigned int idx)
+{
+    //TODO: simplify this
+    unsigned int byte0 = data[idx + (idx >> 2)];
+    unsigned int byte1 = data[idx + (idx >> 2) + 1];
+    unsigned int last_bit0 = 8 - (idx & 3) * 2;
+    unsigned int first_bit1 = 10 - last_bit0;
+    unsigned int res = (byte0 & ((1 << last_bit0) - 1)) << first_bit1;
+    res |= (byte1 >> (8 - first_bit1));
+    return res;
+}
+
+void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName)
+{
+    BroadcastComputors bc;
+    {
+        FILE* f = fopen(compFileName, "rb");
+        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors)){
+            LOG("Failed to read comp list\n");
+            fclose(f);
+            return;
+        }
+        fclose(f);
+    }
+    auto qc = make_qc(nodeIp, nodePort);
+    std::vector<Transaction> txs;
+    std::vector<TxhashStruct> txHashesFromTick;
+    std::vector<extraDataStruct> extraData;
+    std::vector<SignatureStruct> signatureStruct;
+    getTickTransactions(qc.get(), requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    unsigned int votes[676];
+    int nTx = txs.size();
+    LOG("Finding in %d transactions", nTx);
+    for (int i = 0; i < nTx; i++)
+    {
+        if (extraData[i].vecU8.size() == 848)
+        {
+            int comp_idx = requestedTick % 676;
+            if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
+            {
+                uint8_t* data = extraData[i].vecU8.data();
+                uint32_t sum = 0;
+                for (int j = 0; j < 676; j++)
+                {
+                    votes[j] = extract10Bit(data, j);
+                    sum += votes[j];
+                    auto alphabet = indexToAlphabet(j);
+                    LOG("%s: %u\n", alphabet.c_str(), votes[j]);
+                }
+                if (sum < 676*451)
+                {
+                    LOG("Invalid sum votes: %u\n", sum);
+                }
+                if (votes[comp_idx] != 0)
+                {
+                    LOG("Invalid comp votes\n");
+                }
+            }
+        }
+    }
+}

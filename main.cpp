@@ -269,6 +269,10 @@ int run(int argc, char* argv[])
             sanityCheckSpecialCommand(g_requestedSpecialCommand);
             sendSpecialCommandGetMiningScoreRanking(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
             break;
+        case GET_VOTE_COUNTER_TX:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getVoteCounterTransaction(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
+            break;
         case SYNC_TIME:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

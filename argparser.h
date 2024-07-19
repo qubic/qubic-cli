@@ -93,6 +93,10 @@ void print_help(){
     printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
     printf("\t-synctime\n");
     printf("\t\tSync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
+    printf("\t-getminingscoreranking\n");
+    printf("\t\tGet current mining score ranking. Valid private key and node ip/port are required.\t\n");
+    printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
+    printf("\t\tGet vote counter transaction of a tick\t\n");
 
     printf("\n[QX COMMAND]\n");
     printf("\t-qxgetfee\n");
@@ -356,6 +360,17 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
+
+        if(strcmp(argv[i], "-getvotecountertx") == 0)
+        {
+            g_cmd = GET_VOTE_COUNTER_TX;
+            g_requestedFileName = argv[i+1];
+            g_requestedTickNumber = charToNumber(argv[i+2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
 
         if(strcmp(argv[i], "-sendcustomtransaction") == 0)
         {

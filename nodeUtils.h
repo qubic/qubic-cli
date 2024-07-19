@@ -16,6 +16,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode);
 void dumpSpectrumToCSV(const char* input, const char* output);
 void dumpUniverseToCSV(const char* input, const char* output);
 void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed, int command);
+void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName);
 
 // remote tools:
 void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
