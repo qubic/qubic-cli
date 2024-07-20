@@ -13,22 +13,23 @@
 
 #define QX_CONTRACT_INDEX 1
 #define QX_ADDRESS "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARMID"
+
 // QX FUNCTIONS
-#define QX_GET_FEE_PR 1
-#define QX_GET_ASSET_ASK_ORDER_PR 2
-#define QX_GET_ASSET_BID_ORDER_PR 3
-#define QX_GET_ENTITY_ASK_ORDER_PR 4
-#define QX_GET_ENTITY_BID_ORDER_PR 5
+#define QX_GET_FEE 1
+#define QX_GET_ASSET_ASK_ORDER 2
+#define QX_GET_ASSET_BID_ORDER 3
+#define QX_GET_ENTITY_ASK_ORDER 4
+#define QX_GET_ENTITY_BID_ORDER 5
 
 // QX PROCEDURES
-#define QX_ISSUE_ASSET_FN 1
-#define QX_TRANSFER_SHARE_FN 2
-#define QX_PLACEHOLDER0_FN 3
-#define QX_PLACEHOLDER1_FN 4
-#define QX_ADD_ASK_ORDER_FN 5
-#define QX_ADD_BID_ORDER_FN 6
-#define QX_REMOVE_ASK_ORDER_FN 7
-#define QX_REMOVE_BID_ORDER_FN 8
+#define QX_ISSUE_ASSET 1
+#define QX_TRANSFER_SHARE 2
+#define QX_PLACEHOLDER0 3
+#define QX_PLACEHOLDER1 4
+#define QX_ADD_ASK_ORDER 5
+#define QX_ADD_BID_ORDER 6
+#define QX_REMOVE_ASK_ORDER 7
+#define QX_REMOVE_BID_ORDER 8
 
 void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     auto qc = make_qc(nodeIp, nodePort);
@@ -40,7 +41,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
     packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QX_GET_FEE_PR;
+    packet.rcf.inputType = QX_GET_FEE;
     packet.rcf.contractIndex = QX_CONTRACT_INDEX;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
@@ -113,7 +114,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
         scheduledTick = scheduledTickOffset;
     }
     packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QX_ISSUE_ASSET_FN;
+    packet.transaction.inputType = QX_ISSUE_ASSET;
     packet.transaction.inputSize = sizeof(IssueAsset_input);
 
     // fill the input
@@ -190,7 +191,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QX_TRANSFER_SHARE_FN;
+    packet.transaction.inputType = QX_TRANSFER_SHARE;
     packet.transaction.inputSize = sizeof(TransferAssetOwnershipAndPossession_input);
 
     // fill the input
@@ -262,7 +263,7 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 1; // free
-    if (functionNumber == QX_ADD_BID_ORDER_FN){
+    if (functionNumber == QX_ADD_BID_ORDER){
         packet.transaction.amount = price * numberOfShares;
     }
 
@@ -317,7 +318,7 @@ void qxAddToAskOrder(const char* nodeIp, int nodePort,
                      const long long numberOfShares,
                      uint32_t scheduledTickOffset)
 {
-    qxOrderAction<QX_ADD_ASK_ORDER_FN>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
+    qxOrderAction<QX_ADD_ASK_ORDER>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
 }
 
 void qxAddToBidOrder(const char* nodeIp, int nodePort,
@@ -328,7 +329,7 @@ void qxAddToBidOrder(const char* nodeIp, int nodePort,
                      const long long numberOfShares,
                      uint32_t scheduledTickOffset)
 {
-    qxOrderAction<QX_ADD_BID_ORDER_FN>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
+    qxOrderAction<QX_ADD_BID_ORDER>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
 }
 
 void qxRemoveToAskOrder(const char* nodeIp, int nodePort,
@@ -339,7 +340,7 @@ void qxRemoveToAskOrder(const char* nodeIp, int nodePort,
                      const long long numberOfShares,
                      uint32_t scheduledTickOffset)
 {
-    qxOrderAction<QX_REMOVE_ASK_ORDER_FN>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
+    qxOrderAction<QX_REMOVE_ASK_ORDER>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
 }
 
 void qxRemoveToBidOrder(const char* nodeIp, int nodePort,
@@ -350,7 +351,7 @@ void qxRemoveToBidOrder(const char* nodeIp, int nodePort,
                         const long long numberOfShares,
                         uint32_t scheduledTickOffset)
 {
-    qxOrderAction<QX_REMOVE_BID_ORDER_FN>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
+    qxOrderAction<QX_REMOVE_BID_ORDER>(nodeIp, nodePort, seed, pAssetName, pIssuerInQubicFormat, price, numberOfShares, scheduledTickOffset);
 }
 
 void printAssetOrders(qxGetAssetOrder_output& orders)
@@ -424,7 +425,7 @@ void qxGetAssetAskOrder(const char* nodeIp, int nodePort,
                         const char* pIssuerInQubicFormat,
                         const long long offset)
 {
-    qxGetAssetOrder<QX_GET_ASSET_ASK_ORDER_PR>(nodeIp, nodePort, pAssetName, pIssuerInQubicFormat, offset);
+    qxGetAssetOrder<QX_GET_ASSET_ASK_ORDER>(nodeIp, nodePort, pAssetName, pIssuerInQubicFormat, offset);
 }
 
 void qxGetAssetBidOrder(const char* nodeIp, int nodePort,
@@ -432,7 +433,7 @@ void qxGetAssetBidOrder(const char* nodeIp, int nodePort,
                      const char* pIssuerInQubicFormat,
                      const long long offset)
 {
-    qxGetAssetOrder<QX_GET_ASSET_BID_ORDER_PR>(nodeIp, nodePort, pAssetName, pIssuerInQubicFormat, offset);
+    qxGetAssetOrder<QX_GET_ASSET_BID_ORDER>(nodeIp, nodePort, pAssetName, pIssuerInQubicFormat, offset);
 }
 
 void printEntityOrders(qxGetEntityOrder_output& orders)
@@ -505,12 +506,12 @@ void qxGetEntityAskOrder(const char* nodeIp, int nodePort,
                         const char* pHexEntity,
                         const long long offset)
 {
-    qxGetEntityOrder<QX_GET_ENTITY_ASK_ORDER_PR>(nodeIp, nodePort, pHexEntity, offset);
+    qxGetEntityOrder<QX_GET_ENTITY_ASK_ORDER>(nodeIp, nodePort, pHexEntity, offset);
 }
 
 void qxGetEntityBidOrder(const char* nodeIp, int nodePort,
                          const char* pHexEntity,
                          const long long offset)
 {
-    qxGetEntityOrder<QX_GET_ENTITY_BID_ORDER_PR>(nodeIp, nodePort, pHexEntity, offset);
+    qxGetEntityOrder<QX_GET_ENTITY_BID_ORDER>(nodeIp, nodePort, pHexEntity, offset);
 }
