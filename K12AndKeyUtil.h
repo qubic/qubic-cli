@@ -2111,8 +2111,7 @@ static bool decode(const uint8_t* Pencoded, point_t P)
     f2elm_t u, v;
     point_extproj_t R;
     unsigned int i;
-
-    *((__m256i*)P->y) = *((__m256i*)Pencoded);      // Decoding y-coordinate and sign
+    memcpy(P->y, Pencoded, 32);
     P->y[1][1] &= 0x7FFFFFFFFFFFFFFF;
 
     fp2sqr1271(P->y, u);
