@@ -127,7 +127,7 @@ Command:
 		Unlock qu in Qearn
 	-qearngetlockinfoperepoch <EPOCH>
 		Get lock information per epoch
-	-qearngetuserlockedinfo
+	-qearngetuserlockedinfo <EPOCH>
 		Get user locked information in Qearn
 ```
 
