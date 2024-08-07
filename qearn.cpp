@@ -13,8 +13,8 @@
 #define QEARN_CONTRACT_INDEX 6
 
 // QEARN FUNCTIONS
-#define QEARN_GET_LOCK_INFOR_PER_EPOCH 1
-#define QEARN_GET_USER_LOCKED_INFOR 2
+#define QEARN_GET_LOCK_INFO_PER_EPOCH 1
+#define QEARN_GET_USER_LOCKED_INFO 2
 
 // QEARN PROCEDURES
 #define QEARN_LOCK 1
@@ -28,19 +28,22 @@ struct Unlock_input {
 struct Unlock_output {
 };
 
-struct GetLockInforPerEpoch_input {
+struct GetLockInfoPerEpoch_input {
     uint32_t Epoch;                             /* epoch number to get information */
 };
 
-struct GetLockInforPerEpoch_output {
+struct GetLockInfoPerEpoch_output {
     uint64_t LockedAmount;                      /* total locked amount in epoch */
     uint64_t BonusAmount;                       /* bonus amount in epoch excluding the early unlocking */
 };
 
-struct GetUserLockedInfor_input {
+struct GetUserLockedInfo_input {
 };
 
-struct GetUserLockedInfor_output {
+struct GetUserLockedInfo_output {
+    
+    uint32_t NumberOfLockedEpoch;
+
     uint64_t LockedAmount[64];                   /* the amount user locked at every epoch */
     uint32_t LockedEpoch[64];                    /* the epoch user locked */
 };
@@ -163,13 +166,13 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetLockInforPerEpoch_input input;
+        GetLockInfoPerEpoch_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetLockInforPerEpoch_input);
-    packet.rcf.inputType = QEARN_GET_LOCK_INFOR_PER_EPOCH;
+    packet.rcf.inputSize = sizeof(GetLockInfoPerEpoch_input);
+    packet.rcf.inputType = QEARN_GET_LOCK_INFO_PER_EPOCH;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX; 
     packet.input.Epoch = epoch;
     qc->sendData((uint8_t *) &packet, packet.header.size());
@@ -179,13 +182,13 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     int recvByte = buffer.size();
     int ptr = 0;
 
-    GetLockInforPerEpoch_output result;
+    GetLockInfoPerEpoch_output result;
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto infor = (GetLockInforPerEpoch_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *infor;
+            auto info = (GetLockInfoPerEpoch_output*)(data + ptr + sizeof(RequestResponseHeader));
+            result = *info;
         }
         ptr+= header->size();
     }
@@ -197,13 +200,13 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort){
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetUserLockedInfor_input input;
+        GetUserLockedInfo_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetUserLockedInfor_input);
-    packet.rcf.inputType = QEARN_GET_USER_LOCKED_INFOR;
+    packet.rcf.inputSize = sizeof(GetUserLockedInfo_input);
+    packet.rcf.inputType = QEARN_GET_USER_LOCKED_INFO;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
@@ -212,7 +215,8 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort){
     int recvByte = buffer.size();
     int ptr = 0;
 
-    GetUserLockedInfor_output result;
+    GetUserLockedInfo_output result;
+    result.NumberOfLockedEpoch = 0;
     for(uint16_t t = 0 ; t < 64; t++) {
         result.LockedAmount[t] = 0;
         result.LockedEpoch[t] = 0;
@@ -221,11 +225,12 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort){
     {
         auto header = (RequestResponseHeader*)(data+ptr);
         if (header->type() == RespondContractFunction::type()){
-            auto fees = (GetUserLockedInfor_output*)(data + ptr + sizeof(RequestResponseHeader));
+            auto fees = (GetUserLockedInfo_output*)(data + ptr + sizeof(RequestResponseHeader));
             result = *fees;
         }
         ptr+= header->size();
     }
 
-    for(uint16_t t = 0 ; t < 64; t++) if(result.LockedAmount[t] != 0) printf("locked amount:%lld  locked epoch:%d\n", result.LockedAmount[t], result.LockedEpoch[t]);
+    printf("number of locked epoch: %d\n", result.NumberOfLockedEpoch);
+    for(uint16_t t = 0 ; t < result.NumberOfLockedEpoch; t++) if(result.LockedAmount[t] != 0) printf("locked amount:%lld  locked epoch:%d\n", result.LockedAmount[t], result.LockedEpoch[t]);
 }

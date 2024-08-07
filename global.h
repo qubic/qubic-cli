@@ -73,4 +73,4 @@ uint64_t g_get_log_passcode[4] = {0};
 uint64_t g_qearn_lock_amount;
 uint64_t g_qearn_unlock_amount;
 uint32_t g_qearn_locked_epoch;
-uint32_t g_qearn_getinfor_epoch;
+uint32_t g_qearn_getinfo_epoch;
