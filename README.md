@@ -119,6 +119,16 @@ Command:
 		(Oracle providers only) publish a result for a bet
 	-qtrycancelbet <BET_ID>
 		(Game operator only) cancel a bet
+
+[QEARN COMMAND]
+	-qearnlock
+		Lock qu in Qearn
+	-qearnunlock <UNLOCK_AMOUNT> <LOCKED_EPOCH>
+		Unlock qu in Qearn
+	-qearngetlockinforperepoch <EPOCH>
+		Get lock information per epoch
+	-qearngetuserlockedinfor
+		Get user locked information in Qearn
 ```
 
 ### BUILD

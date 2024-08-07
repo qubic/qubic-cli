@@ -694,7 +694,39 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
+        if(strcmp(argv[i], "-qearnlock") == 0)
+        {
+            g_cmd = QEARN_LOCK;
+            g_qearn_lock_amount = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qearnunlock") == 0)
+        {
+            g_cmd = QEARN_UNLOCK;
+            g_qearn_unlock_amount = charToNumber(argv[i + 1]);
+            g_qearn_locked_epoch = charToNumber(argv[i + 2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qearngetlockinforperepoch") == 0)
+        {
+            g_cmd = QEARN_GET_INFOR_PER_EPOCH;
+            g_qearn_getinfor_epoch = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-qearngetuserlockedinfor") == 0)
+        {
+            g_cmd = QEARN_GET_USER_LOCKED_INFOR;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        
         i++;
     }
     if (g_configFile != nullptr)
