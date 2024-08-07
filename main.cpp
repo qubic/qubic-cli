@@ -308,7 +308,7 @@ int run(int argc, char* argv[])
         case QEARN_GET_USER_LOCKED_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qearnGetUserLockedInfo(g_nodeIp, g_nodePort);
+            qearnGetUserLockedInfo(g_nodeIp, g_nodePort, g_qearn_getinfo_epoch);
             break;
 
         default:
