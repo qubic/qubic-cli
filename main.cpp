@@ -303,12 +303,12 @@ int run(int argc, char* argv[])
         case QEARN_GET_INFOR_PER_EPOCH:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qearnGetInforPerEpoch(g_nodeIp, g_nodePort, g_qearn_getinfor_epoch);
+            qearnGetInfoPerEpoch(g_nodeIp, g_nodePort, g_qearn_getinfor_epoch);
             break;
         case QEARN_GET_USER_LOCKED_INFOR:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qearnGetUserLockedInfor(g_nodeIp, g_nodePort);
+            qearnGetUserLockedInfo(g_nodeIp, g_nodePort);
             break;
 
         default:

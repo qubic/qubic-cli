@@ -711,7 +711,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetlockinforperepoch") == 0)
+        if(strcmp(argv[i], "-qearngetlockinfoperepoch") == 0)
         {
             g_cmd = QEARN_GET_INFOR_PER_EPOCH;
             g_qearn_getinfor_epoch = charToNumber(argv[i + 1]);
@@ -719,7 +719,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetuserlockedinfor") == 0)
+        if(strcmp(argv[i], "-qearngetuserlockedinfo") == 0)
         {
             g_cmd = QEARN_GET_USER_LOCKED_INFOR;
             i+=1;

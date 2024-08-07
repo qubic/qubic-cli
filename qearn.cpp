@@ -158,7 +158,7 @@ void qearnUnlock(const char* nodeIp, int nodePort, const char* seed, long long u
     LOG("to check your tx confirmation status\n");
 }
 
-void qearnGetInforPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch){
+void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -192,7 +192,7 @@ void qearnGetInforPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
     printf("bonus amount:%llu\nlocked amount:%llu\n", result.BonusAmount, result.LockedAmount);
 }
 
-void qearnGetUserLockedInfor(const char* nodeIp, const int nodePort){
+void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
