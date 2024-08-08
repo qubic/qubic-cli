@@ -38,6 +38,7 @@ struct GetLockInfoPerEpoch_output {
 };
 
 struct GetUserLockedInfo_input {
+    uint8_t publicKey[32];
     uint32_t epoch;
 };
 
@@ -192,7 +193,11 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     printf("bonus amount:%llu\nlocked amount:%llu\nminimum yield:%d", result.BonusAmount, result.LockedAmount, result.BonusAmount * 100 / result.LockedAmount);
 }
 
-void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, uint32_t epoch){
+void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch){
+    
+    uint8_t publicKey[32] = {0};
+    getPublicKeyFromIdentity(Identity, publicKey);
+
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -205,7 +210,10 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, uint32_t epo
     packet.rcf.inputSize = sizeof(GetUserLockedInfo_input);
     packet.rcf.inputType = QEARN_GET_USER_LOCKED_INFO;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
     packet.input.epoch = epoch;
+    memcpy(packet.input.publicKey, publicKey, 32);
+
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
     qc->receiveDataAll(buffer);
@@ -224,5 +232,5 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, uint32_t epo
         ptr+= header->size();
     }
 
-    printf("The amount of epoch %d: %lld\n", epoch,  result.LockedAmount);
+    printf("The amount of epoch %d: %llu\n", epoch,  result.LockedAmount);
 }
