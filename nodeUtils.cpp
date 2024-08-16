@@ -101,7 +101,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         LOG("LatestCreatedTick: %u\n", curSystemInfo.latestCreatedTick);
         LOG("NumberOfEntities: %u\n", curSystemInfo.numberOfEntities);
         LOG("NumberOfTransactions: %u\n", curSystemInfo.numberOfTransactions);
-        char hex[64];
+        char hex[65];
         byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
         LOG("RandomMiningSeed: %s\n", hex);
         LOG("SolutionThreshold: %u\n", curSystemInfo.solutionThreshold);
