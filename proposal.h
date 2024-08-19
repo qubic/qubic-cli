@@ -174,7 +174,7 @@ struct ProposalDataV1
 	uint32 tick;
 
 	// Proposal payload data (for all except types with class GeneralProposal)
-	union
+	union Data
 	{
 		// Used if type class is Transfer
 		struct Transfer
@@ -201,7 +201,7 @@ struct ProposalDataV1
 			static constexpr sint64 minSupportedValue = 0x8000000000000001;
 			static constexpr sint64 maxSupportedValue = 0x7fffffffffffffff;
 		} variableScalar;
-	};
+	} data;
 };
 static_assert(sizeof(ProposalDataV1) == 256 + 8 + 64, "Unexpected struct size.");
 

@@ -64,6 +64,7 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 	}
 	else if (cls == ProposalTypes::Class::Transfer)
 	{
+		const auto& transfer = p.data.transfer;
 		std::cout << "\ttype = Transfer with " << options << " options";
 		if (options < 2 || options > 5)
 		{
@@ -74,7 +75,7 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 
 		char dstIdentity[128] = { 0 };
 		bool isLowerCase = false;
-		getIdentityFromPublicKey(p.transfer.destination, dstIdentity, isLowerCase);
+		getIdentityFromPublicKey(transfer.destination, dstIdentity, isLowerCase);
 		std::cout << "\t\ttarget address = " << dstIdentity << std::endl;
 
 		std::cout << "\t\tvote value 0 = no change to current status" << std::endl;
@@ -82,22 +83,22 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		{
 			std::cout << "\t\tvote value " << i + 1 << " = ";
 			if (contract == GQMPROP_CONTRACT_INDEX)
-				std::cout << float(p.transfer.amounts[i]) / 1000000 * 100 << "%"; // For GQMPROP amount is relative in millionth
+				std::cout << float(transfer.amounts[i]) / 1000000 * 100 << "%"; // For GQMPROP amount is relative in millionth
 			else
-				std::cout << p.transfer.amounts[i];
-			if (p.transfer.amounts[i] < 0)
+				std::cout << transfer.amounts[i];
+			if (p.data.transfer.amounts[i] < 0)
 			{
 				std::cout << " (ERROR: negative amount)";
 				okay = false;
 			}
 			else if (i >= 1)
 			{
-				if (p.transfer.amounts[i] < p.transfer.amounts[i - 1])
+				if (transfer.amounts[i] < transfer.amounts[i - 1])
 				{
 					std::cout << " (ERROR: amounts not sorted)";
 					okay = false;
 				}
-				else if (p.transfer.amounts[i] == p.transfer.amounts[i - 1])
+				else if (transfer.amounts[i] == transfer.amounts[i - 1])
 				{
 					std::cout << " (ERROR: duplicate amounts are not allowed)";
 					okay = false;
@@ -121,28 +122,29 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		if (options == 0)
 		{
 			// scalar votes
-			std::cout << "\t\tvariable index = " << p.variableScalar.variable << std::endl;
-			std::cout << "\t\tminimum allowed value = " << p.variableScalar.minValue;
-			if (p.variableScalar.minValue < p.variableScalar.minSupportedValue)
+			const auto& variableScalar = p.data.variableScalar;
+			std::cout << "\t\tvariable index = " << variableScalar.variable << std::endl;
+			std::cout << "\t\tminimum allowed value = " << variableScalar.minValue;
+			if (variableScalar.minValue < variableScalar.minSupportedValue)
 			{
 				std::cout << " (ERROR: value to small)";
 				okay = false;
 			}
 			std::cout << std::endl;
-			std::cout << "\t\tmaximum allowed value = " << p.variableScalar.maxValue;
-			if (p.variableScalar.maxValue > p.variableScalar.maxSupportedValue)
+			std::cout << "\t\tmaximum allowed value = " << variableScalar.maxValue;
+			if (variableScalar.maxValue > variableScalar.maxSupportedValue)
 			{
 				std::cout << " (ERROR: value to large)";
 				okay = false;
 			}
 			std::cout << std::endl;
-			std::cout << "\t\tproposed value = " << p.variableScalar.proposedValue;
-			if (p.variableScalar.proposedValue < p.variableScalar.minValue)
+			std::cout << "\t\tproposed value = " << variableScalar.proposedValue;
+			if (variableScalar.proposedValue < variableScalar.minValue)
 			{
 				std::cout << " (ERROR: value to small)";
 				okay = false;
 			}
-			if (p.variableScalar.proposedValue > p.variableScalar.maxValue)
+			if (variableScalar.proposedValue > variableScalar.maxValue)
 			{
 				std::cout << " (ERROR: value to large)";
 				okay = false;
@@ -152,18 +154,19 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		else
 		{
 			// option votes
+			const auto& variableOptions = p.data.variableOptions;
 			std::cout << "\t\tvote value 0 = no change to current value of varibale" << std::endl;
 			for (int i = 0; i < options - 1; ++i)
 			{
-				std::cout << "\t\tvote value " << i + 1 << " = set var value to " << p.variableOptions.values[i];
+				std::cout << "\t\tvote value " << i + 1 << " = set var value to " << variableOptions.values[i];
 				if (i >= 1)
 				{
-					if (p.variableOptions.values[i] < p.variableOptions.values[i - 1])
+					if (variableOptions.values[i] < variableOptions.values[i - 1])
 					{
 						std::cout << " (ERROR: values not sorted)";
 						okay = false;
 					}
-					else if (p.variableOptions.values[i] == p.variableOptions.values[i - 1])
+					else if (variableOptions.values[i] == variableOptions.values[i - 1])
 					{
 						std::cout << " (ERROR: duplicate values are not allowed)";
 						okay = false;
@@ -240,7 +243,8 @@ void printSetProposalHelp()
 	std::cout << "\nYou have to pass a proposal string with the following structure:\n\n";
 	std::cout << "\t\"[ProposalTypeClass]|[NumberOfVoteOptions]:[AdditionalProposalData]|[URL]\"\n\n";
 	std::cout << "[ProposalTypeClass]: Should be one of the following values:\n";
-	std::cout << "\t- GeneralOptions: Normal proposal without automated execution. AdditionalProposalData is empty.\n";
+	std::cout << "\t- GeneralOptions: Normal proposal without automated execution.\n";
+	std::cout << "\t\tNumberOfVoteOptions is 2, 3, ..., 7, or 8. AdditionalProposalData is unused/empty.\n";	
 	std::cout << "\t- Transfer: Propose to transfer/donate an amount to a destination address.\n";
 	std::cout << "\t\tAdditionalProposalData is comma-separated list of destination identity, amount of option 1,\n";
 	std::cout << "\t\tamount of option 2, ... (options 0 is no change to current state. In GQMPROP contract, the\n";
@@ -329,14 +333,14 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		std::string dstIdentity = strtok(writableProposalString, ",");
 		std::cout << "Checking destination identity " << dstIdentity << " ...\n";
 		sanityCheckIdentity(dstIdentity.c_str());
-		getPublicKeyFromIdentity(dstIdentity.c_str(), p.transfer.destination);
+		getPublicKeyFromIdentity(dstIdentity.c_str(), p.data.transfer.destination);
 		for (unsigned int i = 0; i < numberOptions - 1; ++i)
 		{
 			std::string amountStr = strtok(NULL, ",");
 			sint64 amountInt;
 			if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
 			{
-				p.transfer.amounts[i] = amountInt;
+				p.data.transfer.amounts[i] = amountInt;
 			}
 			else
 			{
@@ -621,6 +625,11 @@ void gqmpropVote(const char* nodeIp, int nodePort, const char* seed,
 	v.proposalType = outProposal.proposal.type;
 	v.proposalIndex = proposalIndex;
 	v.voteValue = voteValue;
+	std::cout << "Vote value to cast: ";
+	if (voteValue == NO_VOTE_VALUE)
+		std::cout << "none (remove vote)\n";
+	else
+		std::cout << voteValue << "\n";
 
 	std::cout << "\nSending vote to set your general quorum proposal (you need to be computor to do so)..." << std::endl;
 	makeContractTransaction(nodeIp, nodePort, seed, GQMPROP_CONTRACT_INDEX, GQMPROP_PROC_VOTE, 0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
@@ -780,6 +789,19 @@ void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort)
 	}
 	std::cout << std::endl;
 }
+
+/*
+Test cases:
+- no proposals -> get indices (active/finished), get proposals with wrong index, get results
+- set proposal -> get all active/finished proposals, get by index
+- get results -> 0 votes
+- get vote -> no vote
+- cast votes
+- get results -> n votes
+- get vote -> vote successful?
+- overwrite proposal -> votes must disappear
+
+*/
 
 
 
