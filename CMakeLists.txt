@@ -35,6 +35,7 @@ SET(HEADER_FILES
 	walletUtils.h
 	proposal.h
 )
+SET(CMAKE_C_FLAGS "-mrdrnd")
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 ADD_LIBRARY(fourq-qubic SHARED fourq-qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
