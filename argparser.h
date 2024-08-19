@@ -71,8 +71,6 @@ void print_help(){
     printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getsysteminfo\n");
     printf("\t\tView Current System Status. Includes initial tick, random mining seed, epoch info.\n");
-    printf("\t-publishproposal \n");
-    printf("\t\t(on development)\n");
 
     printf("\n[NODE COMMAND]\n");
     printf("\t-getcurrenttick\n");
@@ -444,11 +442,6 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        if(strcmp(argv[i], "-publishproposal") == 0)
-        {
-            LOG("On development\n");
-            exit(0);
-        }
 
         /**********************
          *****NODE COMMAND*****
