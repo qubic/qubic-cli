@@ -76,14 +76,18 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		char dstIdentity[128] = { 0 };
 		bool isLowerCase = false;
 		getIdentityFromPublicKey(transfer.destination, dstIdentity, isLowerCase);
-		std::cout << "\t\ttarget address = " << dstIdentity << std::endl;
+		std::cout << "\t\ttarget address = " << dstIdentity;
+		uint64_t* dstU64 = (uint64_t*)transfer.destination;
+		if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
+			std::cout << " (contract " << dstU64[0] << ")";
+		std::cout << std::endl;
 
 		std::cout << "\t\tvote value 0 = no change to current status" << std::endl;
-		for (int i = 0; i < options-1; ++i)
+		for (int i = 0; i < std::min(options - 1, 4); ++i)
 		{
 			std::cout << "\t\tvote value " << i + 1 << " = ";
 			if (contract == GQMPROP_CONTRACT_INDEX)
-				std::cout << float(transfer.amounts[i]) / 1000000 * 100 << "%"; // For GQMPROP amount is relative in millionth
+				std::cout << double(transfer.amounts[i]) / 10000.0 << "%"; // For GQMPROP amount is relative in millionth
 			else
 				std::cout << transfer.amounts[i];
 			if (p.data.transfer.amounts[i] < 0)
@@ -330,13 +334,13 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	{
 		// split proposal string in main parts
 		writableProposalString = strdup(proposalDataStr.c_str());
-		std::string dstIdentity = strtok(writableProposalString, ",");
+		std::string dstIdentity = strtok2string(writableProposalString, ",");
 		std::cout << "Checking destination identity " << dstIdentity << " ...\n";
 		sanityCheckIdentity(dstIdentity.c_str());
 		getPublicKeyFromIdentity(dstIdentity.c_str(), p.data.transfer.destination);
-		for (unsigned int i = 0; i < numberOptions - 1; ++i)
+		for (unsigned int i = 0; i < std::min(numberOptions - 1, 4u); ++i)
 		{
-			std::string amountStr = strtok(NULL, ",");
+			std::string amountStr = strtok2string(NULL, ",");
 			sint64 amountInt;
 			if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
 			{
@@ -780,7 +784,7 @@ void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort)
 		{
 			char identity[100] = { 0 };
 			getIdentityFromPublicKey(output.tab[i].destinationPublicKey, identity, false);
-			std::cout << "\n- " << i << ": " << float(output.tab[i].millionthAmount) / 10000.0 << "% (starting epoch "
+			std::cout << "\n- " << i << ": " << double(output.tab[i].millionthAmount) / 10000.0 << "% (starting epoch "
 				<< output.tab[i].firstEpoch << ") to " << identity;
 			uint64_t* dstU64 = (uint64_t*)output.tab[i].destinationPublicKey;
 			if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
