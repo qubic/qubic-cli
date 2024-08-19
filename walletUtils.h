@@ -31,7 +31,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
                              uint32_t scheduledTickOffset);
 bool runContractFunction(const char* nodeIp, int nodePort,
     unsigned int contractIndex,
-    unsigned int funcNumber,
+    unsigned short funcNumber,
     void* inputPtr,
     size_t inputSize,
     void* outputPtr,

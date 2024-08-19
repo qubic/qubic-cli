@@ -330,7 +330,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		std::cout << "Checking destination identity " << dstIdentity << " ...\n";
 		sanityCheckIdentity(dstIdentity.c_str());
 		getPublicKeyFromIdentity(dstIdentity.c_str(), p.transfer.destination);
-		for (int i = 0; i < numberOptions - 1; ++i)
+		for (unsigned int i = 0; i < numberOptions - 1; ++i)
 		{
 			std::string amountStr = strtok(NULL, ",");
 			sint64 amountInt;
@@ -361,7 +361,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 }
 
 void getProposalIndices(const char* nodeIp, int nodePort,
-	uint64_t contractIndex,
+	uint32_t contractIndex,
 	uint16_t inputType,
 	bool activeProposals,
 	std::vector<uint16_t>& proposalIndices)
@@ -378,7 +378,7 @@ struct GetProposal_output
 };
 
 void getProposal(const char* nodeIp, int nodePort,
-	uint64_t contractIndex,
+	uint32_t contractIndex,
 	uint16_t inputType,
 	uint16_t proposalIndex,
 	GetProposal_output& outProposal,
@@ -399,7 +399,7 @@ void getProposal(const char* nodeIp, int nodePort,
 }
 
 void getAndPrintProposal(const char* nodeIp, int nodePort,
-	uint64_t contractIndex,
+	uint32_t contractIndex,
 	uint16_t inputType,
 	uint16_t proposalIndex,
 	QCPtr* qcPtr = nullptr)
@@ -417,7 +417,7 @@ void getAndPrintProposal(const char* nodeIp, int nodePort,
 }
 
 bool getProposalIndices(const char* nodeIp, int nodePort,
-	uint64_t contractIndex,
+	uint32_t contractIndex,
 	uint16_t inputType,
 	bool activeProposals,
 	std::vector<uint16_t>& proposalIndices,
@@ -466,7 +466,7 @@ bool getProposalIndices(const char* nodeIp, int nodePort,
 
 void getAndPrintProposalsCommand(const char* nodeIp, int nodePort,
 	const char* proposalIndexString,
-	uint64_t contractIndex,
+	uint32_t contractIndex,
 	uint16_t getProposalInputType,
 	uint16_t getProposalIndicesInputType,
 	QCPtr* qcPtr = nullptr)
@@ -764,15 +764,18 @@ void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort)
 		return;
 	}
 
-	std::cout << "Revenue donation table:\n";
+	std::cout << "Revenue donation table:";
 	for (int i = 0; i < numEntries; ++i)
 	{
 		if (!isZeroPubkey(output.tab[i].destinationPublicKey))
 		{
 			char identity[100] = { 0 };
 			getIdentityFromPublicKey(output.tab[i].destinationPublicKey, identity, false);
-			std::cout << i << ": " << float(output.tab[i].millionthAmount) / 10000.0 << "% (starting epoch"
-				<< output.tab[i].firstEpoch << ") to " << identity << "\n";
+			std::cout << "\n- " << i << ": " << float(output.tab[i].millionthAmount) / 10000.0 << "% (starting epoch "
+				<< output.tab[i].firstEpoch << ") to " << identity;
+			uint64_t* dstU64 = (uint64_t*)output.tab[i].destinationPublicKey;
+			if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
+				std::cout << " (contract " << dstU64[0] << ")";
 		}
 	}
 	std::cout << std::endl;

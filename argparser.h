@@ -741,7 +741,7 @@ void parseArgument(int argc, char** argv){
             g_cmd = GQMPROP_GET_PROPOSALS;
             if (i + 1 >= argc)
             {
-                LOG("ERROR: You need to pass PROPOSAL_INDEX_OR_GROUP!");
+                LOG("ERROR: You need to pass PROPOSAL_INDEX_OR_GROUP! E.g.: 0, \"active\", or \"finished\".");
                 exit(1);
             }
             g_proposalString = argv[i + 1];

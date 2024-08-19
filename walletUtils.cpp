@@ -374,7 +374,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
 
 bool runContractFunction(const char* nodeIp, int nodePort,
     unsigned int contractIndex,
-    unsigned int funcNumber,
+    unsigned short funcNumber,
     void* inputPtr,
     size_t inputSize,
     void* outputPtr,

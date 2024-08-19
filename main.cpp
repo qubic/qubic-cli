@@ -324,6 +324,7 @@ int run(int argc, char* argv[])
         case GQMPROP_GET_REV_DONATION:
             sanityCheckNode(g_nodeIp, g_nodePort);
             gqmpropGetRevenueDonationTable(g_nodeIp, g_nodePort);
+            break;
 
         default:
             printf("Unexpected command!\n");
