@@ -603,7 +603,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++){
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0){
             numTx++;
-            char digestHex[64];
+            char digestHex[65];
             byteToHex(td.transactionDigests[i], digestHex, 32);
             LOG("%s\n", digestHex);
         }

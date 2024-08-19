@@ -115,7 +115,7 @@ void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
     // Get the spectrum digest from entity
     uint8_t spectumDigest[32] = {0};
     getSpectrumDigest(entity, spectumDigest);
-    char hex[64];
+    char hex[65];
     LOG("Tick: %u\n", entity.tick);
     byteToHex(spectumDigest, hex, 32);
     LOG("Spectum Digest: %s\n", hex);
@@ -141,7 +141,7 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     LOG("Tick: %u\n", tx.tick);
     LOG("Extra data size: %u\n", tx.inputSize);
     if (extraData != nullptr && tx.inputSize){
-        char hex_tring[1024*2] = {0};
+        char hex_tring[1024*2+1] = {0};
         for (int i = 0; i < tx.inputSize; i++)
             sprintf(hex_tring + i * 2, "%02x", extraData[i]);
 

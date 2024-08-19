@@ -105,7 +105,7 @@ void printAssetDigest(T& respondedAsset)
 {
     uint8_t assetDigest[32];
     getAssetDigest(respondedAsset, assetDigest);
-    char hex_digest[64];
+    char hex_digest[65];
     byteToHex(assetDigest, hex_digest, 32);
     LOG("Asset Digest: %s\n", hex_digest);
 }
