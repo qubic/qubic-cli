@@ -24,7 +24,7 @@ void genRandomDestinationSendManyFile(unsigned int amount)
     for (int j = 0; j < 25; ++j)
     {
         char identity[100] = { 0 };
-        uint64_t pubkey[4];
+        unsigned long long pubkey[4];
         _rdrand64_step(&pubkey[0]);
         _rdrand64_step(&pubkey[1]);
         _rdrand64_step(&pubkey[2]);
