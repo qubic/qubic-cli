@@ -1,5 +1,6 @@
 #pragma once
 
+#include "logger.h"
 
 #include <fstream>
 
@@ -26,7 +27,7 @@ static void sanityCheckTxType(uint16_t type)
     }
 }
 
-static void sanityCheckSeed(char* privKey)
+static void sanityCheckSeed(const char* privKey)
 {
 	if (privKey == NULL)
 	{
@@ -69,7 +70,7 @@ static void sanityCheckAmountTransferAsset(long long amount)
     }
 }
 
-static void sanityCheckIdentity(char* identity)
+static void sanityCheckIdentity(const char* identity)
 {
 	if (identity == NULL){
 		LOG("identity is null\n");

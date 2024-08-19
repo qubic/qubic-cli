@@ -25,6 +25,9 @@ void print_help(){
     printf("\t\tPort of the target node for querying blockchain information (default: 21841)\n");
     printf("\t-scheduletick <TICK_OFFSET>\n");
     printf("\t\tOffset number of scheduled tick that will perform a transaction (default: 20)\n");
+    printf("\t-force\n");
+    printf("\t\tDo action although an error has been detected. Currently only implemented for proposals.\n");
+
     printf("Command:\n");
     printf("[WALLET COMMAND]\n");
     printf("\t-showkeys\n");
@@ -129,6 +132,23 @@ void print_help(){
     printf("\t\t(Oracle providers only) publish a result for a bet\n");
     printf("\t-qtrycancelbet <BET_ID>\n");
     printf("\t\t(Game operator only) cancel a bet\n");
+
+    printf("\n[GENERAL QUORUM PROPOSAL COMMANDS]\n");
+    printf("\t-gqmpropsetproposal <PROPOSAL_STRING>\n");
+    printf("\t\tSet proposal in general quorum proposals contract. May overwrite existing proposal, because each computor can have only one proposal at a time. For success, computor status is needed.\n");
+    printf("\t\t<PROPOSAL_STRING> is explained if there is a parsing error.\n");
+    printf("\t-gqmpropclearproposal\n");
+    printf("\t\tClear own proposal in general quorum proposals contract. For success, computor status is needed.\n");
+    printf("\t-gqmpropgetproposals <PROPOSAL_INDEX_OR_GROUP>\n");
+    printf("\t\tGet proposal info from general quorum proposals contract.\n");
+    printf("\t\tEither pass \"active\" to get proposals that are open for voting in the current epoch, or \"finished\" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.\n");
+    printf("\t-gqmpropvote <PROPOSAL_INDEX> <VOTE_VALUE>\n");
+    printf("\t\tVote for proposal in general quorum proposals contract.\n");
+    printf("\t\t<VOTE_VALUE> is the option in range 0 ... N-1 or \"none\".\n");
+    printf("\t-gqmpropgetvote <PROPOSAL_INDEX> [VOTER_IDENTITY]\n");
+    printf("\t\tGet vote from general quorum proposals contract. If VOTER_IDENTITY is skipped, identity of seed is used.\n");
+    printf("\t-gqmpropgetrevdonation\n");
+    printf("\t\tGet and print table of revenue donations applied after each epoch.\n");
 }
 
 static long long charToNumber(char* a)
@@ -693,6 +713,104 @@ void parseArgument(int argc, char** argv){
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
+        }
+
+        /**********************
+         ****GQMPROP COMMAND***
+         **********************/
+
+        if (strcmp(argv[i], "-gqmpropsetproposal") == 0)
+        {
+            g_cmd = GQMPROP_SET_PROPOSAL;
+            g_proposalString = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-gqmpropclearproposal") == 0)
+        {
+            g_cmd = GQMPROP_CLEAR_PROPOSAL;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-gqmpropgetproposals") == 0)
+        {
+            g_cmd = GQMPROP_GET_PROPOSALS;
+            if (i + 1 >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX_OR_GROUP!");
+                exit(1);
+            }
+            g_proposalString = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-gqmpropvote") == 0)
+        {
+            g_cmd = GQMPROP_VOTE;
+            if (i + 2 >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX and VOTE_VALUE!");
+                exit(1);
+            }
+            g_proposalString = argv[i + 1];
+            g_voteValueString = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        
+        if (strcmp(argv[i], "-gqmpropgetvote") == 0)
+        {
+            g_cmd = GQMPROP_GET_VOTE;
+            ++i;
+            if (i >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX!");
+                exit(1);
+            }
+            g_proposalString = argv[i];
+            ++i;
+            if (i < argc)
+            {
+                g_requestedIdentity = argv[i];
+                ++i;
+            }
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-gqmpropgetresults") == 0)
+        {
+            g_cmd = GQMPROP_GET_VOTING_RESULTS;
+            if (i + 1 >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX!");
+                exit(1);
+            }
+            g_proposalString = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-gqmpropgetrevdonation") == 0)
+        {
+            g_cmd = GQMPROP_GET_REV_DONATION;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        
+
+        if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "-force") == 0)
+        {
+            g_force = true;
         }
 
         i++;

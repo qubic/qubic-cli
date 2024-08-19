@@ -5,7 +5,7 @@ void getPublicKeyFromPrivateKey(const uint8_t* privateKey, uint8_t* publicKey);
 void getIdentityFromPublicKey(const uint8_t* pubkey, char* identity, bool isLowerCase);
 void getTxHashFromDigest(const uint8_t* digest, char* txHash);
 void getPublicKeyFromIdentity(const char* identity, uint8_t* publicKey);
-bool checkSumIdentity(char* identity);
+bool checkSumIdentity(const char* identity);
 
 // Compute the digest (root hash) from siblings of Merkle tree
 template <unsigned int hashByteLen>

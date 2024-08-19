@@ -11,6 +11,7 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 		  ${CMAKE_SOURCE_DIR}/qutil.cpp
 		  ${CMAKE_SOURCE_DIR}/qx.cpp
+		  ${CMAKE_SOURCE_DIR}/proposal.cpp
 )
 SET(HEADER_FILES
 	K12AndKeyUtil.h
@@ -32,6 +33,7 @@ SET(HEADER_FILES
 	structs.h
 	utils.h
 	walletUtils.h
+	proposal.h
 )
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 ADD_LIBRARY(fourq-qubic SHARED fourq-qubic.cpp)

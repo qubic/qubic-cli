@@ -310,6 +310,115 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
+
+void makeContractTransaction(const char* nodeIp, int nodePort,
+    const char* seed,
+    uint64_t contractIndex,
+    uint16_t txType,
+    uint64_t amount,
+    int extraDataSize,
+    const uint8_t* extraData,
+    uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint64_t destPublicKey[4] = { contractIndex, 0, 0, 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char publicIdentity[128] = { 0 };
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+
+    std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(Transaction) + extraDataSize + SIGNATURE_SIZE);
+    RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
+    Transaction& packetTransaction = (Transaction&)packet[sizeof(RequestResponseHeader)];
+    uint8_t* packetInputData = &packet[sizeof(RequestResponseHeader) + sizeof(Transaction)];
+    uint8_t* packetSignature = packetInputData + extraDataSize;
+
+    packetHeader.setSize(packet.size());
+    packetHeader.zeroDejavu();
+    packetHeader.setType(BROADCAST_TRANSACTION);
+
+    memcpy(packetTransaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packetTransaction.destinationPublicKey, destPublicKey, 32);
+    packetTransaction.amount = amount;
+    packetTransaction.tick = getTickNumberFromNode(qc) + scheduledTickOffset;
+    packetTransaction.inputType = txType;
+    packetTransaction.inputSize = extraDataSize;
+
+    memcpy(packetInputData, extraData, extraDataSize);
+
+    KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
+        sizeof(Transaction) + extraDataSize,
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, packetSignature);
+
+    qc->sendData(packet.data(), packet.size());
+
+    KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
+        sizeof(Transaction) + extraDataSize + 64,
+        digest,
+        32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("Transaction has been sent!\n");
+    printReceipt(packetTransaction, txHash, extraData);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+bool runContractFunction(const char* nodeIp, int nodePort,
+    unsigned int contractIndex,
+    unsigned int funcNumber,
+    void* inputPtr,
+    size_t inputSize,
+    void* outputPtr,
+    size_t outputSize,
+    QCPtr* qcPtr = nullptr)
+{
+    QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
+    std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(RequestContractFunction) + inputSize);
+    RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
+    RequestContractFunction& packetRcf = (RequestContractFunction&)packet[sizeof(RequestResponseHeader)];
+    uint8_t* packetInputData = (inputSize) ? &packet[sizeof(RequestResponseHeader) + sizeof(RequestContractFunction)] : nullptr;
+
+    packetHeader.setSize(packet.size());
+    packetHeader.randomizeDejavu();
+    packetHeader.setType(RequestContractFunction::type());
+    packetRcf.inputSize = inputSize;
+    packetRcf.inputType = funcNumber;
+    packetRcf.contractIndex = contractIndex;
+    if (inputSize)
+        memcpy(packetInputData, inputPtr, inputSize);
+    qc->sendData(&packet[0], packetHeader.size());
+
+    std::vector<uint8_t> buffer;
+    qc->receiveDataAll(buffer);
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data + ptr);
+        if (header->type() == RespondContractFunction::type()) {
+            if (recvByte - ptr - sizeof(RequestResponseHeader) >= outputSize) {
+                memcpy(outputPtr, (data + ptr + sizeof(RequestResponseHeader)), outputSize);
+                return true;
+            }
+        }
+        ptr += header->size();
+    }
+
+    return false;
+}
+
+
+
 void makeIPOBid(const char* nodeIp, int nodePort,
                 const char* seed,
                 uint32_t contractIndex,

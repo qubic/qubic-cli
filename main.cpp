@@ -11,6 +11,7 @@
 #include "quottery.h"
 #include "qutil.h"
 #include "qx.h"
+#include "proposal.h"
 
 int run(int argc, char* argv[])
 {
@@ -289,6 +290,40 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             qutilBurnQubic(g_nodeIp, g_nodePort, g_seed, g_TxAmount, g_offsetScheduledTick);
             break;
+        case GQMPROP_SET_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            gqmpropSetProposal(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_offsetScheduledTick, g_force);
+            break;
+        case GQMPROP_CLEAR_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            gqmpropClearProposal(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case GQMPROP_GET_PROPOSALS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            gqmpropGetProposals(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case GQMPROP_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            gqmpropVote(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_voteValueString, g_offsetScheduledTick, g_force);
+            break;            
+        case GQMPROP_GET_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            if (g_requestedIdentity)
+                sanityCheckIdentity(g_requestedIdentity);
+            else
+                sanityCheckSeed(g_seed);
+            gqmpropGetVote(g_nodeIp, g_nodePort, g_proposalString, g_requestedIdentity, g_seed);
+            break;
+        case GQMPROP_GET_VOTING_RESULTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            gqmpropGetVotingResults(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case GQMPROP_GET_REV_DONATION:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            gqmpropGetRevenueDonationTable(g_nodeIp, g_nodePort);
 
         default:
             printf("Unexpected command!\n");

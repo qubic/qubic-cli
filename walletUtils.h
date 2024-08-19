@@ -1,4 +1,8 @@
 #pragma once
+
+#include "structs.h"
+#include "connection.h"
+
 void printWalletInfo(const char* seed);
 void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort);
 void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
@@ -17,6 +21,22 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            int extraDataSize,
                            const uint8_t* extraData,
                            uint32_t scheduledTickOffset);
+void makeContractTransaction(const char* nodeIp, int nodePort,
+                             const char* seed,
+                             uint64_t contractIndex,
+                             uint16_t txType,
+                             uint64_t amount,
+                             int extraDataSize,
+                             const uint8_t* extraData,
+                             uint32_t scheduledTickOffset);
+bool runContractFunction(const char* nodeIp, int nodePort,
+    unsigned int contractIndex,
+    unsigned int funcNumber,
+    void* inputPtr,
+    size_t inputSize,
+    void* outputPtr,
+    size_t outputSize,
+    QCPtr* qcPtr = nullptr);
 
 void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1);
 bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signature);
