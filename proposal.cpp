@@ -484,8 +484,8 @@ void getAndPrintProposalsCommand(const char* nodeIp, int nodePort,
 	else
 	{
 		// List all active or finished proposals
-		bool activeProposals = (stricmp(proposalIndexString, "active") == 0);
-		bool finisedProposals = (stricmp(proposalIndexString, "finished") == 0);
+		bool activeProposals = (strcmp(proposalIndexString, "active") == 0);
+		bool finisedProposals = (strcmp(proposalIndexString, "finished") == 0);
 		if (!activeProposals && !finisedProposals)
 		{
 			std::cout << "ERROR: Proposal index must be positive integer up to 65535, \"active\" or \"finished\".\n"
@@ -573,7 +573,7 @@ void gqmpropVote(const char* nodeIp, int nodePort, const char* seed,
 	sint64 voteValue;
 	if (sscanf(voteValueString, "%lli", &voteValue) != 1)
 	{
-		if (stricmp(voteValueString, "none") == 0)
+		if (strcmp(voteValueString, "none") == 0)
 		{
 			voteValue = NO_VOTE_VALUE;
 		}
