@@ -13,8 +13,37 @@
 #include "qx.h"
 #include "proposal.h"
 
+#include <immintrin.h>
+
+void genRandomDestinationSendManyFile(unsigned int amount)
+{
+    // Generate file
+    char filename[300];
+    sprintf(filename, "transfers_%d.txt", amount);
+    FILE* file = fopen(filename, "wt");
+    for (int j = 0; j < 25; ++j)
+    {
+        char identity[100] = { 0 };
+        uint64_t pubkey[4];
+        _rdrand64_step(&pubkey[0]);
+        _rdrand64_step(&pubkey[1]);
+        _rdrand64_step(&pubkey[2]);
+        _rdrand64_step(&pubkey[3]);
+
+        getIdentityFromPublicKey((uint8_t*)pubkey, identity, false);
+        fprintf(file, "%s %d\n", identity, amount);
+    }
+    fclose(file);
+}
+
 int run(int argc, char* argv[])
 {
+    if (strcmp(argv[1], "-rndtransfer") == 0)
+    {
+        genRandomDestinationSendManyFile(atoi(argv[2]));
+        return 0;
+    }
+
     parseArgument(argc, argv);
     switch (g_cmd){
         case SHOW_KEYS:
