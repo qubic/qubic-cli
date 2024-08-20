@@ -17,6 +17,8 @@
 #define CONTRACT_WARNING_MESSAGE 5
 #define CONTRACT_INFORMATION_MESSAGE 6
 #define CONTRACT_DEBUG_MESSAGE 7
+#define BURNING 8
+#define BURNING_LOG_SIZE 40
 #define CUSTOM_MESSAGE 255
 std::string logTypeToString(uint8_t type){
     switch(type){
@@ -36,6 +38,8 @@ std::string logTypeToString(uint8_t type){
             return "Contract info";
         case 7:
             return "Contract debug";
+        case BURNING:
+            return "Burning";
         case 255:
             return "Custom msg";
     }
@@ -135,6 +139,17 @@ std::string parseLogToString_type2_type3(uint8_t* ptr){
                          + std::to_string(unit[6]);
     return result;
 }
+
+std::string parseLogToString_burning(uint8_t* ptr) {
+    char sourceIdentity[61] = { 0 };
+    long long amount;
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(ptr, sourceIdentity, isLowerCase);
+    memcpy(&amount, ptr + 32, 8);
+    std::string result = std::to_string(amount) + " QU from " + std::string(sourceIdentity) + ".";
+    return result;
+}
+
 void printQubicLog(uint8_t* logBuffer, int bufferSize){
     if (bufferSize == 0){
         LOG("Empty log\n");
