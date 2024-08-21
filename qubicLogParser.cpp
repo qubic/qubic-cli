@@ -206,6 +206,14 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
                     LOG("Malfunction buffer size for ASSET_POSSESSION_CHANGE log\n");
                 }
                 break;
+            case BURNING:
+                if (messageSize == BURNING_LOG_SIZE) {
+                    humanLog = parseLogToString_burning(logBuffer);
+                }
+                else {
+                    LOG("Malfunction buffer size for BURNING log\n");
+                }
+                break;
             // TODO: stay up-to-date with core node contract logger
             case CONTRACT_INFORMATION_MESSAGE:
                 if ( ((uint32_t*)logBuffer)[0] == 4 ) { // QUtil
