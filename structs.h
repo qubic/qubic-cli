@@ -221,21 +221,6 @@ typedef struct
     unsigned char month;
     unsigned char year;
 
-    union
-    {
-        struct
-        {
-            unsigned char uriSize;
-            unsigned char uri[255];
-        } proposal;
-        struct
-        {
-            unsigned char zero;
-            unsigned char votes[(676 * 3 + 7) / 8];
-            unsigned char quasiRandomNumber;
-        } ballot;
-    } varStruct;
-
     unsigned char timelock[32];
     unsigned char transactionDigests[NUMBER_OF_TRANSACTIONS_PER_TICK][32];
     long long contractFees[1024];
