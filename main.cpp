@@ -12,6 +12,7 @@
 #include "qutil.h"
 #include "qx.h"
 #include "proposal.h"
+#include "qearn.h"
 
 int run(int argc, char* argv[])
 {
@@ -324,6 +325,41 @@ int run(int argc, char* argv[])
         case GQMPROP_GET_REV_DONATION:
             sanityCheckNode(g_nodeIp, g_nodePort);
             gqmpropGetRevenueDonationTable(g_nodeIp, g_nodePort);
+            break;
+        case QEARN_LOCK:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnLock(g_nodeIp, g_nodePort, g_seed, g_qearn_lock_amount, g_offsetScheduledTick);
+            break;
+        case QEARN_UNLOCK:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnUnlock(g_nodeIp, g_nodePort, g_seed, g_qearn_unlock_amount, g_qearn_locked_epoch, g_offsetScheduledTick);
+            break;
+        case QEARN_GET_INFO_PER_EPOCH:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnGetInfoPerEpoch(g_nodeIp, g_nodePort, g_qearn_getinfo_epoch);
+            break;
+        case QEARN_GET_USER_LOCKED_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnGetUserLockedInfo(g_nodeIp, g_nodePort, g_requestedIdentity, g_qearn_getinfo_epoch);
+            break;
+        case QEARN_GET_STATE_OF_ROUND:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnGetStateOfRound(g_nodeIp, g_nodePort, g_qearn_getinfo_epoch);
+            break;
+        case QEARN_GET_USER_LOCK_STATUS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnGetUserLockedStatus(g_nodeIp, g_nodePort, g_requestedIdentity);
+            break;
+        case QEARN_GET_UNLOCKING_STATUS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qearnGetEndedStatus(g_nodeIp, g_nodePort, g_requestedIdentity);
             break;
 
         default:
