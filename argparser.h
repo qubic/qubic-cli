@@ -147,6 +147,9 @@ void print_help(){
     printf("\t\tGet vote from general quorum proposals contract. If VOTER_IDENTITY is skipped, identity of seed is used.\n");
     printf("\t-gqmpropgetrevdonation\n");
     printf("\t\tGet and print table of revenue donations applied after each epoch.\n");
+    printf("\t-gqmpropgetresults <PROPOSAL_INDEX>\n");
+    printf("\t\tGet the current result of a proposal\n");
+    
 }
 
 static long long charToNumber(char* a)
