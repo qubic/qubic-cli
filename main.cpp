@@ -325,6 +325,41 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             gqmpropGetRevenueDonationTable(g_nodeIp, g_nodePort);
             break;
+        case CCF_SET_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfSetProposal(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_offsetScheduledTick, g_force);
+            break;
+        case CCF_CLEAR_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfClearProposal(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case CCF_GET_PROPOSALS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case CCF_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfVote(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_voteValueString, g_offsetScheduledTick, g_force);
+            break;
+        case CCF_GET_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            if (g_requestedIdentity)
+                sanityCheckIdentity(g_requestedIdentity);
+            else
+                sanityCheckSeed(g_seed);
+            ccfGetVote(g_nodeIp, g_nodePort, g_proposalString, g_requestedIdentity, g_seed);
+            break;
+        case CCF_GET_VOTING_RESULTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetVotingResults(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case CCF_GET_LATEST_TRANSFERS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetLatestTransfers(g_nodeIp, g_nodePort);
+            break;
 
         default:
             printf("Unexpected command!\n");

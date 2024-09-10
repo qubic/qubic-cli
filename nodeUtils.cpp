@@ -45,6 +45,9 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 uint32_t getTickNumberFromNode(QCPtr qc)
 {
     auto curTickInfo = getTickInfoFromNode(qc);
+    int retryCounter = 0;
+    while (curTickInfo.tick == 0 && retryCounter++ < 3)
+        curTickInfo = getTickInfoFromNode(qc);
     return curTickInfo.tick;
 }
 void printTickInfoFromNode(const char* nodeIp, int nodePort)

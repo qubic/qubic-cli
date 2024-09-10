@@ -22,10 +22,36 @@
 #define GQMPROP_PROC_VOTE 2
 
 
+#define CCF_CONTRACT_INDEX 8
+
+#define CCF_FUNC_GET_PROPOSAL_INDICES 1
+#define CCF_FUNC_GET_PROPOSAL 2
+#define CCF_FUNC_GET_VOTE 3
+#define CCF_FUNC_GET_VOTING_RESULT 4
+#define CCF_FUNC_GET_LATEST_TRANSFERS 5
+#define CCF_FUNC_GET_PROPOSAL_FEE 6
+
+#define CCF_PROC_SET_PROPOSAL 1
+#define CCF_PROC_VOTE 2
+
+
+
 void toLower(std::string& data)
 {
 	std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c) { return std::tolower(c); });
 }
+
+void convertProposalDataToYesNo(const ProposalDataV1& pv1, ProposalDataYesNo& pyn)
+{
+	memcpy(&pyn, &pv1, sizeof(pyn));
+}
+
+void convertProposalDataToV1(const ProposalDataYesNo& pyn, ProposalDataV1& pv1)
+{
+	memcpy(&pv1, &pyn, sizeof(pyn));
+	memset(((char*)&pv1) + sizeof(pyn), 0, sizeof(pv1) - sizeof(pyn));
+}
+
 
 bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t* proposerPublicKey = nullptr, int proposalIndex = -1)
 {
@@ -76,13 +102,18 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		char dstIdentity[128] = { 0 };
 		bool isLowerCase = false;
 		getIdentityFromPublicKey(transfer.destination, dstIdentity, isLowerCase);
-		std::cout << "\t\ttarget address = " << dstIdentity;
+		std::cout << "\tdestination address = " << dstIdentity;
 		uint64_t* dstU64 = (uint64_t*)transfer.destination;
 		if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
-			std::cout << " (contract " << dstU64[0] << ")";
+		{
+			if (dstU64[0] == 0)
+				std::cout << " (ERROR: invalid destination address)";
+			else
+				std::cout << " (contract " << dstU64[0] << ")";
+		}
 		std::cout << std::endl;
 
-		std::cout << "\t\tvote value 0 = no change to current status" << std::endl;
+		std::cout << "\t\tvote value 0 = " << ((contract == CCF_CONTRACT_INDEX) ? "no transfer" : "no change to current status") << std::endl;
 		for (int i = 0; i < std::min(options - 1, 4); ++i)
 		{
 			std::cout << "\t\tvote value " << i + 1 << " = ";
@@ -197,6 +228,13 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		std::cout << "\ttick = " << p.tick << std::endl;
 	
 	return okay;
+}
+
+bool printAndCheckProposal(const ProposalDataYesNo& pyn, int contract, const uint8_t* proposerPublicKey = nullptr, int proposalIndex = -1)
+{
+	ProposalDataV1 pv1;
+	convertProposalDataToV1(pyn, pv1);
+	return printAndCheckProposal(pv1, contract, proposerPublicKey, proposalIndex);
 }
 
 void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule)
@@ -372,19 +410,21 @@ void getProposalIndices(const char* nodeIp, int nodePort,
 	proposalIndices.clear();
 }
 
+template <typename ProposalDataType>
 struct GetProposal_output
 {
 	bool okay;
 	uint8_t _padding[7];
 	uint8_t proposerPubicKey[32];
-	ProposalDataV1 proposal;
+	ProposalDataType proposal;
 };
 
+template <typename ProposalDataType>
 void getProposal(const char* nodeIp, int nodePort,
 	uint32_t contractIndex,
 	uint16_t inputType,
 	uint16_t proposalIndex,
-	GetProposal_output& outProposal,
+	GetProposal_output<ProposalDataType>& outProposal,
 	QCPtr* qcPtr = nullptr)
 {
 	struct GetProposal_input
@@ -401,13 +441,14 @@ void getProposal(const char* nodeIp, int nodePort,
 	}
 }
 
+template <typename ProposalDataType>
 void getAndPrintProposal(const char* nodeIp, int nodePort,
 	uint32_t contractIndex,
 	uint16_t inputType,
 	uint16_t proposalIndex,
 	QCPtr* qcPtr = nullptr)
 {
-	GetProposal_output outProposal;
+	GetProposal_output<ProposalDataType> outProposal;
 	getProposal(nodeIp, nodePort, contractIndex, inputType, proposalIndex, outProposal, qcPtr);
 	if (outProposal.okay)
 	{
@@ -467,6 +508,8 @@ bool getProposalIndices(const char* nodeIp, int nodePort,
 	return true;
 }
 
+
+template <typename ProposalDataType>
 void getAndPrintProposalsCommand(const char* nodeIp, int nodePort,
 	const char* proposalIndexString,
 	uint32_t contractIndex,
@@ -478,7 +521,7 @@ void getAndPrintProposalsCommand(const char* nodeIp, int nodePort,
 	if (sscanf(proposalIndexString, "%ui", &proposalIndex) == 1 && proposalIndex <= 0xffffu)
 	{
 		// Print specific proposal
-		getAndPrintProposal(nodeIp, nodePort, contractIndex, getProposalInputType, proposalIndex);
+		getAndPrintProposal<ProposalDataType>(nodeIp, nodePort, contractIndex, getProposalInputType, proposalIndex);
 	}
 	else
 	{
@@ -503,11 +546,216 @@ void getAndPrintProposalsCommand(const char* nodeIp, int nodePort,
 		// Get and print all proposals
 		for (auto idx : proposalIndices)
 		{
-			getAndPrintProposal(nodeIp, nodePort, contractIndex, getProposalInputType, idx, &qc);
+			getAndPrintProposal<ProposalDataType>(nodeIp, nodePort, contractIndex, getProposalInputType, idx, &qc);
 		}
 	}
 }
 
+template <typename ProposalDataType>
+void getVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString, uint32_t contractIdx, uint16_t getProposalInputType, uint16_t getVotingResultsInputType)
+{
+	unsigned int proposalIndex;
+	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
+	{
+		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
+			<< "Got: " << proposalIndexString << std::endl;
+		return;
+	}
+
+	// Reuse connection
+	auto qc = make_qc(nodeIp, nodePort);
+
+	// Get proposal
+	std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
+	GetProposal_output<ProposalDataType> outProposal;
+	getProposal(nodeIp, nodePort,
+		contractIdx, getProposalInputType,
+		proposalIndex, outProposal, &qc);
+	if (!outProposal.okay)
+	{
+		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
+		return;
+	}
+	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+
+	// Get voting results
+	struct GetVotingResults_input
+	{
+		uint16 proposalIndex;
+	} input;
+	struct GetVotingResults_output
+	{
+		bool okay;
+		ProposalSummarizedVotingDataV1 results;
+	} output;
+	input.proposalIndex = proposalIndex;
+
+	if (!runContractFunction(nodeIp, nodePort, contractIdx,
+		getVotingResultsInputType, &input, sizeof(input), &output, sizeof(output), &qc) || !output.okay)
+	{
+		std::cout << "ERROR: Didn't receive valid response from GetVotingResults!" << std::endl;
+		return;
+	}
+
+	printVotingResults(output.results, true);
+}
+
+// Get vote of proposal with given index and voter with given voterPublicKey if not nullptr or voterSeed
+void getVote(const char* nodeIp, int nodePort, const char* proposalIndexString, const char* voterIdentity, const char* voterSeed, uint32_t contractIdx, uint16_t getVoteInputType)
+{
+	uint8_t voterPublicKey[32] = { 0 };
+	if (voterIdentity)
+	{
+		// Get public key from identity
+		sanityCheckIdentity(voterIdentity);
+		getPublicKeyFromIdentity(voterIdentity, voterPublicKey);
+	}
+	else if (voterSeed)
+	{
+		// Get public key from seed
+		sanityCheckSeed(voterSeed);
+		uint8_t privateKey[32] = { 0 };
+		uint8_t subseed[32] = { 0 };
+		uint8_t digest[32] = { 0 };
+		uint8_t signature[64] = { 0 };
+		char publicIdentity[128] = { 0 };
+		getSubseedFromSeed((uint8_t*)voterSeed, subseed);
+		getPrivateKeyFromSubSeed(subseed, privateKey);
+		getPublicKeyFromPrivateKey(privateKey, voterPublicKey);
+	}
+	else
+	{
+		std::cout << "ERROR: Either seed or voter identity must be passed!" << std::endl;
+	}
+
+	unsigned int proposalIndex;
+	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
+	{
+		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
+			<< "Got: " << proposalIndexString << std::endl;
+		return;
+	}
+
+	struct GetVote_input
+	{
+		char voter[32];
+		uint16 proposalIndex;
+	} input;
+
+	memcpy(input.voter, voterPublicKey, 32);
+	input.proposalIndex = proposalIndex;
+
+	struct GetVote_output
+	{
+		bool okay;
+		ProposalSingleVoteDataV1 vote;
+	} output;
+
+	if (!runContractFunction(nodeIp, nodePort, contractIdx,
+		getVoteInputType, &input, sizeof(input), &output, sizeof(output)))
+	{
+		std::cout << "ERROR: Didn't receive valid response from GetVote!" << std::endl;
+		return;
+	}
+	if (!output.okay)
+	{
+		std::cout << "ERROR: No vote value available for you. Probably you have no right to vote." << std::endl;
+		return;
+	}
+
+	std::cout << "Vote information:"
+		<< "\n\tproposal index = " << output.vote.proposalIndex
+		<< "\n\tproposal tick = " << output.vote.proposalTick
+		<< "\n\tvote value = ";
+	if (output.vote.voteValue == NO_VOTE_VALUE)
+		std::cout << "no vote";
+	else
+		std::cout << output.vote.voteValue;
+	std::cout << std::endl;
+}
+
+template <typename ProposalDataType>
+void castVote(const char* nodeIp, int nodePort, const char* seed,
+	const char* proposalIndexString,
+	const char* voteValueString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidVote,
+	uint32_t contractIdx, uint16_t getProposalInputType, uint16_t castVoteInputType)
+{
+	// Check proposal index
+	unsigned int proposalIndex;
+	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
+	{
+		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
+			<< "Got: " << proposalIndexString << std::endl;
+		return;
+	}
+
+	// First check of vote value
+	sint64 voteValue;
+	if (sscanf(voteValueString, "%lli", &voteValue) != 1)
+	{
+		if (strcmp(voteValueString, "none") == 0)
+		{
+			voteValue = NO_VOTE_VALUE;
+		}
+		else
+		{
+			std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
+				<< "Got: " << proposalIndexString << std::endl;
+			return;
+		}
+	}
+
+	// Reuse connection
+	auto qc = make_qc(nodeIp, nodePort);
+
+	// Check vote value vs proposal?
+	if (!forceSendingInvalidVote)
+	{
+		// Get proposal
+		std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
+		GetProposal_output<ProposalDataType> outProposal;
+		getProposal(nodeIp, nodePort,
+			contractIdx, getProposalInputType,
+			proposalIndex, outProposal, &qc);
+		if (!outProposal.okay)
+		{
+			std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
+			return;
+		}
+		printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+
+		uint16 typeClass = ProposalTypes::cls(outProposal.proposal.type);
+		uint16 optionCount = ProposalTypes::optionCount(outProposal.proposal.type);
+		if (typeClass == ProposalTypes::Class::Variable)
+		{
+			std::cout << "WARNING: Unexpected proposal for setting variable! Vote is not checked." << std::endl;
+		}
+		else
+		{
+			if (voteValue != NO_VOTE_VALUE && (voteValue < 0 || voteValue >= optionCount))
+			{
+				std::cout << "ERROR: Invalid vote value \"" << voteValue << "\". Pass an integer selecting an option from proposal above or \"none\" to remove your vote.";
+				return;
+			}
+		}
+	}
+
+	ProposalSingleVoteDataV1 v;
+	v.proposalTick = outProposal.proposal.tick;
+	v.proposalType = outProposal.proposal.type;
+	v.proposalIndex = proposalIndex;
+	v.voteValue = voteValue;
+	std::cout << "Vote value to cast: ";
+	if (voteValue == NO_VOTE_VALUE)
+		std::cout << "none (remove vote)\n";
+	else
+		std::cout << voteValue << "\n";
+
+	std::cout << "\nSending vote (you need to be computor to do so) ..." << std::endl;
+	makeContractTransaction(nodeIp, nodePort, seed, contractIdx, castVoteInputType, 0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
+}
 
 void gqmpropSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	const char* proposalString,
@@ -547,7 +795,7 @@ void gqmpropClearProposal(const char* nodeIp, int nodePort, const char* seed,
 
 void gqmpropGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString)
 {
-	getAndPrintProposalsCommand(nodeIp, nodePort,
+	getAndPrintProposalsCommand<ProposalDataV1>(nodeIp, nodePort,
 		proposalIndexString, GQMPROP_CONTRACT_INDEX,
 		GQMPROP_FUNC_GET_PROPOSAL, GQMPROP_FUNC_GET_PROPOSAL_INDICES);
 }
@@ -559,196 +807,19 @@ void gqmpropVote(const char* nodeIp, int nodePort, const char* seed,
 	uint32_t scheduledTickOffset,
 	bool forceSendingInvalidVote)
 {
-	// Check proposal index
-	unsigned int proposalIndex;
-	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
-	{
-		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
-			<< "Got: " << proposalIndexString << std::endl;
-		return;
-	}
-
-	// First check of vote value
-	sint64 voteValue;
-	if (sscanf(voteValueString, "%lli", &voteValue) != 1)
-	{
-		if (strcmp(voteValueString, "none") == 0)
-		{
-			voteValue = NO_VOTE_VALUE;
-		}
-		else
-		{
-			std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
-				<< "Got: " << proposalIndexString << std::endl;
-			return;
-		}
-	}
-
-	// Reuse connection
-	auto qc = make_qc(nodeIp, nodePort);
-
-	// Get proposal
-	std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
-	GetProposal_output outProposal;
-	getProposal(nodeIp, nodePort,
-		GQMPROP_CONTRACT_INDEX, GQMPROP_FUNC_GET_PROPOSAL,
-		proposalIndex, outProposal, &qc);
-	if (!outProposal.okay)
-	{
-		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
-		return;
-	}
-	printAndCheckProposal(outProposal.proposal, GQMPROP_CONTRACT_INDEX, outProposal.proposerPubicKey, proposalIndex);
-
-	// Check vote value vs proposal?
-	if (!forceSendingInvalidVote)
-	{
-		uint16 typeClass = ProposalTypes::cls(outProposal.proposal.type);
-		uint16 optionCount = ProposalTypes::optionCount(outProposal.proposal.type);
-		if (typeClass == ProposalTypes::Class::Variable)
-		{
-			std::cout << "WARNING: Unexpected proposal for setting variable! Vote is not checked." << std::endl;
-		}
-		else
-		{
-			if (voteValue != NO_VOTE_VALUE && (voteValue < 0 || voteValue >= optionCount))
-			{
-				std::cout << "ERROR: Invalid vote value \"" << voteValue << "\". Pass an integer selecting an option from proposal above or \"none\" to remove your vote.";
-				return;
-			}
-		}
-	}
-
-	ProposalSingleVoteDataV1 v;
-	v.proposalTick = outProposal.proposal.tick;
-	v.proposalType = outProposal.proposal.type;
-	v.proposalIndex = proposalIndex;
-	v.voteValue = voteValue;
-	std::cout << "Vote value to cast: ";
-	if (voteValue == NO_VOTE_VALUE)
-		std::cout << "none (remove vote)\n";
-	else
-		std::cout << voteValue << "\n";
-
-	std::cout << "\nSending vote to set your general quorum proposal (you need to be computor to do so)..." << std::endl;
-	makeContractTransaction(nodeIp, nodePort, seed, GQMPROP_CONTRACT_INDEX, GQMPROP_PROC_VOTE, 0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
+	castVote<ProposalDataV1>(nodeIp, nodePort, seed, proposalIndexString, voteValueString, scheduledTickOffset, forceSendingInvalidVote,
+		GQMPROP_CONTRACT_INDEX, GQMPROP_FUNC_GET_PROPOSAL, GQMPROP_PROC_VOTE);
 }
 
 // Get vote of proposal with given index and voter with given voterPublicKey if not nullptr or voterSeed
 void gqmpropGetVote(const char* nodeIp, int nodePort, const char* proposalIndexString, const char* voterIdentity, const char* voterSeed)
 {
-	uint8_t voterPublicKey[32] = { 0 };
-	if (voterIdentity)
-	{
-		// Get public key from identity
-		sanityCheckIdentity(voterIdentity);
-		getPublicKeyFromIdentity(voterIdentity, voterPublicKey);
-	}
-	else if (voterSeed)
-	{
-		// Get public key from seed
-		sanityCheckSeed(voterSeed);
-		uint8_t privateKey[32] = { 0 };
-		uint8_t subseed[32] = { 0 };
-		uint8_t digest[32] = { 0 };
-		uint8_t signature[64] = { 0 };
-		char publicIdentity[128] = { 0 };
-		getSubseedFromSeed((uint8_t*)voterSeed, subseed);
-		getPrivateKeyFromSubSeed(subseed, privateKey);
-		getPublicKeyFromPrivateKey(privateKey, voterPublicKey);
-	}
-	else
-	{
-		std::cout << "ERROR: Either seed or voter identity must be passed!" << std::endl;
-	}
-
-	unsigned int proposalIndex;
-	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
-	{
-		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
-				<< "Got: " << proposalIndexString << std::endl;
-		return;
-	}
-
-	struct GetVote_input
-	{
-		char voter[32];
-		uint16 proposalIndex;
-	} input;
-
-	memcpy(input.voter, voterPublicKey, 32);
-	input.proposalIndex = proposalIndex;
-
-	struct GetVote_output
-	{
-		bool okay;
-		ProposalSingleVoteDataV1 vote;
-	} output;
-
-	if (!runContractFunction(nodeIp, nodePort, GQMPROP_CONTRACT_INDEX,
-		GQMPROP_FUNC_GET_VOTE, &input, sizeof(input), &output, sizeof(output)) || !output.okay)
-	{
-		std::cout << "ERROR: Didn't receive valid response from GetVote!" << std::endl;
-		return;
-	}
-
-	std::cout << "Vote information:"
-		<< "\n\tproposal index = " << output.vote.proposalIndex
-		<< "\n\tproposal tick = " << output.vote.proposalTick
-		<< "\n\tvote value = ";
-	if (output.vote.voteValue == NO_VOTE_VALUE)
-		std::cout << "no vote";
-	else
-		std::cout << output.vote.voteValue;
-	std::cout << std::endl;
+	getVote(nodeIp, nodePort, proposalIndexString, voterIdentity, voterSeed, GQMPROP_CONTRACT_INDEX, GQMPROP_FUNC_GET_VOTE);
 }
 
 void gqmpropGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString)
 {
-	unsigned int proposalIndex;
-	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
-	{
-		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
-			<< "Got: " << proposalIndexString << std::endl;
-		return;
-	}
-
-	// Reuse connection
-	auto qc = make_qc(nodeIp, nodePort);
-
-	// Get proposal
-	std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
-	GetProposal_output outProposal;
-	getProposal(nodeIp, nodePort,
-		GQMPROP_CONTRACT_INDEX, GQMPROP_FUNC_GET_PROPOSAL,
-		proposalIndex, outProposal, &qc);
-	if (!outProposal.okay)
-	{
-		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
-		return;
-	}
-	printAndCheckProposal(outProposal.proposal, GQMPROP_CONTRACT_INDEX, outProposal.proposerPubicKey, proposalIndex);
-
-	// Get voting results
-	struct GetVotingResults_input
-	{
-		uint16 proposalIndex;
-	} input;
-	struct GetVotingResults_output
-	{
-		bool okay;
-		ProposalSummarizedVotingDataV1 results;
-	} output;
-	input.proposalIndex = proposalIndex;
-
-	if (!runContractFunction(nodeIp, nodePort, GQMPROP_CONTRACT_INDEX,
-		GQMPROP_FUNC_GET_VOTING_RESULT, &input, sizeof(input), &output, sizeof(output), &qc) || !output.okay)
-	{
-		std::cout << "ERROR: Didn't receive valid response from GetVotingResults!" << std::endl;
-		return;
-	}
-
-	printVotingResults(output.results, true);
+	getVotingResults<ProposalDataV1>(nodeIp, nodePort, proposalIndexString, GQMPROP_CONTRACT_INDEX, GQMPROP_FUNC_GET_PROPOSAL, GQMPROP_FUNC_GET_VOTING_RESULT);
 }
 
 void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort)
@@ -793,6 +864,8 @@ void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort)
 Test cases:
 - no proposals -> get indices (active/finished), get proposals with wrong index, get results
 - set proposal -> get all active/finished proposals, get by index
+- set proposal should only work for computor seeds
+
 - get results -> 0 votes
 - get vote -> no vote
 - cast votes
@@ -802,7 +875,158 @@ Test cases:
 
 */
 
+void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
+	const char* proposalString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidProposal)
+{
+	// TODO: query and check fee
+	uint64_t fee = 1000000;
 
+	// Parse and check
+	ProposalDataV1 pv1;
+	bool proposalOkay = parseProposalString(proposalString, pv1) && printAndCheckProposal(pv1, CCF_CONTRACT_INDEX);
+	if (pv1.type != ProposalTypes::TransferYesNo)
+	{
+		std::cout << "ERROR: Only Transfer|2 (TransferYesNo) is supported as proposal type by CCF contract!" << std::endl;
+		proposalOkay = false;
+	}
+	if (!proposalOkay && !forceSendingInvalidProposal)
+	{
+		std::cout << "\nCancelling to send CCF proposal due to errors in proposal ..." << std::endl;
+		return;
+	}
 
+	// Transfer data to yes/no proposal data structure
+	ProposalDataYesNo pyn;
+	convertProposalDataToYesNo(pv1, pyn);
+
+	// Send transaction
+	std::cout << "\nSending transaction to set your CCF proposal ..." << std::endl;
+	makeContractTransaction(nodeIp, nodePort, seed,
+		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
+		sizeof(pyn), (uint8_t*)&pyn, scheduledTickOffset);
+}
+
+void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
+	uint32_t scheduledTickOffset)
+{
+	// TODO: query and check fee
+	uint64_t fee = 1000000;
+
+	std::cout << "Sending transaction to clear your CCF proposal ..." << std::endl;
+	ProposalDataYesNo p;
+	memset(&p, 0, sizeof(p));
+	p.epoch = 0;	// epoch 0 clears proposal
+	makeContractTransaction(nodeIp, nodePort, seed,
+		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
+		sizeof(p), (uint8_t*)&p, scheduledTickOffset);
+}
+
+void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString)
+{
+	getAndPrintProposalsCommand<ProposalDataYesNo>(nodeIp, nodePort,
+		proposalIndexString, CCF_CONTRACT_INDEX,
+		CCF_FUNC_GET_PROPOSAL, CCF_FUNC_GET_PROPOSAL_INDICES);
+}
+
+void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString)
+{
+	getVotingResults<ProposalDataYesNo>(nodeIp, nodePort, proposalIndexString, CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_FUNC_GET_VOTING_RESULT);
+}
+
+// Get vote of proposal with given index and voter with given voterPublicKey if not nullptr or voterSeed
+void ccfGetVote(const char* nodeIp, int nodePort, const char* proposalIndexString, const char* voterIdentity, const char* voterSeed)
+{
+	getVote(nodeIp, nodePort, proposalIndexString, voterIdentity, voterSeed, CCF_CONTRACT_INDEX, CCF_FUNC_GET_VOTE);
+}
+
+void ccfVote(const char* nodeIp, int nodePort, const char* seed,
+	const char* proposalIndexString,
+	const char* voteValueString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidVote)
+{
+	castVote<ProposalDataYesNo>(nodeIp, nodePort, seed, proposalIndexString, voteValueString, scheduledTickOffset, forceSendingInvalidVote,
+		CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_PROC_VOTE);
+}
+
+void ccfGetLatestTransfers(const char* nodeIp, int nodePort)
+{
+	struct LatestTransfersEntry
+	{
+		uint8 destination[32];
+		uint8 url[256];
+		sint64 amount;
+		uint32 tick;
+		bool success;
+	};
+	constexpr int numEntries = 128;
+	struct RevenueDonationTable
+	{
+		LatestTransfersEntry tab[numEntries];
+	};
+	RevenueDonationTable* output = new RevenueDonationTable();
+
+	if (!runContractFunction(nodeIp, nodePort, CCF_CONTRACT_INDEX,
+		CCF_FUNC_GET_LATEST_TRANSFERS, nullptr, 0, output, sizeof(RevenueDonationTable)))
+	{
+		std::cout << "ERROR: Didn't receive response from GetLatestTransfers!" << std::endl;
+		return;
+	}
+
+	// Find highest tick to start output with
+	uint32 maxTick = 0;
+	int maxTickIdx = 0;
+	for (int i = 0; i < numEntries; ++i)
+	{
+		if (output->tab[i].tick > maxTick)
+		{
+			maxTick = output->tab[i].tick;
+			maxTickIdx = i;
+		}
+	}
+
+	std::cout << "Latest outgoing funding transfers of CCF (most recent on top):\n";
+	for (int i = numEntries - 1; i >= 0; --i)
+	{
+		int idx = (i + maxTickIdx) % numEntries;
+		const LatestTransfersEntry& t = output->tab[idx];
+		if (!isZeroPubkey(t.destination))
+		{
+			char identity[100] = { 0 };
+			getIdentityFromPublicKey(t.destination, identity, false);
+			std::cout << " - proposal ";
+			for (int j = 0; j < 256 && t.url[j]; ++j)
+				std::cout << t.url[j];
+			std::cout << " (tick " << t.tick << ")\n";
+			std::cout << "   " << t.amount << " qus to " << identity;
+			uint64_t* dstU64 = (uint64_t*)t.destination;
+			if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
+				std::cout << " (contract " << dstU64[0] << ")";
+			if (t.success)
+				std::cout << "\n   accepted and transfered" << std::endl;
+			else
+				std::cout << "\n   accepted by quorum but not transfered due to insufficient funds in CCF" << std::endl;
+		}
+	}
+
+	delete output;
+}
+
+/*
+Test cases:
+- no proposals -> get indices (active/finished), get proposals with wrong index, get results
+- set proposal -> get all active/finished proposals, get by index
+- set proposal should work with any seed that has enough QU for fee
+
+- get results -> 0 votes
+- get vote -> no vote
+- cast votes
+- get results -> n votes
+- get vote -> vote successful?
+- overwrite proposal -> votes must disappear
+
+*/
 
 
