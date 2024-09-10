@@ -710,22 +710,22 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 	// Reuse connection
 	auto qc = make_qc(nodeIp, nodePort);
 
+	// Get proposal
+	std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
+	GetProposal_output<ProposalDataType> outProposal;
+	getProposal(nodeIp, nodePort,
+		contractIdx, getProposalInputType,
+		proposalIndex, outProposal, &qc);
+	if (!outProposal.okay)
+	{
+		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
+		return;
+	}
+	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+
 	// Check vote value vs proposal?
 	if (!forceSendingInvalidVote)
 	{
-		// Get proposal
-		std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
-		GetProposal_output<ProposalDataType> outProposal;
-		getProposal(nodeIp, nodePort,
-			contractIdx, getProposalInputType,
-			proposalIndex, outProposal, &qc);
-		if (!outProposal.okay)
-		{
-			std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
-			return;
-		}
-		printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
-
 		uint16 typeClass = ProposalTypes::cls(outProposal.proposal.type);
 		uint16 optionCount = ProposalTypes::optionCount(outProposal.proposal.type);
 		if (typeClass == ProposalTypes::Class::Variable)
