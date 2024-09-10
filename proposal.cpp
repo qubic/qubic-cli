@@ -211,10 +211,7 @@ void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule
 		int mostVotedOption = 0;
 		for (uint16 i = 0; i < results.optionCount; ++i)
 		{
-			std::cout << "\tvotes for option " << i << " = " << results.optionVoteCount[i];
-			//if (i == 0)
-			//	std::cout << " (no change)";
-			std::cout << std::endl;
+			std::cout << "\tvotes for option " << i << " = " << results.optionVoteCount[i] << std::endl;
 			if (results.optionVoteCount[mostVotedOption] < results.optionVoteCount[i])
 			{
 				mostVotedOption = i;
@@ -227,8 +224,6 @@ void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule
 				std::cout << " (total votes not sufficient for acceptance of proposal)";
 			else if (results.optionVoteCount[mostVotedOption] <= results.authorizedVoters / 3)
 				std::cout << " (votes for this option not sufficient for acceptance of proposal)";
-			else if (mostVotedOption == 0)
-				std::cout << " (voting result is no change to current state)";
 			else
 				std::cout << " (sufficient votes to accept proposal option " << mostVotedOption << ")";
 		}
