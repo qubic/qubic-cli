@@ -212,8 +212,8 @@ void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule
 		for (uint16 i = 0; i < results.optionCount; ++i)
 		{
 			std::cout << "\tvotes for option " << i << " = " << results.optionVoteCount[i];
-			if (i == 0)
-				std::cout << " (no change)";
+			//if (i == 0)
+			//	std::cout << " (no change)";
 			std::cout << std::endl;
 			if (results.optionVoteCount[mostVotedOption] < results.optionVoteCount[i])
 			{

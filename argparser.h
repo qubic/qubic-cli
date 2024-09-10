@@ -145,10 +145,10 @@ void print_help(){
     printf("\t\t<VOTE_VALUE> is the option in range 0 ... N-1 or \"none\".\n");
     printf("\t-gqmpropgetvote <PROPOSAL_INDEX> [VOTER_IDENTITY]\n");
     printf("\t\tGet vote from general quorum proposals contract. If VOTER_IDENTITY is skipped, identity of seed is used.\n");
+    printf("\t-gqmpropgetresults <PROPOSAL_INDEX>\n");
+    printf("\t\tGet the current result of a proposal (general quorum proposals contract).\n");
     printf("\t-gqmpropgetrevdonation\n");
     printf("\t\tGet and print table of revenue donations applied after each epoch.\n");
-    printf("\t-gqmpropgetresults <PROPOSAL_INDEX>\n");
-    printf("\t\tGet the current result of a proposal\n");
     
 }
 
