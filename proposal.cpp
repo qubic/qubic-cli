@@ -999,15 +999,15 @@ void ccfGetLatestTransfers(const char* nodeIp, int nodePort)
 			std::cout << " - proposal ";
 			for (int j = 0; j < 256 && t.url[j]; ++j)
 				std::cout << t.url[j];
-			std::cout << " (tick " << t.tick << ")\n";
+			std::cout << "\n";
 			std::cout << "   " << t.amount << " qus to " << identity;
 			uint64_t* dstU64 = (uint64_t*)t.destination;
 			if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
 				std::cout << " (contract " << dstU64[0] << ")";
 			if (t.success)
-				std::cout << "\n   accepted and transfered" << std::endl;
+				std::cout << "\n   accepted and transfered in tick " << t.tick << std::endl;
 			else
-				std::cout << "\n   accepted by quorum but not transfered due to insufficient funds in CCF" << std::endl;
+				std::cout << "\n   accepted by quorum but not transfered due to insufficient funds in CCF (in tick " << t.tick << ")" << std::endl;
 		}
 	}
 
