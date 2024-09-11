@@ -191,6 +191,7 @@ typedef struct
     unsigned int initialTick;
 } CurrentTickInfo;
 
+#pragma pack(push, 1)
 typedef struct
 {
     short version;
@@ -212,7 +213,14 @@ typedef struct
 
     uint8_t randomMiningSeed[32];
     int solutionThreshold;
+
+    unsigned long long totalSpectrumAmount;
+
+    // Entity balances less or euqal this value will be burned if number of entites rises to 75% of spectrum capacity.
+    // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
+    unsigned long long currentEntityBalanceDustThreshold;
 } CurrentSystemInfo;
+#pragma pack(pop)
 
 typedef struct
 {

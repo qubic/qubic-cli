@@ -103,6 +103,8 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         LOG("InitialTick: %u\n", curSystemInfo.initialTick);
         LOG("LatestCreatedTick: %u\n", curSystemInfo.latestCreatedTick);
         LOG("NumberOfEntities: %u\n", curSystemInfo.numberOfEntities);
+        LOG("TotalSpectrumAmount: %llu\n", curSystemInfo.totalSpectrumAmount);
+        LOG("EntityBalanceDustThreshold: %llu\n", curSystemInfo.currentEntityBalanceDustThreshold);
         LOG("NumberOfTransactions: %u\n", curSystemInfo.numberOfTransactions);
         char hex[65];
         byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
@@ -111,6 +113,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 
         // todo: add initial time
 
+        LOG("\nAbout EntityBalanceDustThreshold: Entity balances less or euqal this value will be burned if number of entites rises to 75%% of spectrum capacity. Starts to be meaningful if >50%% of spectrum is filled but may still change after that.\n");
     } else {
         LOG("Error while getting system info from %s:%d\n", nodeIp, nodePort);
     }
