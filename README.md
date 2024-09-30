@@ -18,6 +18,8 @@ Basic config:
 		Port of the target node for querying blockchain information (default: 21841)
 	-scheduletick <TICK_OFFSET>
 		Offset number of scheduled tick that will perform a transaction (default: 20)
+	-force
+		Do action although an error has been detected. Currently only implemented for proposals.
 Command:
 [WALLET COMMAND]
 	-showkeys
@@ -32,6 +34,8 @@ Command:
 		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid private key and node ip/port are required.
 	-qutilsendtomanyv1 <FILE>
 		Performs multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.
+	-qutilburnqubic <AMOUNT>
+		Performs burning qubic, valid private key and node ip/port are required.
 
 [BLOCKCHAIN/PROTOCOL COMMAND]
 	-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>
@@ -42,8 +46,6 @@ Command:
 		Get of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
 	-getnodeiplist
 		Print a list of node ip from a seed node ip. Valid node ip/port are required.
-	-getminingscoreranking
-		Get current mining score ranking.
 	-checktxontick <TICK_NUMBER> <TX_ID>
 		Check if a transaction is included in a tick. valid node ip/port are required.
 	-checktxonfile <TX_ID> <TICK_DATA_FILE>
@@ -62,8 +64,6 @@ Command:
 		View IPO status. valid node ip/port, CONTRACT_INDEX are required.
 	-getsysteminfo
 		View Current System Status. Includes initial tick, random mining seed, epoch info.
-	-publishproposal 
-		(on development)
 
 [NODE COMMAND]
 	-getcurrenttick
@@ -87,6 +87,10 @@ Command:
 		Fetch a single log line from the node. Valid node ip/port, passcodes are required.
 	-synctime
 		Sync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!	
+	-getminingscoreranking
+		Get current mining score ranking. Valid private key and node ip/port are required.	
+	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
+		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) 	
 
 [QX COMMAND]
 	-qxgetfee
@@ -101,8 +105,8 @@ Command:
 		Get orders on Qx
 
 [QTRY COMMAND]
-	-qtrygetfee
-		Show current qtry fee.
+	-qtrygetbasicinfo
+		Show qtry basic info from a node.
 	-qtryissuebet
 		Issue a bet (prompt mode)
 	-qtrygetactivebet
@@ -119,6 +123,44 @@ Command:
 		(Oracle providers only) publish a result for a bet
 	-qtrycancelbet <BET_ID>
 		(Game operator only) cancel a bet
+
+[GENERAL QUORUM PROPOSAL COMMANDS]
+	-gqmpropsetproposal <PROPOSAL_STRING>
+		Set proposal in general quorum proposals contract. May overwrite existing proposal, because each computor can have only one proposal at a time. For success, computor status is needed.
+		<PROPOSAL_STRING> is explained if there is a parsing error.
+	-gqmpropclearproposal
+		Clear own proposal in general quorum proposals contract. For success, computor status is needed.
+	-gqmpropgetproposals <PROPOSAL_INDEX_OR_GROUP>
+		Get proposal info from general quorum proposals contract.
+		Either pass "active" to get proposals that are open for voting in the current epoch, or "finished" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.
+	-gqmpropvote <PROPOSAL_INDEX> <VOTE_VALUE>
+		Vote for proposal in general quorum proposals contract.
+		<VOTE_VALUE> is the option in range 0 ... N-1 or "none".
+	-gqmpropgetvote <PROPOSAL_INDEX> [VOTER_IDENTITY]
+		Get vote from general quorum proposals contract. If VOTER_IDENTITY is skipped, identity of seed is used.
+	-gqmpropgetresults <PROPOSAL_INDEX>
+		Get the current result of a proposal (general quorum proposals contract).
+	-gqmpropgetrevdonation
+		Get and print table of revenue donations applied after each epoch.
+
+[CCF COMMANDS]
+	-ccfsetproposal <PROPOSAL_STRING>
+		Set proposal in computor controlled fund (CCF) contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee.
+		<PROPOSAL_STRING> is explained if there is a parsing error. Only "Transfer|2" (yes/no transfer proposals) are allowed in CCF.
+	-ccfclearproposal
+		Clear own proposal in CCF contract. Costs a fee.
+	-ccfgetproposals <PROPOSAL_INDEX_OR_GROUP>
+		Get proposal info from CCF contract.
+		Either pass "active" to get proposals that are open for voting in the current epoch, or "finished" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.
+	-ccfvote <PROPOSAL_INDEX> <VOTE_VALUE>
+		Cast vote for a proposal in the CCF contract.
+		<VOTE_VALUE> is the option in range 0 ... N-1 or "none".
+	-ccfgetvote <PROPOSAL_INDEX> [VOTER_IDENTITY]
+		Get vote from CCF contract. If VOTER_IDENTITY is skipped, identity of seed is used.
+	-ccfgetresults <PROPOSAL_INDEX>
+		Get the current result of a CCF proposal.
+	-ccflatesttransfers
+		Get and print latest transfers of CCF granted by quorum.
 ```
 
 ### BUILD
