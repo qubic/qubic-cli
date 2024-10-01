@@ -190,3 +190,75 @@ static_assert(sizeof(qxOrderAction_input) == sizeof(RemoveFromBidOrder_input), "
 static_assert(sizeof(qxOrderAction_input) == sizeof(RemoveFromAskOrder_input), "wrong implementation");
 static_assert(sizeof(qxOrderAction_input) == sizeof(AddToBidOrder_input), "wrong implementation");
 static_assert(sizeof(qxOrderAction_input) == sizeof(AddToAskOrder_input), "wrong implementation");
+
+struct QX : ContractBase
+{
+    uint64_t _earnedAmount;
+    uint64_t _distributedAmount;
+    uint64_t _burnedAmount;
+
+    uint32_t _assetIssuanceFee; // Amount of qus
+    uint32_t _transferFee; // Amount of qus
+    uint32_t _tradeFee; // Number of billionths
+
+    struct _AssetOrder
+    {
+        uint8_t entity[32];
+        int64_t numberOfShares;
+    };
+    collection<_AssetOrder, 2097152 * X_MULTIPLIER> _assetOrders;
+    static_assert(sizeof(_assetOrders) == 302514192, "The size of the _assetOrders must be the same with core.");
+
+    struct _EntityOrder
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+        int64_t numberOfShares;
+    };
+    collection<_EntityOrder, 2097152 * X_MULTIPLIER> _entityOrders;
+    static_assert(sizeof(_entityOrders) == 319291408, "The size of the _entityOrders must be the same with core.");
+
+    // Belows are used for replicate exactly QX struct in core.
+    // TODO: change to "locals" variables and remove from state? -> every func/proc can define struct of "locals" that is passed as an argument (stored on stack structure per processor)
+    int64_t _elementIndex, _elementIndex2;
+    uint8_t _issuerAndAssetName[32];
+    _AssetOrder _assetOrder;
+    _EntityOrder _entityOrder;
+    int64_t _price;
+    int64_t _fee;
+    AssetAskOrders_output::Order _assetAskOrder;
+    AssetBidOrders_output::Order _assetBidOrder;
+    EntityAskOrders_output::Order _entityAskOrder;
+    EntityBidOrders_output::Order _entityBidOrder;
+
+    struct _TradeMessage
+    {
+        uint32_t _contractIndex;
+        uint32_t _type;
+
+        uint8_t issuer[32];
+        uint64_t assetName;
+        int64_t price;
+        int64_t numberOfShares;
+
+        char _terminator;
+    } _tradeMessage;
+
+    struct _NumberOfReservedShares_input
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+    } _numberOfReservedShares_input;
+    struct _NumberOfReservedShares_output
+    {
+        int64_t numberOfShares;
+    } _numberOfReservedShares_output;
+};
+
+// Match size between cli and core struct. may be changed in the future
+static constexpr uint64_t QX_STATE_SIZE = 621806120ULL;
+static_assert(sizeof(QX) == QX_STATE_SIZE, "Size of QX must match with core's QX");
+
+//ContractDescription qxContractDescriptions = {"QX", 66, 10000, sizeof(QX)};
+
+
