@@ -67,6 +67,7 @@ enum COMMAND
     CCF_GET_VOTE = 59,
     CCF_GET_VOTING_RESULTS = 60,
     CCF_GET_LATEST_TRANSFERS = 61,
+    DUMP_CONTRACT_FILE = 62,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -561,3 +562,108 @@ struct RespondTxStatus
     }
 };
 #pragma pack(pop)
+
+
+enum SCType
+{
+    SC_TYPE_Contract0State = 0,
+    SC_TYPE_QX = 1,
+    SC_TYPE_QTRY = 2,
+    SC_TYPE_RANDOM = 3,
+    SC_TYPE_QUTIL = 4,
+    SC_TYPE_MLM = 5,
+    SC_TYPE_GQMPROP = 6,
+    SC_TYPE_SWATCH = 7,
+    SC_TYPE_CCF = 8,
+    SC_TYPE_MAX
+};
+
+// Generate contract related structs
+constexpr uint64_t X_MULTIPLIER = 1ULL;
+struct ContractDescription
+{
+    char assetName[8];
+    // constructionEpoch needs to be set to after IPO (IPO is before construction)
+    uint16_t constructionEpoch, destructionEpoch;
+    uint64_t stateSize;
+};
+
+struct ContractBase
+{
+};
+
+template <typename T, uint64_t L>
+struct array
+{
+    static_assert(L && !(L & (L - 1)),
+        "The capacity of the array must be 2^N."
+        );
+    T _values[L];
+};
+
+static const int64_t COLLECTION_NULL_INDEX = -1LL;
+
+// Simplified collection from core
+template <typename T, uint64_t L>
+struct collection
+{
+public:
+
+    // Return maximum number of elements that may be stored.
+    static constexpr uint64_t capacity() { return L; }
+
+    // Return total populations.
+    uint64_t population() { return _population; }
+
+    // Return element value at elementIndex.
+    inline T element(int64_t elementIndex) const { return _elements[elementIndex & (L - 1)].value; }
+
+    // Return overall number of elements.
+    inline uint64_t population() const { return _population; }
+
+    // Return point of view elementIndex belongs to (or 0 id if unused).
+    void pov(int64_t elementIndex, uint8_t* povID) const
+    {
+        memcpy(povID, _povs[_elements[elementIndex & (L - 1)].povIndex].value, 32);
+    }
+
+    // Return priority of elementIndex (or 0 id if unused).
+    int64_t priority(int64_t elementIndex) const
+    {
+        return _elements[elementIndex & (L - 1)].priority;
+    }
+
+private:
+    static_assert(L && !(L & (L - 1)), "The capacity of the collection must be 2^N.");
+    static constexpr int64_t _nEncodedFlags = L > 32 ? 32 : L;
+
+    // Hash map of point of views = element filters, each with one priority queue (or empty)
+    struct PoV
+    {
+        uint8_t value[32];
+        uint64_t population;
+        int64_t headIndex, tailIndex;
+        int64_t bstRootIndex;
+    } _povs[L];
+
+    // 2 bits per element of _povs: 0b00 = not occupied; 0b01 = occupied; 0b10 = occupied but marked
+    // for removal; 0b11 is unused The state "occupied but marked for removal" is needed for finding
+    // the index of a pov in the hash map. Setting an entry to "not occupied" in remove() would
+    // potentially undo a collision, create a gap, and mess up the entry search.
+    uint64_t _povOccupationFlags[(L * 2 + 63) / 64];
+
+    // Array of elements (filled sequentially), each belongs to one PoV / priority queue (or is
+    // empty) Elements of a POV entry will be stored as a binary search tree (BST); so this
+    // structure has some properties related to BST (bstParentIndex, bstLeftIndex, bstRightIndex).
+    struct Element
+    {
+        T value;
+        int64_t priority;
+        int64_t povIndex;
+        int64_t bstParentIndex;
+        int64_t bstLeftIndex;
+        int64_t bstRightIndex;
+    } _elements[L];
+    uint64_t _population;
+    uint64_t _markRemovalCounter;
+};
