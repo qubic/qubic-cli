@@ -12,9 +12,30 @@ void dumpQxContractToCSV(const char* input, const char* output)
 {
     std::cout << "Dumping QX contract file " << input << std::endl;
 
+    // Check the file size
+    FILE* f;
+    {
+        f = fopen(input, "rb"); // Open the file in binary mode
+        if (f == nullptr)
+        {
+            std::cout << "Can not open file! Exit. " << output << std::endl;
+            return;
+        }
+
+        fseek(f, 0, SEEK_END);
+        unsigned long fileSize = (unsigned long)ftell(f);
+        fclose(f);
+
+        if (fileSize != sizeof(QX))
+        {
+            std::cout << "File size is different from QX state size! " << fileSize << " . Expected " << sizeof(QX) << std::endl;
+            return;
+        }
+    }
+
     std::shared_ptr<QX> qxState = std::make_shared<QX>();
 
-    FILE* f = fopen(input, "rb");
+    f = fopen(input, "rb");
     fread(qxState.get(), 1, sizeof(QX), f);
     fclose(f);
 
@@ -78,20 +99,23 @@ void dumpQxContractToCSV(const char* input, const char* output)
     std::cout << "File is written into " << output << std::endl;
 }
 
-void dumpContractToCSV(const char* input, const char* output)
+void dumpQtryContractToCSV(const char* input, const char* output)
+{
+    std::cout << "Dumping Qtry contract file " << input << std::endl;
+}
+
+void dumpContractToCSV(const char* input, uint32_t contractId, const char* output)
 {
     // Checking the contract type
     std::string fileName = input;
     auto extensionLocation = fileName.rfind('.');
-    int contractType = std::stoi(fileName.substr(fileName.rfind('.') - 4, 4));
-
-    switch (contractType)
+    switch (contractId)
     {
     case SCType::SC_TYPE_QX :
         dumpQxContractToCSV(input, output);
         break;
     default:
-        std::cout << "Unsupported contract type: " << contractType << std::endl;
+        std::cout << "Unsupported contract id: " << contractId << std::endl;
         break;
     }
 

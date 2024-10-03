@@ -65,8 +65,8 @@ void print_help(){
     printf("\t\tDump spectrum file into csv.\n");
     printf("\t-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
     printf("\t\tDump universe file into csv.\n");
-    printf("\t-dumpcontractfile <CONTRACT_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
-    printf("\t\tDump contract file into csv.\n");
+    printf("\t-dumpcontractfile <CONTRACT_BINARY_FILE> <CONTRACT_ID> <OUTPUT_CSV_FILE>\n");
+    printf("\t\tDump contract file into csv. Current supported CONTRACT_IDs: 1-QX \n");
     printf("\t-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>\n");
     printf("\t\tParticipating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getipostatus <CONTRACT_INDEX>\n");
@@ -450,8 +450,9 @@ void parseArgument(int argc, char** argv){
         {
             g_cmd = DUMP_CONTRACT_FILE;
             g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
-            i+=3;
+            g_dump_binary_contract_id = charToNumber(argv[i+2]);
+            g_dump_binary_file_output = argv[i+3];
+            i+=4;
             CHECK_OVER_PARAMETERS
             break;
         }

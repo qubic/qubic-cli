@@ -55,6 +55,7 @@ char* g_qx_asset_transfer_issuer_in_hex;
 
 char* g_dump_binary_file_input;
 char* g_dump_binary_file_output;
+uint32_t g_dump_binary_contract_id = 0;
 
 //IPO bid
 uint32_t g_ipo_contract_index = 0;

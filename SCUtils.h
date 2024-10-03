@@ -2,4 +2,4 @@
 
 #include <cstdint>
 
-void dumpContractToCSV(const char* input, const char* output);
+void dumpContractToCSV(const char* input, uint32_t contractId, const char* output);
