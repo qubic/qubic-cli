@@ -58,8 +58,8 @@ Command:
 		Dump spectrum file into csv.
 	-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>
 		Dump universe file into csv.
-	-dumpcontractfile <CONTRACT_BINARY_FILE> <OUTPUT_CSV_FILE>
-		Dump contract file into csv.
+	-dumpcontractfile <CONTRACT_BINARY_FILE> <CONTRACT_ID> <OUTPUT_CSV_FILE>
+		Dump contract file into csv. Current supported CONTRACT_ID: 1-QX
 	-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>
 		Participating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.
 	-getipostatus <CONTRACT_INDEX>
