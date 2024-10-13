@@ -68,6 +68,7 @@ enum COMMAND
     CCF_GET_VOTING_RESULTS = 60,
     CCF_GET_LATEST_TRANSFERS = 61,
     DUMP_CONTRACT_FILE = 62,
+    GET_TX_INFO = 63,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -270,6 +271,11 @@ typedef struct
     unsigned int tick;
     unsigned char transactionFlags[NUMBER_OF_TRANSACTIONS_PER_TICK / 8];
 } RequestedTickTransactions;
+
+typedef struct
+{
+    unsigned char transactionDigest[32];
+} RequestedTransactionInfo;
 
 typedef struct
 {

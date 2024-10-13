@@ -46,6 +46,8 @@ Command:
 		Get of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
 	-getnodeiplist
 		Print a list of node ip from a seed node ip. Valid node ip/port are required.
+	-gettxinfo <TX_ID>
+		Get tx infomation, will print empty if there is no tx or invalid tx. valid node ip/port are required.
 	-checktxontick <TICK_NUMBER> <TX_ID>
 		Check if a transaction is included in a tick. valid node ip/port are required.
 	-checktxonfile <TX_ID> <TICK_DATA_FILE>
