@@ -367,8 +367,18 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
             // Check the digest of respond transaction
             if (memcmp(txHash, respondTxHash, 60) == 0)
             {
+                extraDataStruct ed;
+                ed.vecU8.resize(tx->inputSize);
+                if (tx->inputSize != 0)
+                {
+                    memcpy(
+                        ed.vecU8.data(),
+                        reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
+                        tx->inputSize);
+                }
+
                 receivedTx = true;
-                printReceipt(*tx, respondTxHash, nullptr, -1);
+                printReceipt(*tx, respondTxHash, ed.vecU8.data(), -1);
                 break;
             }
         }
