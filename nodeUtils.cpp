@@ -325,7 +325,7 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
 
 bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
 {
-    char txUpperHash[61];
+    char txUpperHash[61] = {0};
     for (int i = 0; txHash[i] != '\0'; ++i)
     {
         txUpperHash[i] = std::toupper(txHash[i]);
@@ -357,18 +357,18 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
         {
             auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
             uint8_t digest[32] = {0};
-            char txHash[128] = {0};
+            char respondTxHash[61] = {0};
             KangarooTwelve(
                 reinterpret_cast<const uint8_t*>(tx),
                 sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
                 digest,
                 32);
+            getTxHashFromDigest(digest, respondTxHash);
             // Check the digest of respond transaction
-            if (memcmp(digest, packet.txs.transactionDigest, 32) == 0)
+            if (memcmp(txHash, respondTxHash, 60) == 0)
             {
                 receivedTx = true;
-                getTxHashFromDigest(digest, txHash);
-                printReceipt(*tx, txHash, nullptr, -1);
+                printReceipt(*tx, respondTxHash, nullptr, -1);
                 break;
             }
         }
