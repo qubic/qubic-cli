@@ -66,6 +66,11 @@ int run(int argc, char* argv[])
                                   g_txExtraData, g_offsetScheduledTick);
 
             break;
+        case GET_TX_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckTxHash(g_requestedTxId);
+            getTxInfo(g_nodeIp, g_nodePort, g_requestedTxId);
+            break;
         case CHECK_TX_ON_TICK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckTxHash(g_requestedTxId);

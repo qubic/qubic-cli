@@ -53,6 +53,8 @@ void print_help(){
     printf("\t\tGet of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
     printf("\t-getnodeiplist\n");
     printf("\t\tPrint a list of node ip from a seed node ip. Valid node ip/port are required.\n");
+    printf("\t-gettxinfo <TX_ID>\n");
+    printf("\t\tGet tx infomation, will print empty if there is no tx or invalid tx. valid node ip/port are required.\n");
     printf("\t-checktxontick <TICK_NUMBER> <TX_ID>\n");
     printf("\t\tCheck if a transaction is included in a tick. valid node ip/port are required.\n");
     printf("\t-checktxonfile <TX_ID> <TICK_DATA_FILE>\n");
@@ -371,6 +373,14 @@ void parseArgument(int argc, char** argv){
         {
             g_cmd = GET_NODE_IP_LIST;
             i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-gettxinfo") == 0)
+        {
+            g_cmd = GET_TX_INFO;
+            g_requestedTxId = argv[i+1];
+            i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
