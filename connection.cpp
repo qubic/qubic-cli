@@ -46,7 +46,7 @@ static int connect(const char* nodeIp, int nodePort)
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     struct timeval tv;
-    tv.tv_sec = 2;
+    tv.tv_sec = 10;
     tv.tv_usec = 0;
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
     setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof tv);
@@ -74,7 +74,11 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 	mNodePort = nodePort;
 	mSocket = connect(nodeIp, nodePort);
     if (mSocket < 0)
-        throw std::logic_error("No connection.");
+        throw std::logic_error("Unable to establish connection.");
+
+    // discard handshake - exchange peer packets
+    std::vector<uint8_t> buff;
+    receiveDataAll(buff);
 }
 QubicConnection::~QubicConnection()
 {
@@ -102,33 +106,35 @@ void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
     }
 }
 
+void QubicConnection::resolveConnection()
+{
+    mSocket = connect(mNodeIp, mNodePort);
+    if (mSocket < 0)
+        throw std::logic_error("Unable to establish connection.");
+}
+
 template <typename T>
 T QubicConnection::receivePacketAs()
 {
-    std::vector<uint8_t> receivedData;
-    receivedData.resize(0);
-    uint8_t tmp[1024];
-    int recvByte = receiveData(tmp, 1024);
-    while (recvByte > 0)
+    // first receive the header
+    RequestResponseHeader header;
+    int recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+    if (recvByte != sizeof(RequestResponseHeader))
     {
-        receivedData.resize(recvByte + receivedData.size());
-        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
-        recvByte = receiveData(tmp, 1024);
+        throw std::logic_error("No connection.");
     }
-
-    recvByte = receivedData.size();
-    uint8_t* data = receivedData.data();
-    int ptr = 0;
+    int packet_size = header.size();
     T result;
     memset(&result, 0, sizeof(T));
-    while (ptr < recvByte)
+    if (packet_size - sizeof(RequestResponseHeader))
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == T::type()){
-            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *dataT;
+        memset(mBuffer, 0, packet_size - sizeof(RequestResponseHeader));
+        // receive the rest
+        recvByte = receiveData(mBuffer, packet_size - sizeof(RequestResponseHeader));
+        if (recvByte != packet_size - sizeof(RequestResponseHeader)){
+            throw std::logic_error("No connection.");
         }
-        ptr+= header->size();
+        result = *((T*)mBuffer);
     }
     return result;
 }

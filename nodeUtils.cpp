@@ -27,7 +27,15 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    try{
+        qc->receiveDataAll(buffer);
+    } catch(std::logic_error& e)
+    {
+        qc->resolveConnection();
+        memset(&result, sizeof(result), 0);
+        return result;
+    }
+
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
@@ -323,15 +331,17 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     return false;
 }
 
-bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
+// @return:
+// - 0: ok
+// - 1: hash doesn't exist
+// - 2: failed connection
+int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int& dataSize)
 {
     char txUpperHash[61] = {0};
     for (int i = 0; txHash[i] != '\0'; ++i)
     {
         txUpperHash[i] = std::toupper(txHash[i]);
     }
-
-    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestedTransactionInfo txs;
@@ -346,7 +356,13 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
     // Received the respond and print the receipt
     bool receivedTx = false;
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    try{
+        qc->receiveDataAll(buffer);
+    } catch (std::logic_error& e){
+        qc->resolveConnection();
+        return 2;
+    }
+
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
@@ -359,10 +375,10 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
-                reinterpret_cast<const uint8_t*>(tx),
-                sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
-                digest,
-                32);
+                    reinterpret_cast<const uint8_t*>(tx),
+                    sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
+                    digest,
+                    32);
             getTxHashFromDigest(digest, respondTxHash);
             // Check the digest of respond transaction
             if (memcmp(txHash, respondTxHash, 60) == 0)
@@ -372,9 +388,87 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
                 if (tx->inputSize != 0)
                 {
                     memcpy(
-                        ed.vecU8.data(),
-                        reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
-                        tx->inputSize);
+                            ed.vecU8.data(),
+                            reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
+                            tx->inputSize);
+                }
+
+                receivedTx = true;
+                memcpy(outData, ed.vecU8.data(), tx->inputSize);
+                dataSize = tx->inputSize;
+                break;
+            }
+        }
+        ptr += header->size();
+    }
+    if (!receivedTx)
+    {
+        LOG("Failed to get tx info. Please check the tx hash and try again later.\n");
+        return 1;
+    }
+    return 0;
+}
+
+// @return:
+// - 0: ok
+// - 1: hash doesn't exist
+// - 2: failed connection
+int _GetTxInfo(QCPtr& qc, const char* txHash)
+{
+    char txUpperHash[61] = {0};
+    for (int i = 0; txHash[i] != '\0'; ++i)
+    {
+        txUpperHash[i] = std::toupper(txHash[i]);
+    }
+    struct {
+        RequestResponseHeader header;
+        RequestedTransactionInfo txs;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_TRANSACTION_INFO);
+    getPublicKeyFromIdentity(txUpperHash, packet.txs.transactionDigest);
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    // Received the respond and print the receipt
+    bool receivedTx = false;
+    std::vector<uint8_t> buffer;
+    try{
+        qc->receiveDataAll(buffer);
+    } catch (std::logic_error& e){
+        qc->resolveConnection();
+        return 2;
+    }
+
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data + ptr);
+        if (header->type() == BROADCAST_TRANSACTION)
+        {
+            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            uint8_t digest[32] = {0};
+            char respondTxHash[61] = {0};
+            KangarooTwelve(
+                    reinterpret_cast<const uint8_t*>(tx),
+                    sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
+                    digest,
+                    32);
+            getTxHashFromDigest(digest, respondTxHash);
+            // Check the digest of respond transaction
+            if (memcmp(txHash, respondTxHash, 60) == 0)
+            {
+                extraDataStruct ed;
+                ed.vecU8.resize(tx->inputSize);
+                if (tx->inputSize != 0)
+                {
+                    memcpy(
+                            ed.vecU8.data(),
+                            reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
+                            tx->inputSize);
                 }
 
                 receivedTx = true;
@@ -387,8 +481,15 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
     if (!receivedTx)
     {
         LOG("Failed to get tx info. Please check the tx hash and try again later.\n");
+        return 1;
     }
-    return true;
+    return 0;
+}
+
+int getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
+{
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+    return _GetTxInfo(qc, txHash);
 }
 
 static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){

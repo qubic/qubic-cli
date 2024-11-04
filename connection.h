@@ -7,7 +7,8 @@ class QubicConnection
 {
 public:
 	QubicConnection(const char* nodeIp, int nodePort);
-	~QubicConnection();	
+	~QubicConnection();
+    void resolveConnection();
 	int receiveData(uint8_t* buffer, int sz);
 	int sendData(uint8_t* buffer, int sz);
     void receiveDataAll(std::vector<uint8_t>& buffer);
@@ -17,6 +18,7 @@ private:
 	char mNodeIp[32];
 	int mNodePort;
 	int mSocket;
+    uint8_t mBuffer[0xFFFFFF];
 };
 typedef std::shared_ptr<QubicConnection> QCPtr;
 static QCPtr make_qc(const char* nodeIp, int nodePort)

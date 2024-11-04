@@ -182,6 +182,16 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getLogFromNode(g_nodeIp, g_nodePort, g_get_log_passcode);
             break;
+        case UPLOAD_FILE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            uploadFile(g_nodeIp, g_nodePort, g_file_path, g_seed, g_offsetScheduledTick);
+            break;
+        case DOWNLOAD_FILE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            downloadFile(g_nodeIp, g_nodePort, g_requestedTxId, g_file_path);
+            break;
         case DUMP_SPECTRUM_FILE:
             sanityFileExist(g_dump_binary_file_input);
             sanityCheckValidString(g_dump_binary_file_output);

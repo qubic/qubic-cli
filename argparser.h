@@ -55,6 +55,10 @@ void print_help(){
     printf("\t\tPrint a list of node ip from a seed node ip. Valid node ip/port are required.\n");
     printf("\t-gettxinfo <TX_ID>\n");
     printf("\t\tGet tx infomation, will print empty if there is no tx or invalid tx. valid node ip/port are required.\n");
+    printf("\t-uploadfile <FILE_PATH>\n");
+    printf("\t\tUpload a file to qubic network. valid node ip/port and seed are required.\n");
+    printf("\t-downloadfile <TX_ID> <FILE_PATH>\n");
+    printf("\t\tDownload a file to qubic network. valid node ip/port are required.\n");
     printf("\t-checktxontick <TICK_NUMBER> <TX_ID>\n");
     printf("\t\tCheck if a transaction is included in a tick. valid node ip/port are required.\n");
     printf("\t-checktxonfile <TX_ID> <TICK_DATA_FILE>\n");
@@ -381,6 +385,23 @@ void parseArgument(int argc, char** argv){
             g_cmd = GET_TX_INFO;
             g_requestedTxId = argv[i+1];
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-uploadfile") == 0)
+        {
+            g_cmd = UPLOAD_FILE;
+            g_file_path = argv[i+1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if(strcmp(argv[i], "-downloadfile") == 0)
+        {
+            g_cmd = DOWNLOAD_FILE;
+            g_requestedTxId = argv[i+1];
+            g_file_path = argv[i+2];
+            i+=3;
             CHECK_OVER_PARAMETERS
             break;
         }
