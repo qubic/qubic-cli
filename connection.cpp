@@ -46,7 +46,7 @@ static int connect(const char* nodeIp, int nodePort)
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     struct timeval tv;
-    tv.tv_sec = 10;
+    tv.tv_sec = 1;
     tv.tv_usec = 0;
     setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
     setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof tv);
@@ -110,6 +110,7 @@ int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
     return count;
 }
 
+// TODO: remove this function, send/recv size should be known before hand
 void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
 {
     receivedData.resize(0);
