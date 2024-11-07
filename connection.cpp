@@ -79,7 +79,7 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     // receive handshake - exchange peer packets
     mHandshakeData.resize(sizeof(ExchangePublicPeers));
     uint8_t* data = mHandshakeData.data();
-    *((ExchangePublicPeers*)data) = receivePacketAs<ExchangePublicPeers>();
+    *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();
 }
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
 {
@@ -92,8 +92,24 @@ QubicConnection::~QubicConnection()
 
 int QubicConnection::receiveData(uint8_t* buffer, int sz)
 {
+    if (sz > 4096){
+        LOG("Warning: trying to receive too big chunk, consider using receiveDataBig instead\n");
+    }
 	return recv(mSocket, (char*)buffer, sz, 0);
 }
+
+int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
+{
+    int count = 0;
+    while (sz){
+        int chunk = std::min(sz, 1024);
+        int received_byte = receiveData(buffer + count, chunk);
+        count += received_byte;
+        sz -= received_byte;
+    }
+    return count;
+}
+
 void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
 {
     receivedData.resize(0);

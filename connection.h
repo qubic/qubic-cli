@@ -10,6 +10,7 @@ public:
 	~QubicConnection();
     void resolveConnection();
 	int receiveData(uint8_t* buffer, int sz);
+    int receiveDataBig(uint8_t* buffer, int sz);
 	int sendData(uint8_t* buffer, int sz);
     void receiveDataAll(std::vector<uint8_t>& buffer);
     void getHandshakeData(std::vector<uint8_t>& buffer);

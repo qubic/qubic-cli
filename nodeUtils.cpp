@@ -1576,27 +1576,31 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
 
     SpecialCommandGetMiningScoreRanking response;
 
+    int headerSize = sizeof(RequestResponseHeader) + 8 + 4; // header and everIncreasingNonceAndCommandType and numberOfRankings
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-
-    auto header = (RequestResponseHeader*)(data);
-    data = data + sizeof(RequestResponseHeader) + header->size();
-
-    // Get data out
-    unsigned char* ptr = data;
-    // get back the mining score ranking
-    response.everIncreasingNonceAndCommandType = *(unsigned long long*)ptr;
-    ptr += 8;
-
-    response.numRankings = *(unsigned int*)ptr;
-    ptr += 4;
-
+    buffer.resize(headerSize);
+    qc->receiveData(buffer.data(), headerSize);
+    int contentSize = 0;
+    {
+        uint8_t* data = buffer.data() + sizeof(RequestResponseHeader);
+        response.everIncreasingNonceAndCommandType = *((unsigned long long*)data);
+        response.numRankings = *((unsigned int*)(data+8));
+        contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
+    }
     if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
-        LOG("Failed to get mining score ranking!\n");
+        LOG("Failed to get mining score ranking! everIncreasingNonceAndCommandType is mismatched: want %016lx | have %016lx\n", packet.cmd.everIncreasingNonceAndCommandType, response.everIncreasingNonceAndCommandType);
         return;
     }
+    if (contentSize < 676 * 36)
+    {
+        LOG("Malformed content size\n");
+        return;
+    }
+    buffer.resize(contentSize);
+    qc->receiveDataBig(buffer.data(), contentSize);
+    uint8_t* data = buffer.data();
+    // Get data out
+    unsigned char* ptr = data;
 
     // Get the number of miners
     LOG("Total miner: %u\n", response.numRankings);
