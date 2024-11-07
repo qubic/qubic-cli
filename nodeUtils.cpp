@@ -1343,21 +1343,16 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
     qc->getHandshakeData(buffer);
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    if (recvByte == 0)
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == EXCHANGE_PUBLIC_PEERS){
-            auto epp = (ExchangePublicPeers*)(data + ptr + sizeof(RequestResponseHeader));
-            for (int i = 0; i < 4; i++){
-                if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
-                std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
-                result.push_back(new_ip);
-            }
-        }
-        ptr+= header->size();
+        return result;
     }
-
+    auto epp = (ExchangePublicPeers*)(data);
+    for (int i = 0; i < 4; i++){
+        if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
+        std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
+        result.push_back(new_ip);
+    }
     return result;
 }
 void getNodeIpList(const char* nodeIp, const int nodePort)
