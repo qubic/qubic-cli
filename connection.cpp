@@ -76,9 +76,14 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     if (mSocket < 0)
         throw std::logic_error("Unable to establish connection.");
 
-    // discard handshake - exchange peer packets
-    std::vector<uint8_t> buff;
-    receiveDataAll(buff);
+    // receive handshake - exchange peer packets
+    mHandshakeData.resize(sizeof(ExchangePublicPeers));
+    uint8_t* data = mHandshakeData.data();
+    *((ExchangePublicPeers*)data) = receivePacketAs<ExchangePublicPeers>();
+}
+void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
+{
+    buffer = mHandshakeData;
 }
 QubicConnection::~QubicConnection()
 {
@@ -113,8 +118,9 @@ void QubicConnection::resolveConnection()
         throw std::logic_error("Unable to establish connection.");
 }
 
+// Receive the next qubic packet with a RequestResponseHeader
 template <typename T>
-T QubicConnection::receivePacketAs()
+T QubicConnection::receivePacketWithHeaderAs()
 {
     // first receive the header
     RequestResponseHeader header;
@@ -136,6 +142,21 @@ T QubicConnection::receivePacketAs()
         }
         result = *((T*)mBuffer);
     }
+    return result;
+}
+
+// same as receivePacketWithHeaderAs but without the header
+template <typename T>
+T QubicConnection::receivePacketAs()
+{
+    int packet_size = sizeof(T);
+    T result;
+    memset(&result, 0, sizeof(T));
+    int recvByte = receiveData(mBuffer, packet_size);
+    if (recvByte != packet_size){
+        throw std::logic_error("Unexpected data size.");
+    }
+    result = *((T*)mBuffer);
     return result;
 }
 
@@ -183,10 +204,11 @@ int QubicConnection::sendData(uint8_t* buffer, int sz)
 	return sz - size;
 }
 
-template SpecialCommand QubicConnection::receivePacketAs<SpecialCommand>();
-template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
-template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
-template SpecialCommandSendTime QubicConnection::receivePacketAs<SpecialCommandSendTime>();
-template GetSendToManyV1Fee_output QubicConnection::receivePacketAs<GetSendToManyV1Fee_output>();
+template SpecialCommand QubicConnection::receivePacketWithHeaderAs<SpecialCommand>();
+template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
+template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+template SpecialCommandSendTime QubicConnection::receivePacketWithHeaderAs<SpecialCommandSendTime>();
+template GetSendToManyV1Fee_output QubicConnection::receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
+template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 
 template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();

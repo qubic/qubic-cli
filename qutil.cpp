@@ -63,7 +63,7 @@ long long getSendToManyV1Fee(QCPtr qc)
     packet.rcf.inputType = qutilFunctionId::GetSendToManyV1Fee;
     packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto fee = qc->receivePacketAs<GetSendToManyV1Fee_output>();
+    auto fee = qc->receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
     return fee.fee;
 }
 

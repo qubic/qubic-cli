@@ -979,7 +979,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    auto response = qc->receivePacketAs<SpecialCommand>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommand>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
@@ -1029,7 +1029,7 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.mainModeFlag == packet.cmd.mainModeFlag){
@@ -1076,7 +1076,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
@@ -1168,7 +1168,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
-        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
@@ -1220,7 +1220,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
-        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
@@ -1326,16 +1326,21 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
 std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
-    auto qc = make_qc(nodeIp, nodePort);
+    QCPtr qc;
+    try{
+        qc = make_qc(nodeIp, nodePort);
+    } catch (std::logic_error& e)
+    {
+        return result;
+    }
+
     struct {
         RequestResponseHeader header;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_CURRENT_TICK_INFO);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    qc->getHandshakeData(buffer);
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
@@ -1345,6 +1350,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
         if (header->type() == EXCHANGE_PUBLIC_PEERS){
             auto epp = (ExchangePublicPeers*)(data + ptr + sizeof(RequestResponseHeader));
             for (int i = 0; i < 4; i++){
+                if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
                 std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
                 result.push_back(new_ip);
             }
