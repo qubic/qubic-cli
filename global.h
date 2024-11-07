@@ -26,7 +26,7 @@ char* g_toogle_main_aux_0 = nullptr;
 char* g_toogle_main_aux_1 = nullptr;
 int g_set_solution_threshold_epoch = -1;
 int g_set_solution_threshold_value = -1;
-
+char* g_file_path = nullptr;
 
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;

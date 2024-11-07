@@ -69,6 +69,8 @@ enum COMMAND
     CCF_GET_LATEST_TRANSFERS = 61,
     DUMP_CONTRACT_FILE = 62,
     GET_TX_INFO = 63,
+    UPLOAD_FILE = 64,
+    DOWNLOAD_FILE = 65,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -285,6 +287,10 @@ typedef struct
 {
     char hash[60];
 } TxhashStruct;
+typedef struct
+{
+    uint8_t ptr[32];
+} TxHash32Struct;
 typedef struct
 {
     std::vector<uint8_t> vecU8;
@@ -672,4 +678,51 @@ private:
     } _elements[L];
     uint64_t _population;
     uint64_t _markRemovalCounter;
+};
+
+struct FileHeaderTransaction : public Transaction
+{
+    static constexpr unsigned char transactionType()
+    {
+        return 3; // TODO: Set actual value
+    }
+
+    static constexpr long long minAmount()
+    {
+        return 0;
+    }
+
+    static constexpr unsigned short minInputSize()
+    {
+        return sizeof(fileSize)
+               + sizeof(numberOfFragments)
+               + sizeof(fileFormat);
+    }
+
+    unsigned long long fileSize;
+    unsigned long long numberOfFragments;
+    unsigned char fileFormat[8];
+    unsigned char signature[SIGNATURE_SIZE];
+};
+
+struct FileFragmentTransactionPrefix : public Transaction
+{
+    static constexpr unsigned char transactionType()
+    {
+        return 4; // TODO: Set actual value
+    }
+
+    static constexpr long long minAmount()
+    {
+        return 0;
+    }
+
+    static constexpr unsigned short minInputSize()
+    {
+        return sizeof(fragmentIndex)
+               + sizeof(prevFileFragmentTransactionDigest);
+    }
+
+    unsigned long long fragmentIndex;
+    uint8_t prevFileFragmentTransactionDigest[32];
 };

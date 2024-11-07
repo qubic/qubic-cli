@@ -2,7 +2,7 @@
 #include <immintrin.h>
 #include <cstdint>
 #include <string>
-
+#include "keyUtils.h"
 #define ROL64(a, offset) ((((unsigned long long)a) << offset) ^ (((unsigned long long)a) >> (64 - offset)))
 
 #define KeccakF1600RoundConstant0 0x000000008000808bULL
@@ -2266,4 +2266,30 @@ BOOL_FUNC_DECL verify(const unsigned char* publicKey, const unsigned char* messa
     encode(A, (unsigned char*)A);
 
     return (memcmp(A, signature, 32) == 0);
+}
+
+/* Get 32 bytes of public key from 55-char seed
+ * */
+static void getPublicKeyFromSeed(const char* seed, uint8_t* publicKey)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, publicKey);
+}
+
+/* Sign an array of bytes
+ * */
+static void signData(const char* seed, const uint8_t* data, const size_t dataLength, uint8_t* signature)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    uint8_t digest[32];
+    KangarooTwelve(data, dataLength, digest, 32);
+    sign(subseed, sourcePublicKey, digest, signature);
 }

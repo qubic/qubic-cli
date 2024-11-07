@@ -27,7 +27,15 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    try{
+        qc->receiveDataAll(buffer);
+    } catch(std::logic_error& e)
+    {
+        qc->resolveConnection();
+        memset(&result, sizeof(result), 0);
+        return result;
+    }
+
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
@@ -323,15 +331,17 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     return false;
 }
 
-bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
+// @return:
+// - 0: ok
+// - 1: hash doesn't exist
+// - 2: failed connection
+int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int& dataSize)
 {
     char txUpperHash[61] = {0};
     for (int i = 0; txHash[i] != '\0'; ++i)
     {
         txUpperHash[i] = std::toupper(txHash[i]);
     }
-
-    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
         RequestedTransactionInfo txs;
@@ -346,7 +356,13 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
     // Received the respond and print the receipt
     bool receivedTx = false;
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    try{
+        qc->receiveDataAll(buffer);
+    } catch (std::logic_error& e){
+        qc->resolveConnection();
+        return 2;
+    }
+
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
@@ -359,10 +375,10 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
-                reinterpret_cast<const uint8_t*>(tx),
-                sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
-                digest,
-                32);
+                    reinterpret_cast<const uint8_t*>(tx),
+                    sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
+                    digest,
+                    32);
             getTxHashFromDigest(digest, respondTxHash);
             // Check the digest of respond transaction
             if (memcmp(txHash, respondTxHash, 60) == 0)
@@ -372,9 +388,87 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
                 if (tx->inputSize != 0)
                 {
                     memcpy(
-                        ed.vecU8.data(),
-                        reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
-                        tx->inputSize);
+                            ed.vecU8.data(),
+                            reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
+                            tx->inputSize);
+                }
+
+                receivedTx = true;
+                memcpy(outData, ed.vecU8.data(), tx->inputSize);
+                dataSize = tx->inputSize;
+                break;
+            }
+        }
+        ptr += header->size();
+    }
+    if (!receivedTx)
+    {
+        LOG("Failed to get tx info. Please check the tx hash and try again later.\n");
+        return 1;
+    }
+    return 0;
+}
+
+// @return:
+// - 0: ok
+// - 1: hash doesn't exist
+// - 2: failed connection
+int _GetTxInfo(QCPtr& qc, const char* txHash)
+{
+    char txUpperHash[61] = {0};
+    for (int i = 0; txHash[i] != '\0'; ++i)
+    {
+        txUpperHash[i] = std::toupper(txHash[i]);
+    }
+    struct {
+        RequestResponseHeader header;
+        RequestedTransactionInfo txs;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_TRANSACTION_INFO);
+    getPublicKeyFromIdentity(txUpperHash, packet.txs.transactionDigest);
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    // Received the respond and print the receipt
+    bool receivedTx = false;
+    std::vector<uint8_t> buffer;
+    try{
+        qc->receiveDataAll(buffer);
+    } catch (std::logic_error& e){
+        qc->resolveConnection();
+        return 2;
+    }
+
+    uint8_t* data = buffer.data();
+    int recvByte = buffer.size();
+    int ptr = 0;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data + ptr);
+        if (header->type() == BROADCAST_TRANSACTION)
+        {
+            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            uint8_t digest[32] = {0};
+            char respondTxHash[61] = {0};
+            KangarooTwelve(
+                    reinterpret_cast<const uint8_t*>(tx),
+                    sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
+                    digest,
+                    32);
+            getTxHashFromDigest(digest, respondTxHash);
+            // Check the digest of respond transaction
+            if (memcmp(txHash, respondTxHash, 60) == 0)
+            {
+                extraDataStruct ed;
+                ed.vecU8.resize(tx->inputSize);
+                if (tx->inputSize != 0)
+                {
+                    memcpy(
+                            ed.vecU8.data(),
+                            reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction),
+                            tx->inputSize);
                 }
 
                 receivedTx = true;
@@ -387,8 +481,15 @@ bool getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
     if (!receivedTx)
     {
         LOG("Failed to get tx info. Please check the tx hash and try again later.\n");
+        return 1;
     }
-    return true;
+    return 0;
+}
+
+int getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
+{
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+    return _GetTxInfo(qc, txHash);
 }
 
 static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
@@ -878,7 +979,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    auto response = qc->receivePacketAs<SpecialCommand>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommand>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         LOG("Node received special command\n");
@@ -928,7 +1029,7 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketAs<SpecialCommandToggleMainModeResquestAndResponse>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.mainModeFlag == packet.cmd.mainModeFlag){
@@ -975,7 +1076,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+    auto response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
         if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
@@ -1067,7 +1168,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
-        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
@@ -1119,7 +1220,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
-        auto response = qc->receivePacketAs<SpecialCommandSendTime>();
+        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
@@ -1225,32 +1326,33 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
 std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
-    auto qc = make_qc(nodeIp, nodePort);
+    QCPtr qc;
+    try{
+        qc = make_qc(nodeIp, nodePort);
+    } catch (std::logic_error& e)
+    {
+        return result;
+    }
+
     struct {
         RequestResponseHeader header;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_CURRENT_TICK_INFO);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
+    qc->getHandshakeData(buffer);
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    if (recvByte == 0)
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == EXCHANGE_PUBLIC_PEERS){
-            auto epp = (ExchangePublicPeers*)(data + ptr + sizeof(RequestResponseHeader));
-            for (int i = 0; i < 4; i++){
-                std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
-                result.push_back(new_ip);
-            }
-        }
-        ptr+= header->size();
+        return result;
     }
-
+    auto epp = (ExchangePublicPeers*)(data);
+    for (int i = 0; i < 4; i++){
+        if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
+        std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
+        result.push_back(new_ip);
+    }
     return result;
 }
 void getNodeIpList(const char* nodeIp, const int nodePort)
@@ -1469,27 +1571,31 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
 
     SpecialCommandGetMiningScoreRanking response;
 
+    int headerSize = sizeof(RequestResponseHeader) + 8 + 4; // header and everIncreasingNonceAndCommandType and numberOfRankings
     std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-
-    auto header = (RequestResponseHeader*)(data);
-    data = data + sizeof(RequestResponseHeader) + header->size();
-
-    // Get data out
-    unsigned char* ptr = data;
-    // get back the mining score ranking
-    response.everIncreasingNonceAndCommandType = *(unsigned long long*)ptr;
-    ptr += 8;
-
-    response.numRankings = *(unsigned int*)ptr;
-    ptr += 4;
-
+    buffer.resize(headerSize);
+    qc->receiveData(buffer.data(), headerSize);
+    int contentSize = 0;
+    {
+        uint8_t* data = buffer.data() + sizeof(RequestResponseHeader);
+        response.everIncreasingNonceAndCommandType = *((unsigned long long*)data);
+        response.numRankings = *((unsigned int*)(data+8));
+        contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
+    }
     if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
-        LOG("Failed to get mining score ranking!\n");
+        LOG("Failed to get mining score ranking! everIncreasingNonceAndCommandType is mismatched: want %016lx | have %016lx\n", packet.cmd.everIncreasingNonceAndCommandType, response.everIncreasingNonceAndCommandType);
         return;
     }
+    if (contentSize < 676 * 36)
+    {
+        LOG("Malformed content size\n");
+        return;
+    }
+    buffer.resize(contentSize);
+    qc->receiveDataBig(buffer.data(), contentSize);
+    uint8_t* data = buffer.data();
+    // Get data out
+    unsigned char* ptr = data;
 
     // Get the number of miners
     LOG("Total miner: %u\n", response.numRankings);
