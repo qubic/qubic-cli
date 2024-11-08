@@ -440,7 +440,6 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
         qc->resolveConnection();
         return 2;
     }
-
     uint8_t* data = buffer.data();
     int recvByte = buffer.size();
     int ptr = 0;
