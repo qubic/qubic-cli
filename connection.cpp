@@ -152,17 +152,21 @@ T QubicConnection::receivePacketWithHeaderAs()
     {
         throw std::logic_error("No connection.");
     }
-    int packet_size = header.size();
+    //if (header.type() != T::type())
+    //{
+    //    throw std::logic_error("Unexpected header type.");
+    //}
+    int packetSize = header.size();
     T result;
     memset(&result, 0, sizeof(T));
-    if (packet_size - sizeof(RequestResponseHeader))
+    if (packetSize - sizeof(RequestResponseHeader))
     {
-        memset(mBuffer, 0, packet_size - sizeof(RequestResponseHeader));
+        memset(mBuffer, 0, packetSize - sizeof(RequestResponseHeader));
         // receive the rest
-        recvByte = receiveData(mBuffer, packet_size - sizeof(RequestResponseHeader));
-        if (recvByte != packet_size - sizeof(RequestResponseHeader))
+        recvByte = receiveData(mBuffer, packetSize - sizeof(RequestResponseHeader));
+        if (recvByte != packetSize - sizeof(RequestResponseHeader))
         {
-            throw std::logic_error("No connection.");
+            throw std::logic_error("Unexpected data size.");
         }
         result = *((T*)mBuffer);
     }
@@ -173,11 +177,11 @@ T QubicConnection::receivePacketWithHeaderAs()
 template <typename T>
 T QubicConnection::receivePacketAs()
 {
-    int packet_size = sizeof(T);
+    int packetSize = sizeof(T);
     T result;
     memset(&result, 0, sizeof(T));
-    int recvByte = receiveData(mBuffer, packet_size);
-    if (recvByte != packet_size)
+    int recvByte = receiveData(mBuffer, packetSize);
+    if (recvByte != packetSize)
     {
         throw std::logic_error("Unexpected data size.");
     }
@@ -188,30 +192,17 @@ T QubicConnection::receivePacketAs()
 template <typename T>
 std::vector<T> QubicConnection::getLatestVectorPacketAs()
 {
-    std::vector<uint8_t> receivedData;
-    receivedData.resize(0);
-    uint8_t tmp[1024];
-    int recvByte = receiveData(tmp, 1024);
-    while (recvByte > 0)
-    {
-        receivedData.resize(recvByte + receivedData.size());
-        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
-        recvByte = receiveData(tmp, 1024);
-    }
-
-    recvByte = receivedData.size();
-    uint8_t* data = receivedData.data();
-    int ptr = 0;
     std::vector<T> results;
-    while (ptr < recvByte)
+    while (true)
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == T::type())
+        try
         {
-            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
-            results.push_back(*dataT);
+            results.push_back(receivePacketWithHeaderAs<T>());
         }
-        ptr+= header->size();
+        catch (std::logic_error& e)
+        {
+            break;
+        }
     }
     return results;
 }

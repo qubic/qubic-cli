@@ -31,15 +31,20 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     {
         result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
     } 
-    catch(std::logic_error& e)
+    catch (std::logic_error& e)
     {
-        qc->resolveConnection();
+        try
+        {
+            qc->resolveConnection();
+        }
+        catch (std::logic_error& e) {}
         memset(&result, sizeof(result), 0);
         return result;
     }
 
     return result;
 }
+
 uint32_t getTickNumberFromNode(QCPtr qc)
 {
     auto curTickInfo = getTickInfoFromNode(qc);
@@ -48,6 +53,7 @@ uint32_t getTickNumberFromNode(QCPtr qc)
         curTickInfo = getTickInfoFromNode(qc);
     return curTickInfo.tick;
 }
+
 void printTickInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -75,9 +81,15 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     packet.header.setType(REQUEST_SYSTEM_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    // TODO: should this also have try catch?
-    return qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
+    try 
+    {
+        result = qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
+    }
+    catch (std::logic_error& e) {}
+
+    return result;
 }
+
 void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -198,7 +210,11 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    result = qc->receivePacketWithHeaderAs<TickData>();
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<TickData>();
+    }
+    catch (std::logic_error& e) {}
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -213,29 +229,35 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     RespondTxStatus result;
-    try{
+    memset(&result, 0, sizeof(RespondTxStatus));
+    try
+    {
         result = qc->receivePacketWithHeaderAs<RespondTxStatus>();
         // notice: the node not always return full size of RESPOND_TX_STATUS
         // it only returns enough digests
         // -> set remainder in array memory which may contain junk to 0
         memset(result.txDigests[result.txCount], 0, (NUMBER_OF_TRANSACTIONS_PER_TICK - result.txCount) * 32);
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error& e) 
+    {
         // it's expected to catch this error on some node that not turn on tx status
         return -1;
     }
 
     int tx_id = -1;
-    for (int i = 0; i < result.txCount; i++){
+    for (int i = 0; i < result.txCount; i++)
+    {
         char tx_hash[60];
         memset(tx_hash, 0, 60);
         getIdentityFromPublicKey(result.txDigests[i], tx_hash, true);
-        if (memcmp(tx_hash, txHash, 60) == 0){
+        if (memcmp(tx_hash, txHash, 60) == 0)
+        {
             tx_id = i;
             break;
         }
     }
-    if (tx_id == -1){
+    if (tx_id == -1)
+    {
         return -1; // not found !?
     }
     return (result.moneyFlew[tx_id >> 3] & (1<<(tx_id & 7))) ? 1 : 0;
@@ -869,13 +891,26 @@ bool checkTxOnFile(const char* txHash, const char* fileName)
 
 void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, uint8_t* rawPacket)
 {
-    std::vector<uint8_t> buffer;
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData(rawPacket, rawPacketSize);
     LOG("Sent %d bytes\n", rawPacketSize);
-    qc->receiveDataAll(buffer);
-    LOG("Received %d bytes\n", buffer.size());
-    for (int i = 0; i < buffer.size(); i++){
+    RequestResponseHeader header;
+    uint8_t* headerPtr = (uint8_t*)&header;
+    qc->receiveData(headerPtr, sizeof(RequestResponseHeader));
+    std::vector<uint8_t> buffer;
+    if (header.size() > sizeof(RequestResponseHeader))
+    {
+        unsigned long long remainingSize = header.size() - sizeof(RequestResponseHeader);
+        buffer.resize(remainingSize);
+        qc->receiveData(buffer.data(), remainingSize);
+    }
+    LOG("Received %d bytes\n", header.size());
+    for (int i = 0; i < sizeof(RequestResponseHeader); ++i)
+    {
+        LOG("%02x", headerPtr[i]);
+    }
+    for (int i = 0; i < buffer.size(); ++i)
+    {
         LOG("%02x", buffer[i]);
     }
     LOG("\n");
@@ -913,14 +948,26 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommand>();
+    SpecialCommand response;
+    memset(&response, 0, sizeof(SpecialCommand));
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommand>();
+    }
+    catch (std::logic_error& e) {}
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
         LOG("Node received special command\n");
-    } else{
-        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST){
+    } 
+    else
+    {
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST)
+        {
             LOG("Failed to send special command\n");
-        } else {
+        } 
+        else 
+        {
             LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
         }
     }
@@ -963,15 +1010,28 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
-        if (response.mainModeFlag == packet.cmd.mainModeFlag){
+    SpecialCommandToggleMainModeResquestAndResponse response;
+    memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
+    }
+    catch (std::logic_error& e) {}
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        if (response.mainModeFlag == packet.cmd.mainModeFlag)
+        {
             LOG("Successfully set MAINAUX flag\n");
-        } else {
+        } 
+        else 
+        {
             LOG("The packet is successfully sent but failed set MAINAUX flag\n");
         }
-    } else{
+    }
+    else
+    {
         LOG("Failed set MAINAUX flag\n");
     }
 }
@@ -1010,15 +1070,28 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
-        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
+    SpecialCommandSetSolutionThresholdResquestAndResponse response;
+    memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+    }
+    catch (std::logic_error& e) {}
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold)
+        {
             LOG("Successfully set solution threshold\n");
-        } else {
+        } 
+        else 
+        {
             LOG("The packet is successfully sent but failed set solution threshold\n");
         }
-    } else{
+    } 
+    else
+    {
         LOG("Failed set solution threshold\n");
     }
 }
@@ -1102,11 +1175,20 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
-        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        
+        SpecialCommandSendTime response;
+        memset(&response, 0, sizeof(SpecialCommandSendTime));
+        try
+        {
+            response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        }
+        catch (std::logic_error& e) {}        
+        
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
-        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
+        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) 
+        {
             LOG("Failed to query node time!\n");
             return;
         }
@@ -1154,11 +1236,20 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
-        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+
+        SpecialCommandSendTime response;
+        memset(&response, 0, sizeof(SpecialCommandSendTime));
+        try
+        {
+            response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        }
+        catch (std::logic_error& e) {}
+
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
-        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) {
+        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) 
+        {
             LOG("Failed to set node time!\n");
             return;
         }
@@ -1184,9 +1275,12 @@ BroadcastComputors readComputorListFromFile(const char* fileName)
                    sizeof(BroadcastComputors) - SIGNATURE_SIZE,
                    digest,
                    32);
-    if (verify(arbPubkey, digest, result.computors.signature)){
+    if (verify(arbPubkey, digest, result.computors.signature))
+    {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } else {
+    } 
+    else 
+    {
         LOG("Computor list is NOT verified\n");
     }
     return result;
@@ -1239,9 +1333,12 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
                    sizeof(BroadcastComputors) - SIGNATURE_SIZE,
                    digest,
                    32);
-    if (verify(arbPubkey, digest, bc.computors.signature)){
+    if (verify(arbPubkey, digest, bc.computors.signature))
+    {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } else {
+    } 
+    else 
+    {
         LOG("Computor list is NOT verified\n");
     }
     FILE* f = fopen(fileName, "wb");
@@ -1253,9 +1350,11 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
     QCPtr qc;
-    try{
+    try
+    {
         qc = make_qc(nodeIp, nodePort);
-    } catch (std::logic_error& e)
+    } 
+    catch (std::logic_error& e)
     {
         return result;
     }
@@ -1274,26 +1373,30 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
         return result;
     }
     auto epp = (ExchangePublicPeers*)(data);
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < 4; i++)
+    {
         if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
         std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
         result.push_back(new_ip);
     }
     return result;
 }
+
 void getNodeIpList(const char* nodeIp, const int nodePort)
 {
     LOG("Fetching node ip list from %s\n", nodeIp);
     std::vector<std::string> result = _getNodeIpList(nodeIp, nodePort);
     int count = 0;
-    for (int i = 0; i < result.size() && count++ < 4; i++){
+    for (int i = 0; i < result.size() && count++ < 4; i++)
+    {
         std::vector<std::string> new_result = _getNodeIpList(result[i].c_str(), nodePort);
         result.insert(result.end(), new_result.begin(), new_result.end());
     }
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     result.erase(last, result.end());
-    for (auto s : result){
+    for (auto s : result)
+    {
         LOG("%s\n", s.c_str());
     }
 }
@@ -1321,10 +1424,13 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
         printQubicLog(logBuffer.data(), logSize);
     }
 }
+
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;
-    for (int i = 0; i < 32; i++){
-        if (e.publicKey[i] != 0){
+    for (int i = 0; i < 32; i++)
+    {
+        if (e.publicKey[i] != 0)
+        {
             is_pubkey_zero = false;
             break;
         }

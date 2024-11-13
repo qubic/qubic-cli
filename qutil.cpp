@@ -63,8 +63,18 @@ long long getSendToManyV1Fee(QCPtr qc)
     packet.rcf.inputType = qutilFunctionId::GetSendToManyV1Fee;
     packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto fee = qc->receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
-    return fee.fee;
+
+    GetSendToManyV1Fee_output fee;
+    memset(&fee, 0, sizeof(GetSendToManyV1Fee_output));
+    try
+    {
+        fee = qc->receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
+        return fee.fee;
+    }
+    catch (std::logic_error& e)
+    {
+        return 0;
+    }
 }
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
