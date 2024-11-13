@@ -26,28 +26,18 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch(std::logic_error& e)
+
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
+    } 
+    catch(std::logic_error& e)
     {
         qc->resolveConnection();
         memset(&result, sizeof(result), 0);
         return result;
     }
 
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_CURRENT_TICK_INFO){
-            auto curTickInfo = (CurrentTickInfo*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curTickInfo;
-        }
-        ptr+= header->size();
-    }
     return result;
 }
 uint32_t getTickNumberFromNode(QCPtr qc)
@@ -84,21 +74,9 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_SYSTEM_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_SYSTEM_INFO){
-            auto curSystemInfo = (CurrentSystemInfo*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curSystemInfo;
-        }
-        ptr+= header->size();
-    }
-    return result;
+
+    // TODO: should this also have try catch?
+    return qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
 }
 void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 {
@@ -159,22 +137,27 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
     for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
     for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    while (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_TRANSACTION){
-            auto tx = (Transaction *)(data + ptr + sizeof(RequestResponseHeader));
+        auto header = (RequestResponseHeader*)buffer;
+        if (header->type() == BROADCAST_TRANSACTION)
+        {
+            recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             txs.push_back(*tx);
+            if (hashes != nullptr || extraData != nullptr || sigs != nullptr)
+            {
+                recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
+            }
             if (hashes != nullptr){
                 TxhashStruct hash;
                 uint8_t digest[32] = {0};
                 char txHash[128] = {0};
-                KangarooTwelve(reinterpret_cast<const uint8_t *>(tx),
+                KangarooTwelve(reinterpret_cast<const uint8_t*>(tx),
                                sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
                                digest,
                                32);
@@ -186,17 +169,17 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 extraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
                 if (tx->inputSize != 0){
-                    memcpy(ed.vecU8.data(), reinterpret_cast<const uint8_t *>(tx) + sizeof(Transaction), tx->inputSize);
+                    memcpy(ed.vecU8.data(), reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction), tx->inputSize);
                 }
                 extraData->push_back(ed);
             }
             if (sigs != nullptr){
                 SignatureStruct sig;
-                memcpy(sig.sig, reinterpret_cast<const uint8_t *>(tx) + sizeof(Transaction) + tx->inputSize, 64);
+                memcpy(sig.sig, reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction) + tx->inputSize, SIGNATURE_SIZE);
                 sigs->push_back(sig);
             }
         }
-        ptr+= header->size();
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
 }
@@ -214,21 +197,8 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     packet.requestTickData.requestedTickData.tick = tick;
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_FUTURE_TICK_DATA){
-            auto curTickData = (TickData*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curTickData;
-        }
-        ptr+= header->size();
-    }
 
+    result = qc->receivePacketWithHeaderAs<TickData>();
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -242,32 +212,17 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     packet.header.setType(REQUEST_TX_STATUS); // REQUEST_TX_STATUS
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
+    RespondTxStatus result;
     try{
-        qc->receiveDataAll(buffer);
+        result = qc->receivePacketWithHeaderAs<RespondTxStatus>();
+        // notice: the node not always return full size of RESPOND_TX_STATUS
+        // it only returns enough digests
+        // -> set remainder in array memory which may contain junk to 0
+        memset(result.txDigests[result.txCount], 0, (NUMBER_OF_TRANSACTIONS_PER_TICK - result.txCount) * 32);
     }
     catch (std::logic_error& e) {
         // it's expected to catch this error on some node that not turn on tx status
         return -1;
-    }
-
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    RespondTxStatus result;
-    memset(&result, 0, sizeof(result));
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_TX_STATUS){
-            // notice: the node not always return full size of RESPOND_TX_STATUS
-            // it only returns enough digests
-            auto ptr_rts = (RespondTxStatus *)(data + ptr + sizeof(RequestResponseHeader));
-            size_t received_size = ptr_rts->size();
-            memcpy(&result, ptr_rts, received_size);
-            break;
-        }
-        ptr+= header->size();
     }
 
     int tx_id = -1;
@@ -355,23 +310,15 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
 
     // Received the respond and print the receipt
     bool receivedTx = false;
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch (std::logic_error& e){
-        qc->resolveConnection();
-        return 2;
-    }
-
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, bufferSize);
+    if (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data + ptr);
+        auto header = (RequestResponseHeader*)buffer;
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
@@ -396,10 +343,8 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
                 receivedTx = true;
                 memcpy(outData, ed.vecU8.data(), tx->inputSize);
                 dataSize = tx->inputSize;
-                break;
             }
         }
-        ptr += header->size();
     }
     if (!receivedTx)
     {
@@ -433,22 +378,15 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
 
     // Received the respond and print the receipt
     bool receivedTx = false;
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch (std::logic_error& e){
-        qc->resolveConnection();
-        return 2;
-    }
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, bufferSize);
+    if (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data + ptr);
+        auto header = (RequestResponseHeader*)(buffer);
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
@@ -472,10 +410,8 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
 
                 receivedTx = true;
                 printReceipt(*tx, respondTxHash, ed.vecU8.data(), -1);
-                break;
             }
         }
-        ptr += header->size();
     }
     if (!receivedTx)
     {
@@ -943,7 +879,6 @@ void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, ui
         LOG("%02x", buffer[i]);
     }
     LOG("\n");
-
 }
 
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command)
@@ -1268,24 +1203,16 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
     packet.header.setType(REQUEST_COMPUTORS);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    bool okay = false;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_COMPUTORS){
-            auto bc = (BroadcastComputors*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *bc;
-            okay = true;
-        }
-        ptr+= header->size();
-    }
 
-    return okay;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<BroadcastComputors>();
+        return true;
+    }
+    catch (std::logic_error& e) 
+    {
+        return false;
+    }
 }
 
 void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName)
@@ -1383,21 +1310,16 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondLog::type()){
-            auto logBuffer = (uint8_t*)(data + ptr + sizeof(RequestResponseHeader));
-            printQubicLog(logBuffer, header->size() - sizeof(RequestResponseHeader));
-        }
-        ptr+= header->size();
-    }
 
+    RequestResponseHeader header;
+    qc->receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+    if (header.type() == RespondLog::type())
+    {
+        unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
+        std::vector<uint8_t> logBuffer(logSize);
+        qc->receiveData(logBuffer.data(), logSize);
+        printQubicLog(logBuffer.data(), logSize);
+    }
 }
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;

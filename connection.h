@@ -12,7 +12,7 @@ public:
 	int receiveData(uint8_t* buffer, int sz);
     int receiveDataBig(uint8_t* buffer, int sz);
 	int sendData(uint8_t* buffer, int sz);
-    void receiveDataAll(std::vector<uint8_t>& buffer);
+    void receiveDataAll(std::vector<uint8_t>& receivedData);
     void getHandshakeData(std::vector<uint8_t>& buffer);
     template <typename T> T receivePacketWithHeaderAs();
     template <typename T> T receivePacketAs();

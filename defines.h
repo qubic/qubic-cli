@@ -4,6 +4,8 @@
 #define DEFAULT_NODE_IP "127.0.0.1"
 #define NUMBER_OF_TRANSACTIONS_PER_TICK 1024
 #define SIGNATURE_SIZE 64
+#define MAX_INPUT_SIZE 1024ULL
+#define MAX_TRANSACTION_SIZE (MAX_INPUT_SIZE + sizeof(Transaction) + SIGNATURE_SIZE)
 #define SPECTRUM_DEPTH 24 // Is derived from SPECTRUM_CAPACITY (=N)
 #define ASSETS_DEPTH 24 // Is derived from ASSETS_CAPACITY (=N)
 #define DEFAULT_SEED "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"

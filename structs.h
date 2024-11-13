@@ -390,6 +390,11 @@ typedef struct
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_OWNED_ASSETS;
+    }
 } RespondOwnedAssets;
 
 typedef struct
@@ -405,6 +410,11 @@ typedef struct
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_POSSESSED_ASSETS;
+    }
 } RespondPossessedAssets;
 
 typedef struct
