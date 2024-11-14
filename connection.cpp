@@ -15,6 +15,11 @@
 
 #include "connection.h"
 #include "logger.h"
+
+// includes for template instantiations
+#include "quottery.h"
+#include "qxStruct.h"
+
 #ifdef _MSC_VER
 static int connect(const char* nodeIp, int nodePort)
 {
@@ -116,24 +121,6 @@ int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
     return count;
 }
 
-//// TODO: remove this function, send/recv size should be known before hand
-//void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
-//{
-//    receivedData.resize(0);
-//    uint8_t tmp[1024];
-//    int recvByte = receiveData(tmp, 1024);
-//    while (recvByte > 0)
-//    {
-//        receivedData.resize(recvByte + receivedData.size());
-//        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
-//        recvByte = receiveData(tmp, 1024);
-//    }
-//    if (receivedData.size() == 0)
-//    {
-//        throw std::logic_error("Error: Did not receive any response from node.");
-//    }
-//}
-
 void QubicConnection::resolveConnection()
 {
     mSocket = connect(mNodeIp, mNodePort);
@@ -233,6 +220,15 @@ template CurrentSystemInfo QubicConnection::receivePacketWithHeaderAs<CurrentSys
 template TickData QubicConnection::receivePacketWithHeaderAs<TickData>();
 template RespondTxStatus QubicConnection::receivePacketWithHeaderAs<RespondTxStatus>();
 template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<BroadcastComputors>();
+template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>();
+template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>();
+template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>();
+template getBetOptionDetail_output QubicConnection::receivePacketWithHeaderAs<getBetOptionDetail_output>();
+template getActiveBet_output QubicConnection::receivePacketWithHeaderAs<getActiveBet_output>();
+template getActiveBetByCreator_output QubicConnection::receivePacketWithHeaderAs<getActiveBetByCreator_output>();
+template QxFees_output QubicConnection::receivePacketWithHeaderAs<QxFees_output>();
+template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetAssetOrder_output>();
+template qxGetEntityOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetEntityOrder_output>();
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 

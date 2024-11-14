@@ -23,9 +23,6 @@ public:
     // Send sz bytes contained in buffer.
 	int sendData(uint8_t* buffer, int sz);
 
-    //// TO BE REMOVED
-    //void receiveDataAll(std::vector<uint8_t>& buffer);
-
     //void receiveDataAll(std::vector<uint8_t>& buffer);
     void getHandshakeData(std::vector<uint8_t>& buffer);
 

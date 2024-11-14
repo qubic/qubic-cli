@@ -397,23 +397,17 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         memcpy(packetInputData, inputPtr, inputSize);
     qc->sendData(&packet[0], packetHeader.size());
 
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data + ptr);
-        if (header->type() == RespondContractFunction::type()) {
-            if (recvByte - ptr - sizeof(RequestResponseHeader) >= outputSize) {
-                memcpy(outputPtr, (data + ptr + sizeof(RequestResponseHeader)), outputSize);
-                return true;
-            }
-        }
-        ptr += header->size();
-    }
+    std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
+    int recvByte = qc->receiveData(buffer.data(), buffer.size());
 
+    auto header = (RequestResponseHeader*)buffer.data();
+    if (header->type() == RespondContractFunction::type() && 
+        recvByte - sizeof(RequestResponseHeader) == outputSize)
+    {
+        memcpy(outputPtr, (buffer.data() + sizeof(RequestResponseHeader)), outputSize);
+        return true;
+    }
+    
     return false;
 }
 
@@ -485,7 +479,6 @@ void makeIPOBid(const char* nodeIp, int nodePort,
 
 RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
     RespondContractIPO result;
-    memset(&result, 0, sizeof(RespondContractIPO));
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -496,19 +489,14 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     packet.header.setType(REQUEST_CONTRACT_IPO);
     packet.req.contractIndex = contractIndex;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_CONTRACT_IPO){
-            auto rcipo = (RespondContractIPO*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *rcipo;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<RespondContractIPO>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(RespondContractIPO));
     }
 
     return result;

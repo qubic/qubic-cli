@@ -44,24 +44,15 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     packet.rcf.inputType = QX_GET_FEE;
     packet.rcf.contractIndex = QX_CONTRACT_INDEX;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    memset(&result, 0, sizeof(result));
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(QxFees_output)){
-                auto fees = (QxFees_output*)(data + ptr + sizeof(RequestResponseHeader));
-                result = *fees;
-            }
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QxFees_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(result));
+    }
 }
 
 void printQxFee(const char* nodeIp, const int nodePort){
@@ -402,22 +393,13 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
     memcpy(&packet.qgao.assetName, assetNameU1, 8);
     packet.qgao.offset = offset;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(qxGetAssetOrder_output)){
-                auto orders = (qxGetAssetOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
-                printAssetOrders(*orders);
-            }
-        }
-        ptr+= header->size();
+        qxGetAssetOrder_output orders = qc->receivePacketWithHeaderAs<qxGetAssetOrder_output>();
+        printAssetOrders(orders);
     }
+    catch (std::logic_error& e) {}
 }
 
 void qxGetAssetAskOrder(const char* nodeIp, int nodePort,
@@ -484,22 +466,13 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
     memcpy(packet.qgeo.entity, entity, 32);
     packet.qgeo.offset = offset;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            if (recvByte - ptr - sizeof(RequestResponseHeader) >= sizeof(qxGetEntityOrder_output)){
-                auto orders = (qxGetEntityOrder_output*)(data + ptr + sizeof(RequestResponseHeader));
-                printEntityOrders(*orders);
-            }
-        }
-        ptr+= header->size();
+        qxGetEntityOrder_output orders = qc->receivePacketWithHeaderAs<qxGetEntityOrder_output>();
+        printEntityOrders(orders);
     }
+    catch (std::logic_error& e) {}
 }
 
 void qxGetEntityAskOrder(const char* nodeIp, int nodePort,

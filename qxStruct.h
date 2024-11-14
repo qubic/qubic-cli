@@ -1,5 +1,7 @@
 #pragma once
 
+#include "structs.h"
+
 struct IssueAsset_input
 {
     uint64_t name;
@@ -97,6 +99,11 @@ struct qxGetAssetOrder_output{
     };
 
     Order orders[256];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
 };
 
 static_assert(sizeof(qxGetAssetOrder_output) == sizeof(AssetAskOrders_output), "wrong implementation");
@@ -118,6 +125,11 @@ struct qxGetEntityOrder_output{
         long long numberOfShares;
     };
     Order orders[256];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
 };
 static_assert(sizeof(qxGetEntityOrder_output) == sizeof(EntityAskOrders_output), "wrong implementation");
 static_assert(sizeof(qxGetEntityOrder_output) == sizeof(EntityBidOrders_output), "wrong implementation");
