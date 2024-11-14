@@ -18,7 +18,6 @@
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
     CurrentTickInfo result;
-    memset(&result, 0, sizeof(CurrentTickInfo));
     struct {
         RequestResponseHeader header;
     } packet;
@@ -38,8 +37,7 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
             qc->resolveConnection();
         }
         catch (std::logic_error& e) {}
-        memset(&result, sizeof(result), 0);
-        return result;
+        memset(&result, 0, sizeof(CurrentTickInfo));
     }
 
     return result;
@@ -72,7 +70,6 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
 CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
 {
     CurrentSystemInfo result;
-    memset(&result, 0, sizeof(CurrentSystemInfo));
     struct {
         RequestResponseHeader header;
     } packet;
@@ -85,7 +82,10 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     {
         result = qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(CurrentSystemInfo));
+    }
 
     return result;
 }
@@ -144,7 +144,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_TICK_TRANSACTIONS); // REQUEST_TICK_TRANSACTIONS
+    packet.header.setType(REQUEST_TICK_TRANSACTIONS);
     packet.txs.tick = requestedTick;
     for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
     for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
@@ -197,7 +197,6 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
 }
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
-    memset(&result, 0, sizeof(TickData));
     static struct
     {
         RequestResponseHeader header;
@@ -214,7 +213,10 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     {
         result = qc->receivePacketWithHeaderAs<TickData>();
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(TickData));
+    }
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -229,7 +231,6 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     RespondTxStatus result;
-    memset(&result, 0, sizeof(RespondTxStatus));
     try
     {
         result = qc->receivePacketWithHeaderAs<RespondTxStatus>();
@@ -240,6 +241,7 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     }
     catch (std::logic_error& e) 
     {
+        memset(&result, 0, sizeof(RespondTxStatus));
         // it's expected to catch this error on some node that not turn on tx status
         return -1;
     }
@@ -949,12 +951,14 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     SpecialCommand response;
-    memset(&response, 0, sizeof(SpecialCommand));
     try
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommand>();
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error& e) 
+    {
+        memset(&response, 0, sizeof(SpecialCommand));
+    }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
     {
@@ -1012,12 +1016,14 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     SpecialCommandToggleMainModeResquestAndResponse response;
-    memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
     try
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error& e) 
+    {
+        memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
+    }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
     {
@@ -1072,12 +1078,14 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
     SpecialCommandSetSolutionThresholdResquestAndResponse response;
-    memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
     try
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error& e) 
+    {
+        memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
+    }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
     {
@@ -1177,12 +1185,14 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
         
         SpecialCommandSendTime response;
-        memset(&response, 0, sizeof(SpecialCommandSendTime));
         try
         {
             response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         }
-        catch (std::logic_error& e) {}        
+        catch (std::logic_error& e) 
+        {
+            memset(&response, 0, sizeof(SpecialCommandSendTime));
+        }        
         
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
@@ -1238,12 +1248,14 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
 
         SpecialCommandSendTime response;
-        memset(&response, 0, sizeof(SpecialCommandSendTime));
         try
         {
             response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         }
-        catch (std::logic_error& e) {}
+        catch (std::logic_error& e) 
+        {
+            memset(&response, 0, sizeof(SpecialCommandSendTime));
+        }
 
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
@@ -1305,6 +1317,7 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
     }
     catch (std::logic_error& e) 
     {
+        memset(&result, 0, sizeof(BroadcastComputors));
         return false;
     }
 }

@@ -1,8 +1,10 @@
 #pragma once
+
 #include "defines.h"
 #include "utils.h"
 #include <cstddef>
 #include <cstring>
+
 enum COMMAND
 {
     SHOW_KEYS = 0,
@@ -213,6 +215,11 @@ typedef struct
     unsigned short numberOfAlignedVotes;
     unsigned short numberOfMisalignedVotes;
     unsigned int initialTick;
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_CURRENT_TICK_INFO;
+    }
 } CurrentTickInfo;
 
 #pragma pack(push, 1)
@@ -243,6 +250,11 @@ typedef struct
     // Entity balances less or euqal this value will be burned if number of entites rises to 75% of spectrum capacity.
     // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
     unsigned long long currentEntityBalanceDustThreshold;
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_SYSTEM_INFO;
+    }
 } CurrentSystemInfo;
 #pragma pack(pop)
 
@@ -265,6 +277,11 @@ typedef struct
     long long contractFees[1024];
 
     unsigned char signature[SIGNATURE_SIZE];
+
+    static constexpr unsigned char type()
+    {
+        return BROADCAST_FUTURE_TICK_DATA;
+    }
 } TickData;
 typedef struct
 {
@@ -428,11 +445,21 @@ typedef struct
 typedef struct
 {
     Computors computors;
+
+    static constexpr unsigned char type()
+    {
+        return BROADCAST_COMPUTORS;
+    }
 } BroadcastComputors;
 
 typedef struct
 {
     unsigned char peers[4][4];
+
+    static constexpr unsigned char type()
+    {
+        return EXCHANGE_PUBLIC_PEERS;
+    }
 } ExchangePublicPeers;
 
 struct RequestLog // Fetches log
@@ -601,6 +628,11 @@ struct RespondTxStatus
     unsigned int size() const
     {
         return offsetof(RespondTxStatus, txDigests) + txCount * 32;
+    }
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_TX_STATUS;
     }
 };
 #pragma pack(pop)

@@ -40,21 +40,15 @@ void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result){
     packet.rcf.inputType = quotteryViewId::fee;
     packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto info = (qtryBasicInfo_output *)(data + ptr + sizeof(RequestResponseHeader));
-            result = *info;
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<qtryBasicInfo_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(qtryBasicInfo_output));
+    }
 }
 
 void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort){
@@ -129,6 +123,7 @@ static void accumulatedDay(int month, uint64_t& res)
         case 12:res = 334; break;
     }
 }
+
 static int dateCompare(uint32_t& A, uint32_t& B, int& i)
 {
     if (A == B) return 0;
@@ -359,6 +354,7 @@ void quotteryJoinBet(const char* nodeIp, int nodePort, const char* seed, uint32_
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
+
 void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBetInfo_output& result){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
@@ -374,22 +370,17 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     packet.rcf.contractIndex = 2;
     packet.input.betId = betId;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto fees = (getBetInfo_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *fees;
-        }
-        ptr+= header->size();
-    }
 
+    try 
+    {
+        result = qc->receivePacketWithHeaderAs<getBetInfo_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(getBetInfo_output));
+    }
 }
+
 void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
 
     getBetInfo_output result;
@@ -459,7 +450,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
     }
 }
 
-//  getBetOptionDetail 3
+// getBetOptionDetail 3
 void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
@@ -476,22 +467,17 @@ void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
     packet.bo_inp.betId = betId;
     packet.bo_inp.betOption = betOption;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto oup = (getBetOptionDetail_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *oup;
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<getBetOptionDetail_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(getBetOptionDetail_output));
+    }
 }
+
 // showing which ID bet for an option
 void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption){
     getBetOptionDetail_output result;
@@ -511,7 +497,8 @@ void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32
         }
     }
 }
-//getActiveBet 4
+
+// getActiveBet 4
 void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_output& result){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
@@ -525,22 +512,17 @@ void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_o
     packet.rcf.inputType = quotteryViewId::activeBet;
     packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto oup = (getActiveBet_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *oup;
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<getActiveBet_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(getActiveBet_output));
+    }
 }
+
 // showing which ID bet for an option
 void quotteryPrintActiveBet(const char* nodeIp, const int nodePort){
     getActiveBet_output result;
@@ -552,8 +534,8 @@ void quotteryPrintActiveBet(const char* nodeIp, const int nodePort){
     }
     LOG("\n");
 }
-//getBetByCreator 5
-//getActiveBet 4
+
+// getBetByCreator 5
 void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getActiveBetByCreator_output& result, const uint8_t* creator){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
@@ -569,21 +551,15 @@ void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getAc
     packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
     memcpy(packet.abi.creator, creator, 32);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto oup = (getActiveBetByCreator_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *oup;
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<getActiveBetByCreator_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(getActiveBetByCreator_output));
+    }
 }
 
 void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, const char* identity){

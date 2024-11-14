@@ -83,7 +83,7 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     // receive handshake - exchange peer packets
     mHandshakeData.resize(sizeof(ExchangePublicPeers));
     uint8_t* data = mHandshakeData.data();
-    *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();
+    *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();   
 }
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
 {
@@ -116,23 +116,23 @@ int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
     return count;
 }
 
-// TODO: remove this function, send/recv size should be known before hand
-void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
-{
-    receivedData.resize(0);
-    uint8_t tmp[1024];
-    int recvByte = receiveData(tmp, 1024);
-    while (recvByte > 0)
-    {
-        receivedData.resize(recvByte + receivedData.size());
-        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
-        recvByte = receiveData(tmp, 1024);
-    }
-    if (receivedData.size() == 0)
-    {
-        throw std::logic_error("Error: Did not receive any response from node.");
-    }
-}
+//// TODO: remove this function, send/recv size should be known before hand
+//void QubicConnection::receiveDataAll(std::vector<uint8_t>& receivedData)
+//{
+//    receivedData.resize(0);
+//    uint8_t tmp[1024];
+//    int recvByte = receiveData(tmp, 1024);
+//    while (recvByte > 0)
+//    {
+//        receivedData.resize(recvByte + receivedData.size());
+//        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
+//        recvByte = receiveData(tmp, 1024);
+//    }
+//    if (receivedData.size() == 0)
+//    {
+//        throw std::logic_error("Error: Did not receive any response from node.");
+//    }
+//}
 
 void QubicConnection::resolveConnection()
 {
@@ -152,10 +152,10 @@ T QubicConnection::receivePacketWithHeaderAs()
     {
         throw std::logic_error("No connection.");
     }
-    //if (header.type() != T::type())
-    //{
-    //    throw std::logic_error("Unexpected header type.");
-    //}
+    if (header.type() != T::type())
+    {
+        throw std::logic_error("Unexpected header type.");
+    }
     int packetSize = header.size();
     T result;
     memset(&result, 0, sizeof(T));
