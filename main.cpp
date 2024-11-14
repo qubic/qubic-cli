@@ -67,6 +67,11 @@ int run(int argc, char* argv[])
                                   g_txExtraData, g_offsetScheduledTick);
 
             break;
+        case GET_TX_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckTxHash(g_requestedTxId);
+            getTxInfo(g_nodeIp, g_nodePort, g_requestedTxId);
+            break;
         case CHECK_TX_ON_TICK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckTxHash(g_requestedTxId);
@@ -178,6 +183,16 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getLogFromNode(g_nodeIp, g_nodePort, g_get_log_passcode);
             break;
+        case UPLOAD_FILE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            uploadFile(g_nodeIp, g_nodePort, g_file_path, g_seed, g_offsetScheduledTick);
+            break;
+        case DOWNLOAD_FILE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            downloadFile(g_nodeIp, g_nodePort, g_requestedTxId, g_file_path);
+            break;
         case DUMP_SPECTRUM_FILE:
             sanityFileExist(g_dump_binary_file_input);
             sanityCheckValidString(g_dump_binary_file_output);
@@ -187,6 +202,11 @@ int run(int argc, char* argv[])
             sanityFileExist(g_dump_binary_file_input);
             sanityCheckValidString(g_dump_binary_file_output);
             dumpUniverseToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
+            break;
+        case DUMP_CONTRACT_FILE:
+            sanityFileExist(g_dump_binary_file_input);
+            sanityCheckValidString(g_dump_binary_file_output);
+            dumpContractToCSV(g_dump_binary_file_input, g_dump_binary_contract_id, g_dump_binary_file_output);
             break;
         case PRINT_QX_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -309,7 +329,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             gqmpropVote(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_voteValueString, g_offsetScheduledTick, g_force);
-            break;            
+            break;
         case GQMPROP_GET_VOTE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             if (g_requestedIdentity)
@@ -326,6 +346,40 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             gqmpropGetRevenueDonationTable(g_nodeIp, g_nodePort);
             break;
+        case CCF_SET_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfSetProposal(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_offsetScheduledTick, g_force);
+            break;
+        case CCF_CLEAR_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfClearProposal(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case CCF_GET_PROPOSALS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case CCF_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            ccfVote(g_nodeIp, g_nodePort, g_seed, g_proposalString, g_voteValueString, g_offsetScheduledTick, g_force);
+            break;
+        case CCF_GET_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            if (g_requestedIdentity)
+                sanityCheckIdentity(g_requestedIdentity);
+            else
+                sanityCheckSeed(g_seed);
+            ccfGetVote(g_nodeIp, g_nodePort, g_proposalString, g_requestedIdentity, g_seed);
+            break;
+        case CCF_GET_VOTING_RESULTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetVotingResults(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case CCF_GET_LATEST_TRANSFERS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetLatestTransfers(g_nodeIp, g_nodePort);
         case QEARN_LOCK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

@@ -19,10 +19,29 @@ void gqmpropGetVote(const char* nodeIp, int nodePort, const char* proposalIndexS
 void gqmpropGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString);
 void gqmpropGetRevenueDonationTable(const char* nodeIp, int nodePort);
 
+void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
+	const char* proposalString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidProposal);
+void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
+	uint32_t scheduledTickOffset);
+void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString);
+void ccfVote(const char* nodeIp, int nodePort, const char* seed,
+	const char* proposalIndexString,
+	const char* voteValueString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidVote);
+void ccfGetVote(const char* nodeIp, int nodePort, const char* proposalIndexString,
+	const char* voterIdentity, const char* voterSeed);
+void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString);
+void ccfGetLatestTransfers(const char* nodeIp, int nodePort);
+
+
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef int64_t sint64;
+typedef uint64_t uint64;
 
 
 constexpr uint16 INVALID_PROPOSAL_INDEX = 0xffff;
@@ -186,17 +205,17 @@ struct ProposalDataV1
 		// Used if type class is Variable and type is not VariableScalarMean
 		struct VariableOptions
 		{
+			uint64 variable;     // For identifying variable (interpreted by contract only)
 			sint64 values[4];    // N first amounts are proposed options sorted without duplicates, rest zero
-			uint16 variable;     // For identifying variable (interpreted by contract only)
 		} variableOptions;
 
 		// Used if type is VariableScalarMean
 		struct VariableScalar
 		{
+			uint64 variable;            // For identifying variable (interpreted by contract only)
 			sint64 minValue;            // Minimum value allowed in proposedValue and votes, must be > NO_VOTE_VALUE
 			sint64 maxValue;            // Maximum value allowed in proposedValue and votes, must be >= minValue
 			sint64 proposedValue;       // Needs to be in range between minValue and maxValue
-			uint16 variable;            // For identifying variable (interpreted by contract only)
 
 			static constexpr sint64 minSupportedValue = 0x8000000000000001;
 			static constexpr sint64 maxSupportedValue = 0x7fffffffffffffff;
@@ -205,3 +224,41 @@ struct ProposalDataV1
 };
 static_assert(sizeof(ProposalDataV1) == 256 + 8 + 64, "Unexpected struct size.");
 
+// Proposal data struct for 2-option proposals (requires less storage space).
+// Input data for contract procedure call, usable as ProposalDataType in ProposalVoting
+struct ProposalDataYesNo
+{
+	// URL explaining proposal, zero-terminated string.
+	uint8 url[256];
+
+	// Epoch, when proposal is active. For setProposal(), 0 means to clear proposal and non-zero means the current epoch.
+	uint16 epoch;
+
+	// Type of proposal, see ProposalTypes.
+	uint16 type;
+
+	// Tick when proposal has been set. Output only, overwritten in setProposal().
+	uint32 tick;
+
+	// Proposal payload data (for all except types with class GeneralProposal)
+	union Data
+	{
+		// Used if type class is Transfer
+		struct Transfer
+		{
+			uint8 destination[32];
+			sint64 amount;		// Amount of proposed option (non-negative)
+		} transfer;
+
+		// Used if type class is Variable and type is not VariableScalarMean
+		struct VariableOptions
+		{
+			uint64 variable;    // For identifying variable (interpreted by contract only)
+			sint64 value;		// Value of proposed option, rest zero
+		} variableOptions;
+	} data;
+
+	// Whether to support scalar votes next to option votes.
+	static constexpr bool supportScalarVotes = false;
+};
+static_assert(sizeof(ProposalDataYesNo) == 256 + 8 + 40, "Unexpected struct size.");

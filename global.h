@@ -26,7 +26,7 @@ char* g_toogle_main_aux_0 = nullptr;
 char* g_toogle_main_aux_1 = nullptr;
 int g_set_solution_threshold_epoch = -1;
 int g_set_solution_threshold_value = -1;
-
+char* g_file_path = nullptr;
 
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;
@@ -55,6 +55,7 @@ char* g_qx_asset_transfer_issuer_in_hex;
 
 char* g_dump_binary_file_input;
 char* g_dump_binary_file_output;
+uint32_t g_dump_binary_contract_id = 0;
 
 //IPO bid
 uint32_t g_ipo_contract_index = 0;
