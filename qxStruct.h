@@ -97,7 +97,6 @@ struct qxGetAssetOrder_output{
         long long price;
         long long numberOfShares;
     };
-
     Order orders[256];
 
     static constexpr unsigned char type()
@@ -133,8 +132,6 @@ struct qxGetEntityOrder_output{
 };
 static_assert(sizeof(qxGetEntityOrder_output) == sizeof(EntityAskOrders_output), "wrong implementation");
 static_assert(sizeof(qxGetEntityOrder_output) == sizeof(EntityBidOrders_output), "wrong implementation");
-
-
 
 struct TransferAssetOwnershipAndPossession_input
 {
@@ -203,6 +200,7 @@ static_assert(sizeof(qxOrderAction_input) == sizeof(RemoveFromAskOrder_input), "
 static_assert(sizeof(qxOrderAction_input) == sizeof(AddToBidOrder_input), "wrong implementation");
 static_assert(sizeof(qxOrderAction_input) == sizeof(AddToAskOrder_input), "wrong implementation");
 
+#pragma pack (push, 8)
 struct QX : ContractBase
 {
     uint64_t _earnedAmount;
@@ -266,6 +264,7 @@ struct QX : ContractBase
         int64_t numberOfShares;
     } _numberOfReservedShares_output;
 };
+#pragma pack (pop)
 
 // Match size between cli and core struct. may be changed in the future
 static constexpr uint64_t QX_STATE_SIZE = 621806120ULL;
