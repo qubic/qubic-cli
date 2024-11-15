@@ -176,6 +176,22 @@ void print_help(){
     printf("\t\tGet the current result of a CCF proposal.\n");
     printf("\t-ccflatesttransfers\n");
     printf("\t\tGet and print latest transfers of CCF granted by quorum.\n");
+
+    printf("\n[QEARN COMMANDS]\n");
+    printf("\t-qearnlock <LOCK_AMOUNT>\n");
+    printf("\t\tlock the qu to Qearn SC.\n");
+    printf("\t-qearnunlock <UNLOCKING_AMOUNT> <LOCKED_EPOCH>\n");
+    printf("\t\tunlock the qu from Qearn SC, unlock the amount of <UNLOCKING_AMOUNT> that locked in the epoch <LOCKED_EPOCH>.\n");
+    printf("\t-qearngetlockinfoperepoch <EPOCH>\n");
+    printf("\t\tGet the info(Total locked amount, Total bonus amount) locked in <EPOCH>.\n");
+    printf("\t-qearngetuserlockedinfo <IDENTITY> <EPOCH>\n");
+    printf("\t\tGet the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.\n");
+    printf("\t-qearngetstateofround <EPOCH>\n");
+    printf("\t\tGet the status(not started, running, ended) of the epoch <EPOCH>.\n");
+    printf("\t-qearngetuserlockstatus <IDENTITY>\n");
+    printf("\t\tGet the status(binary number) that the user locked for 52 weeks.\n");
+    printf("\t-qearngetunlockingstatus <IDENTITY>\n");
+    printf("\t\tGet the unlocking history of the user.\n");
 }
 
 static long long charToNumber(char* a)
