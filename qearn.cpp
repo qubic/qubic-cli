@@ -10,7 +10,7 @@
 #include "K12AndKeyUtil.h"
 #include "qearn.h"
 
-#define QEARN_CONTRACT_INDEX 8
+#define QEARN_CONTRACT_INDEX 9
 
 // QEARN FUNCTIONS
 #define QEARN_GET_LOCK_INFO_PER_EPOCH 1
