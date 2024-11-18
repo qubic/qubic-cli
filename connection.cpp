@@ -12,6 +12,7 @@
 #include <unistd.h>
 #endif
 #include <cstring>
+#include <string>
 
 #include "connection.h"
 #include "logger.h"
@@ -141,7 +142,7 @@ T QubicConnection::receivePacketWithHeaderAs()
     }
     if (header.type() != T::type())
     {
-        throw std::logic_error("Unexpected header type.");
+        throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
     }
     int packetSize = header.size();
     int remainingSize = packetSize - sizeof(RequestResponseHeader);
@@ -196,6 +197,8 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
         }
         catch (std::logic_error& e)
         {
+            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements.").c_str());
+            LOG(e.what());
             break;
         }
     }
