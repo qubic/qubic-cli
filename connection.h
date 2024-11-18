@@ -28,14 +28,14 @@ public:
 
     // Receive data of type T that is preceeded by a header. 
     // May throw std::logic_error.
-    template <typename T> T receivePacketWithHeaderAs();
+    template <typename T> T receivePacketWithHeaderAs(bool skipOtherHeaders = false);
 
     // Receive data of type T without a header. 
     // May throw std::logic_error.
     template <typename T> T receivePacketAs();
 
     // Receive vector data of Ts where each T is preceeded by a header.
-    template <typename T> std::vector<T> getLatestVectorPacketAs();
+    template <typename T> std::vector<T> getLatestVectorPacketAs(bool skipOtherHeaders = false);
 private:
 	char mNodeIp[32];
 	int mNodePort;

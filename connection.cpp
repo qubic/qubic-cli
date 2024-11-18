@@ -131,21 +131,49 @@ void QubicConnection::resolveConnection()
 
 // Receive the next qubic packet with a RequestResponseHeader
 template <typename T>
-T QubicConnection::receivePacketWithHeaderAs()
+T QubicConnection::receivePacketWithHeaderAs(bool skipOtherHeaders)
 {
     // first receive the header
     RequestResponseHeader header;
     int recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-    if (recvByte != sizeof(RequestResponseHeader))
+    int remainingSize;
+    while (true)
     {
-        throw std::logic_error("No connection.");
-    }
-    if (header.type() != T::type())
-    {
-        throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
+        if (recvByte != sizeof(RequestResponseHeader))
+        {
+            throw std::logic_error("No connection.");
+        }
+        if (header.type() != T::type())
+        {
+            if (skipOtherHeaders)
+            {
+                remainingSize = header.size() - sizeof(RequestResponseHeader);
+                if (remainingSize)
+                {
+                    if (remainingSize > 4096)
+                    {
+                        receiveDataBig(mBuffer, remainingSize);
+                    }
+                    else
+                    {
+                        receiveData(mBuffer, remainingSize);
+                    }
+                }
+                // receive next header
+                recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+            }
+            else
+            {
+                throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
+            }
+        }
+        else
+        {
+            break;
+        }
     }
     int packetSize = header.size();
-    int remainingSize = packetSize - sizeof(RequestResponseHeader);
+    remainingSize = packetSize - sizeof(RequestResponseHeader);
     T result;
     memset(&result, 0, sizeof(T));
     if (remainingSize)
@@ -160,10 +188,10 @@ T QubicConnection::receivePacketWithHeaderAs()
         {
             recvByte = receiveData(mBuffer, remainingSize);
         }
-        if (recvByte != remainingSize)
-        {
-            throw std::logic_error("Unexpected data size.");
-        }
+        //if (recvByte != remainingSize)
+        //{
+        //    throw std::logic_error("Unexpected data size.");
+        //}
         result = *((T*)mBuffer);
     }
     return result;
@@ -186,18 +214,18 @@ T QubicConnection::receivePacketAs()
 }
 
 template <typename T>
-std::vector<T> QubicConnection::getLatestVectorPacketAs()
+std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
 {
     std::vector<T> results;
     while (true)
     {
         try
         {
-            results.push_back(receivePacketWithHeaderAs<T>());
+            results.push_back(receivePacketWithHeaderAs<T>(skipOtherHeaders));
         }
         catch (std::logic_error& e)
         {
-            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements.").c_str());
+            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements. ").c_str());
             LOG(e.what());
             break;
         }
@@ -221,28 +249,28 @@ int QubicConnection::sendData(uint8_t* buffer, int sz)
 	return sz - size;
 }
 
-template SpecialCommand QubicConnection::receivePacketWithHeaderAs<SpecialCommand>();
-template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
-template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
-template SpecialCommandSendTime QubicConnection::receivePacketWithHeaderAs<SpecialCommandSendTime>();
-template GetSendToManyV1Fee_output QubicConnection::receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
-template CurrentTickInfo QubicConnection::receivePacketWithHeaderAs<CurrentTickInfo>();
-template CurrentSystemInfo QubicConnection::receivePacketWithHeaderAs<CurrentSystemInfo>();
-template TickData QubicConnection::receivePacketWithHeaderAs<TickData>();
-template RespondTxStatus QubicConnection::receivePacketWithHeaderAs<RespondTxStatus>();
-template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<BroadcastComputors>();
-template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>();
-template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>();
-template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>();
-template getBetOptionDetail_output QubicConnection::receivePacketWithHeaderAs<getBetOptionDetail_output>();
-template getActiveBet_output QubicConnection::receivePacketWithHeaderAs<getActiveBet_output>();
-template getActiveBetByCreator_output QubicConnection::receivePacketWithHeaderAs<getActiveBetByCreator_output>();
-template QxFees_output QubicConnection::receivePacketWithHeaderAs<QxFees_output>();
-template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetAssetOrder_output>();
-template qxGetEntityOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetEntityOrder_output>();
+template SpecialCommand QubicConnection::receivePacketWithHeaderAs<SpecialCommand>(bool skipOtherHeaders);
+template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>(bool skipOtherHeaders);
+template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>(bool skipOtherHeaders);
+template SpecialCommandSendTime QubicConnection::receivePacketWithHeaderAs<SpecialCommandSendTime>(bool skipOtherHeaders);
+template GetSendToManyV1Fee_output QubicConnection::receivePacketWithHeaderAs<GetSendToManyV1Fee_output>(bool skipOtherHeaders);
+template CurrentTickInfo QubicConnection::receivePacketWithHeaderAs<CurrentTickInfo>(bool skipOtherHeaders);
+template CurrentSystemInfo QubicConnection::receivePacketWithHeaderAs<CurrentSystemInfo>(bool skipOtherHeaders);
+template TickData QubicConnection::receivePacketWithHeaderAs<TickData>(bool skipOtherHeaders);
+template RespondTxStatus QubicConnection::receivePacketWithHeaderAs<RespondTxStatus>(bool skipOtherHeaders);
+template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<BroadcastComputors>(bool skipOtherHeaders);
+template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>(bool skipOtherHeaders);
+template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>(bool skipOtherHeaders);
+template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>(bool skipOtherHeaders);
+template getBetOptionDetail_output QubicConnection::receivePacketWithHeaderAs<getBetOptionDetail_output>(bool skipOtherHeaders);
+template getActiveBet_output QubicConnection::receivePacketWithHeaderAs<getActiveBet_output>(bool skipOtherHeaders);
+template getActiveBetByCreator_output QubicConnection::receivePacketWithHeaderAs<getActiveBetByCreator_output>(bool skipOtherHeaders);
+template QxFees_output QubicConnection::receivePacketWithHeaderAs<QxFees_output>(bool skipOtherHeaders);
+template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetAssetOrder_output>(bool skipOtherHeaders);
+template qxGetEntityOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetEntityOrder_output>(bool skipOtherHeaders);
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 
-template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();
-template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>();
-template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>();
+template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>(bool skipOtherHeaders);
+template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>(bool skipOtherHeaders);
+template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>(bool skipOtherHeaders);
