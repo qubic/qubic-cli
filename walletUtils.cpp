@@ -2,6 +2,7 @@
 #include <thread>
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
 #include "utils.h"
 #include "nodeUtils.h"
 #include "keyUtils.h"
@@ -496,6 +497,7 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     }
     catch (std::logic_error& e)
     {
+        LOG(e.what());
         memset(&result, 0, sizeof(RespondContractIPO));
     }
 

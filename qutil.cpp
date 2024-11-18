@@ -73,6 +73,7 @@ long long getSendToManyV1Fee(QCPtr qc)
     }
     catch (std::logic_error& e)
     {
+        LOG(e.what());
         return 0;
     }
 }

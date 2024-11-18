@@ -144,14 +144,22 @@ T QubicConnection::receivePacketWithHeaderAs()
         throw std::logic_error("Unexpected header type.");
     }
     int packetSize = header.size();
+    int remainingSize = packetSize - sizeof(RequestResponseHeader);
     T result;
     memset(&result, 0, sizeof(T));
-    if (packetSize - sizeof(RequestResponseHeader))
+    if (remainingSize)
     {
-        memset(mBuffer, 0, packetSize - sizeof(RequestResponseHeader));
+        memset(mBuffer, 0, remainingSize);
         // receive the rest
-        recvByte = receiveData(mBuffer, packetSize - sizeof(RequestResponseHeader));
-        if (recvByte != packetSize - sizeof(RequestResponseHeader))
+        if (remainingSize > 4096)
+        {
+            recvByte = receiveDataBig(mBuffer, remainingSize);
+        }
+        else
+        {
+            recvByte = receiveData(mBuffer, remainingSize);
+        }
+        if (recvByte != remainingSize)
         {
             throw std::logic_error("Unexpected data size.");
         }
