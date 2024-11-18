@@ -115,9 +115,9 @@ int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
     while (sz)
     {
         int chunk = (std::min)(sz, 1024);
-        int received_byte = receiveData(buffer + count, chunk);
-        count += received_byte;
-        sz -= received_byte;
+        int recvByte = receiveData(buffer + count, chunk);
+        count += recvByte;
+        sz -= recvByte;
     }
     return count;
 }
@@ -188,10 +188,10 @@ T QubicConnection::receivePacketWithHeaderAs(bool skipOtherHeaders)
         {
             recvByte = receiveData(mBuffer, remainingSize);
         }
-        //if (recvByte != remainingSize)
-        //{
-        //    throw std::logic_error("Unexpected data size.");
-        //}
+        if (recvByte != remainingSize)
+        {
+            throw std::logic_error("Unexpected data size.");
+        }
         result = *((T*)mBuffer);
     }
     return result;
