@@ -453,7 +453,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId){
 }
 
 // getBetOptionDetail 3
-void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result){
+bool quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption, getBetOptionDetail_output& result){
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -473,11 +473,13 @@ void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
     try
     {
         result = qc->receivePacketWithHeaderAs<getBetOptionDetail_output>();
+        return true;
     }
     catch (std::logic_error& e)
     {
         LOG(e.what());
         memset(&result, 0, sizeof(getBetOptionDetail_output));
+        return false;
     }
 }
 
@@ -485,8 +487,8 @@ void quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
 void quotteryPrintBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t betId, uint32_t betOption){
     getBetOptionDetail_output result;
     memset(&result, 0, sizeof(getBetOptionDetail_output));
-    quotteryGetBetOptionDetail(nodeIp, nodePort, betId, betOption, result);
-    if (isArrayZero((uint8_t*)&result, sizeof(getBetOptionDetail_output))){
+    if (!quotteryGetBetOptionDetail(nodeIp, nodePort, betId, betOption, result))
+    {
         LOG("Failed to get\n");
         return;
     }
