@@ -216,22 +216,52 @@ T QubicConnection::receivePacketAs()
 template <typename T>
 std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
 {
-    std::vector<T> results;
-    while (true)
+    std::vector<uint8_t> receivedData;
+    receivedData.resize(0);
+    uint8_t tmp[1024];
+    int recvByte = receiveData(tmp, 1024);
+    while (recvByte > 0)
     {
-        try
-        {
-            results.push_back(receivePacketWithHeaderAs<T>(skipOtherHeaders));
+        receivedData.resize(recvByte + receivedData.size());
+        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
+        recvByte = receiveData(tmp, 1024);
+    }
+
+    recvByte = receivedData.size();
+    uint8_t* data = receivedData.data();
+    int ptr = 0;
+    std::vector<T> results;
+    while (ptr < recvByte)
+    {
+        auto header = (RequestResponseHeader*)(data + ptr);
+        if (header->type() == T::type()) {
+            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
+            results.push_back(*dataT);
         }
-        catch (std::logic_error& e)
-        {
-            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements. ").c_str());
-            LOG(e.what());
-            break;
-        }
+        ptr += header->size();
     }
     return results;
 }
+
+//template <typename T>
+//std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
+//{
+//    std::vector<T> results;
+//    while (true)
+//    {
+//        try
+//        {
+//            results.push_back(receivePacketWithHeaderAs<T>(skipOtherHeaders));
+//        }
+//        catch (std::logic_error& e)
+//        {
+//            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements. ").c_str());
+//            LOG(e.what());
+//            break;
+//        }
+//    }
+//    return results;
+//}
 
 int QubicConnection::sendData(uint8_t* buffer, int sz)
 {
