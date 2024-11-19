@@ -9,6 +9,7 @@
 #include "nodeUtils.h"
 #include "K12AndKeyUtil.h"
 #include "qearn.h"
+#include "nodeUtils.cpp"
 
 #define QEARN_CONTRACT_INDEX 9
 
@@ -348,12 +349,18 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
         ptr+= header->size();
     }
 
-    printf("binary result: %llu\n", result.status);
+    printf("binary result: %llu\nThe number of locked epoch is as follows.\n ", result.status);
+    auto curSystemInfo = getSystemInfoFromNode(qc);
+    uint32_t curEpoch = curSystemInfo.epoch;
 
     uint64_t bn = 1;
 
     for(uint64_t i = 0 ; i <= 52; i++) {
-        printf("%d weeks ago: %llu\n", i,  ((result.status & bn) != 0));
+        if(result.status & bn != 0)
+        {
+            printf("%d ", curEpoch);
+        }
+        curEpoch--;
         bn *= 2;
     }
 
