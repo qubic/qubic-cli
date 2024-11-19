@@ -355,9 +355,9 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
     uint64_t bn = 1;
 
     for(uint64_t i = 0 ; i <= 52; i++) {
-        if(result.status & bn != 0)
+        if(result.status & bn)
         {
-            printf("%d ", curEpoch);
+            printf("%u ", curEpoch);
         }
         curEpoch--;
         bn *= 2;
