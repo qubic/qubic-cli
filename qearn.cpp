@@ -348,7 +348,7 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
         ptr+= header->size();
     }
 
-    printf("binary result: %llu\nThe number of locked epoch is as follows.\n ", result.status);
+    printf("binary result: %llu\nThe number of locked epoch is as follows.\n", result.status);
     auto curSystemInfo = getSystemInfoFromNode(qc);
     uint32_t curEpoch = curSystemInfo.epoch;
 
@@ -362,7 +362,7 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
         curEpoch--;
         bn *= 2;
     }
-
+    printf("\n");
 }
 
 void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity){
