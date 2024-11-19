@@ -1,7 +1,11 @@
 #pragma once
+
 #include "connection.h"
+#include "structs.h"
+
 void printTickInfoFromNode(const char* nodeIp, int nodePort);
 void printSystemInfoFromNode(const char* nodeIp, int nodePort);
+CurrentSystemInfo getSystemInfoFromNode(QCPtr qc);
 uint32_t getTickNumberFromNode(QCPtr qc);
 bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick);
 void downloadFile(const char* nodeIp, const int nodePort, const char* trailer, const char* outFilePath);

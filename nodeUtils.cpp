@@ -73,7 +73,7 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
     }
 }
 
-static CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
+CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
 {
     CurrentSystemInfo result;
     memset(&result, 0, sizeof(CurrentSystemInfo));
