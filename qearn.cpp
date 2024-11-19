@@ -9,7 +9,6 @@
 #include "nodeUtils.h"
 #include "K12AndKeyUtil.h"
 #include "qearn.h"
-#include "nodeUtils.cpp"
 
 #define QEARN_CONTRACT_INDEX 9
 
