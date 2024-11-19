@@ -108,7 +108,6 @@ void qearnLock(const char* nodeIp, int nodePort, const char* seed, long long loc
     } packet;
     packet.transaction.amount = lock_amount;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    for(uint8_t i = 0 ; i < 32; i++) printf("%u ", sourcePublicKey[i]); printf("\n");
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
