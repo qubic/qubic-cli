@@ -7,6 +7,7 @@
 #include "logger.h"
 
 #include <iostream>
+#include <string>
 
 void dumpQxContractToCSV(const char* input, const char* output)
 {

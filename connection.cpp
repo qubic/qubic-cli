@@ -102,7 +102,7 @@ int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
 {
     int count = 0;
     while (sz){
-        int chunk = std::min(sz, 1024);
+        int chunk = (std::min)(sz, 1024);
         int received_byte = receiveData(buffer + count, chunk);
         count += received_byte;
         sz -= received_byte;
