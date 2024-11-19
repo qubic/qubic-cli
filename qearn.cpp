@@ -225,7 +225,7 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
         }
         ptr+= header->size();
     }
-    printf("initial bonus amount:%llu\ninitial locked amount:%llu\ncurrent bonus amount: %llu\ncurrent locked amount:%llu\nyield:%llu%", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, result.Yield / 100000);
+    printf("initial bonus amount:  %llu\ninitial locked amount: %llu\ncurrent bonus amount:  %llu\ncurrent locked amount: %llu\nyield: %.6f%%", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, double(result.Yield) / 100000.0);
 }
 
 void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch){

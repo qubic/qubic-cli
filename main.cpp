@@ -382,10 +382,12 @@ int run(int argc, char* argv[])
             ccfGetLatestTransfers(g_nodeIp, g_nodePort);
         case QEARN_LOCK:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             qearnLock(g_nodeIp, g_nodePort, g_seed, g_qearn_lock_amount, g_offsetScheduledTick);
             break;
         case QEARN_UNLOCK:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             qearnUnlock(g_nodeIp, g_nodePort, g_seed, g_qearn_unlock_amount, g_qearn_locked_epoch, g_offsetScheduledTick);
             break;
         case QEARN_GET_INFO_PER_EPOCH:
