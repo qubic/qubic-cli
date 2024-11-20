@@ -237,6 +237,11 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
         if (header->type() == T::type()) {
             auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
             results.push_back(*dataT);
+            LOG(("Read one header of type T (" + std::to_string(header->type()) + "), size " + std::to_string(header->size()) + "\n").c_str());
+        }
+        else
+        {
+            LOG(("Skipping one header of type " + std::to_string(header->type()) + ", size " + std::to_string(header->size()) + "\n").c_str());
         }
         ptr += header->size();
     }
