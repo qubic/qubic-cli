@@ -136,49 +136,23 @@ T QubicConnection::receivePacketWithHeaderAs(bool skipOtherHeaders)
     // first receive the header
     RequestResponseHeader header;
     int recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-    int remainingSize;
-    while (true)
+    if (recvByte != sizeof(RequestResponseHeader))
     {
-        if (recvByte != sizeof(RequestResponseHeader))
-        {
-            throw std::logic_error("No connection.");
-        }
-        if (header.type() != T::type())
-        {
-            if (skipOtherHeaders)
-            {
-                remainingSize = header.size() - sizeof(RequestResponseHeader);
-                if (remainingSize)
-                {
-                    if (remainingSize > 4096)
-                    {
-                        receiveDataBig(mBuffer, remainingSize);
-                    }
-                    else
-                    {
-                        receiveData(mBuffer, remainingSize);
-                    }
-                }
-                // receive next header
-                recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-            }
-            else
-            {
-                throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
-            }
-        }
-        else
-        {
-            break;
-        }
+        throw std::logic_error("No connection.");
     }
+    if (header.type() != T::type())
+    {
+        throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
+    }
+    
     int packetSize = header.size();
-    remainingSize = packetSize - sizeof(RequestResponseHeader);
+    int remainingSize = packetSize - sizeof(RequestResponseHeader);
+    LOG(("Receiving remaining " + std::to_string(remainingSize) + " bytes...").c_str());
     T result;
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
-        memset(mBuffer, 0, remainingSize);
+        memset(mBuffer, 0, sizeof(T));
         // receive the rest
         if (remainingSize > 4096)
         {
@@ -190,7 +164,7 @@ T QubicConnection::receivePacketWithHeaderAs(bool skipOtherHeaders)
         }
         if (recvByte != remainingSize)
         {
-            throw std::logic_error("Unexpected data size.");
+            throw std::logic_error(("Unexpected data size: received only " + std::to_string(recvByte) + " bytes instead of " + std::to_string(remainingSize)).c_str());
         }
         result = *((T*)mBuffer);
     }
@@ -213,60 +187,60 @@ T QubicConnection::receivePacketAs()
     return result;
 }
 
-template <typename T>
-std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
-{
-    std::vector<uint8_t> receivedData;
-    receivedData.resize(0);
-    uint8_t tmp[1024];
-    int recvByte = receiveData(tmp, 1024);
-    while (recvByte > 0)
-    {
-        receivedData.resize(recvByte + receivedData.size());
-        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
-        recvByte = receiveData(tmp, 1024);
-    }
-
-    recvByte = receivedData.size();
-    uint8_t* data = receivedData.data();
-    int ptr = 0;
-    std::vector<T> results;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data + ptr);
-        if (header->type() == T::type()) {
-            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
-            results.push_back(*dataT);
-            LOG(("Read one header of type T (" + std::to_string(header->type()) + "), size " + std::to_string(header->size()) + "\n").c_str());
-        }
-        else
-        {
-            LOG(("Skipping one header of type " + std::to_string(header->type()) + ", size " + std::to_string(header->size()) + "\n").c_str());
-        }
-        ptr += header->size();
-    }
-    return results;
-}
-
 //template <typename T>
 //std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
 //{
-//    std::vector<T> results;
-//    while (true)
+//    std::vector<uint8_t> receivedData;
+//    receivedData.resize(0);
+//    uint8_t tmp[1024];
+//    int recvByte = receiveData(tmp, 1024);
+//    while (recvByte > 0)
 //    {
-//        try
-//        {
-//            results.push_back(receivePacketWithHeaderAs<T>(skipOtherHeaders));
+//        receivedData.resize(recvByte + receivedData.size());
+//        memcpy(receivedData.data() + receivedData.size() - recvByte, tmp, recvByte);
+//        recvByte = receiveData(tmp, 1024);
+//    }
+//
+//    recvByte = receivedData.size();
+//    uint8_t* data = receivedData.data();
+//    int ptr = 0;
+//    std::vector<T> results;
+//    while (ptr < recvByte)
+//    {
+//        auto header = (RequestResponseHeader*)(data + ptr);
+//        if (header->type() == T::type()) {
+//            auto dataT = (T*)(data + ptr + sizeof(RequestResponseHeader));
+//            results.push_back(*dataT);
+//            LOG(("Read one header of type T (" + std::to_string(header->type()) + "), size " + std::to_string(header->size()) + "\n").c_str());
 //        }
-//        catch (std::logic_error& e)
+//        else
 //        {
-//            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements. ").c_str());
-//            LOG(e.what());
-//            break;
+//            LOG(("Skipping one header of type " + std::to_string(header->type()) + ", size " + std::to_string(header->size()) + "\n").c_str());
 //        }
+//        ptr += header->size();
 //    }
 //    return results;
 //}
+
+template <typename T>
+std::vector<T> QubicConnection::getLatestVectorPacketAs(bool skipOtherHeaders)
+{
+    std::vector<T> results;
+    while (true)
+    {
+        try
+        {
+            results.push_back(receivePacketWithHeaderAs<T>(skipOtherHeaders));
+        }
+        catch (std::logic_error& e)
+        {
+            LOG(("getLatestVectorPacketAs ended after receiving " + std::to_string(results.size()) + " elements. ").c_str());
+            LOG(e.what());
+            break;
+        }
+    }
+    return results;
+}
 
 int QubicConnection::sendData(uint8_t* buffer, int sz)
 {
