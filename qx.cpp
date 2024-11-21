@@ -52,7 +52,6 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(result));
     }
 }
@@ -401,10 +400,7 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
         qxGetAssetOrder_output orders = qc->receivePacketWithHeaderAs<qxGetAssetOrder_output>();
         printAssetOrders(orders);
     }
-    catch (std::logic_error& e) 
-    {
-        LOG(e.what());
-    }
+    catch (std::logic_error& e) {}
 }
 
 void qxGetAssetAskOrder(const char* nodeIp, int nodePort,
@@ -477,10 +473,7 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
         qxGetEntityOrder_output orders = qc->receivePacketWithHeaderAs<qxGetEntityOrder_output>();
         printEntityOrders(orders);
     }
-    catch (std::logic_error& e) 
-    {
-        LOG(e.what());
-    }
+    catch (std::logic_error& e) {}
 }
 
 void qxGetEntityAskOrder(const char* nodeIp, int nodePort,

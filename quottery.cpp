@@ -47,7 +47,6 @@ void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result){
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(qtryBasicInfo_output));
     }
 }
@@ -378,7 +377,6 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(getBetInfo_output));
     }
 }
@@ -477,7 +475,6 @@ bool quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(getBetOptionDetail_output));
         return false;
     }
@@ -524,7 +521,6 @@ void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_o
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(getActiveBet_output));
     }
 }
@@ -564,7 +560,6 @@ void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getAc
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(getActiveBetByCreator_output));
     }
 }

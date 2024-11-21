@@ -32,7 +32,6 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     } 
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(CurrentTickInfo));
     }
 
@@ -80,7 +79,6 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(CurrentSystemInfo));
     }
 
@@ -212,7 +210,6 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(TickData));
     }
 }
@@ -239,7 +236,6 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(RespondTxStatus));
         // it's expected to catch this error on some node that not turn on tx status
         return -1;
@@ -956,7 +952,6 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommand));
     }
 
@@ -1022,7 +1017,6 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
     }
 
@@ -1085,7 +1079,6 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
     }
 
@@ -1193,7 +1186,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
         catch (std::logic_error& e) 
         {
-            LOG(e.what());
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }        
         
@@ -1257,7 +1249,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
         catch (std::logic_error& e) 
         {
-            LOG(e.what());
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }
 
@@ -1321,7 +1312,6 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
     }
     catch (std::logic_error& e) 
     {
-        LOG(e.what());
         memset(&result, 0, sizeof(BroadcastComputors));
         return false;
     }
