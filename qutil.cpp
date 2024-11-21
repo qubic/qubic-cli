@@ -73,7 +73,8 @@ long long getSendToManyV1Fee(QCPtr qc)
     }
     catch (std::logic_error& e)
     {
-        return 0;
+        LOG(e.what());
+        return -1;
     }
 }
 
@@ -119,6 +120,8 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
         packet.transaction.amount += amounts[i];
     }
     long long fee = getSendToManyV1Fee(qc);
+    if (fee == -1)
+        return;
     LOG("Send to many V1 fee: %lld\n", fee);
     packet.transaction.amount += fee; // fee
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);

@@ -952,7 +952,9 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
     catch (std::logic_error& e)
     {
+        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommand));
+        return;
     }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
@@ -1428,7 +1430,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     {
         unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
         std::vector<uint8_t> logBuffer(logSize);
-        qc->receiveData(logBuffer.data(), logSize);
+        qc->receiveDataBig(logBuffer.data(), logSize);
         printQubicLog(logBuffer.data(), logSize);
     }
 }
@@ -1618,7 +1620,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
         contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
     }
     if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
-        LOG("Failed to get mining score ranking! everIncreasingNonceAndCommandType is mismatched: want %016lx | have %016lx\n", packet.cmd.everIncreasingNonceAndCommandType, response.everIncreasingNonceAndCommandType);
+        LOG("Failed to get mining score ranking!\n");
         return;
     }
     if (contentSize < 676 * 36)
