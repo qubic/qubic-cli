@@ -147,7 +147,7 @@ T QubicConnection::receivePacketWithHeaderAs(bool skipOtherHeaders)
     
     int packetSize = header.size();
     int remainingSize = packetSize - sizeof(RequestResponseHeader);
-    LOG(("Receiving remaining " + std::to_string(remainingSize) + " bytes...\n").c_str());
+    LOG(("Found header of type " + std::to_string(header.type()) + ". Receiving remaining " + std::to_string(remainingSize) + " bytes...\n").c_str());
     T result;
     memset(&result, 0, sizeof(T));
     if (remainingSize)
