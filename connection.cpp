@@ -167,7 +167,7 @@ T QubicConnection::receivePacketWithHeaderAs()
         }
         if (remainingSize)
         {
-            throw std::logic_error(("Unexpected data size: missing " + std::to_string(remainingSize) + " bytes, expected a total of " + std::to_string(packetSize) + " bytes (incl. header).").c_str());
+            throw std::logic_error("Unexpected data size: missing " + std::to_string(remainingSize) + " bytes, expected a total of " + std::to_string(packetSize) + " bytes (incl. header).");
         }
         result = *((T*)mBuffer);
     }

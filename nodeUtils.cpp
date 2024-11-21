@@ -950,7 +950,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommand>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error& e)
     {
         memset(&response, 0, sizeof(SpecialCommand));
     }
