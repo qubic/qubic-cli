@@ -610,13 +610,13 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     packet.rqt.tick = requestedTick;
     memset(packet.rqt.voteFlags, 0, (676 + 7) / 8);
     qc->sendData(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
-    auto votes = qc->getLatestVectorPacketAs<Tick>(/*skipOtherHeaders=*/true);
+    auto votes = qc->getLatestVectorPacketAs<Tick>();
     LOG("Received %d quorum tick #%u (votes)\n", votes.size(), requestedTick);
 
     packet.rqt.tick = requestedTick+1;
     memset(packet.rqt.voteFlags, 0, (676 + 7) / 8);
     qc->sendData(reinterpret_cast<uint8_t *>(&packet), sizeof(packet));
-    auto votes_next = qc->getLatestVectorPacketAs<Tick>(/*skipOtherHeaders=*/true);
+    auto votes_next = qc->getLatestVectorPacketAs<Tick>();
     LOG("Received %d quorum tick #%u (votes)\n", votes_next.size(), requestedTick+1);
 
     int N = votes.size();
