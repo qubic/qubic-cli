@@ -165,6 +165,23 @@ Command:
 		Get the current result of a CCF proposal.
 	-ccflatesttransfers
 		Get and print latest transfers of CCF granted by quorum.
+
+[QEARN COMMAND]
+
+	-qearnlock <LOCK_AMOUNT>
+		lock the qu to Qearn SC.
+	-qearnunlock <UNLOCKING_AMOUNT> <LOCKED_EPOCH>
+		unlock the qu from Qearn SC, unlock the amount of <UNLOCKING_AMOUNT> that locked in the epoch <LOCKED_EPOCH>.
+	-qearngetlockinfoperepoch <EPOCH>
+		Get the info(Total locked amount, Total bonus amount) locked in <EPOCH>.
+	-qearngetuserlockedinfo <IDENTITY> <EPOCH>
+		Get the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.
+	-qearngetstateofround <EPOCH>
+		Get the status(not started, running, ended) of the epoch <EPOCH>.
+	-qearngetuserlockstatus <IDENTITY>
+		Get the status(binary number) that the user locked for 52 weeks.
+	-qearngetunlockingstatus <IDENTITY>
+		Get the unlocking history of the user.
 ```
 
 ### BUILD

@@ -72,3 +72,9 @@ uint32_t g_quottery_picked_option;
 char* g_qutil_sendtomanyv1_payout_list_file = nullptr;
 
 uint64_t g_get_log_passcode[4] = {0};
+
+//qearn
+uint64_t g_qearn_lock_amount;
+uint64_t g_qearn_unlock_amount;
+uint32_t g_qearn_locked_epoch;
+uint32_t g_qearn_getinfo_epoch;
