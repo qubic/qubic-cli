@@ -13,6 +13,7 @@
 #include "qx.h"
 #include "proposal.h"
 #include "qearn.h"
+#include "qvault.h"
 
 int run(int argc, char* argv[])
 {
@@ -409,6 +410,58 @@ int run(int argc, char* argv[])
         case QEARN_GET_UNLOCKING_STATUS:
             sanityCheckNode(g_nodeIp, g_nodePort);
             qearnGetEndedStatus(g_nodeIp, g_nodePort, g_requestedIdentity);
+            break;
+        case QVAULT_SUBMIT_AUTH_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_CHANGE_AUTH_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            changeAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_numberOfChangedAddress);
+            break;
+        case QVAULT_SUBMIT_FEES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolder_fee, g_qvault_newreinvesting_fee, g_qvault_newdev_fee);
+            break;
+        case QVAULT_CHANGE_FEES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            changeFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolder_fee, g_qvault_newreinvesting_fee, g_qvault_newdev_fee);
+            break;
+        case QVAULT_SUBMIT_REINVESTING_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitReinvestingAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_CHANGE_REINVESTING_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            changeReinvestingAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_SUBMIT_ADMIN_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitAdminAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_CHANGE_ADMIN_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            changeAdminAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_GET_DATA:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getData(g_nodeIp, g_nodePort);
+            break;
+        case QVAULT_SUBMIT_BANNED_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitBannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_SAVE_BANNED_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            saveBannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_SUBMIT_UNBANNED_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            submitUnbannedannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            break;
+        case QVAULT_SAVE_UNBANNED_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            saveUnbannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
             break;
 
         default:

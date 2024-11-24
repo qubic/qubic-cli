@@ -182,6 +182,35 @@ Command:
 		Get the status(binary number) that the user locked for 52 weeks.
 	-qearngetunlockingstatus <IDENTITY>
 		Get the unlocking history of the user.
+
+[QVAULT COMMAND]
+
+	-qvaultsubmitauthaddress <NEW_ADDRESS>
+		Submit the new authaddress using multisig address.
+	-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>
+		Change the authaddress using multisig address. <NUMBER_OF_CHANGED_ADDRESS> is the one of (1, 2, 3).
+	-qvaultsubmitfees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>
+		Submit the new permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. 
+	-qvaultchangefees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>
+		Change the permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. Get the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.
+	-qvaultsubmitreinvestingaddress <NEW_ADDRESS>
+		Submit the new reinvesting address using multisig address. 
+	-qvaultchangereinvestingaddress <NEW_ADDRESS>
+		Change the address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitreinvestingaddress command.
+	-qvaultsubmitadminaddress <NEW_ADDRESS>
+		Submit the admin address using multisig address.
+	-qvaultchangeadminaddress <NEW_ADDRESS>
+		Change the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.
+	-qvaultgetdata <ANY_NUMBER>
+		Get the state data of smart contract. anyone can check the changes after using the any command. <ANY_NUMBER> is the any number of (0~9).
+	-qvaultsubmitbannedaddress <NEW_ADDRESS>
+		Submit the banned address using multisig address.
+	-qvaultsavebannedaddress <NEW_ADDRESS>
+		Save the banned address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitbannedaddress command.
+	-qvaultsubmitunbannedaddress <NEW_ADDRESS>
+		Submit the unbanned address using multisig address.
+	-qvaultsaveunbannedaddress <NEW_ADDRESS>
+		Unban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.
 ```
 
 ### BUILD
