@@ -78,3 +78,10 @@ uint64_t g_qearn_lock_amount;
 uint64_t g_qearn_unlock_amount;
 uint32_t g_qearn_locked_epoch;
 uint32_t g_qearn_getinfo_epoch;
+
+// qvault
+char* g_qvaultIdentity = nullptr;
+uint32_t g_qvault_numberOfChangedAddress = 0;
+uint32_t g_qvault_newQCAPHolder_fee = 0;
+uint32_t g_qvault_newreinvesting_fee = 0;
+uint32_t g_qvault_newdev_fee = 0;

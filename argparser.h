@@ -192,6 +192,34 @@ void print_help(){
     printf("\t\tGet the status(binary number) that the user locked for 52 weeks.\n");
     printf("\t-qearngetunlockingstatus <IDENTITY>\n");
     printf("\t\tGet the unlocking history of the user.\n");
+
+    printf("\n[QVAULT COMMAND]\n");
+    printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
+    printf("\t\tSubmit the new authaddress using multisig address.\n");
+    printf("\t-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>\n");
+    printf("\t\tChange the authaddress using multisig address. <NUMBER_OF_CHANGED_ADDRESS> is the one of (1, 2, 3).\n");
+    printf("\t-qvaultsubmitfees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>\n");
+    printf("\t\tSubmit the new permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30.\n");
+    printf("\t-qvaultchangefees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>\n");
+    printf("\t\tChange the permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. Get the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.\n");
+    printf("\t-qvaultsubmitreinvestingaddress <NEW_ADDRESS>\n");
+    printf("\t\tSubmit the new reinvesting address using multisig address.\n");
+    printf("\t-qvaultchangereinvestingaddress <NEW_ADDRESS>\n");
+    printf("\t\tChange the address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitreinvestingaddress command.\n");
+    printf("\t-qvaultsubmitadminaddress <NEW_ADDRESS>\n");
+    printf("\t\tSubmit the admin address using multisig address.\n");
+    printf("\t-qvaultchangeadminaddress <NEW_ADDRESS>\n");
+    printf("\t\tChange the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.\n");
+    printf("\t-qvaultgetdata <ANY_NUMBER>\n");
+    printf("\t\tGet the state data of smart contract. anyone can check the changes after using the any command. <ANY_NUMBER> is the any number of (0~9).\n");
+    printf("\t-qvaultsubmitbannedaddress <NEW_ADDRESS>\n");
+    printf("\t\tSubmit the banned address using multisig address.\n");
+    printf("\t-qvaultsavebannedaddress <NEW_ADDRESS>\n");
+    printf("\t\tSave the banned address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitbannedaddress command.\n");
+    printf("\t-qvaultsubmitunbannedaddress <NEW_ADDRESS>\n");
+    printf("\t\tSubmit the unbanned address using multisig address.\n");
+    printf("\t-qvaultsaveunbannedaddress <NEW_ADDRESS>\n");
+    printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1042,6 +1070,126 @@ void parseArgument(int argc, char** argv){
             g_requestedIdentity = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitauthaddress") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_AUTH_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultchangeauthaddress") == 0)
+        {
+            g_cmd = QVAULT_CHANGE_AUTH_ADDRESS;
+            g_qvault_numberOfChangedAddress = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitfees") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_FEES;
+            g_qvault_newQCAPHolder_fee = charToNumber(argv[i + 1]);
+            g_qvault_newreinvesting_fee = charToNumber(argv[i + 2]);
+            g_qvault_newdev_fee = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultchangefees") == 0)
+        {
+            g_cmd = QVAULT_CHANGE_FEES;
+            g_qvault_newQCAPHolder_fee = charToNumber(argv[i + 1]);
+            g_qvault_newreinvesting_fee = charToNumber(argv[i + 2]);
+            g_qvault_newdev_fee = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitreinvestingaddress") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_REINVESTING_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultchangereinvestingaddress") == 0)
+        {
+            g_cmd = QVAULT_CHANGE_REINVESTING_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitadminaddress") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_ADMIN_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultchangeadminaddress") == 0)
+        {
+            g_cmd = QVAULT_CHANGE_ADMIN_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultgetdata") == 0)
+        {
+            g_cmd = QVAULT_GET_DATA;
+            i += 1;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitbannedaddress") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_BANNED_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsavebannedaddress") == 0)
+        {
+            g_cmd = QVAULT_SAVE_BANNED_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsubmitunbannedaddress") == 0)
+        {
+            g_cmd = QVAULT_SUBMIT_UNBANNED_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+
+        if (strcmp(argv[i], "-qvaultsaveunbannedaddress") == 0)
+        {
+            g_cmd = QVAULT_SAVE_UNBANNED_ADDRESS;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
             break;
         }
 
