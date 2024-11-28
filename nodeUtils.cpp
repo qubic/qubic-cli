@@ -18,7 +18,6 @@
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
     CurrentTickInfo result;
-    memset(&result, 0, sizeof(CurrentTickInfo));
     struct {
         RequestResponseHeader header;
     } packet;
@@ -26,30 +25,19 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch(std::logic_error& e)
+
+    try
     {
-        qc->resolveConnection();
-        memset(&result, sizeof(result), 0);
-        return result;
+        result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
+    } 
+    catch (std::logic_error& e)
+    {
+        memset(&result, 0, sizeof(CurrentTickInfo));
     }
 
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_CURRENT_TICK_INFO){
-            auto curTickInfo = (CurrentTickInfo*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curTickInfo;
-        }
-        ptr+= header->size();
-    }
     return result;
 }
+
 uint32_t getTickNumberFromNode(QCPtr qc)
 {
     auto curTickInfo = getTickInfoFromNode(qc);
@@ -58,6 +46,7 @@ uint32_t getTickNumberFromNode(QCPtr qc)
         curTickInfo = getTickInfoFromNode(qc);
     return curTickInfo.tick;
 }
+
 void printTickInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -76,7 +65,6 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
 CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
 {
     CurrentSystemInfo result;
-    memset(&result, 0, sizeof(CurrentSystemInfo));
     struct {
         RequestResponseHeader header;
     } packet;
@@ -84,22 +72,19 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_SYSTEM_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    try 
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_SYSTEM_INFO){
-            auto curSystemInfo = (CurrentSystemInfo*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curSystemInfo;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
     }
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(CurrentSystemInfo));
+    }
+
     return result;
 }
+
 void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -154,27 +139,32 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_TICK_TRANSACTIONS); // REQUEST_TICK_TRANSACTIONS
+    packet.header.setType(REQUEST_TICK_TRANSACTIONS);
     packet.txs.tick = requestedTick;
     for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
     for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    while (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_TRANSACTION){
-            auto tx = (Transaction *)(data + ptr + sizeof(RequestResponseHeader));
+        auto header = (RequestResponseHeader*)buffer;
+        if (header->type() == BROADCAST_TRANSACTION)
+        {
+            recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             txs.push_back(*tx);
+            if (hashes != nullptr || extraData != nullptr || sigs != nullptr)
+            {
+                recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
+            }
             if (hashes != nullptr){
                 TxhashStruct hash;
                 uint8_t digest[32] = {0};
                 char txHash[128] = {0};
-                KangarooTwelve(reinterpret_cast<const uint8_t *>(tx),
+                KangarooTwelve(reinterpret_cast<const uint8_t*>(tx),
                                sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
                                digest,
                                32);
@@ -186,23 +176,22 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 extraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
                 if (tx->inputSize != 0){
-                    memcpy(ed.vecU8.data(), reinterpret_cast<const uint8_t *>(tx) + sizeof(Transaction), tx->inputSize);
+                    memcpy(ed.vecU8.data(), reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction), tx->inputSize);
                 }
                 extraData->push_back(ed);
             }
             if (sigs != nullptr){
                 SignatureStruct sig;
-                memcpy(sig.sig, reinterpret_cast<const uint8_t *>(tx) + sizeof(Transaction) + tx->inputSize, 64);
+                memcpy(sig.sig, reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction) + tx->inputSize, SIGNATURE_SIZE);
                 sigs->push_back(sig);
             }
         }
-        ptr+= header->size();
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
 }
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
-    memset(&result, 0, sizeof(TickData));
     static struct
     {
         RequestResponseHeader header;
@@ -214,21 +203,15 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     packet.requestTickData.requestedTickData.tick = tick;
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_FUTURE_TICK_DATA){
-            auto curTickData = (TickData*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *curTickData;
-        }
-        ptr+= header->size();
-    }
 
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<TickData>();
+    }
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(TickData));
+    }
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -242,45 +225,36 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     packet.header.setType(REQUEST_TX_STATUS); // REQUEST_TX_STATUS
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
+    RespondTxStatus result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<RespondTxStatus>();
+        // notice: the node not always return full size of RESPOND_TX_STATUS
+        // it only returns enough digests
+        // -> set remainder in array memory which may contain junk to 0
+        memset(result.txDigests[result.txCount], 0, (NUMBER_OF_TRANSACTIONS_PER_TICK - result.txCount) * 32);
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(RespondTxStatus));
         // it's expected to catch this error on some node that not turn on tx status
         return -1;
     }
 
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    RespondTxStatus result;
-    memset(&result, 0, sizeof(result));
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_TX_STATUS){
-            // notice: the node not always return full size of RESPOND_TX_STATUS
-            // it only returns enough digests
-            auto ptr_rts = (RespondTxStatus *)(data + ptr + sizeof(RequestResponseHeader));
-            size_t received_size = ptr_rts->size();
-            memcpy(&result, ptr_rts, received_size);
-            break;
-        }
-        ptr+= header->size();
-    }
-
     int tx_id = -1;
-    for (int i = 0; i < result.txCount; i++){
+    for (int i = 0; i < result.txCount; i++)
+    {
         char tx_hash[60];
         memset(tx_hash, 0, 60);
         getIdentityFromPublicKey(result.txDigests[i], tx_hash, true);
-        if (memcmp(tx_hash, txHash, 60) == 0){
+        if (memcmp(tx_hash, txHash, 60) == 0)
+        {
             tx_id = i;
             break;
         }
     }
-    if (tx_id == -1){
+    if (tx_id == -1)
+    {
         return -1; // not found !?
     }
     return (result.moneyFlew[tx_id >> 3] & (1<<(tx_id & 7))) ? 1 : 0;
@@ -355,23 +329,15 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
 
     // Received the respond and print the receipt
     bool receivedTx = false;
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch (std::logic_error& e){
-        qc->resolveConnection();
-        return 2;
-    }
-
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, bufferSize);
+    if (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data + ptr);
+        auto header = (RequestResponseHeader*)buffer;
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
@@ -396,10 +362,8 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
                 receivedTx = true;
                 memcpy(outData, ed.vecU8.data(), tx->inputSize);
                 dataSize = tx->inputSize;
-                break;
             }
         }
-        ptr += header->size();
     }
     if (!receivedTx)
     {
@@ -433,22 +397,15 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
 
     // Received the respond and print the receipt
     bool receivedTx = false;
-    std::vector<uint8_t> buffer;
-    try{
-        qc->receiveDataAll(buffer);
-    } catch (std::logic_error& e){
-        qc->resolveConnection();
-        return 2;
-    }
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, bufferSize);
+    if (recvByte > 0)
     {
-        auto header = (RequestResponseHeader*)(data + ptr);
+        auto header = (RequestResponseHeader*)(buffer);
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            auto tx = (Transaction*)(data + ptr + sizeof(RequestResponseHeader));
+            auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             uint8_t digest[32] = {0};
             char respondTxHash[61] = {0};
             KangarooTwelve(
@@ -472,10 +429,8 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
 
                 receivedTx = true;
                 printReceipt(*tx, respondTxHash, ed.vecU8.data(), -1);
-                break;
             }
         }
-        ptr += header->size();
     }
     if (!receivedTx)
     {
@@ -933,17 +888,29 @@ bool checkTxOnFile(const char* txHash, const char* fileName)
 
 void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, uint8_t* rawPacket)
 {
-    std::vector<uint8_t> buffer;
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData(rawPacket, rawPacketSize);
     LOG("Sent %d bytes\n", rawPacketSize);
-    qc->receiveDataAll(buffer);
-    LOG("Received %d bytes\n", buffer.size());
-    for (int i = 0; i < buffer.size(); i++){
+    RequestResponseHeader header;
+    uint8_t* headerPtr = (uint8_t*)&header;
+    qc->receiveData(headerPtr, sizeof(RequestResponseHeader));
+    std::vector<uint8_t> buffer;
+    if (header.size() > sizeof(RequestResponseHeader))
+    {
+        unsigned long long remainingSize = header.size() - sizeof(RequestResponseHeader);
+        buffer.resize(remainingSize);
+        qc->receiveData(buffer.data(), remainingSize);
+    }
+    LOG("Received %d bytes\n", header.size());
+    for (int i = 0; i < sizeof(RequestResponseHeader); ++i)
+    {
+        LOG("%02x", headerPtr[i]);
+    }
+    for (int i = 0; i < buffer.size(); ++i)
+    {
         LOG("%02x", buffer[i]);
     }
     LOG("\n");
-
 }
 
 void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed, int command)
@@ -978,14 +945,30 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommand>();
+    SpecialCommand response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommand>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG(e.what());
+        memset(&response, 0, sizeof(SpecialCommand));
+        return;
+    }
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
         LOG("Node received special command\n");
-    } else{
-        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST){
+    } 
+    else
+    {
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST)
+        {
             LOG("Failed to send special command\n");
-        } else {
+        } 
+        else 
+        {
             LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
         }
     }
@@ -1028,15 +1011,30 @@ void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
-        if (response.mainModeFlag == packet.cmd.mainModeFlag){
+    SpecialCommandToggleMainModeResquestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
+    }
+    catch (std::logic_error& e) 
+    {
+        memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        if (response.mainModeFlag == packet.cmd.mainModeFlag)
+        {
             LOG("Successfully set MAINAUX flag\n");
-        } else {
+        } 
+        else 
+        {
             LOG("The packet is successfully sent but failed set MAINAUX flag\n");
         }
-    } else{
+    }
+    else
+    {
         LOG("Failed set MAINAUX flag\n");
     }
 }
@@ -1075,15 +1073,30 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     memcpy(packet.signature, signature, 64);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    auto response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 
-    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType){
-        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold){
+    SpecialCommandSetSolutionThresholdResquestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
+    }
+    catch (std::logic_error& e) 
+    {
+        memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold)
+        {
             LOG("Successfully set solution threshold\n");
-        } else {
+        } 
+        else 
+        {
             LOG("The packet is successfully sent but failed set solution threshold\n");
         }
-    } else{
+    } 
+    else
+    {
         LOG("Failed set solution threshold\n");
     }
 }
@@ -1167,11 +1180,22 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
-        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        
+        SpecialCommandSendTime response;
+        try
+        {
+            response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        }
+        catch (std::logic_error& e) 
+        {
+            memset(&response, 0, sizeof(SpecialCommandSendTime));
+        }        
+        
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
-        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) {
+        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) 
+        {
             LOG("Failed to query node time!\n");
             return;
         }
@@ -1219,11 +1243,22 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto qc = make_qc(nodeIp, nodePort);
         auto startTime = std::chrono::steady_clock::now();
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
-        auto response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+
+        SpecialCommandSendTime response;
+        try
+        {
+            response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
+        }
+        catch (std::logic_error& e) 
+        {
+            memset(&response, 0, sizeof(SpecialCommandSendTime));
+        }
+
         auto endTime = std::chrono::steady_clock::now();
         auto nowLocal = std::chrono::system_clock::now();
 
-        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) {
+        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) 
+        {
             LOG("Failed to set node time!\n");
             return;
         }
@@ -1249,9 +1284,12 @@ BroadcastComputors readComputorListFromFile(const char* fileName)
                    sizeof(BroadcastComputors) - SIGNATURE_SIZE,
                    digest,
                    32);
-    if (verify(arbPubkey, digest, result.computors.signature)){
+    if (verify(arbPubkey, digest, result.computors.signature))
+    {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } else {
+    } 
+    else 
+    {
         LOG("Computor list is NOT verified\n");
     }
     return result;
@@ -1268,24 +1306,17 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
     packet.header.setType(REQUEST_COMPUTORS);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    bool okay = false;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == BROADCAST_COMPUTORS){
-            auto bc = (BroadcastComputors*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *bc;
-            okay = true;
-        }
-        ptr+= header->size();
-    }
 
-    return okay;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<BroadcastComputors>();
+        return true;
+    }
+    catch (std::logic_error& e) 
+    {
+        memset(&result, 0, sizeof(BroadcastComputors));
+        return false;
+    }
 }
 
 void getComputorListToFile(const char* nodeIp, const int nodePort, const char* fileName)
@@ -1312,9 +1343,12 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
                    sizeof(BroadcastComputors) - SIGNATURE_SIZE,
                    digest,
                    32);
-    if (verify(arbPubkey, digest, bc.computors.signature)){
+    if (verify(arbPubkey, digest, bc.computors.signature))
+    {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } else {
+    } 
+    else 
+    {
         LOG("Computor list is NOT verified\n");
     }
     FILE* f = fopen(fileName, "wb");
@@ -1326,9 +1360,11 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
 {
     std::vector<std::string> result;
     QCPtr qc;
-    try{
+    try
+    {
         qc = make_qc(nodeIp, nodePort);
-    } catch (std::logic_error& e)
+    } 
+    catch (std::logic_error& e)
     {
         return result;
     }
@@ -1347,26 +1383,30 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
         return result;
     }
     auto epp = (ExchangePublicPeers*)(data);
-    for (int i = 0; i < 4; i++){
+    for (int i = 0; i < 4; i++)
+    {
         if (epp->peers[i][0] == 0 && epp->peers[i][1] == 0 && epp->peers[i][2] == 0 && epp->peers[i][3] == 0) continue;
         std::string new_ip = std::to_string(epp->peers[i][0]) + "." + std::to_string(epp->peers[i][1]) + "." + std::to_string(epp->peers[i][2]) + "." + std::to_string(epp->peers[i][3]);
         result.push_back(new_ip);
     }
     return result;
 }
+
 void getNodeIpList(const char* nodeIp, const int nodePort)
 {
     LOG("Fetching node ip list from %s\n", nodeIp);
     std::vector<std::string> result = _getNodeIpList(nodeIp, nodePort);
     int count = 0;
-    for (int i = 0; i < result.size() && count++ < 4; i++){
+    for (int i = 0; i < result.size() && count++ < 4; i++)
+    {
         std::vector<std::string> new_result = _getNodeIpList(result[i].c_str(), nodePort);
         result.insert(result.end(), new_result.begin(), new_result.end());
     }
     std::sort(result.begin(), result.end());
     auto last = std::unique(result.begin(), result.end());
     result.erase(last, result.end());
-    for (auto s : result){
+    for (auto s : result)
+    {
         LOG("%s\n", s.c_str());
     }
 }
@@ -1383,26 +1423,24 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondLog::type()){
-            auto logBuffer = (uint8_t*)(data + ptr + sizeof(RequestResponseHeader));
-            printQubicLog(logBuffer, header->size() - sizeof(RequestResponseHeader));
-        }
-        ptr+= header->size();
-    }
 
+    RequestResponseHeader header;
+    qc->receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+    if (header.type() == RespondLog::type())
+    {
+        unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
+        std::vector<uint8_t> logBuffer(logSize);
+        qc->receiveDataBig(logBuffer.data(), logSize);
+        printQubicLog(logBuffer.data(), logSize);
+    }
 }
+
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;
-    for (int i = 0; i < 32; i++){
-        if (e.publicKey[i] != 0){
+    for (int i = 0; i < 32; i++)
+    {
+        if (e.publicKey[i] != 0)
+        {
             is_pubkey_zero = false;
             break;
         }
@@ -1582,7 +1620,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
         contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
     }
     if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
-        LOG("Failed to get mining score ranking! everIncreasingNonceAndCommandType is mismatched: want %016lx | have %016lx\n", packet.cmd.everIncreasingNonceAndCommandType, response.everIncreasingNonceAndCommandType);
+        LOG("Failed to get mining score ranking!\n");
         return;
     }
     if (contentSize < 676 * 36)

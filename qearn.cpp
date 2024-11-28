@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -27,56 +28,7 @@ struct Unlock_input {
     uint64_t Amount;                            /* unlocking amount */	
     uint32_t Locked_Epoch;                      /* locked epoch */
 };
-
 struct Unlock_output {
-};
-
-struct GetLockInfoPerEpoch_input {
-    uint32_t Epoch;                             /* epoch number to get information */
-};
-
-struct GetLockInfoPerEpoch_output {
-    uint64_t LockedAmount;                      /* initial total locked amount in epoch */
-    uint64_t BonusAmount;                       /* initial bonus amount in epoch*/
-    uint64_t CurrentLockedAmount;               /* total locked amount in epoch. exactly the amount excluding the amount unlocked early*/
-    uint64_t CurrentBonusAmount;                /* bonus amount in epoch excluding the early unlocking */
-    uint64_t Yield;                             /* Yield calculated by 10000000 multiple*/  
-};
-
-struct GetUserLockStatus_input {
-    uint8_t publicKey[32];
-};
-
-struct GetUserLockStatus_output {
-    uint64_t status;
-};
-
-struct GetStateOfRound_input {
-    uint32_t Epoch;
-};
-
-struct GetStateOfRound_output {
-    uint32_t state;
-};
-
-struct GetUserLockedInfo_input {
-    uint8_t publicKey[32];
-    uint32_t epoch;
-};
-
-struct GetUserLockedInfo_output {
-    uint64_t LockedAmount;
-};
-
-struct GetEndedStatus_input {
-    uint8_t publicKey[32];
-};
-
-struct GetEndedStatus_output {
-    uint64_t Fully_Unlocked_Amount;
-    uint64_t Fully_Rewarded_Amount;
-    uint64_t Early_Unlocked_Amount;
-    uint64_t Early_Rewarded_Amount;
 };
 
 void qearnLock(const char* nodeIp, int nodePort, const char* seed, long long lock_amount, uint32_t scheduledTickOffset)
@@ -197,31 +149,26 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetLockInfoPerEpoch_input input;
+        QEarnGetLockInfoPerEpoch_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetLockInfoPerEpoch_input);
+    packet.rcf.inputSize = sizeof(QEarnGetLockInfoPerEpoch_input);
     packet.rcf.inputType = QEARN_GET_LOCK_INFO_PER_EPOCH;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX; 
     packet.input.Epoch = epoch;
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    GetLockInfoPerEpoch_output result;
-    while (ptr < recvByte)
+    QEarnGetLockInfoPerEpoch_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (GetLockInfoPerEpoch_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QEarnGetLockInfoPerEpoch_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
     }
     printf("initial bonus amount:  %llu\ninitial locked amount: %llu\ncurrent bonus amount:  %llu\ncurrent locked amount: %llu\nyield: %.6f%%\n", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, double(result.Yield) / 100000.0);
 }
@@ -235,12 +182,12 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identi
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetUserLockedInfo_input input;
+        QEarnGetUserLockedInfo_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetUserLockedInfo_input);
+    packet.rcf.inputSize = sizeof(QEarnGetUserLockedInfo_input);
     packet.rcf.inputType = QEARN_GET_USER_LOCKED_INFO;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
 
@@ -248,23 +195,17 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identi
     memcpy(packet.input.publicKey, publicKey, 32);
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    GetUserLockedInfo_output result;
-    while (ptr < recvByte)
+    QEarnGetUserLockedInfo_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (GetUserLockedInfo_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QEarnGetUserLockedInfo_output>();
     }
-
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
     printf("The amount of epoch %d: %llu\n", epoch,  result.LockedAmount);
 }
 
@@ -274,33 +215,28 @@ void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetStateOfRound_input input;
+        QEarnGetStateOfRound_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetStateOfRound_input);
+    packet.rcf.inputSize = sizeof(QEarnGetStateOfRound_input);
     packet.rcf.inputType = QEARN_GET_STATE_OF_ROUND;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
 
     packet.input.Epoch = epoch;
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    GetStateOfRound_output result;
-    while (ptr < recvByte)
+    QEarnGetStateOfRound_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (GetStateOfRound_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QEarnGetStateOfRound_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
     }
 
     if(result.state == 0) printf("The state of epoch %d is not started.\n", epoch);
@@ -318,33 +254,28 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetUserLockStatus_input input;
+        QEarnGetUserLockStatus_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetUserLockStatus_input);
+    packet.rcf.inputSize = sizeof(QEarnGetUserLockStatus_input);
     packet.rcf.inputType = QEARN_GET_USER_LOCKED_STATE;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
 
     memcpy(packet.input.publicKey, publicKey, 32);
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    GetUserLockStatus_output result;
-    while (ptr < recvByte)
+    QEarnGetUserLockStatus_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (GetUserLockStatus_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QEarnGetUserLockStatus_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
     }
 
     printf("binary result: %llu\nThe number of locked epoch is as follows.\n", result.status);
@@ -374,35 +305,28 @@ void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetEndedStatus_input input;
+        QEarnGetEndedStatus_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetEndedStatus_input);
+    packet.rcf.inputSize = sizeof(QEarnGetEndedStatus_input);
     packet.rcf.inputType = QEARN_GET_UNLOCKED_STATE;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
 
     memcpy(packet.input.publicKey, publicKey, 32);
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    GetEndedStatus_output result;
-    while (ptr < recvByte)
+    QEarnGetEndedStatus_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (GetEndedStatus_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
     }
-
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
     printf("fully unlocking amount: %llu\nfully rewarded amount: %llu\nearly unlocking amount: %llu\nearly rewarded amount: %llu\n", result.Fully_Unlocked_Amount, result.Fully_Rewarded_Amount, result.Early_Unlocked_Amount, result.Early_Rewarded_Amount);
-
 }

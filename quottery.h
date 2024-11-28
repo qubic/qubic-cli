@@ -1,4 +1,7 @@
 #pragma once
+
+#include "structs.h"
+
 //SC structs
 struct QuotteryjoinBet_input {
     uint32_t betId;
@@ -6,6 +9,7 @@ struct QuotteryjoinBet_input {
     uint32_t option;
     uint32_t _placeHolder;
 };
+
 struct QuotteryissueBet_input {
     uint8_t betDesc[32];
     uint8_t optionDesc[32*8];
@@ -17,8 +21,8 @@ struct QuotteryissueBet_input {
     uint32_t maxBetSlotPerOption;
     uint32_t numberOfOption;
 };
-struct qtryBasicInfo_output
-{
+
+struct qtryBasicInfo_output {
     uint64_t feePerSlotPerHour; // Amount of qus
     uint64_t gameOperatorFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
     uint64_t shareholderFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
@@ -35,8 +39,12 @@ struct qtryBasicInfo_output
     uint64_t distributedAmount;
     uint64_t burnedAmount;
     uint8_t gameOperator[32];
-};
 
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
 
 struct getBetInfo_input {
     uint32_t betId;
@@ -61,35 +69,57 @@ struct getBetInfo_output {
     uint32_t currentBetState[8]; // how many bet slots have been filled on each option
     char betResultWonOption[8];
     char betResultOPId[8];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }    
 };
 
 struct getBetOptionDetail_input {
     uint32_t betId;
     uint32_t betOption;
 };
+
 struct getBetOptionDetail_output {
     uint8_t bettor[32*1024];
-};
-struct getActiveBet_output{
-    uint32_t count;
-    uint32_t betId[1024];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
 };
 
-struct getActiveBetByCreator_input{
+struct getActiveBet_output {
+    uint32_t count;
+    uint32_t betId[1024];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct getActiveBetByCreator_input {
     uint8_t creator[32];
 };
 
-struct getActiveBetByCreator_output{
+struct getActiveBetByCreator_output {
     uint32_t count;
     uint32_t betId[1024];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    } 
 };
 
-struct publishResult_input{
+struct publishResult_input {
     uint32_t betId;
     uint32_t winOption;
 };
 #pragma pack(1)
-struct cancelBet_input{
+struct cancelBet_input {
     uint32_t betId;
 };
 #pragma pop()
@@ -104,7 +134,7 @@ void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, con
 void quotteryCancelBet(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t scheduledTickOffset);
 void quotteryPublishResult(const char* nodeIp, const int nodePort, const char* seed, const uint32_t betId, const uint32_t winOption, const uint32_t scheduledTickOffset);
 
-// Get the basic infomation of quoterry
+// Get the basic information of quottery
 void quotteryGetBasicInfo(const char* nodeIp, const int nodePort, qtryBasicInfo_output& result);
 
 // Core function

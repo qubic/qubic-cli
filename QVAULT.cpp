@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstring>
+#include <stdexcept>
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -85,41 +86,6 @@ struct changeReinvestingAddress_input
 
 struct changeReinvestingAddress_output
 {
-};
-
-struct getData_input
-{
-    uint32_t t;
-};
-
-struct getData_output
-{
-    
-    uint64_t numberOfBannedAddress;
-    uint32_t computor_permille;
-    uint32_t QCAPHolder_permille;
-    uint32_t reinvesting_permille;
-    uint32_t dev_permille;
-    uint8_t AUTH_ADDRESS1[32];
-    uint8_t AUTH_ADDRESS2[32];
-    uint8_t AUTH_ADDRESS3[32];
-    uint8_t Reinvesting_address[32];
-    uint8_t admin_address[32];
-    uint8_t newAuthAddress1[32];
-    uint8_t newAuthAddress2[32];
-    uint8_t newAuthAddress3[32];
-    uint8_t newReinvesting_address1[32];
-    uint8_t newReinvesting_address2[32];
-    uint8_t newReinvesting_address3[32];
-    uint8_t newAdmin_address1[32];
-    uint8_t newAdmin_address2[32];
-    uint8_t newAdmin_address3[32];
-    uint8_t bannedAddress1[32];
-    uint8_t bannedAddress2[32];
-    uint8_t bannedAddress3[32];
-    uint8_t unbannedAddress1[32];
-    uint8_t unbannedAddress2[32];
-    uint8_t unbannedAddress3[32];
 };
 
 struct submitAdminAddress_input
@@ -669,32 +635,27 @@ void getData(const char* nodeIp, int nodePort){
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        getData_input input;
+        QVaultGetData_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(getData_input);
+    packet.rcf.inputSize = sizeof(QVaultGetData_input);
     packet.rcf.inputType = QVAULT_GETDATA;
     packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
     packet.input.t = 10;
     
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
 
-    getData_output result;
-    while (ptr < recvByte)
+    QVaultGetData_output result;
+    try
     {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RespondContractFunction::type()){
-            auto output = (getData_output*)(data + ptr + sizeof(RequestResponseHeader));
-            result = *output;
-        }
-        ptr+= header->size();
+        result = qc->receivePacketWithHeaderAs<QVaultGetData_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
     }
 
     printf("AUTH_ADDRESS1: ");
@@ -754,7 +715,7 @@ void getData(const char* nodeIp, int nodePort){
     printf("\n");
     printf("Permille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
 
-    printf("\nThe number of banned addresses:%u", result.numberOfBannedAddress);
+    printf("\nThe number of banned addresses:%llu", result.numberOfBannedAddress);
 
     printf("\nbanned_address1: ");
     for(uint8_t i = 0 ; i < 32; i++) {

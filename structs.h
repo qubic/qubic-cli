@@ -1,8 +1,10 @@
 #pragma once
+
 #include "defines.h"
 #include "utils.h"
 #include <cstddef>
 #include <cstring>
+
 enum COMMAND
 {
     SHOW_KEYS = 0,
@@ -213,6 +215,11 @@ typedef struct
     unsigned short numberOfAlignedVotes;
     unsigned short numberOfMisalignedVotes;
     unsigned int initialTick;
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_CURRENT_TICK_INFO;
+    }
 } CurrentTickInfo;
 
 #pragma pack(push, 1)
@@ -243,6 +250,11 @@ typedef struct
     // Entity balances less or euqal this value will be burned if number of entites rises to 75% of spectrum capacity.
     // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
     unsigned long long currentEntityBalanceDustThreshold;
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_SYSTEM_INFO;
+    }
 } CurrentSystemInfo;
 #pragma pack(pop)
 
@@ -265,6 +277,11 @@ typedef struct
     long long contractFees[1024];
 
     unsigned char signature[SIGNATURE_SIZE];
+
+    static constexpr unsigned char type()
+    {
+        return BROADCAST_FUTURE_TICK_DATA;
+    }
 } TickData;
 typedef struct
 {
@@ -390,6 +407,11 @@ typedef struct
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_OWNED_ASSETS;
+    }
 } RespondOwnedAssets;
 
 typedef struct
@@ -405,6 +427,11 @@ typedef struct
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_POSSESSED_ASSETS;
+    }
 } RespondPossessedAssets;
 
 typedef struct
@@ -418,11 +445,21 @@ typedef struct
 typedef struct
 {
     Computors computors;
+
+    static constexpr unsigned char type()
+    {
+        return BROADCAST_COMPUTORS;
+    }
 } BroadcastComputors;
 
 typedef struct
 {
     unsigned char peers[4][4];
+
+    static constexpr unsigned char type()
+    {
+        return EXCHANGE_PUBLIC_PEERS;
+    }
 } ExchangePublicPeers;
 
 struct RequestLog // Fetches log
@@ -473,6 +510,11 @@ struct QxFees_output
     uint32_t assetIssuanceFee; // Amount of qus
     uint32_t transferFee; // Amount of qus
     uint32_t tradeFee; // Number of billionths
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }    
 };
 struct GetSendToManyV1Fee_output
 {
@@ -502,6 +544,11 @@ typedef struct
     unsigned int tick;
     uint8_t publicKeys[NUMBER_OF_COMPUTORS][32];
     long long prices[NUMBER_OF_COMPUTORS];
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_CONTRACT_IPO;
+    }
 } RespondContractIPO;
 
 struct SpecialCommandToggleMainModeResquestAndResponse
@@ -591,6 +638,11 @@ struct RespondTxStatus
     unsigned int size() const
     {
         return offsetof(RespondTxStatus, txDigests) + txCount * 32;
+    }
+
+    static constexpr unsigned char type()
+    {
+        return RESPOND_TX_STATUS;
     }
 };
 #pragma pack(pop)

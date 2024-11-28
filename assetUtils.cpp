@@ -24,21 +24,8 @@ std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nod
     packet.header.setType(REQUEST_OWNED_ASSETS);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_OWNED_ASSETS){
-            auto roa = (RespondOwnedAssets *)(data + ptr + sizeof(RequestResponseHeader));
-            result.push_back(* roa);
-        }
-        ptr+= header->size();
-    }
-    return result;
+
+    return qc->getLatestVectorPacketAs<RespondOwnedAssets>();
 }
 std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
@@ -55,21 +42,8 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
     packet.header.setType(REQUEST_POSSESSED_ASSETS);
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t *) &packet, packet.header.size());
-    std::vector<uint8_t> buffer;
-    qc->receiveDataAll(buffer);
-    uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
-    int ptr = 0;
-    while (ptr < recvByte)
-    {
-        auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_POSSESSED_ASSETS){
-            auto rpa = (RespondPossessedAssets *)(data + ptr + sizeof(RequestResponseHeader));
-            result.push_back(* rpa);
-        }
-        ptr+= header->size();
-    }
-    return result;
+
+    return qc->getLatestVectorPacketAs<RespondPossessedAssets>();
 }
 
 template<typename T>
