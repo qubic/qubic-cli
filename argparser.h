@@ -5,14 +5,22 @@
 
 #include "logger.h"
 
-#define CHECK_OVER_PARAMETERS if (i < argc)\
-{ \
-    LOG("Not accept any parameters after main COMMAND, unexpected %s\n", argv[i]); \
-    exit(1); \
-}
+#define CHECK_OVER_PARAMETERS                                                           \
+    if (i < argc)                                                                       \
+    {                                                                                   \
+        LOG("Not accept any parameters after main COMMAND, unexpected %s\n", argv[i]);  \
+        exit(1);                                                                        \
+    }
+
+#define CHECK_NUMBER_OF_PARAMETERS(numParams)                                           \
+    if (i + numParams >= argc)                                                          \
+    {                                                                                   \
+        LOG("Not enough parameters provided for command, expected %d.\nRun qubic-cli -h to display help.\n", numParams);    \
+        exit(1);                                                                        \
+    }
 
 void print_help(){
-    printf("./qubic-cli [basic config] [Command] [command extra parameters]\n");
+    printf("./qubic-cli [basic config] [command] [command extra parameters]\n");
     printf("-help print this message\n");
     printf("Basic config:\n");
     printf("\t-conf <file>\n");
@@ -30,7 +38,7 @@ void print_help(){
     printf("\t\tDo action although an error has been detected. Currently only implemented for proposals.\n");
 
     printf("Command:\n");
-    printf("[WALLET COMMAND]\n");
+    printf("[WALLET COMMANDS]\n");
     printf("\t-showkeys\n");
     printf("\t\tGenerating identity, pubkey key from private key. Private key must be passed either from params or configuration file.\n");
     printf("\t-getbalance <IDENTITY>\n");
@@ -81,7 +89,7 @@ void print_help(){
     printf("\t-getsysteminfo\n");
     printf("\t\tView Current System Status. Includes initial tick, random mining seed, epoch info.\n");
 
-    printf("\n[NODE COMMAND]\n");
+    printf("\n[NODE COMMANDS]\n");
     printf("\t-getcurrenttick\n");
     printf("\t\tShow current tick information of a node\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
@@ -108,7 +116,7 @@ void print_help(){
     printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
     printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
 
-    printf("\n[QX COMMAND]\n");
+    printf("\n[QX COMMANDS]\n");
     printf("\t-qxgetfee\n");
     printf("\t\tShow current Qx fee.\n");
     printf("\t-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
@@ -120,7 +128,7 @@ void print_help(){
     printf("\t-qxgetorder entity/asset bid/ask [ISSUER/ENTITY (in qubic format)] [ASSET_NAME (NULL for requesting entity)] [OFFSET]\n");
     printf("\t\tGet orders on Qx\n");
 
-    printf("\n[QTRY COMMAND]\n");
+    printf("\n[QTRY COMMANDS]\n");
     printf("\t-qtrygetbasicinfo\n");
     printf("\t\tShow qtry basic info from a node.\n");
     printf("\t-qtryissuebet\n");
@@ -194,7 +202,7 @@ void print_help(){
     printf("\t-qearngetunlockingstatus <IDENTITY>\n");
     printf("\t\tGet the unlocking history of the user.\n");
 
-    printf("\n[QVAULT COMMAND]\n");
+    printf("\n[QVAULT COMMANDS]\n");
     printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
     printf("\t\tSubmit the new authaddress using multisig address.\n");
     printf("\t-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>\n");
@@ -296,51 +304,57 @@ void parseArgument(int argc, char** argv){
     g_cmd = TOTAL_COMMAND;
     while (i < argc)
     {
-        /**********************
-         ******BASIC CONFIG****
-         **********************/
+        /************************
+         ***** BASIC CONFIG *****
+         ************************/
+
         if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-h") == 0) {print_help(); exit(0);}
         if(strcmp(argv[i], "-conf") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_configFile = argv[i+1];
             i+=2;
             continue;
         }
         if(strcmp(argv[i], "-seed") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_seed = argv[i+1];
             i+=2;
             continue;
         }
         if(strcmp(argv[i], "-nodeip") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_nodeIp = argv[i+1];
             i+=2;
             continue;
         }
         if(strcmp(argv[i], "-nodeport") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_nodePort = int(charToNumber(argv[i+1]));
             i+=2;
             continue;
         }
         if(strcmp(argv[i], "-scheduletick") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_offsetScheduledTick = int(charToNumber(argv[i+1]));
             i+=2;
             continue;
         }
-
         if(strcmp(argv[i], "-waituntilfinish") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_waitUntilFinish = int(charToNumber(argv[i+1]));
             i+=2;
             continue;
         }
 
-         /**********************
-         ****WALLET COMMAND****
-         **********************/
+        /***************************
+         ***** WALLET COMMANDS *****
+         ***************************/
 
         if(strcmp(argv[i], "-showkeys") == 0)
         {
@@ -349,27 +363,27 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-getbalance") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_BALANCE;
             g_requestedIdentity = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-getasset") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_ASSET;
             g_requestedIdentity = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-sendtoaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_COIN;
             g_targetIdentity = argv[i+1];
             g_TxAmount = charToNumber(argv[i+2]);
@@ -377,9 +391,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-sendtoaddressintick") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = SEND_COIN_IN_TICK;
             g_targetIdentity = argv[i+1];
             g_TxAmount = charToNumber(argv[i+2]);
@@ -389,11 +403,13 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        /********************************************
-         *********BLOCKCHAIN/PROTOCOL COMMAND********
-         ********************************************/
+        /****************************************
+         ***** BLOCKCHAIN/PROTOCOL COMMANDS *****
+         ****************************************/
+
         if(strcmp(argv[i], "-gettickdata") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_TICK_DATA;
             g_requestedTickNumber = charToNumber(argv[i+1]);
             g_requestedFileName = argv[i + 2];
@@ -403,6 +419,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-getquorumtick") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_QUORUM_TICK;
             g_requestedFileName = argv[i + 1];
             g_requestedTickNumber = charToNumber(argv[i+2]);
@@ -412,6 +429,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-getcomputorlist") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_COMP_LIST;
             g_requestedFileName = argv[i + 1];
             i+=2;
@@ -427,6 +445,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-gettxinfo") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_TX_INFO;
             g_requestedTxId = argv[i+1];
             i+=2;
@@ -435,6 +454,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-uploadfile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = UPLOAD_FILE;
             g_file_path = argv[i+1];
             i+=2;
@@ -443,6 +463,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-downloadfile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DOWNLOAD_FILE;
             g_requestedTxId = argv[i+1];
             g_file_path = argv[i+2];
@@ -452,6 +473,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-checktxontick") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = CHECK_TX_ON_TICK;
             g_requestedTickNumber = charToNumber(argv[i+1]);
             g_requestedTxId = argv[i+2];
@@ -461,6 +483,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-checktxonfile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = CHECK_TX_ON_FILE;
             g_requestedTxId = argv[i+1];
             g_requestedFileName = argv[i+2];
@@ -470,6 +493,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-readtickdata") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = READ_TICK_DATA;
             g_requestedFileName = argv[i+1];
             g_requestedFileName2 = argv[i+2];
@@ -477,9 +501,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-getvotecountertx") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_VOTE_COUNTER_TX;
             g_requestedFileName = argv[i+1];
             g_requestedTickNumber = charToNumber(argv[i+2]);
@@ -487,10 +511,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
-
         if(strcmp(argv[i], "-sendcustomtransaction") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = SEND_CUSTOM_TX;
             g_targetIdentity = argv[i+1];
             g_TxType = charToNumber(argv[i+2]);
@@ -501,9 +524,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-dumpspectrumfile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_SPECTRUM_FILE;
             g_dump_binary_file_input = argv[i+1];
             g_dump_binary_file_output = argv[i+2];
@@ -511,9 +534,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-dumpuniversefile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_UNIVERSE_FILE;
             g_dump_binary_file_input = argv[i+1];
             g_dump_binary_file_output = argv[i+2];
@@ -521,9 +544,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-dumpcontractfile") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = DUMP_CONTRACT_FILE;
             g_dump_binary_file_input = argv[i+1];
             g_dump_binary_contract_id = charToNumber(argv[i+2]);
@@ -532,9 +555,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-makeipobid") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MAKE_IPO_BID;
             g_ipo_contract_index = charToNumber(argv[i + 1]);
             g_make_ipo_bid_number_of_share = charToNumber(argv[i+2]);
@@ -545,6 +568,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-getipostatus") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_IPO_STATUS;
             g_ipo_contract_index = charToNumber(argv[i + 1]);
             i+=2;
@@ -552,10 +576,9 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-
-        /**********************
-         *****NODE COMMAND*****
-         **********************/
+        /*************************
+         ***** NODE COMMANDS *****
+         *************************/
 
         if(strcmp(argv[i], "-getsysteminfo") == 0)
         {
@@ -573,6 +596,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-sendspecialcommand") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = SEND_SPECIAL_COMMAND;
             g_requestedSpecialCommand = int(charToNumber(argv[i+1]));
             i+=2;
@@ -581,6 +605,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-tooglemainaux") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
             g_requestedSpecialCommand = SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST;
             g_toogle_main_aux_0 = argv[i+1];
@@ -591,6 +616,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-setsolutionthreshold") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SET_SOLUTION_THRESHOLD;
             g_requestedSpecialCommand = SPECIAL_COMMAND_SET_SOLUTION_THRESHOLD_REQUEST;
             g_set_solution_threshold_epoch = charToNumber(argv[i+1]);
@@ -633,6 +659,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-sendrawpacket") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_RAW_PACKET;
             g_rawPacketSize = int(charToNumber(argv[i+1]));
             hexToByte(argv[i+2], g_rawPacket, g_rawPacketSize);
@@ -640,9 +667,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-getlogfromnode") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = GET_LOG_FROM_NODE;
             g_get_log_passcode[0] = charToUnsignedNumber(argv[i+1]);
             g_get_log_passcode[1] = charToUnsignedNumber(argv[i+2]);
@@ -652,7 +679,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-getminingscoreranking") == 0)
         {
             g_cmd = GET_MINING_SCORE_RANKING;
@@ -662,12 +688,13 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        /**********************
-         ******QX COMMAND******
-         **********************/
+        /***********************
+         ***** QX COMMANDS *****
+         ***********************/
 
         if(strcmp(argv[i], "-qxissueasset") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_ISSUE_ASSET;
             g_qx_issue_asset_name = argv[i+1];
             g_qx_issue_asset_number_of_unit = charToNumber(argv[i+2]);
@@ -679,6 +706,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qxtransferasset") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_ASSET;
             g_qx_asset_transfer_asset_name = argv[i+1];
             g_qx_asset_transfer_issuer_in_hex = argv[i+2];
@@ -688,7 +716,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-qxgetfee") == 0)
         {
             g_cmd = PRINT_QX_FEE;
@@ -696,9 +723,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-qxorder") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QX_ORDER;
             g_qx_command_1 = argv[i+1];
             g_qx_command_2 = argv[i+2];
@@ -712,6 +739,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qxgetorder") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QX_GET_ORDER;
             g_qx_command_1 = argv[i+1];
             g_qx_command_2 = argv[i+2];
@@ -723,9 +751,9 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        /**********************
-         ******QTRY COMMAND****
-         **********************/
+        /*************************
+         ***** QTRY COMMANDS *****
+         *************************/
 
         if(strcmp(argv[i], "-qtryissuebet") == 0)
         {
@@ -736,6 +764,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtryjoinbet") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QUOTTERY_JOIN_BET;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
             g_quottery_number_bet_slot = charToNumber(argv[i+2]);
@@ -747,6 +776,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtrygetbetinfo") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_BET_INFO;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
             i+=2;
@@ -755,6 +785,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtrygetbetdetail") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_GET_BET_DETAIL;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
             g_quottery_option_id = charToNumber(argv[i + 2]);
@@ -771,6 +802,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtrygetactivebetbycreator") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
             g_quottery_creator_id = argv[i+1];
             i+=2;
@@ -786,6 +818,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtrypublishresult") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_PUBLISH_RESULT;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
             g_quottery_option_id = charToNumber(argv[i + 2]);
@@ -795,6 +828,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qtrycancelbet") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_CANCEL_BET;
             g_quottery_bet_id = charToNumber(argv[i + 1]);
             i+=2;
@@ -803,6 +837,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qutilsendtomanyv1") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_SEND_TO_MANY_V1;
             g_qutil_sendtomanyv1_payout_list_file = argv[i + 1];
             i+=2;
@@ -811,6 +846,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qutilburnqubic") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_BURN_QUBIC;
             g_TxAmount = charToNumber(argv[i + 1]);
             i+=2;
@@ -818,19 +854,19 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-        /**********************
-         ****GQMPROP COMMAND***
-         **********************/
+        /****************************
+         ***** GQMPROP COMMANDS *****
+         ****************************/
 
         if (strcmp(argv[i], "-gqmpropsetproposal") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GQMPROP_SET_PROPOSAL;
             g_proposalString = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropclearproposal") == 0)
         {
             g_cmd = GQMPROP_CLEAR_PROPOSAL;
@@ -838,9 +874,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropgetproposals") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GQMPROP_GET_PROPOSALS;
             if (i + 1 >= argc)
             {
@@ -852,9 +888,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropvote") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GQMPROP_VOTE;
             if (i + 2 >= argc)
             {
@@ -867,7 +903,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropgetvote") == 0)
         {
             g_cmd = GQMPROP_GET_VOTE;
@@ -887,7 +922,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropgetresults") == 0)
         {
             g_cmd = GQMPROP_GET_VOTING_RESULTS;
@@ -901,7 +935,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-gqmpropgetrevdonation") == 0)
         {
             g_cmd = GQMPROP_GET_REV_DONATION;
@@ -910,20 +943,19 @@ void parseArgument(int argc, char** argv){
             break;
         }
 
-
-        /**********************
-         **** CCF COMMANDS ****
-         **********************/
+        /************************
+         ***** CCF COMMANDS *****
+         ************************/
 
         if (strcmp(argv[i], "-ccfsetproposal") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = CCF_SET_PROPOSAL;
             g_proposalString = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccfclearproposal") == 0)
         {
             g_cmd = CCF_CLEAR_PROPOSAL;
@@ -931,7 +963,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccfgetproposals") == 0)
         {
             g_cmd = CCF_GET_PROPOSALS;
@@ -945,7 +976,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccfvote") == 0)
         {
             g_cmd = CCF_VOTE;
@@ -960,7 +990,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccfgetvote") == 0)
         {
             g_cmd = CCF_GET_VOTE;
@@ -980,7 +1009,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccfgetresults") == 0)
         {
             g_cmd = CCF_GET_VOTING_RESULTS;
@@ -994,7 +1022,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-ccflatesttransfers") == 0)
         {
             g_cmd = CCF_GET_LATEST_TRANSFERS;
@@ -1002,19 +1029,18 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
-
         if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "-force") == 0)
         {
             g_force = true;
         }
 
-        /**********************
-         ****QEARM COMMAND***
-         **********************/
+        /**************************
+         ***** QEARN COMMANDS *****
+         **************************/
 
         if(strcmp(argv[i], "-qearnlock") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_LOCK;
             g_qearn_lock_amount = charToNumber(argv[i + 1]);
             i+=2;
@@ -1023,6 +1049,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qearnunlock") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_UNLOCK;
             g_qearn_unlock_amount = charToNumber(argv[i + 1]);
             g_qearn_locked_epoch = charToNumber(argv[i + 2]);
@@ -1032,6 +1059,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qearngetlockinfoperepoch") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_INFO_PER_EPOCH;
             g_qearn_getinfo_epoch = charToNumber(argv[i + 1]);
             i+=2;
@@ -1040,6 +1068,7 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qearngetuserlockedinfo") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_GET_USER_LOCKED_INFO;
             g_requestedIdentity = argv[i+1];
             g_qearn_getinfo_epoch = charToNumber(argv[i + 2]);
@@ -1049,51 +1078,52 @@ void parseArgument(int argc, char** argv){
         }
         if(strcmp(argv[i], "-qearngetstateofround") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATE_OF_ROUND;
             g_qearn_getinfo_epoch = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-qearngetuserlockstatus") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_USER_LOCK_STATUS;
             g_requestedIdentity = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if(strcmp(argv[i], "-qearngetunlockingstatus") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_UNLOCKING_STATUS;
             g_requestedIdentity = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitauthaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_AUTH_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultchangeauthaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_AUTH_ADDRESS;
             g_qvault_numberOfChangedAddress = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitfees") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_SUBMIT_FEES;
             g_qvault_newQCAPHolder_fee = charToNumber(argv[i + 1]);
             g_qvault_newreinvesting_fee = charToNumber(argv[i + 2]);
@@ -1102,9 +1132,9 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultchangefees") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_CHANGE_FEES;
             g_qvault_newQCAPHolder_fee = charToNumber(argv[i + 1]);
             g_qvault_newreinvesting_fee = charToNumber(argv[i + 2]);
@@ -1113,43 +1143,42 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitreinvestingaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_REINVESTING_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultchangereinvestingaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_REINVESTING_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitadminaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_ADMIN_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultchangeadminaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_ADMIN_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultgetdata") == 0)
         {
             g_cmd = QVAULT_GET_DATA;
@@ -1157,36 +1186,36 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitbannedaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_BANNED_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsavebannedaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_BANNED_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsubmitunbannedaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_UNBANNED_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         if (strcmp(argv[i], "-qvaultsaveunbannedaddress") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_UNBANNED_ADDRESS;
             g_qvaultIdentity = argv[i + 1];
             i += 2;
