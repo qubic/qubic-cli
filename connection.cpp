@@ -20,6 +20,8 @@
 // includes for template instantiations
 #include "quottery.h"
 #include "qxStruct.h"
+#include "QVAULT.h"
+#include "qearn.h"
 
 #ifdef _MSC_VER
 static int connect(const char* nodeIp, int nodePort)
@@ -235,14 +237,24 @@ template TickData QubicConnection::receivePacketWithHeaderAs<TickData>();
 template RespondTxStatus QubicConnection::receivePacketWithHeaderAs<RespondTxStatus>();
 template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<BroadcastComputors>();
 template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>();
+// QUOTTERY
 template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>();
 template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>();
 template getBetOptionDetail_output QubicConnection::receivePacketWithHeaderAs<getBetOptionDetail_output>();
 template getActiveBet_output QubicConnection::receivePacketWithHeaderAs<getActiveBet_output>();
 template getActiveBetByCreator_output QubicConnection::receivePacketWithHeaderAs<getActiveBetByCreator_output>();
+// QX
 template QxFees_output QubicConnection::receivePacketWithHeaderAs<QxFees_output>();
 template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetAssetOrder_output>();
 template qxGetEntityOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetEntityOrder_output>();
+// QVAULT
+template QVaultGetData_output QubicConnection::receivePacketWithHeaderAs<QVaultGetData_output>();
+// QEARN
+template QEarnGetLockInfoPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetLockInfoPerEpoch_output>();
+template QEarnGetUserLockedInfo_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockedInfo_output>();
+template QEarnGetStateOfRound_output QubicConnection::receivePacketWithHeaderAs<QEarnGetStateOfRound_output>();
+template QEarnGetUserLockStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockStatus_output>();
+template QEarnGetEndedStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 
