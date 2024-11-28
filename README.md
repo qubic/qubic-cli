@@ -4,7 +4,7 @@ Qubic Core client
 
 An intermediate tool to communicate to qubic core node.
 ```
-./qubic-cli [basic config] [Command] [command extra parameters]
+./qubic-cli [basic config] [command] [command extra parameters]
 -help print this message
 Basic config:
 	-conf <file>
@@ -21,7 +21,7 @@ Basic config:
 	-force
 		Do action although an error has been detected. Currently only implemented for proposals.
 Command:
-[WALLET COMMAND]
+[WALLET COMMANDS]
 	-showkeys
 		Generating identity, pubkey key from private key. Private key must be passed either from params or configuration file.
 	-getbalance <IDENTITY>
@@ -37,7 +37,7 @@ Command:
 	-qutilburnqubic <AMOUNT>
 		Performs burning qubic, valid private key and node ip/port are required.
 
-[BLOCKCHAIN/PROTOCOL COMMAND]
+[BLOCKCHAIN/PROTOCOL COMMANDS]
 	-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>
 		Get tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.
 	-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>
@@ -69,7 +69,7 @@ Command:
 	-getsysteminfo
 		View Current System Status. Includes initial tick, random mining seed, epoch info.
 
-[NODE COMMAND]
+[NODE COMMANDS]
 	-getcurrenttick
 		Show current tick information of a node
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
@@ -96,7 +96,7 @@ Command:
 	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
 		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) 	
 
-[QX COMMAND]
+[QX COMMANDS]
 	-qxgetfee
 		Show current Qx fee.
 	-qxissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>
@@ -108,7 +108,7 @@ Command:
 	-qxgetorder entity/asset bid/ask [ISSUER/ENTITY (in qubic format)] [ASSET_NAME (NULL for requesting entity)] [OFFSET]
 		Get orders on Qx
 
-[QTRY COMMAND]
+[QTRY COMMANDS]
 	-qtrygetbasicinfo
 		Show qtry basic info from a node.
 	-qtryissuebet
@@ -166,8 +166,7 @@ Command:
 	-ccflatesttransfers
 		Get and print latest transfers of CCF granted by quorum.
 
-[QEARN COMMAND]
-
+[QEARN COMMANDS]
 	-qearnlock <LOCK_AMOUNT>
 		lock the qu to Qearn SC.
 	-qearnunlock <UNLOCKING_AMOUNT> <LOCKED_EPOCH>
@@ -183,8 +182,7 @@ Command:
 	-qearngetunlockingstatus <IDENTITY>
 		Get the unlocking history of the user.
 
-[QVAULT COMMAND]
-
+[QVAULT COMMANDS]
 	-qvaultsubmitauthaddress <NEW_ADDRESS>
 		Submit the new authaddress using multisig address.
 	-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>
