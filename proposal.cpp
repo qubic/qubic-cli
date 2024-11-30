@@ -375,7 +375,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		{
 			std::string amountStr = strtok2string(NULL, ",");
 			sint64 amountInt;
-			if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
+			if (sscanf(amountStr.c_str(), "%li", &amountInt) == 1)
 			{
 				p.data.transfer.amounts[i] = amountInt;
 			}
@@ -693,7 +693,7 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 
 	// First check of vote value
 	sint64 voteValue;
-	if (sscanf(voteValueString, "%lli", &voteValue) != 1)
+	if (sscanf(voteValueString, "%li", &voteValue) != 1)
 	{
 		if (strcmp(voteValueString, "none") == 0)
 		{

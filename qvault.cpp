@@ -715,7 +715,7 @@ void getData(const char* nodeIp, int nodePort){
     printf("\n");
     printf("Permille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
 
-    printf("\nThe number of banned addresses:%llu", result.numberOfBannedAddress);
+    printf("\nThe number of banned addresses:%lu", result.numberOfBannedAddress);
 
     printf("\nbanned_address1: ");
     for(uint8_t i = 0 ; i < 32; i++) {
