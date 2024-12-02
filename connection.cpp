@@ -20,7 +20,7 @@
 // includes for template instantiations
 #include "quottery.h"
 #include "qxStruct.h"
-#include "QVAULT.h"
+#include "qvault.h"
 #include "qearn.h"
 
 #ifdef _MSC_VER
