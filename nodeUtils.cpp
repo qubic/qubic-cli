@@ -6,6 +6,7 @@
 #include <chrono>
 #include <memory>
 #include <stdexcept>
+
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -51,13 +52,16 @@ void printTickInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     auto curTickInfo = getTickInfoFromNode(qc);
-    if (curTickInfo.epoch != 0){
+    if (curTickInfo.epoch != 0)
+    {
         LOG("Tick: %u\n", curTickInfo.tick);
         LOG("Epoch: %u\n", curTickInfo.epoch);
         LOG("Number Of Aligned Votes: %u\n", curTickInfo.numberOfAlignedVotes);
         LOG("Number Of Misaligned Votes: %u\n", curTickInfo.numberOfMisalignedVotes);
         LOG("Initial tick: %u\n", curTickInfo.initialTick);
-    } else {
+    }
+    else
+    {
         LOG("Error while getting tick info from %s:%d\n", nodeIp, nodePort);
     }
 }
@@ -89,7 +93,8 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     auto curSystemInfo = getSystemInfoFromNode(qc);
-    if (curSystemInfo.epoch != 0){
+    if (curSystemInfo.epoch != 0)
+    {
         LOG("Version: %u\n", curSystemInfo.version);
         LOG("Epoch: %u\n", curSystemInfo.epoch);
         LOG("Tick: %u\n", curSystemInfo.tick);
@@ -107,7 +112,9 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         // todo: add initial time
 
         LOG("\nAbout EntityBalanceDustThreshold: Entity balances less or euqal this value will be burned if number of entites rises to 75%% of spectrum capacity. Starts to be meaningful if >50%% of spectrum is filled but may still change after that.\n");
-    } else {
+    }
+    else
+    {
         LOG("Error while getting system info from %s:%d\n", nodeIp, nodePort);
     }
 }
@@ -160,7 +167,8 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
             {
                 recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
             }
-            if (hashes != nullptr){
+            if (hashes != nullptr)
+            {
                 TxhashStruct hash;
                 uint8_t digest[32] = {0};
                 char txHash[128] = {0};
@@ -172,15 +180,18 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 memcpy(hash.hash, txHash, 60);
                 hashes->push_back(hash);
             }
-            if (extraData != nullptr){
+            if (extraData != nullptr)
+            {
                 extraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
-                if (tx->inputSize != 0){
+                if (tx->inputSize != 0)
+                {
                     memcpy(ed.vecU8.data(), reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction), tx->inputSize);
                 }
                 extraData->push_back(ed);
             }
-            if (sigs != nullptr){
+            if (sigs != nullptr)
+            {
                 SignatureStruct sig;
                 memcpy(sig.sig, reinterpret_cast<const uint8_t*>(tx) + sizeof(Transaction) + tx->inputSize, SIGNATURE_SIZE);
                 sigs->push_back(sig);
@@ -190,6 +201,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
     }
 
 }
+
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
     static struct
@@ -282,7 +294,8 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     }
     int numTx = 0;
     uint8_t all_zero[32] = {0};
-    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++){
+    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
+    {
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0) numTx++;
     }
     std::vector<Transaction> txs;
@@ -446,7 +459,8 @@ int getTxInfo(const char* nodeIp, const int nodePort, const char* txHash)
     return _GetTxInfo(qc, txHash);
 }
 
-static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
+static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
+{
     char digest[64] = {0};
     if (dumpComputorIndex) LOG("Computor index: %d\n", A.computorIndex);
     LOG("Epoch: %d\n", A.epoch);
@@ -464,7 +478,9 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true){
     getIdentityFromPublicKey(A.expectedNextTickTransactionDigest, digest, true);
     LOG("expectedNextTickTransactionDigest: %s\n", digest);
 }
-bool compareVote(const Tick&A, const Tick&B){
+
+bool compareVote(const Tick&A, const Tick&B)
+{
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
            (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
            (A.millisecond == B.millisecond) &&
@@ -481,7 +497,8 @@ bool verifyVoteWithSalt(const Tick&A,
                         const long long prevResourceDigest,
                         const uint8_t* prevSpectrumDigest,
                         const uint8_t* prevUniverseDigest,
-                        const uint8_t* prevComputerDigest){
+                        const uint8_t* prevComputerDigest)
+{
     int cid = A.computorIndex;
     uint8_t saltedData[64];
     uint8_t saltedDigest[32];
@@ -489,7 +506,8 @@ bool verifyVoteWithSalt(const Tick&A,
     memcpy(saltedData, bc.computors.publicKeys[cid], 32);
     memcpy(saltedData+32, &prevResourceDigest, 8);
     KangarooTwelve(saltedData, 40, saltedDigest, 8);
-    if (A.saltedResourceTestingDigest != *((unsigned long long*)(saltedDigest))){
+    if (A.saltedResourceTestingDigest != *((unsigned long long*)(saltedDigest)))
+    {
         LOG("Mismatched saltedResourceTestingDigest. Computor index: %d\n", cid);
         return false;
     }
@@ -532,8 +550,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
                     const long long prevResourceDigest = 0,
                     const uint8_t* prevSpectrumDigest = nullptr,
                     const uint8_t* prevUniverseDigest = nullptr,
-                    const uint8_t* prevComputerDigest = nullptr
-)
+                    const uint8_t* prevComputerDigest = nullptr)
 {
     if (votes.size() == 0) return;
     if (verifySalt)
@@ -543,17 +560,23 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
         bool all_passed = true;
         for (int i = 0; i < N; i++)
         {
-            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest)){
+            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest))
+            {
                 LOG("Vote %d failed to pass salt check\n", i);
                 dumpQuorumTick(votes[i]);
                 all_passed = false;
-            } else {
+            }
+            else
+            {
                 new_votes.push_back(votes[i]);
             }
         }
-        if (all_passed){
+        if (all_passed)
+        {
             LOG("ALL votes PASSED salts check\n");
-        } else {
+        }
+        else
+        {
             votes = new_votes;
         }
     }
@@ -561,17 +584,23 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
     uniqueVote.push_back(votes[0]);
     voteIndices.resize(1);
     voteIndices[0].push_back(votes[0].computorIndex);
-    for (int i = 1; i < votes.size(); i++){
+    for (int i = 1; i < votes.size(); i++)
+    {
         int vote_indice = -1;
-        for (int j = 0; j < uniqueVote.size(); j++){
-            if (compareVote(votes[i], uniqueVote[j])){
+        for (int j = 0; j < uniqueVote.size(); j++)
+        {
+            if (compareVote(votes[i], uniqueVote[j]))
+            {
                 vote_indice = j;
                 break;
             }
         }
-        if (vote_indice != -1){
+        if (vote_indice != -1)
+        {
             voteIndices[vote_indice].push_back(votes[i].computorIndex);
-        } else {
+        }
+        else
+        {
             uniqueVote.push_back(votes[i]);
             voteIndices.resize(voteIndices.size() + 1);
             int M = voteIndices.size() -1;
@@ -587,7 +616,8 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     BroadcastComputors bc;
     {
         FILE* f = fopen(compFileName, "rb");
-        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors)){
+        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors))
+        {
             LOG("Failed to read comp list\n");
             fclose(f);
             return;
@@ -616,17 +646,20 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     LOG("Received %d quorum tick #%u (votes)\n", votes_next.size(), requestedTick+1);
 
     int N = votes.size();
-    if (N == 0){
+    if (N == 0)
+    {
         return;
     }
 
-    for (int i = 0; i < N; i++){
+    for (int i = 0; i < N; i++)
+    {
         uint8_t digest[64] = {0};
         votes[i].computorIndex ^= Tick::type();
         KangarooTwelve((uint8_t*)&votes[i], sizeof(Tick) - SIGNATURE_SIZE, digest, 32);
         votes[i].computorIndex ^= Tick::type();
         int comp_index = votes[i].computorIndex;
-        if (!verify(bc.computors.publicKeys[comp_index], digest, votes[i].signature)){
+        if (!verify(bc.computors.publicKeys[comp_index], digest, votes[i].signature))
+        {
             LOG("Signature of vote %d is not correct\n", i);
             dumpQuorumTick(votes[i]);
             return;
@@ -643,8 +676,10 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     else
     {
         int max_id = 0;
-        for (int i = 1; i < uniqueVote.size(); i++){
-            if (voteIndicesNext[max_id].size() < voteIndicesNext[i].size()){
+        for (int i = 1; i < uniqueVote.size(); i++)
+        {
+            if (voteIndicesNext[max_id].size() < voteIndicesNext[i].size())
+            {
                 max_id = i;
             }
         }
@@ -656,21 +691,24 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
                        vote_next.prevComputerDigest);
     }
 
-
-
     LOG("Number of unique votes: %d\n", uniqueVote.size());
-    for (int i = 0; i < uniqueVote.size(); i++){
+    for (int i = 0; i < uniqueVote.size(); i++)
+    {
         LOG("Vote #%d (voted by %d computors ID) ", i, voteIndices[i].size());
         const bool dumpComputorIndex = false;
         dumpQuorumTick(uniqueVote[i], dumpComputorIndex);
         LOG("Voted by: ");
         std::sort(voteIndices[i].begin(), voteIndices[i].end());
-        for (int j = 0; j < voteIndices[i].size(); j++){
+        for (int j = 0; j < voteIndices[i].size(); j++)
+        {
             int index = voteIndices[i][j];
             auto alphabet = indexToAlphabet(index);
-            if (j < voteIndices[i].size() - 1){
+            if (j < voteIndices[i].size() - 1)
+            {
                 LOG("%d(%s), ", index, alphabet.c_str());
-            } else {
+            }
+            else
+            {
                 LOG("%d(%s)\n", index, alphabet.c_str());
             }
         }
@@ -690,7 +728,8 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     }
     int numTx = 0;
     uint8_t all_zero[32] = {0};
-    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++){
+    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
+    {
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0) numTx++;
     }
     std::vector<Transaction> txs;
@@ -704,7 +743,8 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     {
         fwrite(&txs[i], 1, sizeof(Transaction), f);
         int extraDataSize = txs[i].inputSize;
-        if (extraDataSize != 0){
+        if (extraDataSize != 0)
+        {
             fwrite(extraData[i].vecU8.data(), 1, extraDataSize, f);
         }
         fwrite(signatures[i].sig, 1, SIGNATURE_SIZE, f);
@@ -729,8 +769,10 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     int numTx = 0;
     uint8_t all_zero[32] = {0};
     LOG("List of transactions on tickData (correct order):\n");
-    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++){
-        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0){
+    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
+    {
+        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0)
+        {
             numTx++;
             char digestHex[65];
             byteToHex(td.transactionDigests[i], digestHex, 32);
@@ -739,13 +781,16 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     }
     std::vector<uint8_t> vDigests;
     vDigests.resize(32*numTx);
-    for (int i = 0; i < numTx; i++){
+    for (int i = 0; i < numTx; i++)
+    {
         Transaction tx;
         fread(&tx, 1, sizeof(Transaction), f);
         int extraDataSize = tx.inputSize;
-        if (extraData != nullptr){
+        if (extraData != nullptr)
+        {
             extraDataStruct eds;
-            if (extraDataSize != 0){
+            if (extraDataSize != 0)
+            {
                 fread(extraDataBuffer, 1, extraDataSize, f);
                 eds.vecU8.resize(extraDataSize);
                 memcpy(eds.vecU8.data(), extraDataBuffer, extraDataSize);
@@ -754,7 +799,8 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         }
 
         fread(signatureBuffer, 1, SIGNATURE_SIZE, f);
-        if (signatures != nullptr){
+        if (signatures != nullptr)
+        {
             SignatureStruct sig;
             memcpy(sig.sig, signatureBuffer, SIGNATURE_SIZE);
             signatures->push_back(sig);
@@ -772,7 +818,8 @@ void readTickDataFromFile(const char* fileName, TickData& td,
                            32);
             memcpy(vDigests.data() + i * 32, digest, 32);
         }
-        if (txHashes != nullptr){
+        if (txHashes != nullptr)
+        {
             TxhashStruct tx_hash;
             getTxHashFromDigest(digest, txHashBuffer);
             memcpy(tx_hash.hash, txHashBuffer, 60);
@@ -789,8 +836,10 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     if (extraData != nullptr) _extraData.resize(numTx);
     if (signatures != nullptr) _signatures.resize(numTx);
     if (txHashes != nullptr) _txHashes.resize(numTx);
-    for (int i = 0; i < numTx; i++){
-        for (int j = 0; j < numTx; j++){
+    for (int i = 0; i < numTx; i++)
+    {
+        for (int j = 0; j < numTx; j++)
+        {
             // guaranteed by the protocol, if any duplicated here it's a bug on core side
             if (memcmp(vDigests.data() + j * 32, td.transactionDigests[i], 32) == 0)
             {
@@ -822,7 +871,8 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     //verifying everything
     BroadcastComputors bc;
     bc = readComputorListFromFile(compFile);
-    if (bc.computors.epoch != td.epoch){
+    if (bc.computors.epoch != td.epoch)
+    {
         LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td.epoch);
     }
     KangarooTwelve((uint8_t*)&td, sizeof(TickData), digest, 32);
@@ -838,12 +888,15 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
                    digest,
                    32);
     uint8_t* computorOfThisTick = bc.computors.publicKeys[computorIndex];
-    if (verify(computorOfThisTick, digest, td.signature)){
+    if (verify(computorOfThisTick, digest, td.signature))
+    {
         char computorID[61] = {0};
         getIdentityFromPublicKey(computorOfThisTick, computorID, false);
         LOG("Tick is VERIFIED (signed by correct computor).\n");
         LOG("Comp ID: %s\n", computorID);
-    } else {
+    }
+    else
+    {
         LOG("Tick is NOT verified (not signed by correct computor).\n");
     }
     LOG("Epoch: %u\n", td.epoch);
@@ -858,7 +911,9 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
         if (verifyTx(txs[i], extraData[i].vecU8.data(), signatures[i].sig))
         {
             LOG("Transaction is VERIFIED\n");
-        } else {
+        }
+        else
+        {
             LOG("Transaction is NOT VERIFIED. Incorrect signature\n");
         }
     }
@@ -876,7 +931,8 @@ bool checkTxOnFile(const char* txHash, const char* fileName)
 
     for (int i = 0; i < txs.size(); i++)
     {
-        if (memcmp(txHashes[i].hash, txHash, 60) == 0){
+        if (memcmp(txHashes[i].hash, txHash, 60) == 0)
+        {
             LOG("Found tx %s on file %s\n", txHash, fileName);
             printReceipt(txs[i], txHash, extraData[i].vecU8.data());
             return true;
@@ -1463,8 +1519,10 @@ void dumpSpectrumToCSV(const char* input, const char* output){
         fwrite(header.c_str(), 1, header.size(), f);
     }
     char buffer[128] = {0};
-    for (int i = 0; i < SPECTRUM_CAPACITY; i++){
-        if (!isEmptyEntity(spectrum[i])){
+    for (int i = 0; i < SPECTRUM_CAPACITY; i++)
+    {
+        if (!isEmptyEntity(spectrum[i]))
+        {
             memset(buffer, 0, 128);
             getIdentityFromPublicKey(spectrum[i].publicKey, buffer, false);
             std::string id = buffer;
@@ -1480,7 +1538,7 @@ void dumpSpectrumToCSV(const char* input, const char* output){
     fclose(f);
 }
 
-//only print ownership
+// only print ownership
 void dumpUniverseToCSV(const char* input, const char* output){
     const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
     Asset* asset = (Asset*)malloc(ASSETS_CAPACITY*sizeof(Entity));
@@ -1493,8 +1551,10 @@ void dumpUniverseToCSV(const char* input, const char* output){
         fwrite(header.c_str(), 1, header.size(), f);
     }
     char buffer[128] = {0};
-    for (int i = 0; i < ASSETS_CAPACITY; i++){
-        if (asset[i].varStruct.ownership.type == OWNERSHIP){
+    for (int i = 0; i < ASSETS_CAPACITY; i++)
+    {
+        if (asset[i].varStruct.ownership.type == OWNERSHIP)
+        {
             memset(buffer, 0, 128);
             getIdentityFromPublicKey(asset[i].varStruct.ownership.publicKey, buffer, false);
             std::string id = buffer;
@@ -1502,13 +1562,13 @@ void dumpUniverseToCSV(const char* input, const char* output){
             std::string issuerID = "null";
             size_t issue_index = asset[i].varStruct.ownership.issuanceIndex;
             {
-                //get asset name
+                // get asset name
                 memset(buffer, 0, 128);
                 memcpy(buffer, asset[issue_index].varStruct.issuance.name, 7);
                 asset_name = buffer;
             }
             {
-                //get issuer
+                // get issuer
                 memset(buffer, 0, 128);
                 getIdentityFromPublicKey(asset[issue_index].varStruct.issuance.publicKey, buffer, false);
                 issuerID = buffer;
@@ -1520,7 +1580,8 @@ void dumpUniverseToCSV(const char* input, const char* output){
                                + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
-        if (asset[i].varStruct.ownership.type == POSSESSION){
+        if (asset[i].varStruct.ownership.type == POSSESSION)
+        {
             memset(buffer, 0, 128);
             getIdentityFromPublicKey(asset[i].varStruct.possession.publicKey, buffer, false);
             std::string id = buffer;
@@ -1533,7 +1594,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
             std::string str_contract_index = std::to_string(contract_index);
             std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
             {
-                //get asset name
+                // get asset name
                 int issuance_index = asset[owner_index].varStruct.ownership.issuanceIndex;
                 memset(buffer, 0, 128);
                 memcpy(buffer, asset[issuance_index].varStruct.issuance.name, 7);
@@ -1546,7 +1607,8 @@ void dumpUniverseToCSV(const char* input, const char* output){
                                str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
-        if (asset[i].varStruct.ownership.type == ISSUANCE){
+        if (asset[i].varStruct.ownership.type == ISSUANCE)
+        {
             memset(buffer, 0, 128);
             getIdentityFromPublicKey(asset[i].varStruct.issuance.publicKey, buffer, false);
             std::string id = buffer;
@@ -1557,7 +1619,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
             std::string str_contract_index = std::to_string(1); // don't know how to get this yet
             std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
             {
-                //get asset name
+                // get asset name
                 memset(buffer, 0, 128);
                 memcpy(buffer, asset[i].varStruct.issuance.name, 7);
                 asset_name = buffer;
@@ -1565,7 +1627,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
                 getIdentityFromPublicKey(asset[i].varStruct.issuance.publicKey, buffer, false);
                 issuerID = buffer;
             }
-//            std::string header ="Index,Type,ID,OwnerIndex,ContractIndex,AssetName,AssetIssuer,Amount\n";
+            // std::string header ="Index,Type,ID,OwnerIndex,ContractIndex,AssetName,AssetIssuer,Amount\n";
             std::string line = str_index + ",ISSUANCE," + id + "," + str_owner_index + "," +
                                str_contract_index + "," + asset_name + "," + issuerID + "," + str_amount + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
@@ -1619,7 +1681,8 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
         response.numRankings = *((unsigned int*)(data+8));
         contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
     }
-    if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType) {
+    if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType)
+    {
         LOG("Failed to get mining score ranking!\n");
         return;
     }
@@ -1679,7 +1742,8 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     BroadcastComputors bc;
     {
         FILE* f = fopen(compFileName, "rb");
-        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors)){
+        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors))
+        {
             LOG("Failed to read comp list\n");
             fclose(f);
             return;

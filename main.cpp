@@ -18,7 +18,8 @@
 int run(int argc, char* argv[])
 {
     parseArgument(argc, argv);
-    switch (g_cmd){
+    switch (g_cmd)
+    {
         case SHOW_KEYS:
             sanityCheckSeed(g_seed);
             printWalletInfo(g_seed);
@@ -140,16 +141,25 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sanityCheckValidString(g_qx_command_1);
             sanityCheckValidString(g_qx_command_2);
-            if (strcmp(g_qx_command_1, "add") == 0){
-                if (strcmp(g_qx_command_2, "bid") == 0){
+            if (strcmp(g_qx_command_1, "add") == 0)
+            {
+                if (strcmp(g_qx_command_2, "bid") == 0)
+                {
                     qxAddToBidOrder(g_nodeIp, g_nodePort, g_seed, g_qx_asset_name, g_qx_issuer, g_qx_price, g_qx_number_of_share, g_offsetScheduledTick);
-                } else if (strcmp(g_qx_command_2, "ask") == 0){
+                }
+                else if (strcmp(g_qx_command_2, "ask") == 0)
+                {
                     qxAddToAskOrder(g_nodeIp, g_nodePort, g_seed, g_qx_asset_name, g_qx_issuer, g_qx_price, g_qx_number_of_share, g_offsetScheduledTick);
                 }
-            } else if (strcmp(g_qx_command_1, "remove") == 0){
-                if (strcmp(g_qx_command_2, "bid") == 0){
+            }
+            else if (strcmp(g_qx_command_1, "remove") == 0)
+            {
+                if (strcmp(g_qx_command_2, "bid") == 0)
+                {
                     qxRemoveToBidOrder(g_nodeIp, g_nodePort, g_seed, g_qx_asset_name, g_qx_issuer, g_qx_price, g_qx_number_of_share, g_offsetScheduledTick);
-                } else if (strcmp(g_qx_command_2, "ask") == 0){
+                }
+                else if (strcmp(g_qx_command_2, "ask") == 0)
+                {
                     qxRemoveToAskOrder(g_nodeIp, g_nodePort, g_seed, g_qx_asset_name, g_qx_issuer, g_qx_price, g_qx_number_of_share, g_offsetScheduledTick);
                 }
             }
@@ -158,16 +168,25 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckValidString(g_qx_command_1);
             sanityCheckValidString(g_qx_command_2);
-            if (strcmp(g_qx_command_1, "entity") == 0){
-                if (strcmp(g_qx_command_2, "bid") == 0){
+            if (strcmp(g_qx_command_1, "entity") == 0)
+            {
+                if (strcmp(g_qx_command_2, "bid") == 0)
+                {
                     qxGetEntityBidOrder(g_nodeIp, g_nodePort, g_qx_issuer, g_qx_offset);
-                } else if (strcmp(g_qx_command_2, "ask") == 0){
+                }
+                else if (strcmp(g_qx_command_2, "ask") == 0)
+                {
                     qxGetEntityAskOrder(g_nodeIp, g_nodePort, g_qx_issuer, g_qx_offset);
                 }
-            } else if (strcmp(g_qx_command_1, "asset") == 0){
-                if (strcmp(g_qx_command_2, "bid") == 0){
+            }
+            else if (strcmp(g_qx_command_1, "asset") == 0)
+            {
+                if (strcmp(g_qx_command_2, "bid") == 0)
+                {
                     qxGetAssetBidOrder(g_nodeIp, g_nodePort, g_qx_asset_name, g_qx_issuer, g_qx_offset);
-                } else if (strcmp(g_qx_command_2, "ask") == 0){
+                }
+                else if (strcmp(g_qx_command_2, "ask") == 0)
+                {
                     qxGetAssetAskOrder(g_nodeIp, g_nodePort, g_qx_asset_name, g_qx_issuer, g_qx_offset);
                 }
             }

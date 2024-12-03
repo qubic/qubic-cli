@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <vector>
+
 #include "K12AndKeyUtil.h"
 #include "logger.h"
 
@@ -18,10 +19,12 @@ bool getSubseedFromSeed(const uint8_t* seed, uint8_t* subseed)
 
     return true;
 }
+
 void getPrivateKeyFromSubSeed(const uint8_t* seed, uint8_t* privateKey)
 {
     KangarooTwelve(seed, 32, privateKey, 32);
 }
+
 void getPublicKeyFromPrivateKey(const uint8_t* privateKey, uint8_t* publicKey)
 {
     point_t P;
@@ -54,6 +57,7 @@ void getIdentityFromPublicKey(const uint8_t* pubkey, char* dstIdentity, bool isL
     identity[60] = 0;
     for (int i = 0; i < 60; i++) dstIdentity[i] = identity[i];
 }
+
 void getTxHashFromDigest(const uint8_t* digest, char* txHash)
 {
     bool isLowerCase = true;

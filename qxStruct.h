@@ -82,7 +82,8 @@ struct EntityBidOrders_output
     Order orders[256];
 };
 
-struct qxGetAssetOrder_input{
+struct qxGetAssetOrder_input
+{
     uint8_t issuer[32];
     uint64_t assetName;
     uint64_t offset;
@@ -90,7 +91,8 @@ struct qxGetAssetOrder_input{
 static_assert(sizeof(qxGetAssetOrder_input) == sizeof(AssetAskOrders_input), "wrong implementation");
 static_assert(sizeof(qxGetAssetOrder_input) == sizeof(AssetBidOrders_input), "wrong implementation");
 
-struct qxGetAssetOrder_output{
+struct qxGetAssetOrder_output
+{
     struct Order
     {
         uint8_t entity[32];
@@ -108,14 +110,16 @@ struct qxGetAssetOrder_output{
 static_assert(sizeof(qxGetAssetOrder_output) == sizeof(AssetAskOrders_output), "wrong implementation");
 static_assert(sizeof(qxGetAssetOrder_output) == sizeof(AssetBidOrders_output), "wrong implementation");
 
-struct qxGetEntityOrder_input{
+struct qxGetEntityOrder_input
+{
     uint8_t entity[32];
     uint64_t offset;
 };
 static_assert(sizeof(qxGetEntityOrder_input) == sizeof(EntityAskOrders_input), "wrong implementation");
 static_assert(sizeof(qxGetEntityOrder_input) == sizeof(EntityBidOrders_input), "wrong implementation");
 
-struct qxGetEntityOrder_output{
+struct qxGetEntityOrder_output
+{
     struct Order
     {
         uint8_t issuer[32];
@@ -189,7 +193,8 @@ struct RemoveFromBidOrder_output
     long long removedNumberOfShares;
 };
 
-struct qxOrderAction_input{
+struct qxOrderAction_input
+{
     uint8_t issuer[32];
     uint64_t assetName;
     long long price;

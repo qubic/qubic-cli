@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -24,11 +25,13 @@
 #define QEARN_LOCK 1
 #define QEARN_UNLOCK 2
 
-struct Unlock_input {
+struct Unlock_input
+{
     uint64_t Amount;                            /* unlocking amount */	
     uint32_t Locked_Epoch;                      /* locked epoch */
 };
-struct Unlock_output {
+struct Unlock_output
+{
 };
 
 void qearnLock(const char* nodeIp, int nodePort, const char* seed, long long lock_amount, uint32_t scheduledTickOffset)
@@ -144,7 +147,8 @@ void qearnUnlock(const char* nodeIp, int nodePort, const char* seed, long long u
     LOG("to check your tx confirmation status\n");
 }
 
-void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch){
+void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
+{
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -173,8 +177,8 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     printf("initial bonus amount:  %llu\ninitial locked amount: %llu\ncurrent bonus amount:  %llu\ncurrent locked amount: %llu\nyield: %.6f%%\n", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, double(result.Yield) / 100000.0);
 }
 
-void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch){
-    
+void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch)
+{
     uint8_t publicKey[32] = {0};
     getPublicKeyFromIdentity(Identity, publicKey);
 
@@ -209,8 +213,8 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identi
     printf("The amount of epoch %d: %llu\n", epoch,  result.LockedAmount);
 }
 
-void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch){
-
+void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch)
+{
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -244,8 +248,8 @@ void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch
     if(result.state == 2) printf("The state of epoch %d is ended.\n", epoch);
 }
 
-void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity){
-
+void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -284,8 +288,9 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
 
     uint64_t bn = 1;
 
-    for(uint64_t i = 0 ; i <= 52; i++) {
-        if(result.status & bn)
+    for (uint64_t i = 0 ; i <= 52; i++)
+    {
+        if (result.status & bn)
         {
             printf("%u ", curEpoch);
         }
@@ -295,8 +300,8 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
     printf("\n");
 }
 
-void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity){
-
+void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};

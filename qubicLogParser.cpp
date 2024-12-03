@@ -1,6 +1,7 @@
-#include "qubicLogParser.h"
 #include <string>
 #include <cstring>
+
+#include "qubicLogParser.h"
 #include "keyUtils.h"
 #include "logger.h"
 
@@ -20,8 +21,11 @@
 #define BURNING 8
 #define BURNING_LOG_SIZE 40
 #define CUSTOM_MESSAGE 255
-std::string logTypeToString(uint8_t type){
-    switch(type){
+
+std::string logTypeToString(uint8_t type)
+{
+    switch(type)
+    {
         case 0:
             return "QU transfer";
         case 1:
@@ -45,7 +49,9 @@ std::string logTypeToString(uint8_t type){
     }
     return "Unknown msg";
 }
-std::string parseLogToString_type0(uint8_t* ptr){
+
+std::string parseLogToString_type0(uint8_t* ptr)
+{
     char sourceIdentity[61] = {0};
     char destIdentity[61] = {0};;
     uint64_t amount;
@@ -56,7 +62,9 @@ std::string parseLogToString_type0(uint8_t* ptr){
     std::string result = "from " + std::string(sourceIdentity) + " to " + std::string(destIdentity) + " " + std::to_string(amount) + "QU.";
     return result;
 }
-std::string parseLogToString_type1(uint8_t* ptr){
+
+std::string parseLogToString_type1(uint8_t* ptr)
+{
     char sourceIdentity[61] = {0};
     char name[8] = {0};
     char numberOfDecimalPlaces = 0;
@@ -80,7 +88,9 @@ std::string parseLogToString_type1(uint8_t* ptr){
                        + std::to_string(unit[6]);
     return result;
 }
-std::string parseLogToString_qutil(uint8_t* ptr){
+
+std::string parseLogToString_qutil(uint8_t* ptr)
+{
     std::string res = "";
     char buffer[64] = {0};
     getIdentityFromPublicKey(ptr, buffer, false);
@@ -92,7 +102,8 @@ std::string parseLogToString_qutil(uint8_t* ptr){
     res += std::to_string(amount) + ": ";
     uint32_t logtype;
     memcpy(&logtype, ptr+72, 4);
-    switch(logtype){
+    switch(logtype)
+    {
         case 0:
             res += "Success";
             break;
@@ -111,7 +122,9 @@ std::string parseLogToString_qutil(uint8_t* ptr){
     }
     return res;
 }
-std::string parseLogToString_type2_type3(uint8_t* ptr){
+
+std::string parseLogToString_type2_type3(uint8_t* ptr)
+{
     char sourceIdentity[61] = {0};
     char dstIdentity[61] = {0};
     char issuerIdentity[61] = {0};
@@ -140,7 +153,8 @@ std::string parseLogToString_type2_type3(uint8_t* ptr){
     return result;
 }
 
-std::string parseLogToString_burning(uint8_t* ptr) {
+std::string parseLogToString_burning(uint8_t* ptr)
+{
     char sourceIdentity[61] = { 0 };
     long long amount;
     const bool isLowerCase = false;
@@ -150,17 +164,21 @@ std::string parseLogToString_burning(uint8_t* ptr) {
     return result;
 }
 
-void printQubicLog(uint8_t* logBuffer, int bufferSize){
-    if (bufferSize == 0){
+void printQubicLog(uint8_t* logBuffer, int bufferSize)
+{
+    if (bufferSize == 0)
+    {
         LOG("Empty log\n");
         return;
     }
-    if (bufferSize < 16){
+    if (bufferSize < 16)
+    {
         LOG("Buffer size is too small (not enough to contain the header), expected 16 | received %d\n", bufferSize);
         return;
     }
     uint8_t* end = logBuffer + bufferSize;
-    while (logBuffer < end){
+    while (logBuffer < end)
+    {
         // basic info
         uint8_t year = *((unsigned char*)(logBuffer + 0));
         uint8_t month = *((unsigned char*)(logBuffer + 1));
@@ -177,46 +195,62 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
 
         logBuffer += 16;
         std::string humanLog = "null";
-        switch(messageType){
+        switch(messageType)
+        {
             case QU_TRANSFER:
-                if (messageSize == QU_TRANSFER_LOG_SIZE || messageSize == (QU_TRANSFER_LOG_SIZE+8)){ // with or without transfer ID
+                if (messageSize == QU_TRANSFER_LOG_SIZE || messageSize == (QU_TRANSFER_LOG_SIZE+8))
+                { // with or without transfer ID
                     humanLog = parseLogToString_type0(logBuffer);
-                } else {
+                }
+                else
+                {
                     LOG("Malfunction buffer size for QU_TRANSFER log\n");
                 }
                 break;
             case ASSET_ISSUANCE:
-                if (messageSize == ASSET_ISSUANCE_LOG_SIZE){
+                if (messageSize == ASSET_ISSUANCE_LOG_SIZE)
+                {
                     humanLog = parseLogToString_type1(logBuffer);
-                } else {
+                }
+                else
+                {
                     LOG("Malfunction buffer size for ASSET_ISSUANCE log\n");
                 }
                 break;
             case ASSET_OWNERSHIP_CHANGE:
-                if (messageSize == ASSET_OWNERSHIP_CHANGE_LOG_SIZE){
+                if (messageSize == ASSET_OWNERSHIP_CHANGE_LOG_SIZE)
+                {
                     humanLog = parseLogToString_type2_type3(logBuffer);
-                } else {
+                }
+                else
+                {
                     LOG("Malfunction buffer size for ASSET_OWNERSHIP_CHANGE log\n");
                 }
                 break;
             case ASSET_POSSESSION_CHANGE:
-                if (messageSize == ASSET_POSSESSION_CHANGE_LOG_SIZE){
+                if (messageSize == ASSET_POSSESSION_CHANGE_LOG_SIZE)
+                {
                     humanLog = parseLogToString_type2_type3(logBuffer);
-                } else {
+                }
+                else
+                {
                     LOG("Malfunction buffer size for ASSET_POSSESSION_CHANGE log\n");
                 }
                 break;
             case BURNING:
-                if (messageSize == BURNING_LOG_SIZE) {
+                if (messageSize == BURNING_LOG_SIZE)
+                {
                     humanLog = parseLogToString_burning(logBuffer);
                 }
-                else {
+                else
+                {
                     LOG("Malfunction buffer size for BURNING log\n");
                 }
                 break;
             // TODO: stay up-to-date with core node contract logger
             case CONTRACT_INFORMATION_MESSAGE:
-                if ( ((uint32_t*)logBuffer)[0] == 4 ) { // QUtil
+                if ( ((uint32_t*)logBuffer)[0] == 4 )
+                { // QUtil
                     humanLog = parseLogToString_qutil(logBuffer+8); // padding issue, +8 instead of +4
                 }
                 break;
@@ -227,9 +261,11 @@ void printQubicLog(uint8_t* logBuffer, int bufferSize){
                 break;
         }
         LOG("%02d-%02d-%02d %02d:%02d:%02d %u.%03d %s: %s\n", year, month, day, hour, minute, second, tick, epoch, mt.c_str(), humanLog.c_str());
-        if (humanLog == "null"){
+        if (humanLog == "null")
+        {
             char buff[1024] = {0};
-            for (int i = 0; i < messageSize; i++){
+            for (int i = 0; i < messageSize; i++)
+            {
                 sprintf(buff + i*2, "%02x", logBuffer[i]);
             }
             LOG("Can't parse, original message: %s\n", buff);

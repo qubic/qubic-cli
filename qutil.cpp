@@ -1,3 +1,9 @@
+#include <vector>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <cstring>
+
 #include "qutil.h"
 #include "keyUtils.h"
 #include "structs.h"
@@ -6,24 +12,26 @@
 #include "K12AndKeyUtil.h"
 #include "connection.h"
 #include "walletUtils.h"
-#include <vector>
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <cstring>
 
 constexpr int QUTIL_CONTRACT_ID = 4;
-enum qutilFunctionId{
+
+enum qutilFunctionId
+{
     GetSendToManyV1Fee = 1,
 };
-enum qutilProcedureId{
+
+enum qutilProcedureId
+{
     SendToManyV1 = 1,
     BurnQubic = 2,
 };
-struct SendToManyV1_input {
+
+struct SendToManyV1_input
+{
     uint8_t addresses[25][32];
     int64_t amounts[25];
 };
+
 struct BurnQubic_input
 {
     long long amount;
@@ -85,7 +93,8 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     std::vector<std::string> addresses;
     std::vector<int64_t> amounts;
     readPayoutList(payoutListFile, addresses, amounts);
-    if (addresses.size() > 25){
+    if (addresses.size() > 25)
+    {
         LOG("WARNING: payout list has more than 25 addresses, only the first 25 addresses will be paid\n");
     }
     uint8_t privateKey[32] = {0};
@@ -114,7 +123,8 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     } packet;
     memset(&packet.stm, 0, sizeof(SendToManyV1_input));
     packet.transaction.amount = 0;
-    for (int i = 0; i < std::min(25, int(addresses.size())); i++){
+    for (int i = 0; i < std::min(25, int(addresses.size())); i++)
+    {
         getPublicKeyFromIdentity(addresses[i].data(), packet.stm.addresses[i]);
         packet.stm.amounts[i] = amounts[i];
         packet.transaction.amount += amounts[i];

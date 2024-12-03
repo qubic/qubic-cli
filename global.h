@@ -1,4 +1,7 @@
+#pragma once
+
 #include "defines.h"
+
 COMMAND g_cmd;
 char* g_seed = DEFAULT_SEED;
 char* g_nodeIp = DEFAULT_NODE_IP;

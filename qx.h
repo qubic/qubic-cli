@@ -1,4 +1,5 @@
 #pragma once
+
 void qxIssueAsset(const char* nodeIp, int nodePort,
                   const char* seed,
                   const char* assetName,

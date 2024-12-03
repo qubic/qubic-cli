@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstring>
+
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -27,6 +28,7 @@ std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nod
 
     return qc->getLatestVectorPacketAs<RespondOwnedAssets>();
 }
+
 std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
     std::vector<RespondPossessedAssets> result;
@@ -98,6 +100,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
     LOG("Issuance Index: %d\n", owned.varStruct.ownership.issuanceIndex);
     LOG("Number Of Units: %lld\n", owned.varStruct.ownership.numberOfUnits);
 }
+
 static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
 {
     char issuer[128] = {0};
@@ -113,21 +116,25 @@ static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
     LOG("Owner ID: %s\n", ownerId);
     LOG("Number Of Units: %lld\n", possession.varStruct.possession.numberOfUnits);
 }
+
 void printOwnedAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
     LOG("======== OWNERSHIP ========\n");
     auto vroa = getOwnedAsset(nodeIp, nodePort, requestedIdentity);
-    for (auto& roa : vroa){
+    for (auto& roa : vroa)
+    {
         printOwnedAsset(roa.asset, roa.issuanceAsset);
         printAssetDigest(roa);
         LOG("Tick: %u\n\n", roa.tick);
     }
 }
+
 void printPossessionAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
     LOG("======== POSSESSION ========\n");
     auto vrpa = getPossessionAsset(nodeIp, nodePort, requestedIdentity);
-    for (auto& rpa : vrpa){
+    for (auto& rpa : vrpa)
+    {
         printPossessionAsset(rpa.ownershipAsset, rpa.asset, rpa.issuanceAsset);
         printAssetDigest(rpa);
         LOG("Tick: %u\n\n", rpa.tick);

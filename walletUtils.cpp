@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+
 #include "utils.h"
 #include "nodeUtils.h"
 #include "keyUtils.h"
@@ -32,6 +33,7 @@ void printWalletInfo(const char* seed)
     LOG("Public key: %s\n", publicKeyQubicFormat);
     LOG("Identity: %s\n", publicIdentity);
 }
+
 RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t* publicKey)
 {
     RespondedEntity result;
@@ -62,7 +64,8 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
     while (ptr < recvByte)
     {
         auto header = (RequestResponseHeader*)(data+ptr);
-        if (header->type() == RESPOND_ENTITY){
+        if (header->type() == RESPOND_ENTITY)
+        {
             auto entity = (RespondedEntity*)(data + ptr + sizeof(RequestResponseHeader));
             result = *entity;
         }
@@ -131,7 +134,8 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     getIdentityFromPublicKey(tx.sourcePublicKey, sourceIdentity, isLowerCase);
     getIdentityFromPublicKey(tx.destinationPublicKey, dstIdentity, isLowerCase);
     LOG("~~~~~RECEIPT~~~~~\n");
-    if (txHash != nullptr) {
+    if (txHash != nullptr)
+    {
         memcpy(txHashClean, txHash, 60);
         LOG("TxHash: %s\n", txHashClean);
     }
@@ -141,21 +145,26 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     LOG("Amount: %lu\n", tx.amount);
     LOG("Tick: %u\n", tx.tick);
     LOG("Extra data size: %u\n", tx.inputSize);
-    if (extraData != nullptr && tx.inputSize){
+    if (extraData != nullptr && tx.inputSize)
+    {
         char hex_tring[1024*2+1] = {0};
         for (int i = 0; i < tx.inputSize; i++)
             sprintf(hex_tring + i * 2, "%02x", extraData[i]);
 
         LOG("Extra data: %s\n", hex_tring);
     }
-    if (moneyFlew != -1){
+    if (moneyFlew != -1)
+    {
         if (moneyFlew) LOG("MoneyFlew: Yes\n");
         else LOG("MoneyFlew: No\n");
-    } else {
+    }
+    else
+    {
         LOG("MoneyFlew: N/A\n");
     }
     LOG("~~~~~END-RECEIPT~~~~~\n");
 }
+
 bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signature)
 {
     std::vector<uint8_t> buffer;
@@ -169,8 +178,6 @@ bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signatur
                    32);
     return verify(tx.sourcePublicKey, digest, signature);
 }
-
-
 
 void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char* seed,
                              const char* targetIdentity, const uint64_t amount, uint32_t txTick,
@@ -221,20 +228,23 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
-    if (waitUntilFinish){
+    if (waitUntilFinish)
+    {
         LOG("Waiting for tick:\n");
-        while (currentTick <= packet.transaction.tick){
+        while (currentTick <= packet.transaction.tick)
+        {
             LOG("%d/%d\n", currentTick, packet.transaction.tick);
             Q_SLEEP(1000);
             currentTick = getTickNumberFromNode(qc);
         }
         checkTxOnTick(nodeIp, nodePort, txHash, packet.transaction.tick);
-    } else {
+    }
+    else
+    {
         LOG("run ./qubic-cli [...] -checktxontick %u %s\n", txTick, txHash);
         LOG("to check your tx confirmation status\n");
     }
 }
-
 
 void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
                              const char* targetIdentity, const uint64_t amount, uint32_t scheduledTickOffset,
@@ -245,7 +255,6 @@ void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
     uint32_t txTick = currentTick + scheduledTickOffset;
     makeStandardTransactionInTick(nodeIp, nodePort, seed, targetIdentity, amount, txTick, waitUntilFinish); 
 }
-
 
 void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const char* seed,
@@ -310,7 +319,6 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
-
 
 void makeContractTransaction(const char* nodeIp, int nodePort,
     const char* seed,
@@ -412,14 +420,13 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     return false;
 }
 
-
-
 void makeIPOBid(const char* nodeIp, int nodePort,
                 const char* seed,
                 uint32_t contractIndex,
                 uint64_t pricePerShare,
                 uint16_t numberOfShare,
-                uint32_t scheduledTickOffset){
+                uint32_t scheduledTickOffset)
+{
     auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -478,7 +485,8 @@ void makeIPOBid(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
-RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
+RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex)
+{
     RespondContractIPO result;
     auto qc = make_qc(nodeIp, nodePort);
     struct {
@@ -502,11 +510,15 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
 
     return result;
 }
-void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex){
+
+void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex)
+{
     RespondContractIPO status = _getIPOStatus(nodeIp, nodePort, contractIndex);
     LOG("Identity - Price per share\n");
-    for (int i = 0; i < NUMBER_OF_COMPUTORS; i++){
-        if (!isZeroPubkey(status.publicKeys[i])){
+    for (int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+    {
+        if (!isZeroPubkey(status.publicKeys[i]))
+        {
             char identity[128] = {0};
             getIdentityFromPublicKey(status.publicKeys[i], identity, false);
 

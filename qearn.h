@@ -1,11 +1,15 @@
 #pragma once
 
+#include "structs.h"
+
 // SC structs
 
-struct QEarnGetLockInfoPerEpoch_input {
+struct QEarnGetLockInfoPerEpoch_input
+{
     uint32_t Epoch;                             /* epoch number to get information */
 };
-struct QEarnGetLockInfoPerEpoch_output {
+struct QEarnGetLockInfoPerEpoch_output
+{
     uint64_t LockedAmount;                      /* initial total locked amount in epoch */
     uint64_t BonusAmount;                       /* initial bonus amount in epoch*/
     uint64_t CurrentLockedAmount;               /* total locked amount in epoch. exactly the amount excluding the amount unlocked early*/
@@ -18,11 +22,13 @@ struct QEarnGetLockInfoPerEpoch_output {
     }
 };
 
-struct QEarnGetUserLockedInfo_input {
+struct QEarnGetUserLockedInfo_input
+{
     uint8_t publicKey[32];
     uint32_t epoch;
 };
-struct QEarnGetUserLockedInfo_output {
+struct QEarnGetUserLockedInfo_output
+{
     uint64_t LockedAmount;
 
     static constexpr unsigned char type()
@@ -31,10 +37,12 @@ struct QEarnGetUserLockedInfo_output {
     }
 };
 
-struct QEarnGetStateOfRound_input {
+struct QEarnGetStateOfRound_input
+{
     uint32_t Epoch;
 };
-struct QEarnGetStateOfRound_output {
+struct QEarnGetStateOfRound_output
+{
     uint32_t state;
 
     static constexpr unsigned char type()
@@ -43,10 +51,12 @@ struct QEarnGetStateOfRound_output {
     }
 };
 
-struct QEarnGetUserLockStatus_input {
+struct QEarnGetUserLockStatus_input
+{
     uint8_t publicKey[32];
 };
-struct QEarnGetUserLockStatus_output {
+struct QEarnGetUserLockStatus_output
+{
     uint64_t status;
 
     static constexpr unsigned char type()
@@ -55,10 +65,12 @@ struct QEarnGetUserLockStatus_output {
     }
 };
 
-struct QEarnGetEndedStatus_input {
+struct QEarnGetEndedStatus_input
+{
     uint8_t publicKey[32];
 };
-struct QEarnGetEndedStatus_output {
+struct QEarnGetEndedStatus_output
+{
     uint64_t Fully_Unlocked_Amount;
     uint64_t Fully_Rewarded_Amount;
     uint64_t Early_Unlocked_Amount;

@@ -7,6 +7,7 @@
 #include <memory>
 #include <thread>
 #include <stdexcept>
+
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -77,10 +78,13 @@ bool uploadHeader(QCPtr& qc, const char* seed, size_t fileSize, int numberOfFrag
         ret = _GetTxInfo(qc, txHashQubic);
         Q_SLEEP(1000);
     }
-    if (ret == 0){
+    if (ret == 0)
+    {
         LOG("Transaction %s is included\n", txHashQubic);
         return true;
-    } else {
+    }
+    else
+    {
         LOG("Transaction %s is NOT included.\n", txHashQubic);
         memset(txHash, 0, 32);
         return false;
@@ -139,10 +143,13 @@ bool uploadFragment(QCPtr& qc, const char* seed, const uint64_t fragmentId,
         ret = _GetTxInfo(qc, txHashQubic);
         Q_SLEEP(1000);
     }
-    if (ret == 0){
+    if (ret == 0)
+    {
         LOG("Transaction %s is included\n", txHashQubic);
         return true;
-    } else {
+    }
+    else
+    {
         LOG("Transaction %s is NOT included.\n", txHashQubic);
         memset(outTxHash, 0, 32);
         return false;
@@ -224,9 +231,12 @@ void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, co
     for (int i = 0; i < numberOfFragments; i++)
     {
         getIdentityFromPublicKey(fragmentTxDigests[i].ptr, qubicHash, true);
-        if (i != numberOfFragments - 1){
+        if (i != numberOfFragments - 1)
+        {
             LOG("Fragment #%d: %s\n", i, qubicHash);
-        } else {
+        }
+        else
+        {
             LOG("Trailer: %s\n", qubicHash);
         }
     }
@@ -244,7 +254,8 @@ void downloadFile(const char* nodeIp, const int nodePort, const char* trailer, c
         ret = _GetInputDataFromTxHash(qc, trailer, buffer, dataSize);
         Q_SLEEP(1000);
     }
-    if (ret == 1){
+    if (ret == 1)
+    {
         LOG("Cannot find trailer %s is included\n", trailer);
         return;
     }

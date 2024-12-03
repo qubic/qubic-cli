@@ -1,9 +1,10 @@
 #pragma once
 
-#include "defines.h"
-#include "utils.h"
 #include <cstddef>
 #include <cstring>
+
+#include "defines.h"
+#include "utils.h"
 
 enum COMMAND
 {
@@ -96,19 +97,22 @@ enum COMMAND
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
-struct RequestResponseHeader {
+struct RequestResponseHeader 
+{
 private:
     uint8_t _size[3];
     uint8_t _type;
     unsigned int _dejavu;
 
 public:
-    inline unsigned int size() {
+    inline unsigned int size()
+    {
         if (((*((unsigned int*)_size)) & 0xFFFFFF)==0) return INT32_MAX; // size is never zero, zero means broken packets
         return (*((unsigned int*)_size)) & 0xFFFFFF;
     }
 
-    inline void setSize(unsigned int size) {
+    inline void setSize(unsigned int size)
+    {
         _size[0] = (uint8_t)size;
         _size[1] = (uint8_t)(size >> 8);
         _size[2] = (uint8_t)(size >> 16);
@@ -143,6 +147,7 @@ public:
         _type = type;
     }
 };
+
 typedef struct
 {
     unsigned char publicKey[32];
@@ -189,6 +194,7 @@ struct Entity
     unsigned int numberOfIncomingTransfers, numberOfOutgoingTransfers;
     unsigned int latestIncomingTransferTick, latestOutgoingTransferTick;
 };
+
 typedef struct
 {
     Entity entity;
@@ -283,6 +289,7 @@ typedef struct
         return BROADCAST_FUTURE_TICK_DATA;
     }
 } TickData;
+
 typedef struct
 {
     unsigned int tick;
@@ -320,14 +327,17 @@ typedef struct
 {
     uint8_t sig[SIGNATURE_SIZE];
 } SignatureStruct;
+
 typedef struct
 {
     char hash[60];
 } TxhashStruct;
+
 typedef struct
 {
     uint8_t ptr[32];
 } TxHash32Struct;
+
 typedef struct
 {
     std::vector<uint8_t> vecU8;

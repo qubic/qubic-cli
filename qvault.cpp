@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -34,7 +35,6 @@ struct submitAuthAddress_input
 {
     uint8_t newAddress[32];
 };
-
 struct submitAuthAddress_output
 {
 };
@@ -43,7 +43,6 @@ struct changeAuthAddress_input
 {
     uint32_t numberOfChangedAddress;
 };
-
 struct changeAuthAddress_output
 {
 };
@@ -54,7 +53,6 @@ struct submitFees_input
     uint32_t newreinvesting_permille;
     uint32_t newdev_permille;
 };
-
 struct submitFees_output
 {
 };
@@ -65,7 +63,6 @@ struct changeFees_input
     uint32_t newreinvesting_permille;
     uint32_t newdev_permille;
 };
-
 struct changeFees_output
 {
 };
@@ -74,7 +71,6 @@ struct submitReinvestingAddress_input
 {
     uint8_t newAddress[32];
 };
-
 struct submitReinvestingAddress_output
 {
 };
@@ -83,7 +79,6 @@ struct changeReinvestingAddress_input
 {
     uint8_t newAddress[32];
 };
-
 struct changeReinvestingAddress_output
 {
 };
@@ -92,7 +87,6 @@ struct submitAdminAddress_input
 {
     uint8_t newAddress[32];
 };
-
 struct submitAdminAddress_output
 {
 };
@@ -101,7 +95,6 @@ struct changeAdminAddress_input
 {
     uint8_t newAddress[32];
 };
-
 struct changeAdminAddress_output
 {
 };
@@ -110,7 +103,6 @@ struct submitBannedAddress_input
 {
     uint8_t bannedAddress[32];
 };
-
 struct submitBannedAddress_output
 {
 };
@@ -119,7 +111,6 @@ struct saveBannedAddress_input
 {
     uint8_t bannedAddress[32];
 };
-
 struct saveBannedAddress_output
 {
 };
@@ -128,7 +119,6 @@ struct submitUnbannedAddress_input
 {
     uint8_t unbannedAddress[32];
 };
-
 struct submitUnbannedAddress_output
 {
 };
@@ -137,12 +127,12 @@ struct unblockBannedAddress_input
 {
     uint8_t unbannedAddress[32];
 };
-
 struct unblockBannedAddress_output
 {
 };
 
-void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity){
+void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -203,7 +193,8 @@ void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint3
     LOG("to check your tx confirmation status\n");
 }
 
-void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t numberOfChangedAddress){
+void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t numberOfChangedAddress)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -261,8 +252,8 @@ void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint3
     LOG("to check your tx confirmation status\n");
 }
 
-void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille){
-
+void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -322,8 +313,8 @@ void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     LOG("to check your tx confirmation status\n");
 }
 
-void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille){
-
+void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -381,10 +372,10 @@ void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
-
 }
 
-void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -445,7 +436,8 @@ void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed
     LOG("to check your tx confirmation status\n");
 }
 
-void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -506,7 +498,8 @@ void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed
     LOG("to check your tx confirmation status\n");
 }
 
-void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -567,7 +560,8 @@ void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uin
     LOG("to check your tx confirmation status\n");
 }
 
-void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -628,8 +622,8 @@ void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uin
     LOG("to check your tx confirmation status\n");
 }
 
-void getData(const char* nodeIp, int nodePort){
-
+void getData(const char* nodeIp, int nodePort)
+{
     auto qc = make_qc(nodeIp, nodePort);
     
     struct {
@@ -659,93 +653,75 @@ void getData(const char* nodeIp, int nodePort){
     }
 
     printf("AUTH_ADDRESS1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.AUTH_ADDRESS1[i]);
-    }
     printf("\nAUTH_ADDRESS2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.AUTH_ADDRESS2[i]);
-    }
     printf("\nAUTH_ADDRESS3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.AUTH_ADDRESS3[i]);
-    }
     printf("\nReinvesting_address: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.Reinvesting_address[i]);
-    }
     printf("\nadmin_address: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.admin_address[i]);
-    }
     printf("\nnewAuthAddress1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAuthAddress1[i]);
-    }
     printf("\nnewAuthAddress2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAuthAddress2[i]);
-    }
     printf("\nnewAuthAddress3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAuthAddress3[i]);
-    }
     printf("\nnewReinvesting_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newReinvesting_address1[i]);
-    }
     printf("\nnewReinvesting_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newReinvesting_address2[i]);
-    }
     printf("\nnewReinvesting_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newReinvesting_address3[i]);
-    }
     printf("\nnewAdmin_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAdmin_address1[i]);
-    }printf("\nnewAdmin_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    printf("\nnewAdmin_address2: ");
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAdmin_address2[i]);
-    }printf("\nnewAdmin_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    printf("\nnewAdmin_address3: ");
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.newAdmin_address3[i]);
-    }
     printf("\n");
     printf("Permille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
 
     printf("\nThe number of banned addresses:%llu", result.numberOfBannedAddress);
 
     printf("\nbanned_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.bannedAddress1[i]);
-    }
     printf("\nbanned_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.bannedAddress2[i]);
-    }
     printf("\nbanned_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.bannedAddress3[i]);
-    }
 
     printf("\nunbanned_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.unbannedAddress1[i]);
-    }
     printf("\nunbanned_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.unbannedAddress2[i]);
-    }
     printf("\nunbanned_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
+    for (uint8_t i = 0 ; i < 32; i++)
         printf("%u ", result.unbannedAddress3[i]);
-    }
 }
 
-
-void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -806,8 +782,8 @@ void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed,  ui
     LOG("to check your tx confirmation status\n");
 }
 
-
-void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -868,8 +844,8 @@ void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint
     LOG("to check your tx confirmation status\n");
 }
 
-
-void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};
@@ -930,8 +906,8 @@ void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* se
     LOG("to check your tx confirmation status\n");
 }
 
-
-void saveUnbannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity){
+void saveUnbannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+{
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t publicKey[32] = {0};

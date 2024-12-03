@@ -1,5 +1,3 @@
-#include "structs.h"
-#include <stdexcept>
 #ifdef _MSC_VER
 #pragma comment(lib, "Ws2_32.lib")
 #include <Winsock2.h>
@@ -13,9 +11,11 @@
 #endif
 #include <cstring>
 #include <string>
+#include <stdexcept>
 
 #include "connection.h"
 #include "logger.h"
+#include "structs.h"
 
 // includes for template instantiations
 #include "quottery.h"
@@ -79,6 +79,7 @@ static int connect(const char* nodeIp, int nodePort)
     return serverSocket;
 }
 #endif
+
 QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
 {
 	memset(mNodeIp, 0, 32);
@@ -93,10 +94,12 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     uint8_t* data = mHandshakeData.data();
     *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();   
 }
+
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
 {
     buffer = mHandshakeData;
 }
+
 QubicConnection::~QubicConnection()
 {
 	close(mSocket);

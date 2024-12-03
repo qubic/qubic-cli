@@ -2,15 +2,17 @@
 
 #include "structs.h"
 
-//SC structs
-struct QuotteryjoinBet_input {
+// SC structs
+struct QuotteryjoinBet_input
+{
     uint32_t betId;
     int numberOfSlot;
     uint32_t option;
     uint32_t _placeHolder;
 };
 
-struct QuotteryissueBet_input {
+struct QuotteryissueBet_input
+{
     uint8_t betDesc[32];
     uint8_t optionDesc[32*8];
     uint8_t oracleProviderId[32*8];
@@ -22,7 +24,8 @@ struct QuotteryissueBet_input {
     uint32_t numberOfOption;
 };
 
-struct qtryBasicInfo_output {
+struct qtryBasicInfo_output
+{
     uint64_t feePerSlotPerHour; // Amount of qus
     uint64_t gameOperatorFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
     uint64_t shareholderFee; // 4 digit number ABCD means AB.CD% | 1234 is 12.34%
@@ -46,11 +49,12 @@ struct qtryBasicInfo_output {
     }
 };
 
-struct getBetInfo_input {
+struct getBetInfo_input
+{
     uint32_t betId;
 };
-
-struct getBetInfo_output {
+struct getBetInfo_output
+{
     // meta data info
     uint32_t betId;
     uint32_t nOption;      // options number
@@ -76,12 +80,13 @@ struct getBetInfo_output {
     }    
 };
 
-struct getBetOptionDetail_input {
+struct getBetOptionDetail_input
+{
     uint32_t betId;
     uint32_t betOption;
 };
-
-struct getBetOptionDetail_output {
+struct getBetOptionDetail_output
+{
     uint8_t bettor[32*1024];
 
     static constexpr unsigned char type()
@@ -90,7 +95,8 @@ struct getBetOptionDetail_output {
     }
 };
 
-struct getActiveBet_output {
+struct getActiveBet_output
+{
     uint32_t count;
     uint32_t betId[1024];
 
@@ -100,11 +106,12 @@ struct getActiveBet_output {
     }
 };
 
-struct getActiveBetByCreator_input {
+struct getActiveBetByCreator_input
+{
     uint8_t creator[32];
 };
-
-struct getActiveBetByCreator_output {
+struct getActiveBetByCreator_output
+{
     uint32_t count;
     uint32_t betId[1024];
 
@@ -114,12 +121,15 @@ struct getActiveBetByCreator_output {
     } 
 };
 
-struct publishResult_input {
+struct publishResult_input
+{
     uint32_t betId;
     uint32_t winOption;
 };
+
 #pragma pack(1)
-struct cancelBet_input {
+struct cancelBet_input
+{
     uint32_t betId;
 };
 #pragma pop()

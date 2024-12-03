@@ -1,14 +1,14 @@
-#include "proposal.h"
-#include "walletUtils.h"
-#include "keyUtils.h"
-#include "sanityCheck.h"
-#include "commonFunctions.h"
-
 #include <iostream>
 #include <cstring>
 #include <algorithm>
 #include <cctype>
 #include <string>
+
+#include "proposal.h"
+#include "walletUtils.h"
+#include "keyUtils.h"
+#include "sanityCheck.h"
+#include "commonFunctions.h"
 
 #define GQMPROP_CONTRACT_INDEX 6
 
@@ -35,7 +35,6 @@
 #define CCF_PROC_VOTE 2
 
 
-
 void toLower(std::string& data)
 {
 	std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c) { return std::tolower(c); });
@@ -51,7 +50,6 @@ void convertProposalDataToV1(const ProposalDataYesNo& pyn, ProposalDataV1& pv1)
 	memcpy(&pv1, &pyn, sizeof(pyn));
 	memset(((char*)&pv1) + sizeof(pyn), 0, sizeof(pv1) - sizeof(pyn));
 }
-
 
 bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t* proposerPublicKey = nullptr, int proposalIndex = -1)
 {
@@ -273,7 +271,6 @@ void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule
 		// TODO
 	}
 }
-
 
 void printSetProposalHelp()
 {
@@ -503,7 +500,8 @@ bool getProposalIndices(const char* nodeIp, int nodePort,
 		
 		if (output.numOfIndices > 0)
 			input.prevProposalIndex = output.indices[output.numOfIndices - 1];
-	} while (output.numOfIndices == 64);
+	} 
+	while (output.numOfIndices == 64);
 
 	return true;
 }

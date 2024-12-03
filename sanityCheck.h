@@ -1,8 +1,8 @@
 #pragma once
 
-#include "logger.h"
-
 #include <fstream>
+
+#include "logger.h"
 
 static bool isValidIpAddress(char* ipAddress)
 {
@@ -34,11 +34,13 @@ static void sanityCheckSeed(const char* privKey)
 		LOG("privKey is null\n");
 		exit(1);
 	}
-    if (strlen(privKey) != 55){
+    if (strlen(privKey) != 55)
+    {
         LOG("Seed must be 55-char length\n");
         exit(1);
     }
-    if (memcmp(privKey, DEFAULT_SEED, 55) == 0){
+    if (memcmp(privKey, DEFAULT_SEED, 55) == 0)
+    {
         LOG("WARNING: You are using default seed\n");
     }
 }
@@ -64,7 +66,8 @@ static void sanityCheckNode(char* ip, int port)
 
 static void sanityCheckAmountTransferAsset(long long amount)
 {
-    if (amount <= 0){
+    if (amount <= 0)
+    {
         LOG("Invalid amount\n");
         exit(1);
     }
@@ -72,12 +75,15 @@ static void sanityCheckAmountTransferAsset(long long amount)
 
 static void sanityCheckIdentity(const char* identity)
 {
-	if (identity == NULL){
+	if (identity == NULL)
+    {
 		LOG("identity is null\n");
 		exit(1);
 	}
-	for (int i = 0; i < 60; i++){
-		if (identity[i] < 'A' || identity[i] > 'Z'){
+	for (int i = 0; i < 60; i++)
+    {
+		if (identity[i] < 'A' || identity[i] > 'Z')
+        {
 			LOG("invalid identity at position %d (%c)", i, identity[i]);
 			exit(1);
 		}
@@ -88,42 +94,53 @@ static void sanityCheckIdentity(const char* identity)
         exit(1);
     }
 }
+
 static void sanityCheckTxHash(char* txHash)
 {
-    if (txHash == NULL){
+    if (txHash == NULL)
+    {
         LOG("identity is null\n");
         exit(1);
     }
-    for (int i = 0; i < 60; i++){
-        if (txHash[i] < 'a' || txHash[i] > 'z'){
+    for (int i = 0; i < 60; i++)
+    {
+        if (txHash[i] < 'a' || txHash[i] > 'z')
+        {
             LOG("invalid identity at position %d (%c)", i, txHash[i]);
             exit(1);
         }
     }
 }
+
 static void sanityCheckTxAmount(int64_t amount)
 {
-	if (amount < 0){
+	if (amount < 0)
+    {
 		LOG("invalid amount %lld\n", amount);
 		exit(1);
 	}
 }
+
 static void sanityCheckExtraDataSize(int data_size)
 {
-	if (data_size > 1024){
-		LOG("Invalid data size %d, data size must be smaller than 1024\n", data_size);
-		exit(1);
-	}
-}
-static void sanityCheckRawPacketSize(int data_size)
-{
-	if (data_size > 1024){
+	if (data_size > 1024)
+    {
 		LOG("Invalid data size %d, data size must be smaller than 1024\n", data_size);
 		exit(1);
 	}
 }
 
-static void sanityFileExist (const std::string name) {
+static void sanityCheckRawPacketSize(int data_size)
+{
+	if (data_size > 1024)
+    {
+		LOG("Invalid data size %d, data size must be smaller than 1024\n", data_size);
+		exit(1);
+	}
+}
+
+static void sanityFileExist (const std::string name)
+{
     std::ifstream f(name.c_str());
     if (!f.good())
     {
@@ -143,7 +160,8 @@ static void sanityCheckSpecialCommand(int cmd)
 
 static void sanityCheckNumberOfUnit(long long unit)
 {
-    if (unit <= 0){
+    if (unit <= 0)
+    {
         LOG("Invalid number of unit\n");
         exit(1);
     }
@@ -151,7 +169,8 @@ static void sanityCheckNumberOfUnit(long long unit)
 
 static void sanityCheckNumberOfDecimal(char unit)
 {
-    if (unit < 0){
+    if (unit < 0)
+    {
         LOG("Invalid number of decimal\n");
         exit(1);
     }
@@ -159,18 +178,22 @@ static void sanityCheckNumberOfDecimal(char unit)
 
 static void sanityCheckValidString(const char* str)
 {
-    if (str == nullptr){
+    if (str == nullptr)
+    {
         LOG("Invalid string\n");
         exit(1);
     }
 }
+
 static void sanityCheckUnitofMeasurement(const char* str)
 {
-    if (str == nullptr){
+    if (str == nullptr)
+    {
         LOG("Invalid string\n");
         exit(1);
     }
-    if (strlen(str) != 7){
+    if (strlen(str) != 7)
+    {
         LOG("UnitofMeasurement length must be 7, they are powers of the corresponding SI base units:\n");
         LOG("AMPERE\n");
         LOG("CANDELA\n");
@@ -185,22 +208,30 @@ static void sanityCheckUnitofMeasurement(const char* str)
 
 static void sanityCheckMainAuxStatus(const char* str)
 {
-    if (str == nullptr){
+    if (str == nullptr)
+    {
         LOG("Invalid MAIN/AUX string\n");
         exit(1);
     }
     int len = strlen(str);
-    if (len == 4){
-        if (memcmp(str, "MAIN", 4) != 0){
+    if (len == 4)
+    {
+        if (memcmp(str, "MAIN", 4) != 0)
+        {
             LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
             exit(1);
         }
-    } else if (len == 3){
-        if (memcmp(str, "AUX", 3) != 0){
+    } 
+    else if (len == 3)
+    {
+        if (memcmp(str, "AUX", 3) != 0)
+        {
             LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
             exit(1);
         }
-    } else {
+    }
+    else
+    {
         LOG("Invalid MAIN/AUX string. Expected (MAIN/AUX), have %s\n", str);
         exit(1);
     }
@@ -208,15 +239,18 @@ static void sanityCheckMainAuxStatus(const char* str)
 
 static void checkValidEpoch(int epoch)
 {
-    if (epoch >= 0 &&  epoch < 1000){
+    if (epoch >= 0 &&  epoch < 1000)
+    {
         return;
     }
     LOG("Invalid epoch number\n");
     exit(1);
 }
+
 static void checkValidSolutionThreshold(int thres)
 {
-    if (thres >= 0){
+    if (thres >= 0)
+    {
         return;
     }
     LOG("Invalid solution threshold\n");

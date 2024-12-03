@@ -1,4 +1,7 @@
+#pragma once
+
 #include "commonFunctions.h"
+
 #define DEFAULT_SCHEDULED_TICK_OFFSET 20
 #define DEFAULT_NODE_PORT 21841
 #define DEFAULT_NODE_IP "127.0.0.1"

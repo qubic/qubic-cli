@@ -1,7 +1,9 @@
 #pragma once
+
 #include <cstdint>
 #include <vector>
 #include <memory>
+
 // Not thread safe
 class QubicConnection
 {
@@ -43,7 +45,9 @@ private:
     uint8_t mBuffer[0xFFFFFF];
     std::vector<uint8_t> mHandshakeData; // storing handshake data after open a connection
 };
+
 typedef std::shared_ptr<QubicConnection> QCPtr;
+
 static QCPtr make_qc(const char* nodeIp, int nodePort)
 {
     return std::make_shared<QubicConnection>(nodeIp, nodePort);

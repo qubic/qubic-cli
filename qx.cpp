@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
@@ -32,7 +33,8 @@
 #define QX_REMOVE_ASK_ORDER 7
 #define QX_REMOVE_BID_ORDER 8
 
-void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
+void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result)
+{
     auto qc = make_qc(nodeIp, nodePort);
     struct {
         RequestResponseHeader header;
@@ -56,7 +58,8 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result){
     }
 }
 
-void printQxFee(const char* nodeIp, const int nodePort){
+void printQxFee(const char* nodeIp, const int nodePort)
+{
     QxFees_output result;
     getQxFees(nodeIp, nodePort, result);
     LOG("Asset issuance fee: %u\n", result.assetIssuanceFee);
@@ -99,10 +102,13 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 1000000000;
     uint32_t scheduledTick = 0;
-    if (scheduledTickOffset < 50000){
+    if (scheduledTickOffset < 50000)
+    {
         uint32_t currentTick = getTickNumberFromNode(qc);
         scheduledTick = currentTick + scheduledTickOffset;
-    } else {
+    }
+    else
+    {
         scheduledTick = scheduledTickOffset;
     }
     packet.transaction.tick = scheduledTick;
@@ -136,7 +142,6 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ia));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
-
 }
 
 void qxTransferAsset(const char* nodeIp, int nodePort,
@@ -160,7 +165,8 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     char assetNameU1[8] = {0};
 
     memcpy(assetNameU1, pAssetName, strlen(pAssetName));
-    if (strlen(pIssuerInQubicFormat) != 60){
+    if (strlen(pIssuerInQubicFormat) != 60)
+    {
         LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
         exit(0);
     }
@@ -212,7 +218,6 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ta));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
-
 }
 
 template <int functionNumber>
@@ -223,7 +228,6 @@ void qxOrderAction(const char* nodeIp, int nodePort,
                    const long long price,
                    const long long numberOfShares,
                    uint32_t scheduledTickOffset)
-
 {
     auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
@@ -236,7 +240,8 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     char txHash[128] = {0};
     char assetNameU1[8] = {0};
     memcpy(assetNameU1, pAssetName, strlen(pAssetName));
-    if (strlen(pIssuerInQubicFormat) != 60){
+    if (strlen(pIssuerInQubicFormat) != 60)
+    {
         LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
         exit(0);
     }
@@ -255,7 +260,8 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 1; // free
-    if (functionNumber == QX_ADD_BID_ORDER){
+    if (functionNumber == QX_ADD_BID_ORDER)
+    {
         packet.transaction.amount = price * numberOfShares;
     }
 
@@ -350,14 +356,17 @@ void printAssetOrders(qxGetAssetOrder_output& orders)
 {
     int N = sizeof(orders) /sizeof(orders.orders[0]);
     LOG("Entity\t\tPrice\tNumberOfShares\n");
-    for (int i = 0; i < N; i++){
+    for (int i = 0; i < N; i++)
+    {
         if (!isZeroPubkey(orders.orders[i].entity))
         {
             char iden[120];
             memset(iden, 0, 120);
             getIdentityFromPublicKey(orders.orders[i].entity, iden, false);
             LOG("%s\t%lld\t%lld\n", iden, orders.orders[i].price, orders.orders[i].numberOfShares);
-        } else {
+        }
+        else
+        {
             break;
         }
     }
@@ -372,7 +381,8 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
     uint8_t issuer[32] = {0};
     char assetNameU1[8] = {0};
     memcpy(assetNameU1, pAssetName, strlen(pAssetName));
-    if (strlen(pIssuer) != 60){
+    if (strlen(pIssuer) != 60)
+    {
         LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
         exit(0);
     }
@@ -423,7 +433,8 @@ void printEntityOrders(qxGetEntityOrder_output& orders)
 {
     int N = sizeof(orders) /sizeof(orders.orders[0]);
     LOG("Issuer\t\tAssetName\tPrice\tNumberOfShares\n");
-    for (int i = 0; i < N; i++){
+    for (int i = 0; i < N; i++)
+    {
         if (orders.orders[i].price ||
             orders.orders[i].numberOfShares)
         {
@@ -434,7 +445,9 @@ void printEntityOrders(qxGetEntityOrder_output& orders)
             if (orders.orders[i].assetName)
                 memcpy(assetName, &orders.orders[i].assetName, 8);
             LOG("%s\t%s\t%lld\t%lld\n", iden, assetName, orders.orders[i].price, orders.orders[i].numberOfShares);
-        } else {
+        }
+        else
+        {
             break;
         }
     }
@@ -446,7 +459,8 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
                      const long long offset)
 {
     uint8_t entity[32] = {0};
-    if (strlen(pEntity) != 60){
+    if (strlen(pEntity) != 60)
+    {
         LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
         exit(0);
     }
