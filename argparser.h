@@ -19,7 +19,8 @@
         exit(1);                                                                        \
     }
 
-void print_help(){
+void print_help()
+{
     printf("./qubic-cli [basic config] [command] [command extra parameters]\n");
     printf("-help print this message\n");
     printf("Basic config:\n");
@@ -238,6 +239,7 @@ static long long charToNumber(char* a)
     retVal = strtoll(a, &endptr, 10);
     return retVal;
 }
+
 static uint64_t charToUnsignedNumber(char* a)
 {
     uint64_t retVal = 0;
@@ -249,7 +251,8 @@ static uint64_t charToUnsignedNumber(char* a)
 void readConfigFile(const char* path)
 {
     FILE *file = fopen(path, "r");
-    if (file == nullptr) {
+    if (file == nullptr)
+    {
         LOG("Error opening config file %s\n", path);
         return;
     }
@@ -258,34 +261,46 @@ void readConfigFile(const char* path)
     {
         std::vector<std::string> v;
         std::stringstream ss(line);
-        while (ss.good()) {
+        while (ss.good())
+        {
             std::string substr;
             getline(ss, substr, '=');
             v.push_back(substr);
         }
         memset(line, 0, 1000);
-        if (v[0] == "node_ip"){
-            if ( strcmp(g_nodeIp, DEFAULT_NODE_IP) == 0 ){ // override when node ip is default value
+        if (v[0] == "node_ip")
+        {
+            if ( strcmp(g_nodeIp, DEFAULT_NODE_IP) == 0 )
+            { // override when node ip is default value
                 g_nodeIp = (char*) malloc(64);
                 memset(g_nodeIp, 0, 64);
                 memcpy(g_nodeIp, v[1].c_str(), v[1].size());
-                if (g_nodeIp[v[1].size()-1] == '\n') g_nodeIp[v[1].size()-1] =0;
+                if (g_nodeIp[v[1].size()-1] == '\n') g_nodeIp[v[1].size()-1] = 0;
             }
         }
-        if (v[0] == "seed"){
-            if ( strcmp(g_seed, DEFAULT_SEED) == 0 ){ // override when seed is default value
+        if (v[0] == "seed")
+        {
+            if (strcmp(g_seed, DEFAULT_SEED) == 0)
+            {
+                // override when seed is default value
                 g_seed = (char*) malloc(55);
                 memset(g_seed, 0, 55);
                 memcpy(g_seed, v[1].c_str(), 55);
             }
         }
-        if (v[0] == "node_port"){
-            if ( g_nodePort == DEFAULT_NODE_PORT ){ // override when node port is default value
+        if (v[0] == "node_port")
+        {
+            if (g_nodePort == DEFAULT_NODE_PORT)
+            {
+                // override when node port is default value
                 g_nodePort = std::atoi(v[1].c_str());
             }
         }
-        if (v[0] == "schedule_tick_offset"){
-            if ( g_offsetScheduledTick == DEFAULT_SCHEDULED_TICK_OFFSET ){ // override when node port is default value
+        if (v[0] == "schedule_tick_offset")
+        {
+            if (g_offsetScheduledTick == DEFAULT_SCHEDULED_TICK_OFFSET)
+            {
+                // override when node port is default value
                 g_offsetScheduledTick = std::atoi(v[1].c_str());
             }
         }
@@ -293,8 +308,8 @@ void readConfigFile(const char* path)
     fclose(file);
 }
 
-
-void parseArgument(int argc, char** argv){
+void parseArgument(int argc, char** argv)
+{
     //./qubic-cli [basic config] [Command] [command extra parameters]
     // basic config:
     // -conf , -seed, -nodeip, -nodeport, -scheduletick
@@ -308,43 +323,43 @@ void parseArgument(int argc, char** argv){
          ***** BASIC CONFIG *****
          ************************/
 
-        if(strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-h") == 0) {print_help(); exit(0);}
-        if(strcmp(argv[i], "-conf") == 0)
+        if (strcmp(argv[i], "-help") == 0 || strcmp(argv[i], "-h") == 0) { print_help(); exit(0); }
+        if (strcmp(argv[i], "-conf") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_configFile = argv[i+1];
             i+=2;
             continue;
         }
-        if(strcmp(argv[i], "-seed") == 0)
+        if (strcmp(argv[i], "-seed") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_seed = argv[i+1];
             i+=2;
             continue;
         }
-        if(strcmp(argv[i], "-nodeip") == 0)
+        if (strcmp(argv[i], "-nodeip") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_nodeIp = argv[i+1];
             i+=2;
             continue;
         }
-        if(strcmp(argv[i], "-nodeport") == 0)
+        if (strcmp(argv[i], "-nodeport") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_nodePort = int(charToNumber(argv[i+1]));
             i+=2;
             continue;
         }
-        if(strcmp(argv[i], "-scheduletick") == 0)
+        if (strcmp(argv[i], "-scheduletick") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_offsetScheduledTick = int(charToNumber(argv[i+1]));
             i+=2;
             continue;
         }
-        if(strcmp(argv[i], "-waituntilfinish") == 0)
+        if (strcmp(argv[i], "-waituntilfinish") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_waitUntilFinish = int(charToNumber(argv[i+1]));
@@ -356,14 +371,14 @@ void parseArgument(int argc, char** argv){
          ***** WALLET COMMANDS *****
          ***************************/
 
-        if(strcmp(argv[i], "-showkeys") == 0)
+        if (strcmp(argv[i], "-showkeys") == 0)
         {
             g_cmd = SHOW_KEYS;
             i++;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getbalance") == 0)
+        if (strcmp(argv[i], "-getbalance") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_BALANCE;
@@ -372,7 +387,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getasset") == 0)
+        if (strcmp(argv[i], "-getasset") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_ASSET;
@@ -381,7 +396,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-sendtoaddress") == 0)
+        if (strcmp(argv[i], "-sendtoaddress") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_COIN;
@@ -391,7 +406,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-sendtoaddressintick") == 0)
+        if (strcmp(argv[i], "-sendtoaddressintick") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = SEND_COIN_IN_TICK;
@@ -407,7 +422,7 @@ void parseArgument(int argc, char** argv){
          ***** BLOCKCHAIN/PROTOCOL COMMANDS *****
          ****************************************/
 
-        if(strcmp(argv[i], "-gettickdata") == 0)
+        if (strcmp(argv[i], "-gettickdata") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_TICK_DATA;
@@ -417,7 +432,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getquorumtick") == 0)
+        if (strcmp(argv[i], "-getquorumtick") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_QUORUM_TICK;
@@ -427,7 +442,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getcomputorlist") == 0)
+        if (strcmp(argv[i], "-getcomputorlist") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_COMP_LIST;
@@ -436,14 +451,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getnodeiplist") == 0)
+        if (strcmp(argv[i], "-getnodeiplist") == 0)
         {
             g_cmd = GET_NODE_IP_LIST;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-gettxinfo") == 0)
+        if (strcmp(argv[i], "-gettxinfo") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_TX_INFO;
@@ -452,7 +467,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-uploadfile") == 0)
+        if (strcmp(argv[i], "-uploadfile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = UPLOAD_FILE;
@@ -461,7 +476,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-downloadfile") == 0)
+        if (strcmp(argv[i], "-downloadfile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DOWNLOAD_FILE;
@@ -471,7 +486,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-checktxontick") == 0)
+        if (strcmp(argv[i], "-checktxontick") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = CHECK_TX_ON_TICK;
@@ -481,7 +496,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-checktxonfile") == 0)
+        if (strcmp(argv[i], "-checktxonfile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = CHECK_TX_ON_FILE;
@@ -491,7 +506,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-readtickdata") == 0)
+        if (strcmp(argv[i], "-readtickdata") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = READ_TICK_DATA;
@@ -501,7 +516,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getvotecountertx") == 0)
+        if (strcmp(argv[i], "-getvotecountertx") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = GET_VOTE_COUNTER_TX;
@@ -511,7 +526,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-sendcustomtransaction") == 0)
+        if (strcmp(argv[i], "-sendcustomtransaction") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = SEND_CUSTOM_TX;
@@ -524,7 +539,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-dumpspectrumfile") == 0)
+        if (strcmp(argv[i], "-dumpspectrumfile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_SPECTRUM_FILE;
@@ -534,7 +549,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-dumpuniversefile") == 0)
+        if (strcmp(argv[i], "-dumpuniversefile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_UNIVERSE_FILE;
@@ -544,7 +559,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-dumpcontractfile") == 0)
+        if (strcmp(argv[i], "-dumpcontractfile") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = DUMP_CONTRACT_FILE;
@@ -555,7 +570,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-makeipobid") == 0)
+        if (strcmp(argv[i], "-makeipobid") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MAKE_IPO_BID;
@@ -566,7 +581,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getipostatus") == 0)
+        if (strcmp(argv[i], "-getipostatus") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_IPO_STATUS;
@@ -580,21 +595,21 @@ void parseArgument(int argc, char** argv){
          ***** NODE COMMANDS *****
          *************************/
 
-        if(strcmp(argv[i], "-getsysteminfo") == 0)
+        if (strcmp(argv[i], "-getsysteminfo") == 0)
         {
             g_cmd = GET_SYSTEM_INFO;
             i++;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getcurrenttick") == 0)
+        if (strcmp(argv[i], "-getcurrenttick") == 0)
         {
             g_cmd = GET_CURRENT_TICK;
             i++;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-sendspecialcommand") == 0)
+        if (strcmp(argv[i], "-sendspecialcommand") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = SEND_SPECIAL_COMMAND;
@@ -603,7 +618,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-tooglemainaux") == 0)
+        if (strcmp(argv[i], "-tooglemainaux") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
@@ -614,7 +629,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-setsolutionthreshold") == 0)
+        if (strcmp(argv[i], "-setsolutionthreshold") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SET_SOLUTION_THRESHOLD;
@@ -625,7 +640,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-refreshpeerlist") == 0)
+        if (strcmp(argv[i], "-refreshpeerlist") == 0)
         {
             g_cmd = REFRESH_PEER_LIST;
             g_requestedSpecialCommand = SPECIAL_COMMAND_REFRESH_PEER_LIST;
@@ -633,7 +648,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-forcenexttick") == 0)
+        if (strcmp(argv[i], "-forcenexttick") == 0)
         {
             g_cmd = FORCE_NEXT_TICK;
             g_requestedSpecialCommand = SPECIAL_COMMAND_FORCE_NEXT_TICK;
@@ -641,7 +656,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-reissuevote") == 0)
+        if (strcmp(argv[i], "-reissuevote") == 0)
         {
             g_cmd = REISSUE_VOTE;
             g_requestedSpecialCommand = SPECIAL_COMMAND_REISSUE_VOTE;
@@ -657,7 +672,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-sendrawpacket") == 0)
+        if (strcmp(argv[i], "-sendrawpacket") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_RAW_PACKET;
@@ -667,7 +682,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getlogfromnode") == 0)
+        if (strcmp(argv[i], "-getlogfromnode") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = GET_LOG_FROM_NODE;
@@ -679,7 +694,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-getminingscoreranking") == 0)
+        if (strcmp(argv[i], "-getminingscoreranking") == 0)
         {
             g_cmd = GET_MINING_SCORE_RANKING;
             g_requestedSpecialCommand = SPECIAL_COMMAND_GET_MINING_SCORE_RANKING;
@@ -692,7 +707,7 @@ void parseArgument(int argc, char** argv){
          ***** QX COMMANDS *****
          ***********************/
 
-        if(strcmp(argv[i], "-qxissueasset") == 0)
+        if (strcmp(argv[i], "-qxissueasset") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_ISSUE_ASSET;
@@ -704,7 +719,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qxtransferasset") == 0)
+        if (strcmp(argv[i], "-qxtransferasset") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_ASSET;
@@ -716,14 +731,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qxgetfee") == 0)
+        if (strcmp(argv[i], "-qxgetfee") == 0)
         {
             g_cmd = PRINT_QX_FEE;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qxorder") == 0)
+        if (strcmp(argv[i], "-qxorder") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QX_ORDER;
@@ -737,7 +752,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qxgetorder") == 0)
+        if (strcmp(argv[i], "-qxgetorder") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QX_GET_ORDER;
@@ -755,14 +770,14 @@ void parseArgument(int argc, char** argv){
          ***** QTRY COMMANDS *****
          *************************/
 
-        if(strcmp(argv[i], "-qtryissuebet") == 0)
+        if (strcmp(argv[i], "-qtryissuebet") == 0)
         {
             g_cmd = QUOTTERY_ISSUE_BET;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtryjoinbet") == 0)
+        if (strcmp(argv[i], "-qtryjoinbet") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QUOTTERY_JOIN_BET;
@@ -774,7 +789,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetbetinfo") == 0)
+        if (strcmp(argv[i], "-qtrygetbetinfo") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_BET_INFO;
@@ -783,7 +798,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetbetdetail") == 0)
+        if (strcmp(argv[i], "-qtrygetbetdetail") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_GET_BET_DETAIL;
@@ -793,14 +808,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetactivebet") == 0)
+        if (strcmp(argv[i], "-qtrygetactivebet") == 0)
         {
             g_cmd = QUOTTERY_GET_ACTIVE_BET;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetactivebetbycreator") == 0)
+        if (strcmp(argv[i], "-qtrygetactivebetbycreator") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
@@ -809,14 +824,14 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrygetbasicinfo") == 0)
+        if (strcmp(argv[i], "-qtrygetbasicinfo") == 0)
         {
             g_cmd = QUOTTERY_GET_BASIC_INFO;
             i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrypublishresult") == 0)
+        if (strcmp(argv[i], "-qtrypublishresult") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_PUBLISH_RESULT;
@@ -826,7 +841,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qtrycancelbet") == 0)
+        if (strcmp(argv[i], "-qtrycancelbet") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_CANCEL_BET;
@@ -835,7 +850,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qutilsendtomanyv1") == 0)
+        if (strcmp(argv[i], "-qutilsendtomanyv1") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_SEND_TO_MANY_V1;
@@ -844,7 +859,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qutilburnqubic") == 0)
+        if (strcmp(argv[i], "-qutilburnqubic") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_BURN_QUBIC;
@@ -1038,7 +1053,7 @@ void parseArgument(int argc, char** argv){
          ***** QEARN COMMANDS *****
          **************************/
 
-        if(strcmp(argv[i], "-qearnlock") == 0)
+        if (strcmp(argv[i], "-qearnlock") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_LOCK;
@@ -1047,7 +1062,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearnunlock") == 0)
+        if (strcmp(argv[i], "-qearnunlock") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_UNLOCK;
@@ -1057,7 +1072,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetlockinfoperepoch") == 0)
+        if (strcmp(argv[i], "-qearngetlockinfoperepoch") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_INFO_PER_EPOCH;
@@ -1066,7 +1081,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetuserlockedinfo") == 0)
+        if (strcmp(argv[i], "-qearngetuserlockedinfo") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_GET_USER_LOCKED_INFO;
@@ -1076,7 +1091,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetstateofround") == 0)
+        if (strcmp(argv[i], "-qearngetstateofround") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATE_OF_ROUND;
@@ -1085,7 +1100,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetuserlockstatus") == 0)
+        if (strcmp(argv[i], "-qearngetuserlockstatus") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_USER_LOCK_STATUS;
@@ -1094,7 +1109,7 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS
             break;
         }
-        if(strcmp(argv[i], "-qearngetunlockingstatus") == 0)
+        if (strcmp(argv[i], "-qearngetunlockingstatus") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_UNLOCKING_STATUS;
@@ -1222,7 +1237,6 @@ void parseArgument(int argc, char** argv){
             CHECK_OVER_PARAMETERS;
             break;
         }
-
         i++;
     }
     if (g_configFile != nullptr)
