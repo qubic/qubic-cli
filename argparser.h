@@ -210,8 +210,8 @@ void print_help(){
     printf("\t\tSubmit the admin address using multisig address.\n");
     printf("\t-qvaultchangeadminaddress <NEW_ADDRESS>\n");
     printf("\t\tChange the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.\n");
-    printf("\t-qvaultgetdata <ANY_NUMBER>\n");
-    printf("\t\tGet the state data of smart contract. anyone can check the changes after using the any command. <ANY_NUMBER> is the any number of (0~9).\n");
+    printf("\t-qvaultgetdata\n");
+    printf("\t\tGet the state data of smart contract. anyone can check the changes after using the any command.\n");
     printf("\t-qvaultsubmitbannedaddress <NEW_ADDRESS>\n");
     printf("\t\tSubmit the banned address using multisig address.\n");
     printf("\t-qvaultsavebannedaddress <NEW_ADDRESS>\n");
