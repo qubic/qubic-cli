@@ -697,90 +697,71 @@ void getData(const char* nodeIp, int nodePort){
         ptr+= header->size();
     }
 
-    printf("AUTH_ADDRESS1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.AUTH_ADDRESS1[i]);
-    }
-    printf("\nAUTH_ADDRESS2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.AUTH_ADDRESS2[i]);
-    }
-    printf("\nAUTH_ADDRESS3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.AUTH_ADDRESS3[i]);
-    }
-    printf("\nReinvesting_address: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.Reinvesting_address[i]);
-    }
-    printf("\nadmin_address: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.admin_address[i]);
-    }
-    printf("\nnewAuthAddress1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAuthAddress1[i]);
-    }
-    printf("\nnewAuthAddress2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAuthAddress2[i]);
-    }
-    printf("\nnewAuthAddress3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAuthAddress3[i]);
-    }
-    printf("\nnewReinvesting_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newReinvesting_address1[i]);
-    }
-    printf("\nnewReinvesting_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newReinvesting_address2[i]);
-    }
-    printf("\nnewReinvesting_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newReinvesting_address3[i]);
-    }
-    printf("\nnewAdmin_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAdmin_address1[i]);
-    }printf("\nnewAdmin_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAdmin_address2[i]);
-    }printf("\nnewAdmin_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.newAdmin_address3[i]);
-    }
-    printf("\n");
-    printf("Permille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
+    char auth1[128] = {0};
+    char auth2[128] = {0};
+    char auth3[128] = {0};
+    char reinvesting_address[128] = {0};
+    char admin_address[128] = {0};
+    char newAuth1[128] = {0};
+    char newAuth2[128] = {0};
+    char newAuth3[128] = {0};
+    char newReinvestingAddress1[128] = {0};
+    char newReinvestingAddress2[128] = {0};
+    char newReinvestingAddress3[128] = {0};
+    char newAdminAddress1[128] = {0};
+    char newAdminAddress2[128] = {0};
+    char newAdminAddress3[128] = {0};
+    char newBannedAddress1[128] = {0};
+    char newBannedAddress2[128] = {0};
+    char newBannedAddress3[128] = {0};
+    char newUnbannedAddress1[128] = {0};
+    char newUnbannedAddress2[128] = {0};
+    char newUnbannedAddress3[128] = {0};
+    getIdentityFromPublicKey(result.AUTH_ADDRESS1, auth1, false);
+    getIdentityFromPublicKey(result.AUTH_ADDRESS2, auth2, false);
+    getIdentityFromPublicKey(result.AUTH_ADDRESS3, auth3, false);
+    getIdentityFromPublicKey(result.Reinvesting_address, reinvesting_address, false);
+    getIdentityFromPublicKey(result.admin_address, admin_address, false);
+    getIdentityFromPublicKey(result.newAuthAddress1, newAuth1, false);
+    getIdentityFromPublicKey(result.newAuthAddress2, newAuth2, false);
+    getIdentityFromPublicKey(result.newAuthAddress3, newAuth3, false);
+    getIdentityFromPublicKey(result.newReinvesting_address1, newReinvestingAddress1, false);
+    getIdentityFromPublicKey(result.newReinvesting_address2, newReinvestingAddress2, false);
+    getIdentityFromPublicKey(result.newReinvesting_address3, newReinvestingAddress3, false);
+    getIdentityFromPublicKey(result.newAdmin_address1, newAdminAddress1, false);
+    getIdentityFromPublicKey(result.newAdmin_address2, newAdminAddress2, false);
+    getIdentityFromPublicKey(result.newAdmin_address3, newAdminAddress3, false);
+    getIdentityFromPublicKey(result.bannedAddress1, newBannedAddress1, false);
+    getIdentityFromPublicKey(result.bannedAddress2, newBannedAddress2, false);
+    getIdentityFromPublicKey(result.bannedAddress3, newBannedAddress3, false);
+    getIdentityFromPublicKey(result.unbannedAddress1, newUnbannedAddress1, false);
+    getIdentityFromPublicKey(result.unbannedAddress2, newUnbannedAddress2, false);
+    getIdentityFromPublicKey(result.unbannedAddress3, newUnbannedAddress3, false);
+
+    printf("AUTH_ADDRESS1: %s", auth1);
+    printf("\nAUTH_ADDRESS2: %s", auth2);
+    printf("\nAUTH_ADDRESS3: %s", auth3);
+    printf("\nReinvesting_address: %s", reinvesting_address);
+    printf("\nadmin_address: %s", admin_address);
+    printf("\nnewAuthAddress1: %s", newAuth1);
+    printf("\nnewAuthAddress2: %s", newAuth2);
+    printf("\nnewAuthAddress3: %s", newAuth3);
+    printf("\nnewReinvesting_address1: %s", newReinvestingAddress1);
+    printf("\nnewReinvesting_address2: %s", newReinvestingAddress2);
+    printf("\nnewReinvesting_address3: %s", newReinvestingAddress3);
+    printf("\nnewAdmin_address1: %s", newAdminAddress1);
+    printf("\nnewAdmin_address2: %s", newAdminAddress2);
+    printf("\nnewAdmin_address3: %s", newAdminAddress3);
+    printf("\nPermille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
 
     printf("\nThe number of banned addresses:%u", result.numberOfBannedAddress);
 
-    printf("\nbanned_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.bannedAddress1[i]);
-    }
-    printf("\nbanned_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.bannedAddress2[i]);
-    }
-    printf("\nbanned_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.bannedAddress3[i]);
-    }
-
-    printf("\nunbanned_address1: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.unbannedAddress1[i]);
-    }
-    printf("\nunbanned_address2: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.unbannedAddress2[i]);
-    }
-    printf("\nunbanned_address3: ");
-    for(uint8_t i = 0 ; i < 32; i++) {
-        printf("%u ", result.unbannedAddress3[i]);
-    }
+    printf("\nbanned_address1: %s", newBannedAddress1);
+    printf("\nbanned_address2: %s", newBannedAddress2);
+    printf("\nbanned_address3: %s", newBannedAddress3);
+    printf("\nunbanned_address1: %s", newUnbannedAddress1);
+    printf("\nunbanned_address2: %s", newUnbannedAddress2);
+    printf("\nunbanned_address3: %s", newUnbannedAddress3);
 }
 
 
