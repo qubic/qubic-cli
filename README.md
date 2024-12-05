@@ -199,8 +199,8 @@ Command:
 		Submit the admin address using multisig address.
 	-qvaultchangeadminaddress <NEW_ADDRESS>
 		Change the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.
-	-qvaultgetdata <ANY_NUMBER>
-		Get the state data of smart contract. anyone can check the changes after using the any command. <ANY_NUMBER> is the any number of (0~9).
+	-qvaultgetdata
+		Get the state data of smart contract. anyone can check the changes after using the any command.
 	-qvaultsubmitbannedaddress <NEW_ADDRESS>
 		Submit the banned address using multisig address.
 	-qvaultsavebannedaddress <NEW_ADDRESS>
