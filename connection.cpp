@@ -22,6 +22,7 @@
 #include "qxStruct.h"
 #include "qvault.h"
 #include "qearn.h"
+#include "msvault.h"
 
 #ifdef _MSC_VER
 static int connect(const char* nodeIp, int nodePort)
@@ -274,3 +275,9 @@ template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeer
 template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();
 template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>();
 template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>();
+
+template MsVaultGetBalanceOf_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetBalanceOf_output>();
+template MsVaultGetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetReleaseStatus_output>();
+template MsVaultGetVaults_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaults_output>();
+template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultName_output>();
+template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();

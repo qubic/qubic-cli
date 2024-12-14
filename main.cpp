@@ -1,3 +1,4 @@
+#include <array>
 #include "stdio.h"
 #include "structs.h"
 #include "global.h"
@@ -14,6 +15,7 @@
 #include "proposal.h"
 #include "qearn.h"
 #include "qvault.h"
+#include "msvault.h"
 
 int run(int argc, char* argv[])
 {
@@ -505,6 +507,59 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             saveUnbannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
             break;
+        // MSVAULT
+        case MSVAULT_REGISTER_VAULT_CMD:
+        {
+            msvaultRegisterVault(g_nodeIp, g_nodePort, g_seed,
+                g_msVaultType, g_msVaultVaultName,
+                g_msVaultOwnersCommaSeparated,
+                g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_DEPOSIT_CMD:
+        {
+            msvaultDeposit(g_nodeIp,g_nodePort,g_seed,
+                           g_msVaultID, g_TxAmount, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RELEASE_TO_CMD:
+        {
+            msvaultReleaseTo(g_nodeIp,g_nodePort,g_seed,
+                             g_msVaultID, g_TxAmount, g_msVaultDestination,
+                             g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RESET_RELEASE_CMD:
+        {
+            msvaultResetRelease(g_nodeIp,g_nodePort,g_seed,
+                                g_msVaultID, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_GET_VAULTS_CMD:
+        {
+            msvaultGetVaults(g_nodeIp,g_nodePort,g_msVaultPublicId);
+            break;
+        }
+        case MSVAULT_GET_RELEASE_STATUS_CMD:
+        {
+            msvaultGetReleaseStatus(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_BALANCE_OF_CMD:
+        {
+            msvaultGetBalanceOf(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_VAULT_NAME_CMD:
+        {
+            msvaultGetVaultName(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_REVENUE_INFO_CMD:
+        {
+            msvaultGetRevenueInfo(g_nodeIp,g_nodePort);
+            break;
+        }
 
         default:
             printf("Unexpected command!\n");

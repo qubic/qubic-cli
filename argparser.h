@@ -238,6 +238,26 @@ void print_help()
     printf("\t\tSubmit the unbanned address using multisig address.\n");
     printf("\t-qvaultsaveunbannedaddress <NEW_ADDRESS>\n");
     printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
+
+    printf("\n[MSVAULT COMMANDS]\n");
+    printf("\t-msvaultregistervault <VAULT_TYPE> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
+    printf("\t\tRegister a vault. Vault type, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.\n");
+    printf("\t-msvaultdeposit <VAULT_ID> <AMOUNT>\n");
+    printf("\t\tDeposit qubic into vault given vault ID.\n");
+    printf("\t-msvaultreleaseto <VAULT_ID> <AMOUNT> <DESTINATION_IDENTITY>\n");
+    printf("\t\tRequest release qu to destination. Fee applies.\n");
+    printf("\t-msvaultresetrelease <VAULT_ID>\n");
+    printf("\t\tReset release requests. Fee applies.\n");
+    printf("\t-msvaultgetvaults <IDENTITY>\n");
+    printf("\t\tGet list of vaults owned by IDENTITY.\n");
+    printf("\t-msvaultgetreleasestatus <VAULT_ID>\n");
+    printf("\t\tGet release status of a vault.\n");
+    printf("\t-msvaultgetbalanceof <VAULT_ID>\n");
+    printf("\t\tGet balance of a vault.\n");
+    printf("\t-msvaultgetvaultname <VAULT_ID>\n");
+    printf("\t\tGet vault name.\n");
+    printf("\t-msvaultgetrevenueinfo\n");
+    printf("\t\tGet MsVault revenue info.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1332,6 +1352,104 @@ void parseArgument(int argc, char** argv)
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
+        }
+        /**************************
+         **** MsVault COMMANDS ****
+         **************************/
+        if (strcmp(argv[i], "-msvaultregistervault") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+                g_cmd = MSVAULT_REGISTER_VAULT_CMD;
+            g_msVaultType = (uint16_t)charToNumber(argv[i + 1]);
+
+            {
+                const char* inputVaultName = argv[i + 2];
+                size_t len = strlen(inputVaultName);
+                if (len > 32) {
+                    LOG("Vault name must be at most 32 chars. Truncating...\n");
+                    len = 32;
+                }
+                memset(g_msVaultVaultName, 0, 32);
+                memcpy(g_msVaultVaultName, inputVaultName, len);
+            }
+
+            g_msVaultOwnersCommaSeparated = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultdeposit") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = MSVAULT_DEPOSIT_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            g_TxAmount = charToNumber(argv[i+2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultreleaseto") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = MSVAULT_RELEASE_TO_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            g_TxAmount = charToNumber(argv[i+2]);
+            g_msVaultDestination = argv[i + 3];
+            i+=4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultresetrelease") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_RESET_RELEASE_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetvaults") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_GET_VAULTS_CMD;
+            g_msVaultPublicId = argv[i + 1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetreleasestatus") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_GET_RELEASE_STATUS_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetbalanceof") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_GET_BALANCE_OF_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetvaultname") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_GET_VAULT_NAME_CMD;
+            g_msVaultID = charToNumber(argv[i+1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetrevenueinfo") == 0)
+        {
+            g_cmd = MSVAULT_GET_REVENUE_INFO_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
         }
         i++;
     }
