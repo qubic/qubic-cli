@@ -276,8 +276,10 @@ template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();
 template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>();
 template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>();
 
+// MSVAULT
 template MsVaultGetBalanceOf_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetBalanceOf_output>();
 template MsVaultGetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetReleaseStatus_output>();
 template MsVaultGetVaults_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaults_output>();
 template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultName_output>();
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
+template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();

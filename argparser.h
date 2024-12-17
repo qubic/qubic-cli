@@ -258,6 +258,8 @@ void print_help()
     printf("\t\tGet vault name.\n");
     printf("\t-msvaultgetrevenueinfo\n");
     printf("\t\tGet MsVault revenue info.\n");
+    printf("\t-msvaultgetfees\n");
+    printf("\t\tGet MsVault fees.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1450,6 +1452,13 @@ void parseArgument(int argc, char** argv)
             i++;
             CHECK_OVER_PARAMETERS
             return;
+        }
+        if (strcmp(argv[i], "-msvaultgetfees") == 0)
+        {
+            g_cmd = MSVAULT_GET_FEES_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+                return;
         }
         i++;
     }

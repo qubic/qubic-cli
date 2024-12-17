@@ -560,6 +560,12 @@ int run(int argc, char* argv[])
             msvaultGetRevenueInfo(g_nodeIp,g_nodePort);
             break;
         }
+        case MSVAULT_GET_FEES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetFees(g_nodeIp, g_nodePort);
+            break;
+        }
 
         default:
             printf("Unexpected command!\n");
