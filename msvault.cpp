@@ -28,6 +28,7 @@ constexpr uint64_t RELEASE_RESET_FEE = 500ULL;
 #define MSVAULT_GET_BALANCE_OF 7
 #define MSVAULT_GET_VAULT_NAME 8
 #define MSVAULT_GET_REVENUE_INFO 9
+#define MSVAULT_GET_FEES 10
 
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint16_t vaultType, const uint8_t vaultName[32],
@@ -538,4 +539,52 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
     LOG("Number of Active Vaults: %u\n", output.numberOfActiveVaults);
     LOG("Total Revenue: %llu\n", (unsigned long long)output.totalRevenue);
     LOG("Total Distributed To Shareholders: %llu\n", (unsigned long long)output.totalDistributedToShareholders);
+}
+
+void msvaultGetFees(const char* nodeIp, int nodePort)
+{
+    MsVaultGetFees_input input;
+    memset(&input, 0, sizeof(input));
+
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetFees_input in;
+    } req;
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+    req.rcf.inputType = MSVAULT_GET_FEES;
+    req.rcf.inputSize = sizeof(input);
+    memcpy(&req.in, &input, sizeof(input));
+    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    if (qc->sendData((uint8_t*)&req, req.header.size()) != (int)req.header.size()) {
+        LOG("Failed to send msVault getFees request.\n");
+        return;
+    }
+
+    MsVaultGetFees_output output;
+    memset(&output, 0, sizeof(output));
+    try {
+        output = qc->receivePacketWithHeaderAs<MsVaultGetFees_output>();
+    }
+    catch (std::logic_error& e) {
+        LOG("Failed to receive MsVault getFees output: %s\n", e.what());
+        return;
+    }
+
+    LOG("MsVault Fees:\n");
+    LOG("Registering Fee: %llu\n", (unsigned long long)output.registeringFee);
+    LOG("Release Fee: %llu\n", (unsigned long long)output.releaseFee);
+    LOG("Release Reset Fee: %llu\n", (unsigned long long)output.releaseResetFee);
+    LOG("Holding Fee: %llu\n", (unsigned long long)output.holdingFee);
+    LOG("Deposit Fee: %llu\n", (unsigned long long)output.depositFee); // always 0
 }

@@ -99,6 +99,19 @@ struct MsVaultGetRevenueInfo_output {
     }
 };
 
+struct MsVaultGetFees_input {
+};
+struct MsVaultGetFees_output {
+    uint64_t registeringFee;
+    uint64_t releaseFee;
+    uint64_t releaseResetFee;
+    uint64_t holdingFee;
+    uint64_t depositFee; // always 0 for now
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint16_t vaultType, const uint8_t vaultName[32],
     const char* ownersCommaSeparated,
@@ -119,3 +132,4 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
 void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID);
 void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID);
 void msvaultGetRevenueInfo(const char* nodeIp, int nodePort);
+void msvaultGetFees(const char* nodeIp, int nodePort);
