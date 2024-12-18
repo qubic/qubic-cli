@@ -206,12 +206,12 @@ int run(int argc, char* argv[])
         case UPLOAD_FILE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            uploadFile(g_nodeIp, g_nodePort, g_file_path, g_seed, g_offsetScheduledTick);
+            uploadFile(g_nodeIp, g_nodePort, g_file_path, g_seed, g_offsetScheduledTick, g_compress_tool);
             break;
         case DOWNLOAD_FILE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            downloadFile(g_nodeIp, g_nodePort, g_requestedTxId, g_file_path);
+            downloadFile(g_nodeIp, g_nodePort, g_requestedTxId, g_file_path, g_compress_tool);
             break;
         case DUMP_SPECTRUM_FILE:
             sanityFileExist(g_dump_binary_file_input);
