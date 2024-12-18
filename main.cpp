@@ -430,6 +430,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qearnGetEndedStatus(g_nodeIp, g_nodePort, g_requestedIdentity);
             break;
+        case QEARN_GET_STATS_PER_EPOCH:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qearnGetStatsPerEpoch(g_nodeIp, g_nodePort, g_qearn_getstats_epoch);
+            break;
         case QVAULT_SUBMIT_AUTH_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
             submitAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);

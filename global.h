@@ -81,6 +81,7 @@ uint64_t g_qearn_lock_amount;
 uint64_t g_qearn_unlock_amount;
 uint32_t g_qearn_locked_epoch;
 uint32_t g_qearn_getinfo_epoch;
+uint32_t g_qearn_getstats_epoch;
 
 // qvault
 char* g_qvaultIdentity = nullptr;

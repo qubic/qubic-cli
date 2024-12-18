@@ -181,6 +181,8 @@ Command:
 		Get the status(binary number) that the user locked for 52 weeks.
 	-qearngetunlockingstatus <IDENTITY>
 		Get the unlocking history of the user.
+	-qearngetstatsperepoch <EPOCH>
+		Get the Stats(early unlocked amount, early unlocked percent) of the epoch <EPOCH> and Stats(total locked amount, average APY) of QEarn SC
 
 [QVAULT COMMANDS]
 	-qvaultsubmitauthaddress <NEW_ADDRESS>
