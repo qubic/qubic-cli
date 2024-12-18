@@ -255,12 +255,12 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        getStatsPerEpoch_input input;
+        QEarnGetStatsPerEpoch_input input;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(getStatsPerEpoch_input);
+    packet.rcf.inputSize = sizeof(QEarnGetStatsPerEpoch_input);
     packet.rcf.inputType = QEARN_GET_STATS;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
 
@@ -268,10 +268,10 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    getStatsPerEpoch_output result;
+    QEarnGetStatsPerEpoch_output result;
     try
     {
-        result = qc->receivePacketWithHeaderAs<getStatsPerEpoch_output>();
+        result = qc->receivePacketWithHeaderAs<QEarnGetStatsPerEpoch_output>();
     }
     catch (std::logic_error& e)
     {

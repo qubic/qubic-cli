@@ -65,17 +65,21 @@ struct QEarnGetUserLockStatus_output
     }
 };
 
-struct getStatsPerEpoch_input {
+struct QEarnGetStatsPerEpoch_input {
     uint32_t epoch;
 };
 
-struct getStatsPerEpoch_output {
+struct QEarnGetStatsPerEpoch_output {
 
     uint64_t earlyUnlockedAmount;
     uint64_t earlyUnlockedPercent;
     uint64_t totalLockedAmount;
     uint64_t averageAPY;
 
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
 };
 
 struct QEarnGetEndedStatus_input
