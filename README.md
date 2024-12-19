@@ -254,7 +254,7 @@ On Linux or MacOS, make sure `cmake` and `make` commands are installed and then 
 mkdir build;
 cd build;
 cmake ../;
-make;
+cmake --build .;
 ```
 
 On Windows, use the CMake GUI to create a Visual Studio project and then build the executable in Visual Studio.
