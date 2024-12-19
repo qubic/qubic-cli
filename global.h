@@ -53,34 +53,34 @@ long long g_qx_number_of_share = -1;
 char* g_qx_asset_transfer_possessed_identity = nullptr;
 char* g_qx_asset_transfer_new_owner_identity = nullptr;
 int64_t g_qx_asset_transfer_amount = -1;
-char* g_qx_asset_transfer_asset_name;
-char* g_qx_asset_transfer_issuer_in_hex;
+char* g_qx_asset_transfer_asset_name = nullptr;
+char* g_qx_asset_transfer_issuer_in_hex = nullptr;
 
-char* g_dump_binary_file_input;
-char* g_dump_binary_file_output;
+char* g_dump_binary_file_input = nullptr;
+char* g_dump_binary_file_output = nullptr;
 uint32_t g_dump_binary_contract_id = 0;
 
-//IPO bid
+// IPO bid
 uint32_t g_ipo_contract_index = 0;
 uint16_t g_make_ipo_bid_number_of_share = 0;
 uint64_t g_make_ipo_bid_price_per_share = 0;
 // quottery
-uint32_t g_quottery_bet_id;
-uint32_t g_quottery_option_id;
+uint32_t g_quottery_bet_id = 0;
+uint32_t g_quottery_option_id = 0;
 char* g_quottery_creator_id = nullptr;
-uint64_t g_quottery_number_bet_slot;
-uint64_t g_quottery_amount_per_bet_slot;
-uint32_t g_quottery_picked_option;
+uint64_t g_quottery_number_bet_slot = 0;
+uint64_t g_quottery_amount_per_bet_slot = 0;
+uint32_t g_quottery_picked_option = 0;
 
 char* g_qutil_sendtomanyv1_payout_list_file = nullptr;
 
 uint64_t g_get_log_passcode[4] = {0};
 
-//qearn
-uint64_t g_qearn_lock_amount;
-uint64_t g_qearn_unlock_amount;
-uint32_t g_qearn_locked_epoch;
-uint32_t g_qearn_getinfo_epoch;
+// qearn
+uint64_t g_qearn_lock_amount = 0;
+uint64_t g_qearn_unlock_amount = 0;
+uint32_t g_qearn_locked_epoch = 0;
+uint32_t g_qearn_getinfo_epoch = 0;
 
 // qvault
 char* g_qvaultIdentity = nullptr;
