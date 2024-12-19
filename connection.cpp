@@ -257,6 +257,7 @@ template QEarnGetLockInfoPerEpoch_output QubicConnection::receivePacketWithHeade
 template QEarnGetUserLockedInfo_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockedInfo_output>();
 template QEarnGetStateOfRound_output QubicConnection::receivePacketWithHeaderAs<QEarnGetStateOfRound_output>();
 template QEarnGetUserLockStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockStatus_output>();
+template QEarnGetStatsPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetStatsPerEpoch_output>();
 template QEarnGetEndedStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();

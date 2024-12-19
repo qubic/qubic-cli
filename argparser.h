@@ -202,6 +202,8 @@ void print_help()
     printf("\t\tGet the status(binary number) that the user locked for 52 weeks.\n");
     printf("\t-qearngetunlockingstatus <IDENTITY>\n");
     printf("\t\tGet the unlocking history of the user.\n");
+    printf("\t-qearngetstatsperepoch <EPOCH>\n");
+    printf("\t\tGet the Stats(early unlocked amount, early unlocked percent) of the epoch <EPOCH> and Stats(total locked amount, average APY) of QEarn SC.\n");
 
     printf("\n[QVAULT COMMANDS]\n");
     printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
@@ -1114,6 +1116,15 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_UNLOCKING_STATUS;
             g_requestedIdentity = argv[i+1];
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qearngetstatsperepoch") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QEARN_GET_STATS_PER_EPOCH;
+            g_qearn_getstats_epoch = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;

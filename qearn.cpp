@@ -20,6 +20,7 @@
 #define QEARN_GET_STATE_OF_ROUND 3
 #define QEARN_GET_USER_LOCKED_STATE 4
 #define QEARN_GET_UNLOCKED_STATE 5
+#define QEARN_GET_STATS 6
 
 // QEARN PROCEDURES
 #define QEARN_LOCK 1
@@ -246,6 +247,39 @@ void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch
     if(result.state == 0) printf("The state of epoch %d is not started.\n", epoch);
     if(result.state == 1) printf("The state of epoch %d is running.\n", epoch);
     if(result.state == 2) printf("The state of epoch %d is ended.\n", epoch);
+}
+
+void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        QEarnGetStatsPerEpoch_input input;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(QEarnGetStatsPerEpoch_input);
+    packet.rcf.inputType = QEARN_GET_STATS;
+    packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
+    packet.input.epoch = epoch;
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    QEarnGetStatsPerEpoch_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QEarnGetStatsPerEpoch_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+
+    printf("early unlocked amount: %llu\nearly unlocked percent: %.3f%%\ntotal locked amount in QEarn SC: %llu\naverage APY of QEarn: %.6f%%\n", result.earlyUnlockedAmount, double(result.earlyUnlockedPercent) / 100.0, result.totalLockedAmount, double(result.averageAPY) / 100000.0);
 }
 
 void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)
