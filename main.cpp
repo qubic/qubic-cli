@@ -400,6 +400,7 @@ int run(int argc, char* argv[])
         case CCF_GET_LATEST_TRANSFERS:
             sanityCheckNode(g_nodeIp, g_nodePort);
             ccfGetLatestTransfers(g_nodeIp, g_nodePort);
+            break;
         case QEARN_LOCK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
