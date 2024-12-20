@@ -65,6 +65,23 @@ struct QEarnGetUserLockStatus_output
     }
 };
 
+struct QEarnGetStatsPerEpoch_input {
+    uint32_t epoch;
+};
+
+struct QEarnGetStatsPerEpoch_output {
+
+    uint64_t earlyUnlockedAmount;
+    uint64_t earlyUnlockedPercent;
+    uint64_t totalLockedAmount;
+    uint64_t averageAPY;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
 struct QEarnGetEndedStatus_input
 {
     uint8_t publicKey[32];
@@ -89,3 +106,4 @@ void qearnGetUserLockedInfo(const char* nodeIp, int nodePort,char* Identity,  ui
 void qearnGetStateOfRound(const char* nodeIp, int nodePort, uint32_t epoch);
 void qearnGetUserLockedStatus(const char* nodeIp, int nodePort,char* Identity);
 void qearnGetEndedStatus(const char* nodeIp, int nodePort,char* Identity);
+void qearnGetStatsPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch);
