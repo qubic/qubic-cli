@@ -1279,8 +1279,9 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sendTimeMsg.header.randomizeDejavu();
         sendTimeMsg.header.setType(PROCESS_SPECIAL_COMMAND);
         uint64_t curTime = time(NULL);
+        uint64_t extraNonce = 1; // important: since above piece of code is executed too fast, everIncreasingNonceAndCommandTypes are likely the same for 2 packages, so we need extra nonce here
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SEND_TIME) << 56;
-        sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+        sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | (curTime+extraNonce);
 
         using namespace std::chrono;
         auto now = system_clock::now();
