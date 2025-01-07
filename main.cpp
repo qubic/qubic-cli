@@ -501,7 +501,7 @@ int run(int argc, char* argv[])
         case MSVAULT_REGISTER_VAULT_CMD:
         {
             msvaultRegisterVault(g_nodeIp, g_nodePort, g_seed,
-                g_msVaultType, g_msVaultVaultName,
+                g_msVaultRequiredApprovals, g_msVaultVaultName,
                 g_msVaultOwnersCommaSeparated,
                 g_offsetScheduledTick);
             break;
@@ -556,7 +556,11 @@ int run(int argc, char* argv[])
             msvaultGetFees(g_nodeIp, g_nodePort);
             break;
         }
-
+        case MSVAULT_GET_OWNERS_CMD:
+        {
+            msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
+            break;
+        }
         default:
             printf("Unexpected command!\n");
             break;

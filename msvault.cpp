@@ -29,16 +29,17 @@ constexpr uint64_t RELEASE_RESET_FEE = 500ULL;
 #define MSVAULT_GET_VAULT_NAME 8
 #define MSVAULT_GET_REVENUE_INFO 9
 #define MSVAULT_GET_FEES 10
+#define MSVAULT_GET_VAULT_OWNERS 11
 
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
-    uint16_t vaultType, const uint8_t vaultName[32],
+    uint64_t requiredApprovals, const uint8_t vaultName[32],
     const char* ownersCommaSeparated,
     uint32_t scheduledTickOffset)
 {
     MsVaultRegisterVault_input input;
     memset(&input, 0, sizeof(input));
-    input.vaultType = vaultType;
     memcpy(input.vaultName, vaultName, 32);
+    input.requiredApprovals = requiredApprovals;
 
     // Parse owners
     {
@@ -46,7 +47,7 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
         std::stringstream ss(ownersStr);
         std::string owner;
         int count = 0;
-        while (std::getline(ss, owner, ',') && count < 32) {
+        while (std::getline(ss, owner, ',') && count < MSVAULT_MAX_OWNERS) {
             while (!owner.empty() && (owner.back() == ' ' || owner.back() == '\n')) owner.pop_back();
             while (!owner.empty() && (owner.front() == ' ')) owner.erase(owner.begin());
 
@@ -366,9 +367,9 @@ void msvaultGetVaults(const char* nodeIp, int nodePort, const char* identity)
 
     LOG("Number of vaults: %u\n", output.numberOfVaults);
     for (int i = 0; i < output.numberOfVaults; i++) {
-        char vaultNameStr[128];
-        memset(vaultNameStr, 0, sizeof(vaultNameStr));
-        getIdentityFromPublicKey(output.vaultNames[i], vaultNameStr, false);
+        char vaultNameStr[33];
+        memcpy(vaultNameStr, output.vaultNames[i], 32);
+        vaultNameStr[32] = '\0';
         LOG("Vault #%d: ID %llu, Name: %s\n", i, (unsigned long long)output.vaultIDs[i], vaultNameStr);
     }
 }
@@ -410,7 +411,13 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    for (int i = 0; i < 32; i++)
+    if (!output.status)
+    {
+        LOG("Failed to get release status. Status returned false.\n");
+        return;
+    }
+
+    for (int i = 0; i < MSVAULT_MAX_OWNERS; i++)
     {
         if (output.amounts[i] != 0 || !isZeroPubkey(output.destinations[i]))
         {
@@ -459,6 +466,12 @@ void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
+    if (!output.status)
+    {
+        LOG("Failed to get balance. Status returned false.\n");
+        return;
+    }
+
     LOG("VaultID %llu balance: %lld\n", (unsigned long long)vaultID, (long long)output.balance);
 }
 
@@ -499,6 +512,12 @@ void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
+    if (!output.status)
+    {
+        LOG("Failed to get vault name. Status returned false.\n");
+        return;
+    }
+
     char vaultNameStr[128] = { 0 };
     getIdentityFromPublicKey(output.vaultName, vaultNameStr, false);
     LOG("Vault name: %s\n", vaultNameStr);
@@ -536,7 +555,7 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
         return;
     }
 
-    LOG("Number of Active Vaults: %u\n", output.numberOfActiveVaults);
+    LOG("Number of Active Vaults: %llu\n", output.numberOfActiveVaults);
     LOG("Total Revenue: %llu\n", (unsigned long long)output.totalRevenue);
     LOG("Total Distributed To Shareholders: %llu\n", (unsigned long long)output.totalDistributedToShareholders);
 }
@@ -587,4 +606,64 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
     LOG("Release Reset Fee: %llu\n", (unsigned long long)output.releaseResetFee);
     LOG("Holding Fee: %llu\n", (unsigned long long)output.holdingFee);
     LOG("Deposit Fee: %llu\n", (unsigned long long)output.depositFee); // always 0
+}
+
+void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
+{
+    MsVaultGetVaultOwners_input input;
+    memset(&input, 0, sizeof(input));
+    input.vaultID = vaultID;
+
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetVaultOwners_input in;
+    } req;
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+    req.rcf.inputType = MSVAULT_GET_VAULT_OWNERS;
+    req.rcf.inputSize = sizeof(input);
+    memcpy(&req.in, &input, sizeof(input));
+
+    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    MsVaultGetVaultOwners_output output;
+    memset(&output, 0, sizeof(output));
+    try {
+        output = qc->receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+    }
+    catch (std::logic_error& e) {
+        LOG("Failed to get vault owners.\n");
+        return;
+    }
+
+    // Check status
+    if (!output.status) {
+        LOG("Vault is invalid or inactive. Status=0\n");
+        return;
+    }
+
+    LOG("Vault %llu has %llu owners, requiredApprovals=%llu\n",
+        (unsigned long long)vaultID,
+        (unsigned long long)output.numberOfOwners,
+        (unsigned long long)output.requiredApprovals
+    );
+
+    for (uint64_t i = 0; i < output.numberOfOwners && i < MSVAULT_MAX_OWNERS; i++) {
+        // Convert 32-byte public key to identity or hex
+        char ownerIdentity[128] = { 0 };
+        getIdentityFromPublicKey(output.owners[i], ownerIdentity, false);
+
+        LOG("Owner #%d => %s\n", (int)i, ownerIdentity);
+    }
 }
