@@ -283,3 +283,4 @@ template MsVaultGetVaults_output QubicConnection::receivePacketWithHeaderAs<MsVa
 template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultName_output>();
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
+template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();

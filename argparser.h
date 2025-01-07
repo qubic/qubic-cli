@@ -260,6 +260,8 @@ void print_help()
     printf("\t\tGet MsVault revenue info.\n");
     printf("\t-msvaultgetfees\n");
     printf("\t\tGet MsVault fees.\n");
+    printf("\t-msvaultgetvaultowners <VAULT_ID>\n");
+    printf("\t\tGet MsVault owners given vault ID.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1362,7 +1364,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
                 g_cmd = MSVAULT_REGISTER_VAULT_CMD;
-            g_msVaultType = (uint16_t)charToNumber(argv[i + 1]);
+            g_msVaultRequiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
 
             {
                 const char* inputVaultName = argv[i + 2];
@@ -1457,6 +1459,15 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = MSVAULT_GET_FEES_CMD;
             i++;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetvaultowners") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_GET_OWNERS_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            i += 2;
             CHECK_OVER_PARAMETERS
                 return;
         }
