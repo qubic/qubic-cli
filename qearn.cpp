@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <algorithm>
 
 #include "structs.h"
 #include "walletUtils.h"
@@ -175,7 +176,73 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
         LOG("Failed to receive data\n");
         return;
     }
-    printf("initial bonus amount:  %llu\ninitial locked amount: %llu\ncurrent bonus amount:  %llu\ncurrent locked amount: %llu\nyield: %.6f%%\n", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, double(result.Yield) / 100000.0);
+    uint64_t bonus = result.BonusAmount;
+    uint64_t lockedAmount = result.LockedAmount;
+    uint64_t currentBonus = result.CurrentBonusAmount;
+    uint64_t currentLocked = result.CurrentLockedAmount;
+    uint32_t t = 0, i = 0;
+    char str1[100] = {0,};
+    char str2[100] = {0,};
+    char str3[100] = {0,};
+    char str4[100] = {0,};
+
+    while(bonus)
+    {
+        str1[i++] = (bonus % 10) + '0';
+        bonus /= 10;
+        t++;
+        if(t % 3 == 0 && bonus != 0) 
+        {
+            str1[i++] = ',';
+        }
+    }
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str1[r], str1[j]);
+    }
+    t = 0; i = 0;
+    while(lockedAmount)
+    {
+        str2[i++] = (lockedAmount % 10) + '0';
+        lockedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && lockedAmount != 0) 
+        {
+            str2[i++] = ',';
+        }
+    }
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str2[r], str2[j]);
+    }
+    t = 0; i = 0;
+    while(currentBonus)
+    {
+        str3[i++] = (currentBonus % 10) + '0';
+        currentBonus /= 10;
+        t++;
+        if(t % 3 == 0 && currentBonus != 0) 
+        {
+            str3[i++] = ',';
+        }
+    }
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str3[r], str3[j]);
+    }
+    t = 0; i = 0;
+    while(currentLocked)
+    {
+        str4[i++] = (currentLocked % 10) + '0';
+        currentLocked /= 10;
+        t++;
+        if(t % 3 == 0 && currentLocked != 0) 
+        {
+            str4[i++] = ',';
+        }
+    }
+    
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str4[r], str4[j]);
+    }
+    printf("Initial Bonus Amount:  %s\nInitial Locked Amount: %s\nCurrent Bonus Amount:  %s\nCurrent Locked Amount: %s\nYield: %.6f%%\n", str1, str2, str3, str4, double(result.Yield) / 100000.0);
 }
 
 void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch)
@@ -279,7 +346,47 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
         return;
     }
 
-    printf("early unlocked amount: %llu\nearly unlocked percent: %.3f%%\ntotal locked amount in QEarn SC: %llu\naverage APY of QEarn: %.6f%%\n", result.earlyUnlockedAmount, double(result.earlyUnlockedPercent) / 100.0, result.totalLockedAmount, double(result.averageAPY) / 100000.0);
+    uint64_t earlyUnlockedAmount = result.earlyUnlockedAmount;
+    uint64_t totalLockedAmount = result.totalLockedAmount;
+    uint32_t t = 0, i = 0;
+    char str1[100] = {0,};
+    char str2[100] = {0,};
+
+    if(result.earlyUnlockedAmount == 0)
+    {
+        str1[0] = '0';
+    }
+
+    while(earlyUnlockedAmount)
+    {
+        str1[i++] = (earlyUnlockedAmount % 10) + '0';
+        earlyUnlockedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && earlyUnlockedAmount != 0) 
+        {
+            str1[i++] = ',';
+        }
+    }
+    if(result.earlyUnlockedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str1[r], str1[j]);
+    }
+    t = 0; i = 0;
+    while(totalLockedAmount)
+    {
+        str2[i++] = (totalLockedAmount % 10) + '0';
+        totalLockedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && totalLockedAmount != 0) 
+        {
+            str2[i++] = ',';
+        }
+    }
+    
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(str2[r], str2[j]);
+    }
+
+    printf("Early Unlocked Amount: %s\nEarly Unlocked Percent: %.3f%%\nTotal Locked Amount In QEarn SC: %s\nAverage APY Of QEarn SC: %.6f%%\n", str1, double(result.earlyUnlockedPercent) / 100.0, str2, double(result.averageAPY) / 100000.0);
 }
 
 void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)
