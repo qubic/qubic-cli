@@ -22,6 +22,8 @@
 #define QEARN_GET_USER_LOCKED_STATE 4
 #define QEARN_GET_UNLOCKED_STATE 5
 #define QEARN_GET_STATS 6
+#define QEARN_GET_BURNED_AND_BOOSTED_STATS 7
+#define QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH 8
 
 // QEARN PROCEDURES
 #define QEARN_LOCK 1
@@ -181,68 +183,85 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     uint64_t currentBonus = result.CurrentBonusAmount;
     uint64_t currentLocked = result.CurrentLockedAmount;
     uint32_t t = 0, i = 0;
-    char str1[100] = {0,};
-    char str2[100] = {0,};
-    char str3[100] = {0,};
-    char str4[100] = {0,};
+    char bonus_S[100] = {0,};
+    char lockedAmount_S[100] = {0,};
+    char currentBonus_S[100] = {0,};
+    char currentLocked_S[100] = {0,};
+
+    if(result.BonusAmount == 0)
+    {
+        bonus_S[0] = '0';
+    }
+    if(result.LockedAmount == 0)
+    {
+        lockedAmount_S[0] = '0';
+    }
+    if(result.CurrentBonusAmount == 0)
+    {
+        currentBonus_S[0] = '0';
+    }
+    if(result.CurrentLockedAmount == 0)
+    {
+        currentLocked_S[0] = '0';
+    }
 
     while(bonus)
     {
-        str1[i++] = (bonus % 10) + '0';
+        bonus_S[i++] = (bonus % 10) + '0';
         bonus /= 10;
         t++;
         if(t % 3 == 0 && bonus != 0) 
         {
-            str1[i++] = ',';
+            bonus_S[i++] = ',';
         }
     }
-    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str1[r], str1[j]);
+    if(result.BonusAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(bonus_S[r], bonus_S[j]);
     }
     t = 0; i = 0;
     while(lockedAmount)
     {
-        str2[i++] = (lockedAmount % 10) + '0';
+        lockedAmount_S[i++] = (lockedAmount % 10) + '0';
         lockedAmount /= 10;
         t++;
         if(t % 3 == 0 && lockedAmount != 0) 
         {
-            str2[i++] = ',';
+            lockedAmount_S[i++] = ',';
         }
     }
-    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str2[r], str2[j]);
+    if(result.LockedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(lockedAmount_S[r], lockedAmount_S[j]);
     }
     t = 0; i = 0;
     while(currentBonus)
     {
-        str3[i++] = (currentBonus % 10) + '0';
+        currentBonus_S[i++] = (currentBonus % 10) + '0';
         currentBonus /= 10;
         t++;
         if(t % 3 == 0 && currentBonus != 0) 
         {
-            str3[i++] = ',';
+            currentBonus_S[i++] = ',';
         }
     }
-    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str3[r], str3[j]);
+    if(result.CurrentBonusAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(currentBonus_S[r], currentBonus_S[j]);
     }
     t = 0; i = 0;
     while(currentLocked)
     {
-        str4[i++] = (currentLocked % 10) + '0';
+        currentLocked_S[i++] = (currentLocked % 10) + '0';
         currentLocked /= 10;
         t++;
         if(t % 3 == 0 && currentLocked != 0) 
         {
-            str4[i++] = ',';
+            currentLocked_S[i++] = ',';
         }
     }
     
-    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str4[r], str4[j]);
+    if(result.CurrentLockedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(currentLocked_S[r], currentLocked_S[j]);
     }
-    printf("Initial Bonus Amount:  %s\nInitial Locked Amount: %s\nCurrent Bonus Amount:  %s\nCurrent Locked Amount: %s\nYield: %.6f%%\n", str1, str2, str3, str4, double(result.Yield) / 100000.0);
+    printf("Initial Bonus Amount:  %s\nInitial Locked Amount: %s\nCurrent Bonus Amount:  %s\nCurrent Locked Amount: %s\nYield: %.6f%%\n", bonus_S, lockedAmount_S, currentBonus_S, currentLocked_S, double(result.Yield) / 100000.0);
 }
 
 void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch)
@@ -349,44 +368,244 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
     uint64_t earlyUnlockedAmount = result.earlyUnlockedAmount;
     uint64_t totalLockedAmount = result.totalLockedAmount;
     uint32_t t = 0, i = 0;
-    char str1[100] = {0,};
-    char str2[100] = {0,};
+    char earlyUnlockedAmount_S[100] = {0,};
+    char totalLockedAmount_S[100] = {0,};
 
     if(result.earlyUnlockedAmount == 0)
     {
-        str1[0] = '0';
+        earlyUnlockedAmount_S[0] = '0';
     }
 
     while(earlyUnlockedAmount)
     {
-        str1[i++] = (earlyUnlockedAmount % 10) + '0';
+        earlyUnlockedAmount_S[i++] = (earlyUnlockedAmount % 10) + '0';
         earlyUnlockedAmount /= 10;
         t++;
         if(t % 3 == 0 && earlyUnlockedAmount != 0) 
         {
-            str1[i++] = ',';
+            earlyUnlockedAmount_S[i++] = ',';
         }
     }
     if(result.earlyUnlockedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str1[r], str1[j]);
+        std::swap(earlyUnlockedAmount_S[r], earlyUnlockedAmount_S[j]);
     }
     t = 0; i = 0;
     while(totalLockedAmount)
     {
-        str2[i++] = (totalLockedAmount % 10) + '0';
+        totalLockedAmount_S[i++] = (totalLockedAmount % 10) + '0';
         totalLockedAmount /= 10;
         t++;
         if(t % 3 == 0 && totalLockedAmount != 0) 
         {
-            str2[i++] = ',';
+            totalLockedAmount_S[i++] = ',';
         }
     }
     
     for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-        std::swap(str2[r], str2[j]);
+        std::swap(totalLockedAmount_S[r], totalLockedAmount_S[j]);
     }
 
-    printf("Early Unlocked Amount: %s\nEarly Unlocked Percent: %.3f%%\nTotal Locked Amount In QEarn SC: %s\nAverage APY Of QEarn SC: %.6f%%\n", str1, double(result.earlyUnlockedPercent) / 100.0, str2, double(result.averageAPY) / 100000.0);
+    printf("Early Unlocked Amount: %s\nEarly Unlocked Percent: %.3f%%\nTotal Locked Amount In QEarn SC: %s\nAverage APY Of QEarn SC: %.6f%%\n", earlyUnlockedAmount_S, double(result.earlyUnlockedPercent) / 100.0, totalLockedAmount_S, double(result.averageAPY) / 100000.0);
+}
+
+void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        QEarnGetBurnedAndBoostedStats_input input;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(QEarnGetBurnedAndBoostedStats_input);
+    packet.rcf.inputType = QEARN_GET_BURNED_AND_BOOSTED_STATS;
+    packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
+    packet.input.t = 10;
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    QEarnGetBurnedAndBoostedStats_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStats_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+
+    uint64_t burnedAmount = result.burnedAmount;
+    uint64_t boostedAmount = result.boostedAmount;
+    uint64_t rewardedAmount = result.rewardedAmount;
+
+    uint32_t t = 0, i = 0;
+    char burnedAmount_S[100] = {0,};
+    char boostedAmount_S[100] = {0,};
+    char rewardedAmount_S[100] = {0,};
+
+    if(result.burnedAmount == 0)
+    {
+        burnedAmount_S[0] = '0';
+    }
+    if(result.boostedAmount == 0)
+    {
+        boostedAmount_S[0] = '0';
+    }
+    if(result.rewardedAmount == 0)
+    {
+        rewardedAmount_S[0] = '0';
+    }
+
+    while(burnedAmount)
+    {
+        burnedAmount_S[i++] = (burnedAmount % 10) + '0';
+        burnedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && burnedAmount != 0) 
+        {
+            burnedAmount_S[i++] = ',';
+        }
+    }
+    if(result.burnedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(burnedAmount_S[r], burnedAmount_S[j]);
+    }
+    t = 0; i = 0;
+    while(boostedAmount)
+    {
+        boostedAmount_S[i++] = (boostedAmount % 10) + '0';
+        boostedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && boostedAmount != 0) 
+        {
+            boostedAmount_S[i++] = ',';
+        }
+    }
+    
+    if(result.boostedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(boostedAmount_S[r], boostedAmount_S[j]);
+    }
+
+    t = 0; i = 0;
+    while(rewardedAmount)
+    {
+        rewardedAmount_S[i++] = (rewardedAmount % 10) + '0';
+        rewardedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && rewardedAmount != 0) 
+        {
+            rewardedAmount_S[i++] = ',';
+        }
+    }
+    
+    if(result.rewardedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(rewardedAmount_S[r], rewardedAmount_S[j]);
+    }
+
+    printf("Burned Amount In QEarn SC: %s\nBurend Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent));
+}
+
+void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        QEarnGetBurnedAndBoostedStatsPerEpoch_input input;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(QEarnGetBurnedAndBoostedStatsPerEpoch_input);
+    packet.rcf.inputType = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
+    packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
+    packet.input.epoch = epoch;
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    QEarnGetBurnedAndBoostedStatsPerEpoch_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStatsPerEpoch_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+
+    uint64_t burnedAmount = result.burnedAmount;
+    uint64_t boostedAmount = result.boostedAmount;
+    uint64_t rewardedAmount = result.rewardedAmount;
+
+    uint32_t t = 0, i = 0;
+    char burnedAmount_S[100] = {0,};
+    char boostedAmount_S[100] = {0,};
+    char rewardedAmount_S[100] = {0,};
+
+    if(result.burnedAmount == 0)
+    {
+        burnedAmount_S[0] = '0';
+    }
+    if(result.boostedAmount == 0)
+    {
+        boostedAmount_S[0] = '0';
+    }
+    if(result.rewardedAmount == 0)
+    {
+        rewardedAmount_S[0] = '0';
+    }
+
+    while(burnedAmount)
+    {
+        burnedAmount_S[i++] = (burnedAmount % 10) + '0';
+        burnedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && burnedAmount != 0) 
+        {
+            burnedAmount_S[i++] = ',';
+        }
+    }
+    if(result.burnedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(burnedAmount_S[r], burnedAmount_S[j]);
+    }
+    t = 0; i = 0;
+    while(boostedAmount)
+    {
+        boostedAmount_S[i++] = (boostedAmount % 10) + '0';
+        boostedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && boostedAmount != 0) 
+        {
+            boostedAmount_S[i++] = ',';
+        }
+    }
+    
+    if(result.boostedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(boostedAmount_S[r], boostedAmount_S[j]);
+    }
+
+    t = 0; i = 0;
+    while(rewardedAmount)
+    {
+        rewardedAmount_S[i++] = (rewardedAmount % 10) + '0';
+        rewardedAmount /= 10;
+        t++;
+        if(t % 3 == 0 && rewardedAmount != 0) 
+        {
+            rewardedAmount_S[i++] = ',';
+        }
+    }
+    
+    if(result.rewardedAmount) for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(rewardedAmount_S[r], rewardedAmount_S[j]);
+    }
+
+    printf("Burned Amount In Epoch %d: %s\nBurend Percent In Epoch %d: %.6f%%\nBoosted Amount In Epoch %d: %s\nBoosted Percent In Epoch %d: %.6f%%\nRewarded Amount In Epoch %d: %s\nRewarded Percent In Epoch %d: %.6f%%", epoch, burnedAmount_S, epoch, double(result.burnedPercent) / 100000.0, epoch, boostedAmount_S, epoch, double(result.boostedPercent) / 100000.0, epoch, rewardedAmount_S, epoch, double(result.rewardedPercent) / 100000.0);
 }
 
 void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)
