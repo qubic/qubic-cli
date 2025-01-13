@@ -439,7 +439,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qearnGetBurnedAndBoostedStats(g_nodeIp, g_nodePort);
             break;
-        case QEARN_GET_BUREND_AND_BOOSTED_STATS_PER_EPOCH:
+        case QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH:
             sanityCheckNode(g_nodeIp, g_nodePort);
             qearnGetBurnedAndBoostedStatsPerEpoch(g_nodeIp, g_nodePort, g_qearn_getstats_epoch);
             break;

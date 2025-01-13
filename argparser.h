@@ -1135,7 +1135,7 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qearngetburnedandboostedstats") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
+            CHECK_NUMBER_OF_PARAMETERS(0)
             g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS;
             i+=1;
             CHECK_OVER_PARAMETERS
@@ -1144,7 +1144,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qearngetburnedandboostedstatsperepoch") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QEARN_GET_BUREND_AND_BOOSTED_STATS_PER_EPOCH;
+            g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
             g_qearn_getstats_epoch = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
