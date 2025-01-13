@@ -364,7 +364,6 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
         LOG("Failed to receive data\n");
         return;
     }
-
     uint64_t earlyUnlockedAmount = result.earlyUnlockedAmount;
     uint64_t totalLockedAmount = result.totalLockedAmount;
     uint32_t t = 0, i = 0;
