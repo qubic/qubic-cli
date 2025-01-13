@@ -186,7 +186,7 @@ Command:
 	-qearngetburnedandboostedstats
 		Get the Stats(burned amount and average percent, boosted amount and average percent, rewarded amount and average percent in QEarn SC) of QEarn SC
 	-qearngetburnedandboostedstatsperepoch <EPOCH>
-		Get the Stats(burend amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC
+		Get the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC
 
 [QVAULT COMMANDS]
 	-qvaultsubmitauthaddress <NEW_ADDRESS>

@@ -207,7 +207,7 @@ void print_help()
     printf("\t-qearngetburnedandboostedstats\n");
     printf("\t\tGet the Stats(burned amount and average percent, boosted amount and average percent, rewarded amount and average percent in QEarn SC) of QEarn SC\n");
     printf("\t-qearngetburnedandboostedstatsperepoch <EPOCH>\n");
-    printf("\t\tGet the Stats(burend amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC\n");
+    printf("\t\tGet the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC\n");
 
     printf("\n[QVAULT COMMANDS]\n");
     printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
