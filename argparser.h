@@ -66,9 +66,9 @@ void print_help()
     printf("\t-gettxinfo <TX_ID>\n");
     printf("\t\tGet tx infomation, will print empty if there is no tx or invalid tx. valid node ip/port are required.\n");
     printf("\t-uploadfile <FILE_PATH> [COMPRESS_TOOL]\n");
-    printf("\t\tUpload a file to qubic network. valid node ip/port and seed are required. optional DECOMPRESS_TOOL is use for decompress the file (support: zip(Unix), tar(Win, Unix)) \n");
+    printf("\t\tUpload a file to qubic network. valid node ip/port and seed are required. optional COMPRESS_TOOL is used to compress the file (support: zip(Unix), tar(Win, Unix)) \n");
     printf("\t-downloadfile <TX_ID> <FILE_PATH> [DECOMPRESS_TOOL]\n");
-    printf("\t\tDownload a file to qubic network. valid node ip/port are required. optional DECOMPRESS_TOOL is use for decompress the file (support: zip(Unix), tar(Win, Unix)) \n");
+    printf("\t\tDownload a file to qubic network. valid node ip/port are required. optional DECOMPRESS_TOOL is used to decompress the file (support: zip(Unix), tar(Win, Unix)) \n");
     printf("\t-checktxontick <TICK_NUMBER> <TX_ID>\n");
     printf("\t\tCheck if a transaction is included in a tick. valid node ip/port are required.\n");
     printf("\t-checktxonfile <TX_ID> <TICK_DATA_FILE>\n");
