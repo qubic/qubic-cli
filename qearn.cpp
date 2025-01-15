@@ -60,11 +60,8 @@ void convertToString(uint64_t num, char num_S[])
         }
     }
 
-    if(num) 
-    {
-        for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
-            std::swap(num_S[r], num_S[j]);
-        }
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) {
+        std::swap(num_S[r], num_S[j]);
     }
 }
 
