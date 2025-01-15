@@ -204,6 +204,10 @@ void print_help()
     printf("\t\tGet the unlocking history of the user.\n");
     printf("\t-qearngetstatsperepoch <EPOCH>\n");
     printf("\t\tGet the Stats(early unlocked amount, early unlocked percent) of the epoch <EPOCH> and Stats(total locked amount, average APY) of QEarn SC.\n");
+    printf("\t-qearngetburnedandboostedstats\n");
+    printf("\t\tGet the Stats(burned amount and average percent, boosted amount and average percent, rewarded amount and average percent in QEarn SC) of QEarn SC\n");
+    printf("\t-qearngetburnedandboostedstatsperepoch <EPOCH>\n");
+    printf("\t\tGet the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC\n");
 
     printf("\n[QVAULT COMMANDS]\n");
     printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
@@ -1134,6 +1138,23 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATS_PER_EPOCH;
+            g_qearn_getstats_epoch = charToNumber(argv[i + 1]);
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qearngetburnedandboostedstats") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qearngetburnedandboostedstatsperepoch") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
             g_qearn_getstats_epoch = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS

@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <algorithm>
 
 #include "structs.h"
 #include "walletUtils.h"
@@ -21,6 +22,8 @@
 #define QEARN_GET_USER_LOCKED_STATE 4
 #define QEARN_GET_UNLOCKED_STATE 5
 #define QEARN_GET_STATS 6
+#define QEARN_GET_BURNED_AND_BOOSTED_STATS 7
+#define QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH 8
 
 // QEARN PROCEDURES
 #define QEARN_LOCK 1
@@ -34,6 +37,34 @@ struct Unlock_input
 struct Unlock_output
 {
 };
+
+void convertToString(uint64_t num, char num_S[])
+{
+    uint64_t tmp = num;
+    uint32_t t = 0, i = 0;
+
+    if(num == 0)
+    {
+        num_S[0] = '0';
+        return;
+    }
+
+    while(tmp)
+    {
+        num_S[i++] = (tmp % 10) + '0';
+        tmp /= 10;
+        t++;
+        if(t % 3 == 0 && tmp != 0) 
+        {
+            num_S[i++] = ',';
+        }
+    }
+
+    for (size_t r = 0, j = i - 1; r < j; ++r, --j) 
+    {
+        std::swap(num_S[r], num_S[j]);
+    }
+}
 
 void qearnLock(const char* nodeIp, int nodePort, const char* seed, long long lock_amount, uint32_t scheduledTickOffset)
 {
@@ -175,7 +206,22 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
         LOG("Failed to receive data\n");
         return;
     }
-    printf("initial bonus amount:  %llu\ninitial locked amount: %llu\ncurrent bonus amount:  %llu\ncurrent locked amount: %llu\nyield: %.6f%%\n", result.BonusAmount, result.LockedAmount, result.CurrentBonusAmount, result.CurrentLockedAmount, double(result.Yield) / 100000.0);
+    uint64_t bonus = result.BonusAmount;
+    uint64_t lockedAmount = result.LockedAmount;
+    uint64_t currentBonus = result.CurrentBonusAmount;
+    uint64_t currentLocked = result.CurrentLockedAmount;
+    uint32_t t = 0, i = 0;
+    char bonus_S[100] = {0,};
+    char lockedAmount_S[100] = {0,};
+    char currentBonus_S[100] = {0,};
+    char currentLocked_S[100] = {0,};
+
+    convertToString(result.BonusAmount, bonus_S);
+    convertToString(result.LockedAmount, lockedAmount_S);
+    convertToString(result.CurrentBonusAmount, currentBonus_S);
+    convertToString(result.CurrentLockedAmount, currentLocked_S);
+
+    printf("Initial Bonus Amount:  %s\nInitial Locked Amount: %s\nCurrent Bonus Amount:  %s\nCurrent Locked Amount: %s\nYield: %.6f%%\n", bonus_S, lockedAmount_S, currentBonus_S, currentLocked_S, double(result.Yield) / 100000.0);
 }
 
 void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identity, uint32_t epoch)
@@ -278,8 +324,108 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
         LOG("Failed to receive data\n");
         return;
     }
+    uint64_t earlyUnlockedAmount = result.earlyUnlockedAmount;
+    uint64_t totalLockedAmount = result.totalLockedAmount;
+    uint32_t t = 0, i = 0;
+    char earlyUnlockedAmount_S[100] = {0,};
+    char totalLockedAmount_S[100] = {0,};
 
-    printf("early unlocked amount: %llu\nearly unlocked percent: %.3f%%\ntotal locked amount in QEarn SC: %llu\naverage APY of QEarn: %.6f%%\n", result.earlyUnlockedAmount, double(result.earlyUnlockedPercent) / 100.0, result.totalLockedAmount, double(result.averageAPY) / 100000.0);
+    convertToString(result.earlyUnlockedAmount, earlyUnlockedAmount_S);
+    convertToString(result.totalLockedAmount, totalLockedAmount_S);
+
+    printf("Early Unlocked Amount: %s\nEarly Unlocked Percent: %.3f%%\nTotal Locked Amount In QEarn SC: %s\nAverage APY Of QEarn SC: %.6f%%\n", earlyUnlockedAmount_S, double(result.earlyUnlockedPercent) / 100.0, totalLockedAmount_S, double(result.averageAPY) / 100000.0);
+}
+
+void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        QEarnGetBurnedAndBoostedStats_input input;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(QEarnGetBurnedAndBoostedStats_input);
+    packet.rcf.inputType = QEARN_GET_BURNED_AND_BOOSTED_STATS;
+    packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
+    packet.input.t = 10;
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    QEarnGetBurnedAndBoostedStats_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStats_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+
+    uint64_t burnedAmount = result.burnedAmount;
+    uint64_t boostedAmount = result.boostedAmount;
+    uint64_t rewardedAmount = result.rewardedAmount;
+
+    uint32_t t = 0, i = 0;
+    char burnedAmount_S[100] = {0,};
+    char boostedAmount_S[100] = {0,};
+    char rewardedAmount_S[100] = {0,};
+
+    convertToString(result.burnedAmount, burnedAmount_S);
+    convertToString(result.boostedAmount, boostedAmount_S);
+    convertToString(result.rewardedAmount, rewardedAmount_S);
+
+    printf("Burned Amount In QEarn SC: %s\nBurned Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent));
+}
+
+void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        QEarnGetBurnedAndBoostedStatsPerEpoch_input input;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(QEarnGetBurnedAndBoostedStatsPerEpoch_input);
+    packet.rcf.inputType = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
+    packet.rcf.contractIndex = QEARN_CONTRACT_INDEX;
+
+    packet.input.epoch = epoch;
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    QEarnGetBurnedAndBoostedStatsPerEpoch_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStatsPerEpoch_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+
+    uint64_t burnedAmount = result.burnedAmount;
+    uint64_t boostedAmount = result.boostedAmount;
+    uint64_t rewardedAmount = result.rewardedAmount;
+
+    uint32_t t = 0, i = 0;
+    char burnedAmount_S[100] = {0,};
+    char boostedAmount_S[100] = {0,};
+    char rewardedAmount_S[100] = {0,};
+
+    convertToString(result.burnedAmount, burnedAmount_S);
+    convertToString(result.boostedAmount, boostedAmount_S);
+    convertToString(result.rewardedAmount, rewardedAmount_S);
+
+    printf("Burned Amount In Epoch %d: %s\nBurned Percent In Epoch %d: %.6f%%\nBoosted Amount In Epoch %d: %s\nBoosted Percent In Epoch %d: %.6f%%\nRewarded Amount In Epoch %d: %s\nRewarded Percent In Epoch %d: %.6f%%", epoch, burnedAmount_S, epoch, double(result.burnedPercent) / 100000.0, epoch, boostedAmount_S, epoch, double(result.boostedPercent) / 100000.0, epoch, rewardedAmount_S, epoch, double(result.rewardedPercent) / 100000.0);
 }
 
 void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)

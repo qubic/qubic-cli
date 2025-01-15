@@ -259,6 +259,8 @@ template QEarnGetStateOfRound_output QubicConnection::receivePacketWithHeaderAs<
 template QEarnGetUserLockStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockStatus_output>();
 template QEarnGetStatsPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetStatsPerEpoch_output>();
 template QEarnGetEndedStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
+template QEarnGetBurnedAndBoostedStats_output QubicConnection::receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStats_output>();
+template QEarnGetBurnedAndBoostedStatsPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStatsPerEpoch_output>();
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 

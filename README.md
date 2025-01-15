@@ -183,6 +183,10 @@ Command:
 		Get the unlocking history of the user.
 	-qearngetstatsperepoch <EPOCH>
 		Get the Stats(early unlocked amount, early unlocked percent) of the epoch <EPOCH> and Stats(total locked amount, average APY) of QEarn SC
+	-qearngetburnedandboostedstats
+		Get the Stats(burned amount and average percent, boosted amount and average percent, rewarded amount and average percent in QEarn SC) of QEarn SC
+	-qearngetburnedandboostedstatsperepoch <EPOCH>
+		Get the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC
 
 [QVAULT COMMANDS]
 	-qvaultsubmitauthaddress <NEW_ADDRESS>
