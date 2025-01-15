@@ -46,6 +46,7 @@ void convertToString(uint64_t num, char num_S[])
     if(num == 0)
     {
         num_S[0] = '0';
+        return;
     }
 
     while(tmp)
