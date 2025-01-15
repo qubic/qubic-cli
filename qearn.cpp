@@ -379,7 +379,7 @@ void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
     convertToString(result.boostedAmount, boostedAmount_S);
     convertToString(result.rewardedAmount, rewardedAmount_S);
 
-    printf("Burned Amount In QEarn SC: %s\nBurned Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent));
+    printf("Burned Amount In QEarn SC: %s\nBurned Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent) / 100000.0);
 }
 
 void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
