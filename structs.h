@@ -475,6 +475,14 @@ typedef struct
     }
 } ExchangePublicPeers;
 
+typedef struct
+{
+    static constexpr unsigned char type()
+    {
+        return REQUEST_COMPUTORS;
+    }
+} RequestComputors;
+
 struct RequestLog // Fetches log
 {
     unsigned long long passcode[4];

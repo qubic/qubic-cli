@@ -92,7 +92,14 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     // receive handshake - exchange peer packets
     mHandshakeData.resize(sizeof(ExchangePublicPeers));
     uint8_t* data = mHandshakeData.data();
-    *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();   
+    *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();
+    // If node has no ComputorList or a self-generated ComputorList it will requestComputor upon tcp initialization
+    // Ignore this message if it is here
+    try{
+        *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
+    }
+    catch(std::logic_error& e){
+    }
 }
 
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
