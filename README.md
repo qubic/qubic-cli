@@ -74,7 +74,7 @@ Command:
 		Show current tick information of a node
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
 		Perform a special command to node, valid private key and node ip/port are required.	
-	-tooglemainaux <MODE_0> <Mode_1> 
+	-togglemainaux <MODE_0> <Mode_1> 
 		Remotely toogle Main/Aux mode on node,valid private key and node ip/port are required.	
 		<MODE_0> and <MODE_1> value are: MAIN or AUX	
 	-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> 
