@@ -95,8 +95,8 @@ void print_help()
     printf("\t\tShow current tick information of a node\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
     printf("\t\tPerform a special command to node, valid private key and node ip/port are required.\t\n");
-    printf("\t-tooglemainaux <MODE_0> <Mode_1> \n");
-    printf("\t\tRemotely toogle Main/Aux mode on node,valid private key and node ip/port are required.\t\n");
+    printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
+    printf("\t\tRemotely toggle Main/Aux mode on node,valid private key and node ip/port are required.\t\n");
     printf("\t\t<MODE_0> and <MODE_1> value are: MAIN or AUX\t\n");
     printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> \n");
     printf("\t\tRemotely set solution threshold for future epoch,valid private key and node ip/port are required.\t\n");
@@ -634,13 +634,13 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-tooglemainaux") == 0)
+        if (strcmp(argv[i], "-togglemainaux") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
             g_requestedSpecialCommand = SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST;
-            g_toogle_main_aux_0 = argv[i+1];
-            g_toogle_main_aux_1 = argv[i+2];
+            g_toggle_main_aux_0 = argv[i+1];
+            g_toggle_main_aux_1 = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;

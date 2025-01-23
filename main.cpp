@@ -284,9 +284,9 @@ int run(int argc, char* argv[])
         case TOOGLE_MAIN_AUX:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            sanityCheckMainAuxStatus(g_toogle_main_aux_0);
-            sanityCheckMainAuxStatus(g_toogle_main_aux_1);
-            toogleMainAux(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand, g_toogle_main_aux_0, g_toogle_main_aux_1);
+            sanityCheckMainAuxStatus(g_toggle_main_aux_0);
+            sanityCheckMainAuxStatus(g_toggle_main_aux_1);
+            toggleMainAux(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand, g_toggle_main_aux_0, g_toggle_main_aux_1);
             break;
         case SET_SOLUTION_THRESHOLD:
             sanityCheckNode(g_nodeIp, g_nodePort);

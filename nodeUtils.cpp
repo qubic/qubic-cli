@@ -1030,7 +1030,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
 }
 
-void toogleMainAux(const char* nodeIp, const int nodePort, const char* seed,
+void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
                    int command, std::string mode0, std::string mode1)
 {
     uint8_t privateKey[32] = {0};
