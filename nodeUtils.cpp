@@ -1225,7 +1225,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_QUERY_TIME) << 56;
         queryTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current time used for nonce (query time): %lu", curTime);
+        LOG("Current unix time (in us) used for nonce (query time): %lu\n\n", curTime);
 
         KangarooTwelve((unsigned char*)&queryTimeMsg.cmd,
                        sizeof(queryTimeMsg.cmd),
@@ -1282,7 +1282,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SEND_TIME) << 56;
         sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current time used for nonce (send time): %lu", curTime);
+        LOG("Current unix time (in us) used for nonce (send time): %lu\n\n", curTime);
 
         using namespace std::chrono;
         auto now = system_clock::now();
