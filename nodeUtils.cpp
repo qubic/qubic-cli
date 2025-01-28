@@ -155,17 +155,22 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
     constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
     uint8_t buffer[bufferSize];
     int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
-    while (recvByte > 0)
+    while (recvByte == sizeof(RequestResponseHeader))
     {
         auto header = (RequestResponseHeader*)buffer;
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
+            recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
             auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             txs.push_back(*tx);
+            if (tx->inputSize > MAX_INPUT_SIZE)
+            {
+                LOG("Received tx with invalid inputSize!\n");
+                exit(1);
+            }
             if (hashes != nullptr || extraData != nullptr || sigs != nullptr)
             {
-                recvByte = qc->receiveData(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
+                recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
             }
             if (hashes != nullptr)
             {
@@ -197,6 +202,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 sigs->push_back(sig);
             }
         }
+        // FIXME: slow sender may cause incomplete output to file
         recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
