@@ -112,7 +112,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             sanityCheckNumberOfUnit(g_qx_issue_asset_number_of_unit);
-            sanityCheckValidString(g_qx_issue_asset_name);
+            sanityCheckValidAssetName(g_qx_issue_asset_name);
             sanityCheckValidString(g_qx_issue_unit_of_measurement);
             sanityCheckNumberOfDecimal(g_qx_issue_asset_num_decimal);
             qxIssueAsset(g_nodeIp, g_nodePort, g_seed,
@@ -126,7 +126,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             sanityCheckNumberOfUnit(g_qx_asset_transfer_amount);
-            sanityCheckValidString(g_qx_asset_transfer_asset_name);
+            sanityCheckValidAssetName(g_qx_asset_transfer_asset_name);
             sanityCheckValidString(g_qx_asset_transfer_issuer_in_hex);
             sanityCheckIdentity(g_qx_asset_transfer_new_owner_identity);
             qxTransferAsset(g_nodeIp, g_nodePort, g_seed,
@@ -139,6 +139,7 @@ int run(int argc, char* argv[])
         case QX_ORDER:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qx_asset_name);
             sanityCheckValidString(g_qx_command_1);
             sanityCheckValidString(g_qx_command_2);
             if (strcmp(g_qx_command_1, "add") == 0)
@@ -181,6 +182,7 @@ int run(int argc, char* argv[])
             }
             else if (strcmp(g_qx_command_1, "asset") == 0)
             {
+                sanityCheckValidAssetName(g_qx_asset_name);
                 if (strcmp(g_qx_command_2, "bid") == 0)
                 {
                     qxGetAssetBidOrder(g_nodeIp, g_nodePort, g_qx_asset_name, g_qx_issuer, g_qx_offset);
@@ -190,6 +192,14 @@ int run(int argc, char* argv[])
                     qxGetAssetAskOrder(g_nodeIp, g_nodePort, g_qx_asset_name, g_qx_issuer, g_qx_offset);
                 }
             }
+            break;
+        case QX_TRANSFER_MANAGEMENT_RIGHTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qx_asset_name);
+            sanityCheckIdentity(g_qx_issuer);
+            sanityCheckNumberOfUnit(g_qx_number_of_share);
+            qxTransferAssetManagementRights(g_nodeIp, g_nodePort, g_seed, g_qx_asset_name, g_qx_issuer, g_contract_index, g_qx_number_of_share, g_offsetScheduledTick);
             break;
         case GET_COMP_LIST:
             sanityCheckNode(g_nodeIp, g_nodePort);

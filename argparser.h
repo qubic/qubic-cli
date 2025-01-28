@@ -128,6 +128,8 @@ void print_help()
     printf("\t\tSet order on Qx.\n");
     printf("\t-qxgetorder entity/asset bid/ask [ISSUER/ENTITY (in qubic format)] [ASSET_NAME (NULL for requesting entity)] [OFFSET]\n");
     printf("\t\tGet orders on Qx\n");
+    printf("\t-qxtransferrights <ASSET_NAME> <ISSUER_ID> <NEW_MANAGING_CONTRACT> <NUMBER_OF_SHARES>\n");
+    printf("\t\tTransfer asset management rights of shares from QX to another contract. <NEW_MANAGING_CONTRACT> can be given as name or index. You need to own/possess the shares to do this (seed required).\n");
 
     printf("\n[QTRY COMMANDS]\n");
     printf("\t-qtrygetbasicinfo\n");
@@ -252,6 +254,45 @@ static uint64_t charToUnsignedNumber(char* a)
     char *endptr = nullptr;
     retVal = strtoll(a, &endptr, 10);
     return retVal;
+}
+
+static uint32_t getContractIndex(const char* str)
+{
+#ifdef _MSC_VER
+#define strcasecmp _stricmp
+#endif
+    uint32_t idx = 0;
+    if (strcasecmp(str, "QX") == 0)
+        idx = 1;
+    else if (strcasecmp(str, "QUOTTERY") == 0 || strcasecmp(str, "QTRY") == 0)
+        idx = 2;
+    else if (strcasecmp(str, "RANDOM") == 0)
+        idx = 3;
+    else if (strcasecmp(str, "QUTIL") == 0)
+        idx = 4;
+    else if (strcasecmp(str, "MLM") == 0)
+        idx = 5;
+    else if (strcasecmp(str, "GQMPROP") == 0)
+        idx = 6;
+    else if (strcasecmp(str, "SWATCH") == 0)
+        idx = 7;
+    else if (strcasecmp(str, "CCF") == 0)
+        idx = 8;
+    else if (strcasecmp(str, "QEARN") == 0)
+        idx = 9;
+    else if (strcasecmp(str, "QVAULT") == 0)
+        idx = 10;
+    else
+    {
+        constexpr uint32_t contractCount = 11;
+        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx >= contractCount)
+        {
+            LOG("Contract \"%s\" is unknown!\n", str);
+            exit(1);
+        }
+    }
+    return idx;
+#undef strcasecmp
 }
 
 void readConfigFile(const char* path)
@@ -781,6 +822,19 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-qxtransferrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QX_TRANSFER_MANAGEMENT_RIGHTS;
+            g_qx_asset_name = argv[i + 1];
+            g_qx_issuer = argv[i + 2];
+            g_contract_index = getContractIndex(argv[i + 3]);
+            g_qx_number_of_share = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
 
         /*************************
          ***** QTRY COMMANDS *****

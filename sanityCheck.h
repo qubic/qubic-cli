@@ -256,3 +256,29 @@ static void checkValidSolutionThreshold(int thres)
     LOG("Invalid solution threshold\n");
     exit(1);
 }
+
+static void sanityCheckValidAssetName(const char * name)
+{
+    bool okay = false;
+    if (name)
+    {
+        size_t len = strlen(name);
+        if (name[0] >= 'A' && name[0] <= 'Z' && len < 8)
+        {
+            okay = true;
+            for (unsigned int i = 1; i < len; i++)
+            {
+                if (!(name[i] >= 'A' && name[i] <= 'Z') && !(name[i] >= '0' && name[i] <= '9'))
+                {
+                    okay = false;
+                    break;
+                }
+            }
+        }
+    }
+    if (!okay)
+    {
+        LOG("Invalid asset name! Must be string of at most 7 characters. The first must be an upper-case letter. They rest may be upper-case letters or digits.\n");
+        exit(1);
+    }
+}
