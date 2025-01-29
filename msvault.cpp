@@ -39,6 +39,13 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     MsVaultRegisterVault_input input;
     memset(&input, 0, sizeof(input));
     memcpy(input.vaultName, vaultName, 32);
+
+    if (requiredApprovals <= 1)
+    {
+        LOG("Required Approval must be larger than 1.");
+        return;
+    }
+
     input.requiredApprovals = requiredApprovals;
 
     // Parse owners
