@@ -64,7 +64,7 @@ struct MsVaultGetReleaseStatus_input {
     uint64_t vaultID;
 };
 struct MsVaultGetReleaseStatus_output {
-    bool status;
+    uint64_t status;
     uint64_t amounts[MSVAULT_MAX_OWNERS];
     uint8_t destinations[MSVAULT_MAX_OWNERS][32];
     static constexpr unsigned char type() {
@@ -76,7 +76,7 @@ struct MsVaultGetBalanceOf_input {
     uint64_t vaultID;
 };
 struct MsVaultGetBalanceOf_output {
-    bool status;
+    uint64_t status;
     int64_t balance;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
@@ -87,7 +87,7 @@ struct MsVaultGetVaultName_input {
     uint64_t vaultID;
 };
 struct MsVaultGetVaultName_output {
-    bool status;
+    uint64_t status;
     uint8_t vaultName[32];
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
@@ -121,7 +121,7 @@ struct MsVaultGetVaultOwners_input {
     uint64_t vaultID;
 };
 struct MsVaultGetVaultOwners_output {
-    bool status;
+    uint64_t status;
     uint64_t numberOfOwners;
     uint8_t owners[MSVAULT_MAX_OWNERS][32];  // 16 owners, each 32 bytes
     uint64_t requiredApprovals;
