@@ -240,8 +240,8 @@ void print_help()
     printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
 
     printf("\n[MSVAULT COMMANDS]\n");
-    printf("\t-msvaultregistervault <VAULT_TYPE> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
-    printf("\t\tRegister a vault. Vault type, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.\n");
+    printf("\t-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
+    printf("\t\tRegister a vault. Vault's number of votes for proposal approval <REQUIRED_APPROVALS>, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.\n");
     printf("\t-msvaultdeposit <VAULT_ID> <AMOUNT>\n");
     printf("\t\tDeposit qubic into vault given vault ID.\n");
     printf("\t-msvaultreleaseto <VAULT_ID> <AMOUNT> <DESTINATION_IDENTITY>\n");
@@ -1363,7 +1363,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-msvaultregistervault") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-                g_cmd = MSVAULT_REGISTER_VAULT_CMD;
+            g_cmd = MSVAULT_REGISTER_VAULT_CMD;
             g_msVaultRequiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
 
             {

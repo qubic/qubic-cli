@@ -525,8 +525,9 @@ void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    char vaultNameStr[128] = { 0 };
-    getIdentityFromPublicKey(output.vaultName, vaultNameStr, false);
+    char vaultNameStr[33] = { 0 };
+    memcpy(vaultNameStr, output.vaultName, 32);
+    vaultNameStr[32] = '\0';
     LOG("Vault name: %s\n", vaultNameStr);
 }
 
