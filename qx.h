@@ -66,3 +66,11 @@ void qxGetEntityBidOrder(const char* nodeIp, int nodePort,
 void qxGetEntityAskOrder(const char* nodeIp, int nodePort,
                          const char* pHexEntity,
                          const long long offset);
+
+void qxTransferAssetManagementRights(const char* nodeIp, int nodePort,
+    const char* seed,
+    const char* pAssetName,
+    const char* pIssuerInQubicFormat,
+    uint32_t newManagingContractIndex,
+    int64_t numberOfShares,
+    uint32_t scheduledTickOffset);

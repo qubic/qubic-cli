@@ -31,6 +31,8 @@ int g_set_solution_threshold_epoch = -1;
 int g_set_solution_threshold_value = -1;
 char* g_file_path = nullptr;
 char* g_compress_tool = nullptr;
+uint32_t g_contract_index = 0;
+
 
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;

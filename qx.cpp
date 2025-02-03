@@ -32,6 +32,7 @@
 #define QX_ADD_BID_ORDER 6
 #define QX_REMOVE_ASK_ORDER 7
 #define QX_REMOVE_BID_ORDER 8
+#define QX_TRANSFER_SHARE_MANAGEMENT_RIGHTS 9
 
 void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result)
 {
@@ -306,6 +307,26 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.qoa));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+void qxTransferAssetManagementRights(const char* nodeIp, int nodePort,
+    const char* seed,
+    const char* pAssetName,
+    const char* pIssuerInQubicFormat,
+    uint32_t newManagingContractIndex,
+    int64_t numberOfShares,
+    uint32_t scheduledTickOffset)
+{
+    qxTransferShareManagementRights_input v;
+    getPublicKeyFromIdentity(pIssuerInQubicFormat, v.asset.issuer);
+    v.asset.assetName = 0;
+    memcpy(&v.asset.assetName, pAssetName, strlen(pAssetName));
+    v.newManagingContractIndex = newManagingContractIndex;
+    v.numberOfShares = numberOfShares;
+
+    LOG("\nSending tx for transferring management rights ...\n");
+    makeContractTransaction(nodeIp, nodePort, seed, QX_CONTRACT_INDEX, QX_TRANSFER_SHARE_MANAGEMENT_RIGHTS,
+        0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
 }
 
 void qxAddToAskOrder(const char* nodeIp, int nodePort,

@@ -37,6 +37,7 @@ SET(HEADER_FILES
 	utils.h
 	walletUtils.h
 	proposal.h
+	qx.h
 	qearn.h
 	qvault.h
 )

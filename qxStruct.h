@@ -206,6 +206,18 @@ static_assert(sizeof(qxOrderAction_input) == sizeof(AddToBidOrder_input), "wrong
 static_assert(sizeof(qxOrderAction_input) == sizeof(AddToAskOrder_input), "wrong implementation");
 
 #pragma pack (push, 8)
+struct qxTransferShareManagementRights_input
+{
+    struct
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+    } asset;
+    int64_t numberOfShares;
+    uint32_t newManagingContractIndex;
+};
+static_assert(sizeof(qxTransferShareManagementRights_input) == 56, "wrong implementation");
+
 struct QX : ContractBase
 {
     uint64_t _earnedAmount;
