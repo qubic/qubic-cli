@@ -11,6 +11,7 @@
 #include "connection.h"
 #include "structs.h"
 #include "sanityCheck.h"
+#include <set>
 
 
 #define MSVAULT_CONTRACT_INDEX 11
@@ -31,42 +32,146 @@ constexpr uint64_t RELEASE_RESET_FEE = 500ULL;
 #define MSVAULT_GET_FEES 10
 #define MSVAULT_GET_VAULT_OWNERS 11
 
+static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKey[32],
+    MsVaultGetVaults_output& output) 
+{
+    const int maxAttempts = 3;
+    int attempts = 0;
+    while (attempts < maxAttempts) 
+    {
+        MsVaultGetVaults_input input;
+        memset(&input, 0, sizeof(input));
+        memcpy(input.publicKey, publicKey, 32);
+
+        auto qc = make_qc(nodeIp, nodePort);
+        if (!qc) 
+        {
+            LOG("queryVaults: Failed to connect to node (attempt %d/%d).\n", attempts + 1, maxAttempts);
+            attempts++;
+            continue;
+        }
+
+        struct 
+        {
+            RequestResponseHeader header;
+            RequestContractFunction rcf;
+            MsVaultGetVaults_input in;
+        } req;
+        memset(&req, 0, sizeof(req));
+        req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+        req.rcf.inputType = MSVAULT_GET_VAULTS;
+        req.rcf.inputSize = sizeof(input);
+        memcpy(&req.in, &input, sizeof(input));
+        req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+        req.header.randomizeDejavu();
+        req.header.setType(RequestContractFunction::type());
+
+        qc->sendData((uint8_t*)&req, req.header.size());
+
+        memset(&output, 0, sizeof(output));
+        try 
+        {
+            output = qc->receivePacketWithHeaderAs<MsVaultGetVaults_output>();
+            return true;
+        }
+        catch (std::logic_error& e) 
+        {
+            LOG("queryVaults: Failed to get vaults on attempt %d/%d: %s\n", attempts + 1, maxAttempts, e.what());
+            attempts++;
+        }
+    }
+    LOG("queryVaults: All %d attempts failed. Aborting query.\n", maxAttempts);
+    return false;
+}
+
+static uint64_t getVaultCountForOwner(const char* nodeIp, int nodePort, const std::string& ownerStr)
+{
+    uint8_t pubKey[32] = { 0 };
+    getPublicKeyFromIdentity(ownerStr.c_str(), pubKey);
+
+    MsVaultGetVaults_output output;
+    if (!queryVaults(nodeIp, nodePort, pubKey, output))
+    {
+        LOG("getVaultCountForOwner: Failed to query vaults for owner %s\n", ownerStr.c_str());
+        return 0;
+    }
+    return output.numberOfVaults;
+}
+
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint64_t requiredApprovals, const uint8_t vaultName[32],
     const char* ownersCommaSeparated,
     uint32_t scheduledTickOffset)
 {
+    std::set<std::string> uniqueOwners;
+    std::string ownersStr(ownersCommaSeparated);
+    std::stringstream ss(ownersStr);
+    std::string owner;
+    int count = 0;
+
     MsVaultRegisterVault_input input;
     memset(&input, 0, sizeof(input));
     memcpy(input.vaultName, vaultName, 32);
 
-    if (requiredApprovals <= 1)
+    while (std::getline(ss, owner, ',') && count < owner.size())
     {
-        LOG("Required Approval must be larger than 1.");
+        while (!owner.empty() && (owner.back() == ' ' || owner.back() == '\n')) owner.pop_back();
+        while (!owner.empty() && owner.front() == ' ') owner.erase(owner.begin());
+
+        if (uniqueOwners.find(owner) != uniqueOwners.end())
+        {
+            LOG("Duplicate owner found: %s\n", owner.c_str());
+            return;
+        }
+        uniqueOwners.insert(owner);
+
+        uint8_t buf[32] = { 0 };
+        if (!checkSumIdentity(owner.c_str()))
+        {
+            LOG("Invalid owner: %s\n", owner.c_str());
+            return;
+        }
+        getPublicKeyFromIdentity(owner.c_str(), buf);
+        memcpy(input.owners + count * 32, buf, 32);
+        count++;
+    }
+
+    if (count < 2)
+    {
+        LOG("At least 2 unique owners are required for a vault.\n");
         return;
     }
 
+    printf("%d\n", count);
+
+    if (count > MSVAULT_MAX_OWNERS)
+    {
+        LOG("At most 16 unique owners are allowed for a vault.\n");
+        return;
+    }
+
+    if (requiredApprovals <= 1)
+    {
+        LOG("Required approvals must be greater than 1.\n");
+        return;
+    }
+    if (requiredApprovals > (uint64_t)count)
+    {
+        LOG("Required approvals (%llu) cannot exceed the number of unique owners (%d).\n",
+            requiredApprovals, count);
+        return;
+    }
     input.requiredApprovals = requiredApprovals;
 
-    // Parse owners
+    // For each unique owner, check how many vaults they already are in.
+    for (const auto& own : uniqueOwners)
     {
-        std::string ownersStr(ownersCommaSeparated);
-        std::stringstream ss(ownersStr);
-        std::string owner;
-        int count = 0;
-        while (std::getline(ss, owner, ',') && count < MSVAULT_MAX_OWNERS) {
-            while (!owner.empty() && (owner.back() == ' ' || owner.back() == '\n')) owner.pop_back();
-            while (!owner.empty() && (owner.front() == ' ')) owner.erase(owner.begin());
-
-            uint8_t buf[32] = { 0 };
-            if (!checkSumIdentity(owner.c_str())) {
-                LOG("Invalid owner: %s\n", owner.c_str());
-                continue;
-            }
-            getPublicKeyFromIdentity(owner.c_str(), buf);
-
-            memcpy(input.owners + count * 32, buf, 32);
-            count++;
+        uint64_t vaultCount = getVaultCountForOwner(nodeIp, nodePort, own);
+        if (vaultCount >= MSVAULT_MAX_COOWNER)
+        {
+            LOG("Owner %s already has %llu vaults (max allowed is %d). Cannot register new vault.\n",
+                own.c_str(), vaultCount, MSVAULT_MAX_COOWNER);
+            return;
         }
     }
 
@@ -108,19 +213,19 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
     KangarooTwelve((uint8_t*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(input),
-                   digest,
-                   32);
+        sizeof(packet.transaction) + sizeof(input),
+        digest,
+        32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, 64);
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
     qc->sendData((uint8_t*)&packet, packet.header.size());
-    KangarooTwelve((uint8_t*)&packet.transaction, 
-                   sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
-                   digest, 
-                   32);
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+        digest,
+        32);
     getTxHashFromDigest(digest, txHash);
     LOG("MsVault registerVault transaction sent.\n");
     printReceipt(packet.transaction, txHash, nullptr);
@@ -331,43 +436,17 @@ void msvaultResetRelease(const char* nodeIp, int nodePort, const char* seed,
 
 void msvaultGetVaults(const char* nodeIp, int nodePort, const char* identity)
 {
-    MsVaultGetVaults_input input;
-    memset(&input, 0, sizeof(input));
-
-    if (!checkSumIdentity(identity)) {
+    uint8_t pubKey[32] = { 0 };
+    if (!checkSumIdentity(identity))
+    {
         LOG("Invalid identity: %s\n", identity);
         return;
     }
-    getPublicKeyFromIdentity(identity, input.publicKey);
-
-    auto qc = make_qc(nodeIp, nodePort);
-    if (!qc) {
-        LOG("Failed to connect to node.\n");
-        return;
-    }
-
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetVaults_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
-    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
-    req.rcf.inputType = MSVAULT_GET_VAULTS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
-    req.header.randomizeDejavu();
-    req.header.setType(RequestContractFunction::type());
-
-    qc->sendData((uint8_t*)&req, req.header.size());
+    getPublicKeyFromIdentity(identity, pubKey);
 
     MsVaultGetVaults_output output;
-    memset(&output, 0, sizeof(output));
-    try {
-        output = qc->receivePacketWithHeaderAs<MsVaultGetVaults_output>();
-    }
-    catch (std::logic_error& e) {
+    if (!queryVaults(nodeIp, nodePort, pubKey, output))
+    {
         LOG("Failed to get vaults.\n");
         return;
     }
