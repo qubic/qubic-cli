@@ -1271,7 +1271,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
 
         finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
-        LOG("Packet finalization took %luu ms\n\n", finalizePacketTimeNanosec / 1000000);
+        LOG("Packet finalization took %llu ms\n\n", finalizePacketTimeNanosec / 1000000);
 
         roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status before sync:\n");
@@ -1342,7 +1342,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
 
         finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
-        LOG("Packet finalization took %luu ms\n\n", finalizePacketTimeNanosec / 1000000);
+        LOG("Packet finalization took %llu ms\n\n", finalizePacketTimeNanosec / 1000000);
 
         roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status after sync:\n");
