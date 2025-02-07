@@ -53,8 +53,8 @@ static QCPtr make_qc(const char* nodeIp, int nodePort)
     return std::make_shared<QubicConnection>(nodeIp, nodePort);
 }
 
-class EndResponseReceived : public std::exception
+class EndResponseReceived : public std::runtime_error
 {
 public:
-    EndResponseReceived(const char* message = "Received end response message") : std::exception(message) {}
+    EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
 };
