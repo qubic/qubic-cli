@@ -23,24 +23,31 @@
 #include "qvault.h"
 #include "qearn.h"
 
+#define DEFAULT_TIMEOUT_MSEC 1000
+
 #ifdef _MSC_VER
+
+static bool setTimeout(int serverSocket, int optName, unsigned long milliseconds)
+{
+    DWORD tv = milliseconds;
+    if (setsockopt(serverSocket, SOL_SOCKET, optName, (const char*)&tv, sizeof tv) != 0)
+    {
+        LOG("setsockopt failed with error: %d\n", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
 static int connect(const char* nodeIp, int nodePort)
 {
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(2, 0), &wsa_data);
 
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    DWORD tv = 1000;
-    if (setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) != 0)
-    {
-        LOG("setsockopt for SO_RCVTIMEO failed with error: %u\n", WSAGetLastError());
+    if (!setTimeout(serverSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC))
         return -1;
-    }
-    if (setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof tv) != 0)
-    {
-        LOG("setsockopt for SO_SNDTIMEO failed with error: %u\n", WSAGetLastError());
+    if (!setTimeout(serverSocket, SO_SNDTIMEO, DEFAULT_TIMEOUT_MSEC))
         return -1;
-    }
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -59,15 +66,26 @@ static int connect(const char* nodeIp, int nodePort)
     }
     return serverSocket;
 }
+
 #else
+
+static bool setTimeout(int serverSocket, int optName, unsigned long milliseconds)
+{
+    struct timeval tv;
+    tv.tv_sec = milliseconds / 1000;
+    tv.tv_usec = (milliseconds % 1000) * 1000;
+    if (setsockopt(serverSocket, SOL_SOCKET, optName, (const char*)&tv, sizeof tv) != 0)
+        return false;
+    return true;
+}
+
 static int connect(const char* nodeIp, int nodePort)
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    struct timeval tv;
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
-    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
-    setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof tv);
+    if (!setTimeout(serverSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
+    if (!setTimeout(serverSocket, SO_SNDTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -86,6 +104,7 @@ static int connect(const char* nodeIp, int nodePort)
     }
     return serverSocket;
 }
+
 #endif
 
 QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
@@ -101,13 +120,17 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     mHandshakeData.resize(sizeof(ExchangePublicPeers));
     uint8_t* data = mHandshakeData.data();
     *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();
+
     // If node has no ComputorList or a self-generated ComputorList it will requestComputor upon tcp initialization
     // Ignore this message if it is here
+    // This waits for timeout if RequestComputors is not sent. Temporarily reduce timeout to reduce waiting time.
+    setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC / 5);
     try{
         *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
     }
     catch(std::logic_error& e){
     }
+    setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC);
 }
 
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
