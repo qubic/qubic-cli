@@ -24,6 +24,7 @@ enum qutilProcedureId
 {
     SendToManyV1 = 1,
     BurnQubic = 2,
+    SendToManyBenchmark = 3,
 };
 
 struct SendToManyV1_input
@@ -39,6 +40,12 @@ struct BurnQubic_input
 struct BurnQubic_output
 {
     long long amount;
+};
+
+struct SendToManyBenchmark_input
+{
+    int64_t dstCount;
+    int64_t numTransfersEach;
 };
 
 void readPayoutList(const char* payoutListFile, std::vector<std::string>& addresses, std::vector<int64_t>& amounts)
@@ -214,6 +221,66 @@ void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long lon
                    32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
     LOG("BurnQubic tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed, uint32_t destinationCount, uint32_t numTransfersEach, uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char publicIdentity[128] = { 0 };
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        SendToManyBenchmark_input bm;
+        unsigned char signature[64];
+    } packet;
+    memset(&packet.bm, 0, sizeof(SendToManyBenchmark_input));
+    packet.bm.dstCount = destinationCount;
+    packet.bm.numTransfersEach = numTransfersEach;
+    packet.transaction.amount = destinationCount * numTransfersEach; // no fee at the moment
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = qutilProcedureId::SendToManyBenchmark;
+    packet.transaction.inputSize = sizeof(SendToManyBenchmark_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(SendToManyBenchmark_input),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(SendToManyBenchmark_input) + SIGNATURE_SIZE,
+        digest,
+        32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("SendToManyBenchmark tx has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
