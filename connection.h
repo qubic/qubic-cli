@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 
 // Not thread safe
 class QubicConnection
@@ -56,5 +57,5 @@ static QCPtr make_qc(const char* nodeIp, int nodePort)
 class EndResponseReceived : public std::runtime_error
 {
 public:
-    EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
+    explicit EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
 };
