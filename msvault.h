@@ -99,6 +99,7 @@ struct MsVaultGetRevenueInfo_output {
     uint64_t numberOfActiveVaults;
     uint64_t totalRevenue;
     uint64_t totalDistributedToShareholders;
+    uint64_t burnedAmount;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -112,6 +113,7 @@ struct MsVaultGetFees_output {
     uint64_t releaseResetFee;
     uint64_t holdingFee;
     uint64_t depositFee; // always 0 for now
+    uint64_t burnFee;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
