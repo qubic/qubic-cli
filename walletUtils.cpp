@@ -407,7 +407,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     qc->sendData(&packet[0], packetHeader.size());
 
     std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
-    int recvByte = qc->receiveDataBig(buffer.data(), buffer.size());
+    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), buffer.size());
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() && 

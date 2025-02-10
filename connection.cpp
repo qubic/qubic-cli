@@ -23,16 +23,31 @@
 #include "qvault.h"
 #include "qearn.h"
 
+#define DEFAULT_TIMEOUT_MSEC 1000
+
 #ifdef _MSC_VER
+
+static bool setTimeout(int serverSocket, int optName, unsigned long milliseconds)
+{
+    DWORD tv = milliseconds;
+    if (setsockopt(serverSocket, SOL_SOCKET, optName, (const char*)&tv, sizeof tv) != 0)
+    {
+        LOG("setsockopt failed with error: %d\n", WSAGetLastError());
+        return false;
+    }
+    return true;
+}
+
 static int connect(const char* nodeIp, int nodePort)
 {
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(2, 0), &wsa_data);
 
     int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    size_t tv = 1000;
-    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
-    setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof tv);
+    if (!setTimeout(serverSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
+    if (!setTimeout(serverSocket, SO_SNDTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -51,15 +66,26 @@ static int connect(const char* nodeIp, int nodePort)
     }
     return serverSocket;
 }
+
 #else
+
+static bool setTimeout(int serverSocket, int optName, unsigned long milliseconds)
+{
+    struct timeval tv;
+    tv.tv_sec = milliseconds / 1000;
+    tv.tv_usec = (milliseconds % 1000) * 1000;
+    if (setsockopt(serverSocket, SOL_SOCKET, optName, (const char*)&tv, sizeof tv) != 0)
+        return false;
+    return true;
+}
+
 static int connect(const char* nodeIp, int nodePort)
 {
 	int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    struct timeval tv;
-    tv.tv_sec = 1;
-    tv.tv_usec = 0;
-    setsockopt(serverSocket, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof tv);
-    setsockopt(serverSocket, SOL_SOCKET, SO_SNDTIMEO, (const char *)&tv, sizeof tv);
+    if (!setTimeout(serverSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
+    if (!setTimeout(serverSocket, SO_SNDTIMEO, DEFAULT_TIMEOUT_MSEC))
+        return -1;
     sockaddr_in addr;
     memset((char*)&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
@@ -78,6 +104,7 @@ static int connect(const char* nodeIp, int nodePort)
     }
     return serverSocket;
 }
+
 #endif
 
 QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
@@ -93,13 +120,17 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     mHandshakeData.resize(sizeof(ExchangePublicPeers));
     uint8_t* data = mHandshakeData.data();
     *((ExchangePublicPeers*)data) = receivePacketWithHeaderAs<ExchangePublicPeers>();
+
     // If node has no ComputorList or a self-generated ComputorList it will requestComputor upon tcp initialization
     // Ignore this message if it is here
+    // This waits for timeout if RequestComputors is not sent. Temporarily reduce timeout to reduce waiting time.
+    setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC / 5);
     try{
         *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
     }
     catch(std::logic_error& e){
     }
+    setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC);
 }
 
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)
@@ -112,26 +143,42 @@ QubicConnection::~QubicConnection()
 	close(mSocket);
 }
 
+// Receive the requested number of bytes (sz) or less if sz bytes have not been received after timeout. Return number of received bytes.
 int QubicConnection::receiveData(uint8_t* buffer, int sz)
 {
-    if (sz > 4096)
-    {
-        LOG("Warning: trying to receive too big chunk, consider using receiveDataBig instead\n");
-    }
-	return recv(mSocket, (char*)buffer, sz, 0);
-}
-
-int QubicConnection::receiveDataBig(uint8_t* buffer, int sz)
-{
-    int count = 0;
+    int totalRecvSz = 0;
     while (sz)
     {
-        int chunk = (std::min)(sz, 1024);
-        int recvByte = receiveData(buffer + count, chunk);
-        count += recvByte;
-        sz -= recvByte;
+        // Note that recv may return before sz bytes have been received, it only blocks until socket timeout if no
+        // data has been received!
+        // Linux manual page:
+        //   "If no messages are available at the socket, the receive calls wait for a message to arrive [...]
+        //   The receive calls normally return any data available, up to the requested amount,
+        //   rather than waiting for receipt of the full amount requested."
+        // Microsoft docs:
+        //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
+        //   return as much data as is currently available—up to the size of the buffer specified. [...]
+        //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
+        int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
+        if (recvSz <= 0)
+        {
+            // timemout, closed connection, or other error
+            break;
+        }
+        totalRecvSz += recvSz;
+        sz -= recvSz;
     }
-    return count;
+    return totalRecvSz;
+}
+
+int QubicConnection::receiveAllDataOrThrowException(uint8_t* buffer, int sz)
+{
+    int recvSz = receiveData(buffer, sz);
+    if (recvSz != sz)
+    {
+        throw std::logic_error("Received incomplete data! Expected " + std::to_string(sz) + " bytes, received " + std::to_string(recvSz) + " bytes");
+    }
+    return recvSz;
 }
 
 void QubicConnection::resolveConnection()
@@ -152,6 +199,10 @@ T QubicConnection::receivePacketWithHeaderAs()
     {
         throw std::logic_error("No connection.");
     }
+    if (header.type() == END_RESPOND)
+    {
+        throw EndResponseReceived();
+    }
     if (header.type() != T::type())
     {
         throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
@@ -168,10 +219,7 @@ T QubicConnection::receivePacketWithHeaderAs()
         int recvByteTotal = 0;
         for (int i = 0; i < 5; ++i)
         {
-            if (remainingSize > 4096)
-                recvByte = receiveDataBig(mBuffer + recvByteTotal, remainingSize);
-            else
-                recvByte = receiveData(mBuffer + recvByteTotal, remainingSize);
+            recvByte = receiveData(mBuffer + recvByteTotal, remainingSize);
             recvByteTotal += recvByte;
             remainingSize -= recvByte;
             if (!remainingSize)
@@ -212,8 +260,13 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
         {
             results.push_back(receivePacketWithHeaderAs<T>());
         }
+        catch (EndResponseReceived& e)
+        {
+            break;
+        }
         catch (std::logic_error& e)
         {
+            LOG(e.what());
             break;
         }
     }

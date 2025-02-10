@@ -74,8 +74,8 @@ Command:
 		Show current tick information of a node
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
 		Perform a special command to node, valid private key and node ip/port are required.	
-	-tooglemainaux <MODE_0> <Mode_1> 
-		Remotely toogle Main/Aux mode on node,valid private key and node ip/port are required.	
+	-togglemainaux <MODE_0> <Mode_1>
+		Remotely toggle Main/Aux mode on node,valid private key and node ip/port are required.	
 		<MODE_0> and <MODE_1> value are: MAIN or AUX	
 	-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> 
 		Remotely set solution threshold for future epoch,valid private key and node ip/port are required.	
@@ -107,6 +107,10 @@ Command:
 		Set order on Qx.
 	-qxgetorder entity/asset bid/ask [ISSUER/ENTITY (in qubic format)] [ASSET_NAME (NULL for requesting entity)] [OFFSET]
 		Get orders on Qx
+	-qxtransferrights <ASSET_NAME> <ISSUER_ID> <NEW_MANAGING_CONTRACT> <NUMBER_OF_SHARES>
+		Transfer asset management rights of shares from QX to another contract.
+		<NEW_MANAGING_CONTRACT> can be given as name or index.
+		You need to own/possess the shares to do this (seed required).
 
 [QTRY COMMANDS]
 	-qtrygetbasicinfo
