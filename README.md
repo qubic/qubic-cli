@@ -37,7 +37,7 @@ Command:
 	-qutilburnqubic <AMOUNT>
 		Performs burning qubic, valid private key and node ip/port are required.
 	-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>
-		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Valid private key and node ip/port are required.
+		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.
 
 [BLOCKCHAIN/PROTOCOL COMMANDS]
 	-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>
