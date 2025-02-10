@@ -16,9 +16,9 @@
 
 #define MSVAULT_CONTRACT_INDEX 11
 
-constexpr uint64_t REGISTERING_FEE = 10000ULL;
-constexpr uint64_t RELEASE_FEE = 1000ULL;
-constexpr uint64_t RELEASE_RESET_FEE = 500ULL;
+constexpr uint64_t REGISTERING_FEE = 5000000ULL;
+constexpr uint64_t RELEASE_FEE = 100000ULL;
+constexpr uint64_t RELEASE_RESET_FEE = 1000000ULL;
 
 #define MSVAULT_REGISTER_VAULT 1
 #define MSVAULT_DEPOSIT 2
@@ -141,8 +141,6 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
         LOG("At least 2 unique owners are required for a vault.\n");
         return;
     }
-
-    printf("%d\n", count);
 
     if (count > MSVAULT_MAX_OWNERS)
     {
