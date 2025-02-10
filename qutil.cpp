@@ -7,6 +7,7 @@
 #include "qutil.h"
 #include "keyUtils.h"
 #include "structs.h"
+#include "defines.h"
 #include "logger.h"
 #include "nodeUtils.h"
 #include "K12AndKeyUtil.h"
@@ -228,6 +229,12 @@ void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long lon
 
 void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed, uint32_t destinationCount, uint32_t numTransfersEach, uint32_t scheduledTickOffset)
 {
+    if (destinationCount <= 0 || numTransfersEach <= 0 || destinationCount * numTransfersEach + 2 > CONTRACT_ACTION_TRACKER_SIZE)
+    {
+        LOG("Invalid number of total transfers (0 or exceeds %llu)\n", CONTRACT_ACTION_TRACKER_SIZE - 2);
+        return;
+    }
+
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = { 0 };

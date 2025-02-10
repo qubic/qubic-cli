@@ -55,8 +55,9 @@ void print_help()
     printf("\t-qutilburnqubic <AMOUNT>\n");
     printf("\t\tPerforms burning qubic, valid private key and node ip/port are required.\n");
     printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
-    printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Valid private key and node ip/port are required.\n");
-    printf("\n[BLOCKCHAIN/PROTOCOL COMMAND]\n");
+    printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.\n");
+
+    printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
     printf("\t-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>\n");
