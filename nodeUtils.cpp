@@ -161,7 +161,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
         auto header = (RequestResponseHeader*)buffer;
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
             auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             txs.push_back(*tx);
             if (tx->inputSize > MAX_INPUT_SIZE)
@@ -170,7 +170,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 exit(1);
             }
             ++recvTx;
-            recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
             if (hashes != nullptr)
             {
                 TxhashStruct hash;
@@ -203,7 +203,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
         }
         if (recvTx == nTx)
             break;
-        recvByte = qc->receiveDataBig(buffer, sizeof(RequestResponseHeader));
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
 }
@@ -1511,7 +1511,7 @@ void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
     {
         unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
         std::vector<uint8_t> logBuffer(logSize);
-        qc->receiveDataBig(logBuffer.data(), logSize);
+        qc->receiveAllDataOrThrowException(logBuffer.data(), logSize);
         printQubicLog(logBuffer.data(), logSize);
     }
 }
@@ -1717,7 +1717,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
         return;
     }
     buffer.resize(contentSize);
-    qc->receiveDataBig(buffer.data(), contentSize);
+    qc->receiveAllDataOrThrowException(buffer.data(), contentSize);
     uint8_t* data = buffer.data();
     // Get data out
     unsigned char* ptr = data;

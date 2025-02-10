@@ -54,7 +54,10 @@ void print_help()
     printf("\t\tPerforms multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.\n");
     printf("\t-qutilburnqubic <AMOUNT>\n");
     printf("\t\tPerforms burning qubic, valid private key and node ip/port are required.\n");
-    printf("\n[BLOCKCHAIN/PROTOCOL COMMAND]\n");
+    printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
+    printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.\n");
+
+    printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
     printf("\t-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>\n");
@@ -935,6 +938,16 @@ void parseArgument(int argc, char** argv)
             g_cmd = QUTIL_BURN_QUBIC;
             g_TxAmount = charToNumber(argv[i + 1]);
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilsendtomanybenchmark") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QUTIL_SEND_TO_MANY_BENCHMARK;
+            g_qutil_sendtomanybenchmark_destination_count = charToNumber(argv[i + 1]);
+            g_qutil_sendtomanybenchmark_num_transfers_each = charToNumber(argv[i + 2]);
+            i += 3;
             CHECK_OVER_PARAMETERS
             break;
         }

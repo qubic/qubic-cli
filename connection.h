@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
+#include <stdexcept>
 
 // Not thread safe
 class QubicConnection
@@ -15,12 +16,12 @@ public:
     // May throw std::logic_error.
     void resolveConnection();
 
-    // Receive at most sz bytes and write them to buffer. Return the actual number of received bytes. 
+    // Receive at most sz bytes and write them to buffer. Return the actual number of received bytes.
+    // Should only return less than sz bytes on timeout, closed connection, or error.
 	int receiveData(uint8_t* buffer, int sz);
 
-    // Receive at most sz bytes and write them to buffer. Return the actual number of received bytes.
-    // Receiving of data is split into chunks of 1024 bytes.
-    int receiveDataBig(uint8_t* buffer, int sz);
+    // Receive sz bytes and write them to buffer. Throws std::logic_error if sz bytes cannot be read. 
+    int receiveAllDataOrThrowException(uint8_t* buffer, int sz);
 
     // Send sz bytes contained in buffer.
 	int sendData(uint8_t* buffer, int sz);
@@ -52,3 +53,9 @@ static QCPtr make_qc(const char* nodeIp, int nodePort)
 {
     return std::make_shared<QubicConnection>(nodeIp, nodePort);
 }
+
+class EndResponseReceived : public std::runtime_error
+{
+public:
+    explicit EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
+};
