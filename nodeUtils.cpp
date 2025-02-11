@@ -1215,6 +1215,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
     LOG("CAUTION: MAKE SURE THAT YOUR LOCAL CLOCK IS SET CORRECTLY, FOR EXAMPLE USING NTP.\n");
     LOG("---------------------------------------------------------------------------------\n\n");
 
+    auto qc = make_qc(nodeIp, nodePort);
+
     using namespace std::chrono;
     // get time from node and measure round trip time
     unsigned long long roundTripTimeNanosec = 0;
@@ -1245,8 +1247,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(queryTimeMsg.signature, signature, 64);
 
-        auto qc = make_qc(nodeIp, nodePort);
-
         auto startTime = steady_clock::now();
 
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
@@ -1271,8 +1271,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
 
         finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
-        LOG("Packet finalization took %llu ms\n\n", finalizePacketTimeNanosec / 1000000);
-
         roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status before sync:\n");
         LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
@@ -1316,8 +1314,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(sendTimeMsg.signature, signature, 64);
 
-        auto qc = make_qc(nodeIp, nodePort);
-
         auto startTime = steady_clock::now();
         
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
@@ -1342,8 +1338,6 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         }
 
         finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
-        LOG("Packet finalization took %llu ms\n\n", finalizePacketTimeNanosec / 1000000);
-
         roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status after sync:\n");
         LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
