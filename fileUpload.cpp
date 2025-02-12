@@ -15,7 +15,6 @@
 #include "K12AndKeyUtil.h"
 #include "keyUtils.h"
 #include "walletUtils.h"
-#include "qubicLogParser.h"
 #include <fstream>
 #include <fcntl.h>
 

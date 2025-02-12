@@ -14,7 +14,6 @@
 #include "K12AndKeyUtil.h"
 #include "keyUtils.h"
 #include "walletUtils.h"
-#include "qubicLogParser.h"
 
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
