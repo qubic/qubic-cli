@@ -80,8 +80,6 @@ char* g_qutil_sendtomanyv1_payout_list_file = nullptr;
 int64_t g_qutil_sendtomanybenchmark_destination_count = 0;
 int64_t g_qutil_sendtomanybenchmark_num_transfers_each = 0;
 
-uint64_t g_get_log_passcode[4] = {0};
-
 // qearn
 uint64_t g_qearn_lock_amount = 0;
 uint64_t g_qearn_unlock_amount = 0;

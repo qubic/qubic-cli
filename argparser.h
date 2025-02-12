@@ -111,8 +111,6 @@ void print_help()
     printf("\t\t(equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.\t\n");
     printf("\t-sendrawpacket <DATA_IN_HEX> <SIZE>\n");
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
-    printf("\t-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>\n");
-    printf("\t\tFetch a single log line from the node. Valid node ip/port, passcodes are required.\n");
     printf("\t-synctime\n");
     printf("\t\tSync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
     printf("\t-getminingscoreranking\n");
@@ -739,18 +737,6 @@ void parseArgument(int argc, char** argv)
             g_rawPacketSize = int(charToNumber(argv[i+1]));
             hexToByte(argv[i+2], g_rawPacket, g_rawPacketSize);
             i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-getlogfromnode") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(4)
-            g_cmd = GET_LOG_FROM_NODE;
-            g_get_log_passcode[0] = charToUnsignedNumber(argv[i+1]);
-            g_get_log_passcode[1] = charToUnsignedNumber(argv[i+2]);
-            g_get_log_passcode[2] = charToUnsignedNumber(argv[i+3]);
-            g_get_log_passcode[3] = charToUnsignedNumber(argv[i+4]);
-            i+=5;
             CHECK_OVER_PARAMETERS
             break;
         }

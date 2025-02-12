@@ -209,10 +209,6 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getNodeIpList(g_nodeIp, g_nodePort);
             break;
-        case GET_LOG_FROM_NODE:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            getLogFromNode(g_nodeIp, g_nodePort, g_get_log_passcode);
-            break;
         case UPLOAD_FILE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

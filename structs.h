@@ -27,7 +27,7 @@ enum COMMAND
     QX_ISSUE_ASSET = 16,
     QX_TRANSFER_ASSET = 17,
     GET_NODE_IP_LIST=18,
-    GET_LOG_FROM_NODE = 19,
+    //GET_LOG_FROM_NODE = 19, // moved to qlogging tool
     DUMP_SPECTRUM_FILE = 20,
     DUMP_UNIVERSE_FILE = 21,
     PRINT_QX_FEE =22,

@@ -89,8 +89,6 @@ Command:
 		(equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.	
 	-sendrawpacket <DATA_IN_HEX> <SIZE>
 		Send a raw packet to nodeip. Valid node ip/port are required.
-	-getlogfromnode <PASSCODE_0> <PASSCODE_1> <PASSCODE_2> <PASSCODE_3>
-		Fetch a single log line from the node. Valid node ip/port, passcodes are required.
 	-synctime
 		Sync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!	
 	-getminingscoreranking

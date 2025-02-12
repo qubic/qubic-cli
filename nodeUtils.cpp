@@ -1489,30 +1489,6 @@ void getNodeIpList(const char* nodeIp, const int nodePort)
     }
 }
 
-void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
-{
-    struct {
-        RequestResponseHeader header;
-        unsigned long long passcode[4];
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestLog::type());
-    memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
-    auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    RequestResponseHeader header;
-    qc->receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-    if (header.type() == RespondLog::type())
-    {
-        unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
-        std::vector<uint8_t> logBuffer(logSize);
-        qc->receiveAllDataOrThrowException(logBuffer.data(), logSize);
-        printQubicLog(logBuffer.data(), logSize);
-    }
-}
-
 static bool isEmptyEntity(const Entity& e){
     bool is_pubkey_zero = true;
     for (int i = 0; i < 32; i++)
