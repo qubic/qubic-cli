@@ -1235,7 +1235,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         uint64_t curTime = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_QUERY_TIME) << 56;
         queryTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current unix time (in us) used for nonce (query time): %lu\n\n", curTime);
+        LOG("Current unix time (in us) used for nonce (query time): %llu\n\n", curTime);
 
         // we need to measure the time it takes to finalize the packet because these steps are also executed after the sendTime packet is created later
         auto finalizePacketStartTime = steady_clock::now();
@@ -1296,7 +1296,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         uint64_t curTime = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SEND_TIME) << 56;
         sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current unix time (in us) used for nonce (send time): %lu\n\n", curTime);
+        LOG("Current unix time (in us) used for nonce (send time): %llu\n\n", curTime);
 
         auto finalizePacketTime = duration_cast<system_clock::duration>(nanoseconds(finalizePacketTimeNanosec));
         auto halfRoudTripTime = duration_cast<system_clock::duration>(nanoseconds(roundTripTimeNanosec / 2));
