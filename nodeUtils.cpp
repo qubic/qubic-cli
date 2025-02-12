@@ -1014,9 +1014,12 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommand));
-        return;
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST)
+        {
+            LOG("%s\n", e.what());
+            return;
+        }
     }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
