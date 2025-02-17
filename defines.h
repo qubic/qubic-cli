@@ -51,4 +51,6 @@
 #define QX_CONTRACT_INDEX 1
 #define QX_FEE_FUNCTION_INDEX 1
 
+constexpr unsigned long long CONTRACT_ACTION_TRACKER_SIZE = 16 * 1024 * 1024;
+
 #define Q_SLEEP(X) std::this_thread::sleep_for (std::chrono::milliseconds(X));

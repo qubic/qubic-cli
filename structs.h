@@ -27,7 +27,7 @@ enum COMMAND
     QX_ISSUE_ASSET = 16,
     QX_TRANSFER_ASSET = 17,
     GET_NODE_IP_LIST=18,
-    GET_LOG_FROM_NODE = 19,
+    //GET_LOG_FROM_NODE = 19, // moved to qlogging tool
     DUMP_SPECTRUM_FILE = 20,
     DUMP_UNIVERSE_FILE = 21,
     PRINT_QX_FEE =22,
@@ -98,17 +98,18 @@ enum COMMAND
     QEARN_GET_BURNED_AND_BOOSTED_STATS = 87,
     QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH = 88,
     QX_TRANSFER_MANAGEMENT_RIGHTS = 89,
-    MSVAULT_REGISTER_VAULT_CMD = 90,
-    MSVAULT_DEPOSIT_CMD = 91,
-    MSVAULT_RELEASE_TO_CMD = 92,
-    MSVAULT_RESET_RELEASE_CMD = 93,
-    MSVAULT_GET_VAULTS_CMD = 94,
-    MSVAULT_GET_RELEASE_STATUS_CMD = 95,
-    MSVAULT_GET_BALANCE_OF_CMD = 96,
-    MSVAULT_GET_VAULT_NAME_CMD = 97,
-    MSVAULT_GET_REVENUE_INFO_CMD = 98,
-    MSVAULT_GET_FEES_CMD = 99,
-    MSVAULT_GET_OWNERS_CMD = 100,
+    QUTIL_SEND_TO_MANY_BENCHMARK = 90,
+    MSVAULT_REGISTER_VAULT_CMD = 91,
+    MSVAULT_DEPOSIT_CMD = 92,
+    MSVAULT_RELEASE_TO_CMD = 93,
+    MSVAULT_RESET_RELEASE_CMD = 94,
+    MSVAULT_GET_VAULTS_CMD = 95,
+    MSVAULT_GET_RELEASE_STATUS_CMD = 96,
+    MSVAULT_GET_BALANCE_OF_CMD = 97,
+    MSVAULT_GET_VAULT_NAME_CMD = 98,
+    MSVAULT_GET_REVENUE_INFO_CMD = 99,
+    MSVAULT_GET_FEES_CMD = 100,
+    MSVAULT_GET_OWNERS_CMD = 101,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -228,7 +229,7 @@ typedef struct
     unsigned short inputSize;
 } Transaction;
 
-typedef struct
+struct CurrentTickInfo
 {
     unsigned short tickDuration;
     unsigned short epoch;
@@ -241,10 +242,10 @@ typedef struct
     {
         return RESPOND_CURRENT_TICK_INFO;
     }
-} CurrentTickInfo;
+};
 
 #pragma pack(push, 1)
-typedef struct
+struct CurrentSystemInfo
 {
     short version;
     unsigned short epoch;
@@ -276,10 +277,10 @@ typedef struct
     {
         return RESPOND_SYSTEM_INFO;
     }
-} CurrentSystemInfo;
+};
 #pragma pack(pop)
 
-typedef struct
+struct TickData
 {
     unsigned short computorIndex;
     unsigned short epoch;
@@ -303,7 +304,7 @@ typedef struct
     {
         return BROADCAST_FUTURE_TICK_DATA;
     }
-} TickData;
+};
 
 typedef struct
 {
@@ -425,7 +426,7 @@ typedef struct
     unsigned char publicKey[32];
 } RequestOwnedAssets;
 
-typedef struct
+struct RespondOwnedAssets
 {
     Asset asset;
     Asset issuanceAsset;
@@ -437,14 +438,14 @@ typedef struct
     {
         return RESPOND_OWNED_ASSETS;
     }
-} RespondOwnedAssets;
+};
 
 typedef struct
 {
     unsigned char publicKey[32];
 } RequestPossessedAssets;
 
-typedef struct
+struct RespondPossessedAssets
 {
     Asset asset;
     Asset ownershipAsset;
@@ -457,7 +458,7 @@ typedef struct
     {
         return RESPOND_POSSESSED_ASSETS;
     }
-} RespondPossessedAssets;
+};
 
 typedef struct
 {
@@ -467,7 +468,7 @@ typedef struct
     unsigned char signature[SIGNATURE_SIZE];
 } Computors;
 
-typedef struct
+struct BroadcastComputors
 {
     Computors computors;
 
@@ -475,9 +476,9 @@ typedef struct
     {
         return BROADCAST_COMPUTORS;
     }
-} BroadcastComputors;
+};
 
-typedef struct
+struct ExchangePublicPeers
 {
     unsigned char peers[4][4];
 
@@ -485,15 +486,15 @@ typedef struct
     {
         return EXCHANGE_PUBLIC_PEERS;
     }
-} ExchangePublicPeers;
+};
 
-typedef struct
+struct RequestComputors
 {
     static constexpr unsigned char type()
     {
         return REQUEST_COMPUTORS;
     }
-} RequestComputors;
+};
 
 struct RequestLog // Fetches log
 {
@@ -571,7 +572,7 @@ typedef struct
 
 #define RESPOND_CONTRACT_IPO 34
 
-typedef struct
+struct RespondContractIPO
 {
     unsigned int contractIndex;
     unsigned int tick;
@@ -582,7 +583,7 @@ typedef struct
     {
         return RESPOND_CONTRACT_IPO;
     }
-} RespondContractIPO;
+};
 
 struct SpecialCommandToggleMainModeResquestAndResponse
 {

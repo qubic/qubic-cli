@@ -211,10 +211,6 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getNodeIpList(g_nodeIp, g_nodePort);
             break;
-        case GET_LOG_FROM_NODE:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            getLogFromNode(g_nodeIp, g_nodePort, g_get_log_passcode);
-            break;
         case UPLOAD_FILE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -342,6 +338,11 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             qutilBurnQubic(g_nodeIp, g_nodePort, g_seed, g_TxAmount, g_offsetScheduledTick);
+            break;
+        case QUTIL_SEND_TO_MANY_BENCHMARK:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, g_qutil_sendtomanybenchmark_destination_count, g_qutil_sendtomanybenchmark_num_transfers_each, g_offsetScheduledTick);
             break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);

@@ -7,7 +7,6 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/fileUpload.cpp
 		  ${CMAKE_SOURCE_DIR}/walletUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/assetUtils.cpp
-		  ${CMAKE_SOURCE_DIR}/qubicLogParser.cpp
 		  ${CMAKE_SOURCE_DIR}/SCUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 		  ${CMAKE_SOURCE_DIR}/qutil.cpp
@@ -30,7 +29,6 @@ SET(HEADER_FILES
 	logger.h
 	nodeUtils.h
 	prompt.h
-	qubicLogParser.h
 	quottery.h
 	qutil.h
 	sanityCheck.h

@@ -75,9 +75,10 @@ uint64_t g_quottery_number_bet_slot = 0;
 uint64_t g_quottery_amount_per_bet_slot = 0;
 uint32_t g_quottery_picked_option = 0;
 
+// qutil
 char* g_qutil_sendtomanyv1_payout_list_file = nullptr;
-
-uint64_t g_get_log_passcode[4] = {0};
+int64_t g_qutil_sendtomanybenchmark_destination_count = 0;
+int64_t g_qutil_sendtomanybenchmark_num_transfers_each = 0;
 
 // qearn
 uint64_t g_qearn_lock_amount = 0;

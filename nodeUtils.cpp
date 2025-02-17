@@ -14,7 +14,6 @@
 #include "K12AndKeyUtil.h"
 #include "keyUtils.h"
 #include "walletUtils.h"
-#include "qubicLogParser.h"
 
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {
@@ -161,7 +160,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
         auto header = (RequestResponseHeader*)buffer;
         if (header->type() == BROADCAST_TRANSACTION)
         {
-            recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), sizeof(Transaction));
             auto tx = (Transaction*)(buffer + sizeof(RequestResponseHeader));
             txs.push_back(*tx);
             if (tx->inputSize > MAX_INPUT_SIZE)
@@ -170,7 +169,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 exit(1);
             }
             ++recvTx;
-            recvByte = qc->receiveDataBig(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
             if (hashes != nullptr)
             {
                 TxhashStruct hash;
@@ -203,7 +202,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
         }
         if (recvTx == nTx)
             break;
-        recvByte = qc->receiveDataBig(buffer, sizeof(RequestResponseHeader));
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
 }
@@ -1014,9 +1013,12 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
     catch (std::logic_error& e)
     {
-        LOG(e.what());
         memset(&response, 0, sizeof(SpecialCommand));
-        return;
+        if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST)
+        {
+            LOG("%s\n", e.what());
+            return;
+        }
     }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
@@ -1215,8 +1217,12 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
     LOG("CAUTION: MAKE SURE THAT YOUR LOCAL CLOCK IS SET CORRECTLY, FOR EXAMPLE USING NTP.\n");
     LOG("---------------------------------------------------------------------------------\n\n");
 
+    auto qc = make_qc(nodeIp, nodePort);
+
+    using namespace std::chrono;
     // get time from node and measure round trip time
     unsigned long long roundTripTimeNanosec = 0;
+    unsigned long long finalizePacketTimeNanosec = 0;
     {
         LOG("Querying node time ...\n\n");
 
@@ -1228,10 +1234,13 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         queryTimeMsg.header.setSize(sizeof(queryTimeMsg));
         queryTimeMsg.header.randomizeDejavu();
         queryTimeMsg.header.setType(PROCESS_SPECIAL_COMMAND);
-        uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        uint64_t curTime = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_QUERY_TIME) << 56;
         queryTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current unix time (in us) used for nonce (query time): %lu\n\n", curTime);
+        LOG("Current unix time (in us) used for nonce (query time): %llu\n\n", curTime);
+
+        // we need to measure the time it takes to finalize the packet because these steps are also executed after the sendTime packet is created later
+        auto finalizePacketStartTime = steady_clock::now();
 
         KangarooTwelve((unsigned char*)&queryTimeMsg.cmd,
                        sizeof(queryTimeMsg.cmd),
@@ -1240,8 +1249,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(queryTimeMsg.signature, signature, 64);
 
-        auto qc = make_qc(nodeIp, nodePort);
-        auto startTime = std::chrono::steady_clock::now();
+        auto startTime = steady_clock::now();
+
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
         
         SpecialCommandSendTime response;
@@ -1254,8 +1263,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }        
         
-        auto endTime = std::chrono::steady_clock::now();
-        auto nowLocal = std::chrono::system_clock::now();
+        auto endTime = steady_clock::now();
+        auto nowLocal = system_clock::now();
 
         if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) 
         {
@@ -1263,7 +1272,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
             return;
         }
 
-        roundTripTimeNanosec = std::chrono::duration<unsigned long long, std::nano>(endTime - startTime).count();
+        finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
+        roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status before sync:\n");
         LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
         LOG("\tLocal time (UTC): "); logTime(convertTime(nowLocal)); LOG("\n\n");
@@ -1275,7 +1285,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         return;
     }
 
-    // set node clock to local UTC time + half round trip time (not very accurate but simple and sufficient for requirements of 5 seconds)
+    // set node clock to local UTC time + finalize packet time + half round trip time (not very accurate but simple and sufficient for requirements of 5 seconds)
     {
         struct {
             RequestResponseHeader header;
@@ -1285,17 +1295,19 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sendTimeMsg.header.setSize(sizeof(sendTimeMsg));
         sendTimeMsg.header.randomizeDejavu();
         sendTimeMsg.header.setType(PROCESS_SPECIAL_COMMAND);
-        uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        uint64_t curTime = duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
         uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SEND_TIME) << 56;
         sendTimeMsg.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
-        LOG("Current unix time (in us) used for nonce (send time): %lu\n\n", curTime);
+        LOG("Current unix time (in us) used for nonce (send time): %llu\n\n", curTime);
 
-        using namespace std::chrono;
-        auto now = system_clock::now();
+        auto finalizePacketTime = duration_cast<system_clock::duration>(nanoseconds(finalizePacketTimeNanosec));
         auto halfRoudTripTime = duration_cast<system_clock::duration>(nanoseconds(roundTripTimeNanosec / 2));
-        UtcTime timeToSet = convertTime(now + halfRoudTripTime);
+        auto now = system_clock::now();
+        UtcTime timeToSet = convertTime(now + finalizePacketTime + halfRoudTripTime);
         sendTimeMsg.cmd.utcTime = timeToSet;
         LOG("Setting node time to "); logTime(timeToSet); LOG(" ...\n\n");
+
+        auto finalizePacketStartTime = steady_clock::now();
 
         KangarooTwelve((unsigned char*)&sendTimeMsg.cmd,
                        sizeof(sendTimeMsg.cmd),
@@ -1304,8 +1316,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         sign(subseed, sourcePublicKey, digest, signature);
         memcpy(sendTimeMsg.signature, signature, 64);
 
-        auto qc = make_qc(nodeIp, nodePort);
-        auto startTime = std::chrono::steady_clock::now();
+        auto startTime = steady_clock::now();
+        
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
 
         SpecialCommandSendTime response;
@@ -1318,8 +1330,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }
 
-        auto endTime = std::chrono::steady_clock::now();
-        auto nowLocal = std::chrono::system_clock::now();
+        auto endTime = steady_clock::now();
+        auto nowLocal = system_clock::now();
 
         if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) 
         {
@@ -1327,7 +1339,8 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
             return;
         }
 
-        roundTripTimeNanosec = std::chrono::duration<unsigned long long, std::nano>(endTime - startTime).count();
+        finalizePacketTimeNanosec = duration<unsigned long long, std::nano>(startTime - finalizePacketStartTime).count();
+        roundTripTimeNanosec = duration<unsigned long long, std::nano>(endTime - startTime).count();
         LOG("Clock status after sync:\n");
         LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
         LOG("\tLocal time (UTC): "); logTime(convertTime(nowLocal)); LOG("\n\n");
@@ -1472,30 +1485,6 @@ void getNodeIpList(const char* nodeIp, const int nodePort)
     for (auto s : result)
     {
         LOG("%s\n", s.c_str());
-    }
-}
-
-void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode)
-{
-    struct {
-        RequestResponseHeader header;
-        unsigned long long passcode[4];
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestLog::type());
-    memcpy(packet.passcode, passcode, 4 * sizeof(uint64_t));
-    auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    RequestResponseHeader header;
-    qc->receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-    if (header.type() == RespondLog::type())
-    {
-        unsigned long long logSize = header.size() - sizeof(RequestResponseHeader);
-        std::vector<uint8_t> logBuffer(logSize);
-        qc->receiveDataBig(logBuffer.data(), logSize);
-        printQubicLog(logBuffer.data(), logSize);
     }
 }
 
@@ -1700,7 +1689,7 @@ void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodeP
         return;
     }
     buffer.resize(contentSize);
-    qc->receiveDataBig(buffer.data(), contentSize);
+    qc->receiveAllDataOrThrowException(buffer.data(), contentSize);
     uint8_t* data = buffer.data();
     // Get data out
     unsigned char* ptr = data;
