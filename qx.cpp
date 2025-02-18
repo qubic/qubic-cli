@@ -318,6 +318,7 @@ void qxTransferAssetManagementRights(const char* nodeIp, int nodePort,
     uint32_t scheduledTickOffset)
 {
     qxTransferShareManagementRights_input v;
+    memset(&v, 0, sizeof(v));
     getPublicKeyFromIdentity(pIssuerInQubicFormat, v.asset.issuer);
     v.asset.assetName = 0;
     memcpy(&v.asset.assetName, pAssetName, strlen(pAssetName));

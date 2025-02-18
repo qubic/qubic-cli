@@ -46,6 +46,8 @@ void print_help()
     printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
     printf("\t-getasset <IDENTITY>\n");
     printf("\t\tPrint a list of assets of an identity\n");
+    printf("\t-queryassets <QUERY_TYPE> <QUERY_STING>\n");
+    printf("\t\tQuery and print assets information. Skip arguments to get detailed documentation.\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.\n");
     printf("\t-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>\n");
@@ -293,7 +295,9 @@ static uint32_t getContractIndex(const char* str)
         }
     }
     return idx;
+#ifdef _MSC_VER
 #undef strcasecmp
+#endif
 }
 
 void readConfigFile(const char* path)
@@ -443,6 +447,17 @@ void parseArgument(int argc, char** argv)
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
+        }
+        if (strcmp(argv[i], "-queryassets") == 0)
+        {
+            g_cmd = QUERY_ASSETS;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_paramString2 = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+             break;
         }
         if (strcmp(argv[i], "-sendtoaddress") == 0)
         {

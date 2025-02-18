@@ -43,6 +43,10 @@ int run(int argc, char* argv[])
             printOwnedAsset(g_nodeIp, g_nodePort, g_requestedIdentity);
             printPossessionAsset(g_nodeIp, g_nodePort, g_requestedIdentity);
             break;
+        case QUERY_ASSETS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printAssetRecords(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
+            break;
         case SEND_COIN:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

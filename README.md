@@ -28,6 +28,8 @@ Command:
 		Balance of an identity (amount of qubic, number of in/out txs)
 	-getasset <IDENTITY>
 		Print a list of assets of an identity
+	-queryassets <QUERY_TYPE> <QUERY_STING>
+		Query and print assets information. Skip arguments to get detailed documentation.
 	-sendtoaddress <TARGET_IDENTITY> <AMOUNT>
 		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.
 	-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>

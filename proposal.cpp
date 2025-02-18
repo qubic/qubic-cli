@@ -1,14 +1,13 @@
 #include <iostream>
-#include <cstring>
 #include <algorithm>
 #include <cctype>
-#include <string>
 
 #include "proposal.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
 #include "sanityCheck.h"
 #include "commonFunctions.h"
+#include "utils.h"
 
 #define GQMPROP_CONTRACT_INDEX 6
 
@@ -285,12 +284,6 @@ void printSetProposalHelp()
 	std::cout << "\t\tamount is relative in millionth, for example 150000 = 15% and 1000 = 0.1%.\n";
 	std::cout << "\t- Variable: Propose to set variable in contract state to specific value. Not supported yet.\n";
 	std::cout << std::endl;
-}
-
-std::string strtok2string(char* s, const char* delimiter)
-{
-	const char* res = strtok(s, delimiter);
-	return (res) ? res : "";
 }
 
 bool parseProposalString(const char* proposalString, ProposalDataV1& p)
