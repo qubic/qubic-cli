@@ -247,7 +247,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
         packet.req.assetReqType = RequestAssets::requestByUniverseIdx;
         if (requestQueryString == nullptr || sscanf(requestQueryString, "%u", &packet.req.byUniverseIdx.universeIdx) != 1)
         {
-            LOG("Error: Expected positive number (index in universe), found \"%s\"!", requestQueryString ? requestQueryString : "");
+            LOG("Error: Expected positive number (index in universe), found \"%s\"!\n", requestQueryString ? requestQueryString : "");
             exit(1);
         }
     }
@@ -262,7 +262,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
             {
                 auto parts = splitString(assignment, "=");
                 std::string id = parts[0];
-                std::string value = parts[1].empty() ? "" : parts[1];
+                std::string value = parts.size() > 1 ? parts[1] : "";
                 if (strcasecmp(id.c_str(), "issuer") == 0)
                 {
                     packet.req.byFilter.flags &= ~RequestAssets::anyIssuer;
@@ -277,7 +277,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 }
                 else
                 {
-                    LOG("Error: Invalid identifier in query string. Expected \"issuer\" or \"name\", found \"%s\"!", id.c_str());
+                    LOG("Error: Invalid identifier in query string. Expected \"issuer\" or \"name\", found \"%s\"!\n", id.c_str());
                     exit(1);
                 }
             }
@@ -298,7 +298,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
             {
                 auto parts = splitString(assignment, "=");
                 std::string id = parts[0];
-                std::string value = parts[1].empty() ? "" : parts[1];
+                std::string value = parts.size() > 1 ? parts[1] : "";
                 if (strcasecmp(id.c_str(), "issuer") == 0)
                 {
                     issuerGiven = true;
@@ -321,7 +321,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 {
                     if (queryOwnerships)
                     {
-                        LOG("Warning: Ignoring %s, because ownership records are queried!", assignment.c_str());
+                        LOG("Warning: Ignoring %s, because ownership records are queried!\n", assignment.c_str());
                         continue;
                     }
                     packet.req.byFilter.flags &= ~RequestAssets::anyPossessor;
@@ -333,7 +333,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                     packet.req.byFilter.flags &= ~RequestAssets::anyOwnershipManagingContract;
                     if (sscanf(value.c_str(), "%hu", &packet.req.byFilter.ownershipManagingContract) != 1)
                     {
-                        LOG("Error: Expected unsigned short number for ownership managing contract index, found \"%s\"!", value.c_str());
+                        LOG("Error: Expected unsigned short number for ownership managing contract index, found \"%s\"!\n", value.c_str());
                         exit(1);
                     }
                 }
@@ -341,31 +341,31 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 {
                     if (queryOwnerships)
                     {
-                        LOG("Warning: Ignoring %s, because ownership records are queried!", assignment.c_str());
+                        LOG("Warning: Ignoring %s, because ownership records are queried!\n", assignment.c_str());
                         continue;
                     }
                     packet.req.byFilter.flags &= ~RequestAssets::anyPossessionManagingContract;
                     if (sscanf(value.c_str(), "%hu", &packet.req.byFilter.possessionManagingContract) != 1)
                     {
-                        LOG("Error: Expected unsigned short number for possession managing contract index, found \"%s\"!", value.c_str());
+                        LOG("Error: Expected unsigned short number for possession managing contract index, found \"%s\"!\n", value.c_str());
                         exit(1);
                     }
                 }
                 else
                 {
-                    LOG("Error: Invalid identifier in query string. Found \"%s\"!", id.c_str());
+                    LOG("Error: Invalid identifier in query string. Found \"%s\"!\n", id.c_str());
                     printAssetRecordsHelp();
                 }
             }
         }
         if (!nameGiven)
         {
-            LOG("Error: You need to specify an asset name with name=[NAME]!");
+            LOG("Error: You need to specify an asset name with name=[NAME]!\n");
             exit(1);
         }
         if (!issuerGiven)
         {
-            LOG("Warning: No issuer given, assuming NULL_ID (issued by quorum like contract shares).");
+            LOG("Warning: No issuer given, assuming NULL_ID (issued by quorum like contract shares).\n");
         }
     }
     else
