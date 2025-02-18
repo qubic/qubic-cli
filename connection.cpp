@@ -266,7 +266,7 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
         }
         catch (std::logic_error& e)
         {
-            LOG(e.what());
+            LOG("%s\n", e.what());
             break;
         }
     }
@@ -327,3 +327,5 @@ template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeer
 template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();
 template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>();
 template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>();
+template std::vector<RespondAssets> QubicConnection::getLatestVectorPacketAs<RespondAssets>();
+template std::vector<RespondAssetsWithSiblings> QubicConnection::getLatestVectorPacketAs<RespondAssetsWithSiblings>();
