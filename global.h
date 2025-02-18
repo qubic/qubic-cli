@@ -63,6 +63,36 @@ int64_t g_qx_asset_transfer_amount = -1;
 char* g_qx_asset_transfer_asset_name = nullptr;
 char* g_qx_asset_transfer_issuer_in_hex = nullptr;
 
+// qswap
+char* g_qswap_issue_asset_name = nullptr;
+char* g_qswap_issue_unit_of_measurement = nullptr;
+int64_t g_qswap_issue_asset_number_of_unit = -1;
+char g_qswap_issue_asset_num_decimal = 0;
+
+char* g_qswap_command_1 = nullptr;
+char* g_qswap_asset_name = nullptr;
+char* g_qswap_issuer = nullptr;
+
+char* g_qswap_asset_transfer_possessed_identity = nullptr;
+char* g_qswap_asset_transfer_new_owner_identity = nullptr;
+int64_t g_qswap_asset_transfer_amount = -1;
+char* g_qswap_asset_transfer_asset_name = nullptr;
+char* g_qswap_asset_transfer_issuer = nullptr;
+
+int64_t g_qswap_add_liqudity_asset_amount_desired = -1;
+int64_t g_qswap_remove_liqudity_burn_liqudity = -1;
+int64_t g_qswap_liqudity_qu_amount_min = -1;
+int64_t g_qswap_liqudity_asset_amount_min = -1;
+
+char* g_qswap_get_liqudity_of_staker_issuer = nullptr;
+
+int64_t g_qswap_swap_amount_out = -1;
+int64_t g_qswap_swap_amount_out_min = -1;
+int64_t g_qswap_swap_amount_in = -1;
+int64_t g_qswap_swap_amount_in_max = -1;
+
+int64_t g_qswap_quote_amount = -1;
+
 char* g_dump_binary_file_input = nullptr;
 char* g_dump_binary_file_output = nullptr;
 uint32_t g_dump_binary_contract_id = 0;
