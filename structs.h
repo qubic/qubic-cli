@@ -99,6 +99,19 @@ enum COMMAND
     QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH = 88,
     QX_TRANSFER_MANAGEMENT_RIGHTS = 89,
     QUTIL_SEND_TO_MANY_BENCHMARK = 90,
+
+    PRINT_QSWAP_FEE = 91,
+    QSWAP_ISSUE_ASSET = 92,
+    QSWAP_TRANSFER_ASSET = 93,
+    QSWAP_CREATE_POOL = 94,
+    QSWAP_GET_POOL_BASIC = 95,
+    QSWAP_LIQUDITY = 96,
+    QSWAP_GET_LIQUDITY_OF = 97,
+    QSWAP_SWAP_EXACT_QU_FOR_ASSET = 98,
+    QSWAP_SWAP_QU_FOR_EXACT_ASSET = 99,
+    QSWAP_SWAP_EXACT_ASSET_FOR_QU = 100,
+    QSWAP_SWAP_ASSET_FOR_EXACT_QU = 101,
+    QSWAP_QUOTE = 102,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -533,6 +546,18 @@ struct QxFees_output
     uint32_t assetIssuanceFee; // Amount of qus
     uint32_t transferFee; // Amount of qus
     uint32_t tradeFee; // Number of billionths
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }    
+};
+struct QswapFees_output
+{
+    uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t transferFee; // Amount of qus
+    uint32_t swapFee; // Number of 10000ths
+    uint32_t protocolFee; // Number of 100ths
 
     static constexpr unsigned char type()
     {
