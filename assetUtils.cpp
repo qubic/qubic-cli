@@ -399,7 +399,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
 
     if (!receivedResponses)
     {
-        LOG("No assets match your query.");
+        LOG("No assets match your query.\n");
     }
 
 #ifdef _MSC_VER
