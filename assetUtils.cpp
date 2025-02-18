@@ -202,7 +202,7 @@ void printAssetResponseWithSiblings(const RespondAssetsWithSiblings& response, b
     LOG("\tuniverse digest = %s\n", hex_digest);
 }
 
-void printAssetRecordsHelp()
+void printAssetRecordsHelpAndExit()
 {
     LOG("qubic-cli -queryassets [type] [query]\n");
     LOG("  [type] is one of the following (without \"):\n");
@@ -215,9 +215,10 @@ void printAssetRecordsHelp()
     LOG("        - \"owner=[identity]\": Owner of shares to consider (skip for all owners).\n");
     LOG("        - \"oc=[index]\": Index of contract managing ownership (skip for all contracts).\n");
     LOG("    - \"possessions\" or \"p\": Get asset possession records, [query] is like for ownerships, but may additionally have:\n");
-    LOG("        - \"possessor=[identity]\": Possessor of shares to consider (skip for all owners).\n");
+    LOG("        - \"possessor=[identity]\": Possessor of shares to consider (skip for all possessors).\n");
     LOG("        - \"pc=[index]\": Index of contract managing possession (skip for all contracts).\n");
     LOG("    - \"idx\": Get asset record with given universe index, [query] is the index number.\n");
+    exit(1);
 }
 
 void printAssetRecords(const char* nodeIp, const int nodePort, const char* requestType, const char* requestQueryString)
@@ -354,7 +355,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 else
                 {
                     LOG("Error: Invalid identifier in query string. Found \"%s\"!\n", id.c_str());
-                    printAssetRecordsHelp();
+                    printAssetRecordsHelpAndExit();
                 }
             }
         }
@@ -370,18 +371,20 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
     }
     else
     {
-        printAssetRecordsHelp();
+        printAssetRecordsHelpAndExit();
     }
 
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t*)&packet, packet.header.size());
 
+    bool receivedResponses = false;
     if (withSiblings)
     {
         auto responses = qc->getLatestVectorPacketAs<RespondAssetsWithSiblings>();
         for (const auto& response : responses)
         {
             printAssetResponseWithSiblings(response, verbose);
+            receivedResponses = true;
         }
     }
     else
@@ -390,7 +393,13 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
         for (const auto& response : responses)
         {
             printAssetResponse(response, verbose);
+            receivedResponses = true;
         }
+    }
+
+    if (!receivedResponses)
+    {
+        LOG("No assets match your query.");
     }
 
 #ifdef _MSC_VER
