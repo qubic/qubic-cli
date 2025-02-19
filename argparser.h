@@ -63,7 +63,7 @@ void print_help()
     printf("\t-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>\n");
     printf("\t\tGet quorum tick data, the summary of quorum tick will be printed, <COMP_LIST_FILE> is fetched by command -getcomputorlist. valid node ip/port are required.\n");
     printf("\t-getcomputorlist <OUTPUT_FILE_NAME>\n");
-    printf("\t\tGet of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
+    printf("\t\tGet computor list of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.\n");
     printf("\t-getnodeiplist\n");
     printf("\t\tPrint a list of node ip from a seed node ip. Valid node ip/port are required.\n");
     printf("\t-gettxinfo <TX_ID>\n");

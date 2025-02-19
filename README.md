@@ -45,7 +45,7 @@ Command:
 	-getquorumtick <COMP_LIST_FILE> <TICK_NUMBER>
 		Get quorum tick data, the summary of quorum tick will be printed, <COMP_LIST_FILE> is fetched by command -getcomputorlist. valid node ip/port are required.
 	-getcomputorlist <OUTPUT_FILE_NAME>
-		Get of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
+		Get computor list of the current epoch. Feed this data to -readtickdata to verify tick data. valid node ip/port are required.
 	-getnodeiplist
 		Print a list of node ip from a seed node ip. Valid node ip/port are required.
 	-gettxinfo <TX_ID>
