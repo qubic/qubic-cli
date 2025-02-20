@@ -127,12 +127,12 @@ struct publishResult_input
     uint32_t winOption;
 };
 
-#pragma pack(1)
+#pragma pack(push, 1)
 struct cancelBet_input
 {
     uint32_t betId;
 };
-#pragma pop()
+#pragma pack(pop)
 
 void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset);
 void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId);
