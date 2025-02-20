@@ -263,6 +263,10 @@ void print_help()
     printf("\t\tGet MsVault fees.\n");
     printf("\t-msvaultgetvaultowners <VAULT_ID>\n");
     printf("\t\tGet MsVault owners given vault ID.\n");
+
+    printf("\n[TESTING COMMANDS]\n");
+    printf("\t-testqpifunctionsbeginandendtick\n");
+    printf("\t\tTests output of qpi functions that were saved at begin and end tick for the last 16 ticks. Requires the TESTEXA SC to be enabled.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1356,9 +1360,11 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS;
             break;
         }
+
         /**************************
-         **** MsVault COMMANDS ****
+         **** MSVAULT COMMANDS ****
          **************************/
+
         if (strcmp(argv[i], "-msvaultregistervault") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
@@ -1459,7 +1465,7 @@ void parseArgument(int argc, char** argv)
             g_cmd = MSVAULT_GET_FEES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-                return;
+            return;
         }
         if (strcmp(argv[i], "-msvaultgetvaultowners") == 0)
         {
@@ -1468,8 +1474,21 @@ void parseArgument(int argc, char** argv)
             g_msVaultID = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-                return;
+            return;
         }
+
+        /**************************
+         **** TESTING COMMANDS ****
+         **************************/
+        
+        if (strcmp(argv[i], "-testqpifunctionsbeginandendtick") == 0)
+        {
+            g_cmd = TEST_QPI_FUNCTIONS_BEGIN_AND_END_TICK;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+
         i++;
     }
     if (g_configFile != nullptr)

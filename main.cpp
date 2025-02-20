@@ -16,6 +16,7 @@
 #include "qearn.h"
 #include "qvault.h"
 #include "msvault.h"
+#include "testUtils.h"
 
 int run(int argc, char* argv[])
 {
@@ -586,6 +587,12 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
+            break;
+        }
+        case TEST_QPI_FUNCTIONS_BEGIN_AND_END_TICK:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            testQpiFunctionsBeginAndEndTick(g_nodeIp, g_nodePort);
             break;
         }
         default:
