@@ -1,3 +1,4 @@
+#include <array>
 #include "stdio.h"
 #include "structs.h"
 #include "global.h"
@@ -14,6 +15,7 @@
 #include "proposal.h"
 #include "qearn.h"
 #include "qvault.h"
+#include "msvault.h"
 
 int run(int argc, char* argv[])
 {
@@ -510,7 +512,86 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             saveUnbannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
             break;
-
+        // MSVAULT
+        case MSVAULT_REGISTER_VAULT_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            msvaultRegisterVault(g_nodeIp, g_nodePort, g_seed,
+                g_msVaultRequiredApprovals, g_msVaultVaultName,
+                g_msVaultOwnersCommaSeparated,
+                g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_DEPOSIT_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            msvaultDeposit(g_nodeIp,g_nodePort,g_seed,
+                           g_msVaultID, g_TxAmount, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RELEASE_TO_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckIdentity(g_msVaultDestination);
+            msvaultReleaseTo(g_nodeIp,g_nodePort,g_seed,
+                             g_msVaultID, g_TxAmount, g_msVaultDestination,
+                             g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RESET_RELEASE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            msvaultResetRelease(g_nodeIp,g_nodePort,g_seed,
+                                g_msVaultID, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_GET_VAULTS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_msVaultPublicId);
+            msvaultGetVaults(g_nodeIp,g_nodePort,g_msVaultPublicId);
+            break;
+        }
+        case MSVAULT_GET_RELEASE_STATUS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetReleaseStatus(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_BALANCE_OF_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetBalanceOf(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_VAULT_NAME_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetVaultName(g_nodeIp,g_nodePort,g_msVaultID);
+            break;
+        }
+        case MSVAULT_GET_REVENUE_INFO_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetRevenueInfo(g_nodeIp,g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_FEES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetFees(g_nodeIp, g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_OWNERS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
+            break;
+        }
         default:
             printf("Unexpected command!\n");
             break;

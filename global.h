@@ -95,3 +95,11 @@ uint32_t g_qvault_numberOfChangedAddress = 0;
 uint32_t g_qvault_newQCAPHolder_fee = 0;
 uint32_t g_qvault_newreinvesting_fee = 0;
 uint32_t g_qvault_newdev_fee = 0;
+
+// msvault
+uint64_t g_msVaultID = 0;
+uint64_t g_msVaultRequiredApprovals = 0;
+uint8_t g_msVaultVaultName[32] = { 0 };
+char* g_msVaultDestination = nullptr;
+char* g_msVaultPublicId = nullptr;
+char* g_msVaultOwnersCommaSeparated = nullptr;
