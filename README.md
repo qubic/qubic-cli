@@ -219,6 +219,30 @@ Command:
 		Submit the unbanned address using multisig address.
 	-qvaultsaveunbannedaddress <NEW_ADDRESS>
 		Unban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.
+
+[MSVAULT COMMANDS]
+	-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>
+			Register a vault. Vault's number of votes for proposal approval <REQUIRED_APPROVALS>, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.
+	-msvaultdeposit <VAULT_ID> <AMOUNT>
+			Deposit qubic into vault given vault ID.
+	-msvaultreleaseto <VAULT_ID> <AMOUNT> <DESTINATION_IDENTITY>
+			Request release qu to destination. Fee applies.
+	-msvaultresetrelease <VAULT_ID>
+			Reset release requests. Fee applies.
+	-msvaultgetvaults <IDENTITY>
+			Get list of vaults owned by IDENTITY.
+	-msvaultgetreleasestatus <VAULT_ID>
+			Get release status of a vault.
+	-msvaultgetbalanceof <VAULT_ID>
+			Get balance of a vault.
+	-msvaultgetvaultname <VAULT_ID>
+			Get vault name.
+	-msvaultgetrevenueinfo
+			Get MsVault revenue info.
+	-msvaultgetfees
+			Get MsVault fees.
+	-msvaultgetvaultowners <VAULT_ID>
+			Get MsVault owners given vault ID.
 ```
 
 ### BUILD

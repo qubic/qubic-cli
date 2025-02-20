@@ -22,6 +22,7 @@
 #include "qxStruct.h"
 #include "qvault.h"
 #include "qearn.h"
+#include "msvault.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
@@ -327,3 +328,12 @@ template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeer
 template std::vector<Tick> QubicConnection::getLatestVectorPacketAs<Tick>();
 template std::vector<RespondOwnedAssets> QubicConnection::getLatestVectorPacketAs<RespondOwnedAssets>();
 template std::vector<RespondPossessedAssets> QubicConnection::getLatestVectorPacketAs<RespondPossessedAssets>();
+
+// MSVAULT
+template MsVaultGetBalanceOf_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetBalanceOf_output>();
+template MsVaultGetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetReleaseStatus_output>();
+template MsVaultGetVaults_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaults_output>();
+template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultName_output>();
+template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
+template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
+template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
