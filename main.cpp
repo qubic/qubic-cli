@@ -511,6 +511,8 @@ int run(int argc, char* argv[])
         // MSVAULT
         case MSVAULT_REGISTER_VAULT_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             msvaultRegisterVault(g_nodeIp, g_nodePort, g_seed,
                 g_msVaultRequiredApprovals, g_msVaultVaultName,
                 g_msVaultOwnersCommaSeparated,
@@ -519,12 +521,17 @@ int run(int argc, char* argv[])
         }
         case MSVAULT_DEPOSIT_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             msvaultDeposit(g_nodeIp,g_nodePort,g_seed,
                            g_msVaultID, g_TxAmount, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_RELEASE_TO_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckIdentity(g_msVaultDestination);
             msvaultReleaseTo(g_nodeIp,g_nodePort,g_seed,
                              g_msVaultID, g_TxAmount, g_msVaultDestination,
                              g_offsetScheduledTick);
@@ -532,32 +539,40 @@ int run(int argc, char* argv[])
         }
         case MSVAULT_RESET_RELEASE_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             msvaultResetRelease(g_nodeIp,g_nodePort,g_seed,
                                 g_msVaultID, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_GET_VAULTS_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_msVaultPublicId);
             msvaultGetVaults(g_nodeIp,g_nodePort,g_msVaultPublicId);
             break;
         }
         case MSVAULT_GET_RELEASE_STATUS_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetReleaseStatus(g_nodeIp,g_nodePort,g_msVaultID);
             break;
         }
         case MSVAULT_GET_BALANCE_OF_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetBalanceOf(g_nodeIp,g_nodePort,g_msVaultID);
             break;
         }
         case MSVAULT_GET_VAULT_NAME_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetVaultName(g_nodeIp,g_nodePort,g_msVaultID);
             break;
         }
         case MSVAULT_GET_REVENUE_INFO_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetRevenueInfo(g_nodeIp,g_nodePort);
             break;
         }
@@ -569,6 +584,7 @@ int run(int argc, char* argv[])
         }
         case MSVAULT_GET_OWNERS_CMD:
         {
+            sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
             break;
         }
