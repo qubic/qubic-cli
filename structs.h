@@ -197,6 +197,8 @@ struct Tick
     uint8_t transactionDigest[32];
     uint8_t expectedNextTickTransactionDigest[32];
 
+    uint8_t saltedTransactionBodyDigest[32];
+
     unsigned char signature[SIGNATURE_SIZE];
     static constexpr unsigned char type()
     {
