@@ -2,4 +2,5 @@
 build/
 # geany editor
 *geany
+tmp/
 
