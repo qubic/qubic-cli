@@ -28,6 +28,7 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
                       const char* seed,
                       const char* pAssetName,
                       const char* pHexIssuer,
+                      int64_t quAmountDesired,
                       int64_t assetAmountDesired,
                       int64_t quAmountMin,
                       int64_t assetAmountMin,
@@ -46,6 +47,7 @@ void qswapSwapExactQuForAsset(const char* nodeIp, int nodePort,
                               const char* seed,
                               const char* pAssetName,
                               const char* pHexIssuer,
+                              int64_t quAmountIn,
                               int64_t assetAmountOutMin,
                               uint32_t scheduledTickOffset);
 
@@ -53,6 +55,7 @@ void qswapSwapQuForExactAsset(const char* nodeIp, int nodePort,
                               const char* seed,
                               const char* pAssetName,
                               const char* pHexIssuer,
+                              int64_t quAmountInMax,
                               int64_t assetAmountOut,
                               uint32_t scheduledTickOffset);
 

@@ -79,8 +79,11 @@ int64_t g_qswap_asset_transfer_amount = -1;
 char* g_qswap_asset_transfer_asset_name = nullptr;
 char* g_qswap_asset_transfer_issuer = nullptr;
 
+int64_t g_qswap_tx_qu_amount = -1;
+
 int64_t g_qswap_add_liqudity_asset_amount_desired = -1;
 int64_t g_qswap_remove_liqudity_burn_liqudity = -1;
+
 int64_t g_qswap_liqudity_qu_amount_min = -1;
 int64_t g_qswap_liqudity_asset_amount_min = -1;
 

@@ -972,14 +972,28 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qswapliqudity") == 0)
+        if (strcmp(argv[i], "-qswapaddliqudity") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(6)
-            g_cmd = QSWAP_LIQUDITY;
+            CHECK_NUMBER_OF_PARAMETERS(7)
+            g_cmd = QSWAP_ADD_LIQUDITY;
             g_qswap_command_1 = argv[i+1];
             g_qswap_asset_name = argv[i+2];
             g_qswap_issuer = argv[i+3];
-            g_qswap_add_liqudity_asset_amount_desired = charToNumber(argv[i+4]);
+            g_qswap_tx_qu_amount = charToNumber(argv[i+4]);
+            g_qswap_add_liqudity_asset_amount_desired = charToNumber(argv[i+5]);
+            g_qswap_liqudity_qu_amount_min = charToNumber(argv[i+6]);
+            g_qswap_liqudity_asset_amount_min = charToNumber(argv[i+7]);
+            i+=8;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapremoveliqudity") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(6)
+            g_cmd = QSWAP_REMOVE_LIQUDITY;
+            g_qswap_command_1 = argv[i+1];
+            g_qswap_asset_name = argv[i+2];
+            g_qswap_issuer = argv[i+3];
             g_qswap_remove_liqudity_burn_liqudity = charToNumber(argv[i+4]);
             g_qswap_liqudity_qu_amount_min = charToNumber(argv[i+5]);
             g_qswap_liqudity_asset_amount_min = charToNumber(argv[i+6]);
@@ -1000,30 +1014,32 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qswapswapexactquforasset") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(3)
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out_min = charToNumber(argv[i+3]);
+            g_qswap_tx_qu_amount = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
         }
         if (strcmp(argv[i], "-qswapswapquforexactasset") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(3)
-            g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_SWAP_QU_FOR_EXACT_ASSET;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
-            i+=4;
+            g_qswap_tx_qu_amount = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_out = charToNumber(argv[i+4]);
+            i+=5;
             CHECK_OVER_PARAMETERS
             break;
         }
         if (strcmp(argv[i], "-qswapswapexactassetforqu") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-            g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
+            g_cmd = QSWAP_SWAP_EXACT_ASSET_FOR_QU;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
             g_qswap_swap_amount_out_min = charToNumber(argv[i+3]);
@@ -1034,7 +1050,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qswapswapassetforexactqu") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
-            g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
+            g_cmd = QSWAP_SWAP_ASSET_FOR_EXACT_QU;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
             g_qswap_swap_amount_out= charToNumber(argv[i+3]);

@@ -310,6 +310,7 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
                       const char* seed,
                       const char* pAssetName,
                       const char* pIssuerInQubicFormat,
+                      int64_t quAmountDesired,
                       int64_t assetAmountDesired,
                       int64_t quAmountMin,
                       int64_t assetAmountMin,
@@ -347,7 +348,7 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 1000000000;
+    packet.transaction.amount = quAmountDesired;
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
@@ -489,6 +490,7 @@ void qswapSwapQuForAssetAction(const char* nodeIp, int nodePort,
                                const char* seed,
                                const char* pAssetName,
                                const char* pIssuerInQubicFormat,
+                               int64_t quAmountIn,
                                int64_t assetAmountOut,
                                uint32_t scheduledTickOffset)
 {
@@ -522,7 +524,7 @@ void qswapSwapQuForAssetAction(const char* nodeIp, int nodePort,
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 1; // free
+    packet.transaction.amount = quAmountIn;
 
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
@@ -573,10 +575,20 @@ void qswapSwapExactQuForAsset(const char* nodeIp, int nodePort,
                               const char* seed,
                               const char* pAssetName,
                               const char* pHexIssuer,
+                              int64_t quAmountIn,
                               int64_t assetAmountOutMin,
                               uint32_t scheduledTickOffset)
 {
-    qswapSwapQuForAssetAction<QSWAP_SWAP_EXACT_QU_FOR_ASSET>(nodeIp, nodePort, seed, pAssetName, pHexIssuer, assetAmountOutMin, scheduledTickOffset);
+    qswapSwapQuForAssetAction<QSWAP_SWAP_EXACT_QU_FOR_ASSET>(
+        nodeIp,
+        nodePort,
+        seed,
+        pAssetName,
+        pHexIssuer,
+        quAmountIn,
+        assetAmountOutMin,
+        scheduledTickOffset
+    );
 }
 
 
@@ -584,10 +596,20 @@ void qswapSwapQuForExactAsset(const char* nodeIp, int nodePort,
                               const char* seed,
                               const char* pAssetName,
                               const char* pHexIssuer,
+                              int64_t quAmountInMax,
                               int64_t assetAmountOut,
                               uint32_t scheduledTickOffset)
 {
-    qswapSwapQuForAssetAction<QSWAP_SWAP_QU_FOR_EXACT_ASSET>(nodeIp, nodePort, seed, pAssetName, pHexIssuer, assetAmountOut, scheduledTickOffset);
+    qswapSwapQuForAssetAction<QSWAP_SWAP_QU_FOR_EXACT_ASSET>(
+        nodeIp,
+        nodePort,
+        seed,
+        pAssetName,
+        pHexIssuer,
+        quAmountInMax,
+        assetAmountOut,
+        scheduledTickOffset
+    );
 }
 
 template <int procedureNumber>
