@@ -965,7 +965,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qswapgetpoolbasic") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
-            g_cmd = QSWAP_CREATE_POOL;
+            g_cmd = QSWAP_GET_POOL_BASIC;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
             i+=3;
