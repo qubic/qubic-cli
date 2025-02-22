@@ -729,7 +729,6 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
                             const char* pHexIssuer)
 {
     uint8_t issuer[32] = {0};
-    uint8_t account[32] = {0};
     char assetNameU1[8] = {0};
     memcpy(assetNameU1, pAssetName, strlen(pAssetName));
     if (strlen(pHexIssuer) != 60)
@@ -748,7 +747,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(qswapGetLiqudityOf_input);
+    packet.rcf.inputSize = sizeof(qswapGetPoolBasicState_input);
     packet.rcf.inputType = QSWAP_GET_POOL_BASIC_STATE;
     packet.rcf.contractIndex = QSWAP_CONTRACT_INDEX;
     memcpy(packet.gpbs.issuer, issuer, 32);
