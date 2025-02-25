@@ -225,7 +225,7 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     {
         result = qc->receivePacketWithHeaderAs<TickData>();
     }
-    catch (std::logic_error& e) 
+    catch (const std::exception& e) 
     {
         memset(&result, 0, sizeof(TickData));
     }
@@ -723,12 +723,11 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
-    uint32_t currenTick = getTickNumberFromNode(qc);
     TickData td;
     getTickData(nodeIp, nodePort, requestedTick, td);
     if (td.epoch == 0)
     {
-        LOG("Tick %u is empty\n", requestedTick);
+        LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return;
     }
     int numTx = 0;
