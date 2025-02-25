@@ -13,8 +13,8 @@ struct QswapIssueAsset_input
 struct QswapTransferAssetOwnershipAndPossession_input
 {
     uint8_t issuer[32];
+    int64_t assetName;
     uint8_t newOwnerAndPossessor[32];
-    unsigned long long assetName;
     long long numberOfUnits;
 };
 
@@ -91,7 +91,7 @@ struct qswapGetPoolBasicState_input{
 };
 
 struct qswapGetPoolBasicState_output{
-    bool poolExists;
+    int64_t poolExists;
     int64_t reservedQuAmount;
     int64_t reservedAssetAmount;
     int64_t totalLiqudity;
