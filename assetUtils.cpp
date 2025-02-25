@@ -310,7 +310,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 {
                     nameGiven = true;
                     sanityCheckValidAssetName(value.c_str());
-                    memcpy(&packet.req.byFilter.assetName, value.c_str(), 7);
+                    memcpy(&packet.req.byFilter.assetName, value.c_str(), std::min(7, (int)value.length()));
                 }
                 else if (strcasecmp(id.c_str(), "owner") == 0)
                 {
