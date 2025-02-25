@@ -360,9 +360,10 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
     LOG("Sending QSWAP - AddLiqudity\n");
     LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
-    LOG("amountDesired: %s\n", assetAmountDesired);
-    LOG("quAmountMin: %s\n", quAmountMin);
-    LOG("assetAmountMin: %s\n", assetAmountMin);
+    LOG("quAmountDesired: %lld\n", quAmountDesired);
+    LOG("amountDesired: %lld\n", assetAmountDesired);
+    LOG("quAmountMin: %lld\n", quAmountMin);
+    LOG("assetAmountMin: %lld\n", assetAmountMin);
     LOG("\n-------------------------------------\n\n");
 
     // fill the input
@@ -437,7 +438,7 @@ void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 1000000000;
+    packet.transaction.amount = 0;
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
@@ -449,9 +450,9 @@ void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
     LOG("Sending QSWAP - RemoveLiqudity\n");
     LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
-    LOG("burnLiqudity: %s\n", burnLiqudity);
-    LOG("quAmountMin: %s\n", quAmountMin);
-    LOG("assetAmountMin: %s\n", assetAmountMin);
+    LOG("burnLiqudity: %lld\n", burnLiqudity);
+    LOG("quAmountMin: %lld\n", quAmountMin);
+    LOG("assetAmountMin: %lld\n", assetAmountMin);
     LOG("\n-------------------------------------\n\n");
 
     // fill the input
@@ -536,12 +537,19 @@ void qswapSwapQuForAssetAction(const char* nodeIp, int nodePort,
     LOG("\n-------------------------------------\n\n");
     if (procedureNumber == QSWAP_SWAP_EXACT_QU_FOR_ASSET){
         LOG("Sending QSWAP swapExactQuForAsset action - procedureNumber: %d\n", procedureNumber);
+        LOG("Issuer: %s\n", pIssuerInQubicFormat);
+        LOG("assetName: %s\n", assetNameU1);
+        LOG("qu amount in: %d\n", quAmountIn);
+        LOG("asset amount out min: %lld\n", assetAmountOut);
+        LOG("Sending QSWAP swapExactQuForAsset action - procedureNumber: %d\n", procedureNumber);
     } else if (procedureNumber == QSWAP_SWAP_QU_FOR_EXACT_ASSET ){
         LOG("Sending QSWAP swapQuForExactAsset action - procedureNumber: %d\n", procedureNumber);
+        LOG("Issuer: %s\n", pIssuerInQubicFormat);
+        LOG("assetName: %s\n", assetNameU1);
+        LOG("qu amount in max: %d\n", quAmountIn);
+        LOG("asset amount out: %lld\n", assetAmountOut);
+        LOG("Sending QSWAP swapQuForExactAsset action - procedureNumber: %d\n", procedureNumber);
     }
-    LOG("Issuer: %s\n", pIssuerInQubicFormat);
-    LOG("assetName: %s\n", assetNameU1);
-    LOG("assetAmountOut : %lld\n", assetAmountOut);
     LOG("\n-------------------------------------\n\n");
 
     // fill the input
@@ -664,13 +672,17 @@ void qswapSwapAssetForQuAction(const char* nodeIp, int nodePort,
     // LOG("Sending Qswap action - functionNumber: %d\n", functionNumber);
     if (procedureNumber == QSWAP_SWAP_EXACT_ASSET_FOR_QU){
         LOG("Sending qswap swapExactAssetForQu action - procedureNumber: %d\n", procedureNumber);
+        LOG("Issuer: %s\n", pIssuerInQubicFormat);
+        LOG("assetName: %s\n", assetNameU1);
+        LOG("assetAmountIn: %lld\n", assetAmountIn);
+        LOG("quAmountOutMin : %lld\n", quAmountOut);
     } else if (procedureNumber == QSWAP_SWAP_ASSET_FOR_EXACT_QU) {
         LOG("Sending qswap swapAssetForExactQu action - procedureNumber: %d\n", procedureNumber);
+        LOG("Issuer: %s\n", pIssuerInQubicFormat);
+        LOG("assetName: %s\n", assetNameU1);
+        LOG("assetAmountInMax: %lld\n", assetAmountIn);
+        LOG("quAmountOut : %lld\n", quAmountOut);
     }
-    LOG("Issuer: %s\n", pIssuerInQubicFormat);
-    LOG("assetName: %s\n", assetNameU1);
-    LOG("assetAmountIn: %lld\n", assetAmountIn);
-    LOG("quAmountOut : %lld\n", quAmountOut);
     LOG("\n-------------------------------------\n\n");
 
     // fill the input
@@ -709,7 +721,7 @@ void qswapSwapExactAssetForQu(const char* nodeIp, int nodePort,
                               int64_t quAmountOutMin,
                               uint32_t scheduledTickOffset)
 {
-    qswapSwapAssetForQuAction<QSWAP_SWAP_EXACT_ASSET_FOR_QU>(nodeIp, nodePort, seed, pHexIssuer, pAssetName, assetAmountIn, quAmountOutMin, scheduledTickOffset);
+    qswapSwapAssetForQuAction<QSWAP_SWAP_EXACT_ASSET_FOR_QU>(nodeIp, nodePort, seed, pAssetName, pHexIssuer, assetAmountIn, quAmountOutMin, scheduledTickOffset);
 }
 
 void qswapSwapAssetForExactQu(const char* nodeIp, int nodePort,
@@ -720,7 +732,7 @@ void qswapSwapAssetForExactQu(const char* nodeIp, int nodePort,
                               int64_t quAmountOut,
                               uint32_t scheduledTickOffset)
 {
-    qswapSwapAssetForQuAction<QSWAP_SWAP_ASSET_FOR_EXACT_QU>(nodeIp, nodePort, seed, pHexIssuer, pAssetName, assetAmountInMax, quAmountOut, scheduledTickOffset);
+    qswapSwapAssetForQuAction<QSWAP_SWAP_ASSET_FOR_EXACT_QU>(nodeIp, nodePort, seed, pAssetName, pHexIssuer, assetAmountInMax, quAmountOut, scheduledTickOffset);
 }
 
 
