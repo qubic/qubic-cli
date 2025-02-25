@@ -480,8 +480,6 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
     LOG("prevComputerDigest: %s\n", digest);
     getIdentityFromPublicKey(A.transactionDigest, digest, true);
     LOG("transactionDigest: %s\n", digest);
-    getIdentityFromPublicKey(A.saltedTransactionBodyDigest, digest, true);
-    LOG("saltedTransactionBodyDigest: %s\n", digest);
     getIdentityFromPublicKey(A.expectedNextTickTransactionDigest, digest, true);
     LOG("expectedNextTickTransactionDigest: %s\n", digest);
 }
