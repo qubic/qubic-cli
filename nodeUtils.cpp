@@ -482,6 +482,8 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
     LOG("transactionDigest: %s\n", digest);
     getIdentityFromPublicKey(A.expectedNextTickTransactionDigest, digest, true);
     LOG("expectedNextTickTransactionDigest: %s\n", digest);
+    getIdentityFromPublicKey(A.prevTransactionBodyDigest, digest, true);
+    LOG("prevTransactionBodyDigest: %s\n", digest);
 }
 
 bool compareVote(const Tick&A, const Tick&B)
@@ -502,7 +504,8 @@ bool verifyVoteWithSalt(const Tick&A,
                         const long long prevResourceDigest,
                         const uint8_t* prevSpectrumDigest,
                         const uint8_t* prevUniverseDigest,
-                        const uint8_t* prevComputerDigest)
+                        const uint8_t* prevComputerDigest,
+                        const uint8_t* prevTransactionBodyDigest)
 {
     int cid = A.computorIndex;
     uint8_t saltedData[64];
@@ -539,6 +542,14 @@ bool verifyVoteWithSalt(const Tick&A,
         LOG("Mismatched saltedComputerDigest. Computor index: %d\n", cid);
         return false;
     }
+
+    memcpy(saltedData+32, prevTransactionBodyDigest, 32);
+    KangarooTwelve(saltedData, 64, saltedDigest, 32);
+    if (memcmp(saltedDigest, A.saltedTransactionBodyDigest, 32) != 0)
+    {
+        LOG("Mismatched saltedTransactionBodyDigest. Computor index: %d\n", cid);
+        return false;
+    }
     return true;
 }
 
@@ -555,7 +566,8 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
                     const long long prevResourceDigest = 0,
                     const uint8_t* prevSpectrumDigest = nullptr,
                     const uint8_t* prevUniverseDigest = nullptr,
-                    const uint8_t* prevComputerDigest = nullptr)
+                    const uint8_t* prevComputerDigest = nullptr,
+                    const uint8_t* prevTransactionBodyDigest = nullptr)
 {
     if (votes.size() == 0) return;
     if (verifySalt)
@@ -565,7 +577,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
         bool all_passed = true;
         for (int i = 0; i < N; i++)
         {
-            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest))
+            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest, prevTransactionBodyDigest))
             {
                 LOG("Vote %d failed to pass salt check\n", i);
                 dumpQuorumTick(votes[i]);
@@ -693,7 +705,8 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
                        vote_next.prevResourceTestingDigest,
                        vote_next.prevSpectrumDigest,
                        vote_next.prevUniverseDigest,
-                       vote_next.prevComputerDigest);
+                       vote_next.prevComputerDigest,
+                       vote_next.prevTransactionBodyDigest);
     }
 
     LOG("Number of unique votes: %d\n", uniqueVote.size());
