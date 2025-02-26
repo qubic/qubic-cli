@@ -471,7 +471,7 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
     LOG("Epoch: %d\n", A.epoch);
     LOG("Tick: %d\n", A.tick);
     LOG("Time: 20%02u-%02u-%02u %02u:%02u:%02u.%04u\n", A.year, A.month, A.day, A.hour, A.minute, A.second, A.millisecond);
-    LOG("prevResourceTestingDigest: %llu\n", A.prevResourceTestingDigest);
+    LOG("prevResourceTestingDigest: %u\n", A.prevResourceTestingDigest);
     getIdentityFromPublicKey(A.prevSpectrumDigest, digest, true);
     LOG("prevSpectrumDigest: %s\n", digest);
     getIdentityFromPublicKey(A.prevUniverseDigest, digest, true);
@@ -479,11 +479,10 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
     getIdentityFromPublicKey(A.prevComputerDigest, digest, true);
     LOG("prevComputerDigest: %s\n", digest);
     getIdentityFromPublicKey(A.transactionDigest, digest, true);
+    LOG("prevTransactionBodyDigest: %u\n", A.prevTransactionBodyDigest);
     LOG("transactionDigest: %s\n", digest);
     getIdentityFromPublicKey(A.expectedNextTickTransactionDigest, digest, true);
     LOG("expectedNextTickTransactionDigest: %s\n", digest);
-    getIdentityFromPublicKey(A.prevTransactionBodyDigest, digest, true);
-    LOG("prevTransactionBodyDigest: %s\n", digest);
 }
 
 bool compareVote(const Tick&A, const Tick&B)
@@ -501,20 +500,20 @@ bool compareVote(const Tick&A, const Tick&B)
 
 bool verifyVoteWithSalt(const Tick&A,
                         const BroadcastComputors& bc,
-                        const long long prevResourceDigest,
+                        const unsigned int prevResourceDigest,
                         const uint8_t* prevSpectrumDigest,
                         const uint8_t* prevUniverseDigest,
                         const uint8_t* prevComputerDigest,
-                        const uint8_t* prevTransactionBodyDigest)
+                        const unsigned int prevTransactionBodyDigest)
 {
     int cid = A.computorIndex;
     uint8_t saltedData[64];
     uint8_t saltedDigest[32];
     memset(saltedData, 0, 64);
     memcpy(saltedData, bc.computors.publicKeys[cid], 32);
-    memcpy(saltedData+32, &prevResourceDigest, 8);
-    KangarooTwelve(saltedData, 40, saltedDigest, 8);
-    if (A.saltedResourceTestingDigest != *((unsigned long long*)(saltedDigest)))
+    memcpy(saltedData+32, &prevResourceDigest, 4);
+    KangarooTwelve(saltedData, 36, saltedDigest, 4);
+    if (A.saltedResourceTestingDigest != *((unsigned int*)(saltedDigest)))
     {
         LOG("Mismatched saltedResourceTestingDigest. Computor index: %d\n", cid);
         return false;
@@ -543,11 +542,12 @@ bool verifyVoteWithSalt(const Tick&A,
         return false;
     }
 
-    memcpy(saltedData+32, prevTransactionBodyDigest, 32);
-    KangarooTwelve(saltedData, 64, saltedDigest, 32);
-    if (memcmp(saltedDigest, A.saltedTransactionBodyDigest, 32) != 0)
+    memset(saltedData+32, 0, 32);
+    memcpy(saltedData+32, &prevTransactionBodyDigest, 4);
+    KangarooTwelve(saltedData, 36, saltedDigest, 4);
+    if (A.saltedTransactionBodyDigest != *((unsigned int*)(saltedDigest)))
     {
-        LOG("Mismatched saltedTransactionBodyDigest. Computor index: %d\n", cid);
+        LOG("Mismatched saltedTransactionBodyDigest. Computor index: %d\n%u\n%u\n", cid, A.saltedTransactionBodyDigest, *((unsigned int*)(saltedDigest)));
         return false;
     }
     return true;
@@ -563,11 +563,11 @@ std::string indexToAlphabet(int index){
 void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std::vector<std::vector<int>>& voteIndices, int N,
                     bool verifySalt = false,
                     BroadcastComputors* pBC = nullptr,
-                    const long long prevResourceDigest = 0,
+                    const unsigned int prevResourceDigest = 0,
                     const uint8_t* prevSpectrumDigest = nullptr,
                     const uint8_t* prevUniverseDigest = nullptr,
                     const uint8_t* prevComputerDigest = nullptr,
-                    const uint8_t* prevTransactionBodyDigest = nullptr)
+                    const unsigned int prevTransactionBodyDigest = 0)
 {
     if (votes.size() == 0) return;
     if (verifySalt)
