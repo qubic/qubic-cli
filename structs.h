@@ -110,7 +110,8 @@ enum COMMAND
     MSVAULT_GET_REVENUE_INFO_CMD = 99,
     MSVAULT_GET_FEES_CMD = 100,
     MSVAULT_GET_OWNERS_CMD = 101,
-    TEST_QPI_FUNCTIONS_OUTPUT = 102,
+    QUERY_ASSETS = 102,
+    TEST_QPI_FUNCTIONS_OUTPUT = 103,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -460,6 +461,88 @@ struct RespondPossessedAssets
         return RESPOND_POSSESSED_ASSETS;
     }
 };
+
+
+// Options to request assets:
+// - all issued asset records, optionally with filtering by issuer and/or name
+// - all ownership records of a specific asset type, optionally with filtering by owner and managing contract
+// - all possession records of a specific asset type, optionally with filtering by possessor and managing contract
+// - by universeIdx (set issuer and asset name to 0)
+union RequestAssets
+{
+    static constexpr unsigned char type()
+    {
+        return 52;
+    }
+
+    // type of asset request
+    static constexpr unsigned short requestIssuanceRecords = 0;
+    static constexpr unsigned short requestOwnershipRecords = 1;
+    static constexpr unsigned short requestPossessionRecords = 2;
+    static constexpr unsigned short requestByUniverseIdx = 3;
+    unsigned short assetReqType;
+
+    // common flags
+    static constexpr unsigned short getSiblings = 0b1;
+
+    // flags of requestIssuanceRecords
+    static constexpr unsigned short anyIssuer = 0b10;
+    static constexpr unsigned short anyAssetName = 0b100;
+
+    // flags of requestOwnershipRecords
+    static constexpr unsigned short anyOwner = 0b1000;
+    static constexpr unsigned short anyOwnershipManagingContract = 0b10000;
+
+    // flags of requestOwnershipRecords and requestPossessionRecords
+    static constexpr unsigned short anyPossessor = 0b100000;
+    static constexpr unsigned short anyPossessionManagingContract = 0b1000000;
+
+    // data of type requestIssuanceRecords, requestOwnershipRecords, and requestPossessionRecords
+    struct
+    {
+        unsigned short assetReqType;
+        unsigned short flags;
+        unsigned short ownershipManagingContract;
+        unsigned short possessionManagingContract;
+        unsigned char issuer[32];
+        unsigned long long assetName;
+        unsigned char owner[32];
+        unsigned char possessor[32];
+    } byFilter;
+
+    // data of type requestByUniverseIdx
+    struct
+    {
+        unsigned short assetReqType;
+        unsigned short flags;
+        unsigned int universeIdx;
+    } byUniverseIdx;
+};
+
+static_assert(sizeof(RequestAssets) == 112, "Something is wrong with the struct size.");
+
+
+// Response message after RequestAssets without flag getSiblings
+struct RespondAssets
+{
+    Asset asset;
+    unsigned int tick;
+    unsigned int universeIndex;
+
+    static constexpr unsigned char type()
+    {
+        return 53;
+    }
+};
+static_assert(sizeof(RespondAssets) == 56, "Something is wrong with the struct size.");
+
+// Response message after RequestAssets with flag getSiblings
+struct RespondAssetsWithSiblings : public RespondAssets
+{
+    unsigned char siblings[ASSETS_DEPTH][32];
+};
+static_assert(sizeof(RespondAssetsWithSiblings) == 824, "Something is wrong with the struct size.");
+
 
 typedef struct
 {

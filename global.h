@@ -16,6 +16,8 @@ char* g_qx_share_transfer_new_owner_identity = nullptr;
 int64_t g_qx_share_transfer_amount = 0;
 const char* g_proposalString = "";
 const char* g_voteValueString = "";
+const char* g_paramString1 = "";
+const char* g_paramString2 = "";
 bool g_force = false;
 
 int64_t g_TxAmount = 0;

@@ -278,7 +278,7 @@ static void sanityCheckValidAssetName(const char * name)
     }
     if (!okay)
     {
-        LOG("Invalid asset name! Must be string of at most 7 characters. The first must be an upper-case letter. They rest may be upper-case letters or digits.\n");
+        LOG("Invalid asset name \"%s\"! It must be a string of at most 7 characters. The first must be an upper-case letter. The rest may be upper-case letters or digits.\n", name);
         exit(1);
     }
 }
