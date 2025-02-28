@@ -30,7 +30,7 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     {
         result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
     } 
-    catch (std::logic_error& e)
+    catch (std::exception& e)
     {
         memset(&result, 0, sizeof(CurrentTickInfo));
     }
@@ -282,21 +282,20 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     return (result.moneyFlew[tx_id >> 3] & (1<<(tx_id & 7))) ? 1 : 0;
 }
 
-bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick)
+bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick)
 {
-    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     // conditions:
     // - current Tick is higher than requested tick
     // - has tick data
     // - has txHash in tick transactions
-    uint32_t currenTick = getTickNumberFromNode(qc);
-    if (currenTick <= requestedTick)
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    if (currentTick <= requestedTick)
     {
-        LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currenTick);
+        LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currentTick);
         return false;
     }
     TickData td;
-    getTickData(nodeIp, nodePort, requestedTick, td);
+    getTickData(qc, requestedTick, td);
     if (td.epoch == 0)
     {
         LOG("Tick %u is empty\n", requestedTick);
@@ -326,6 +325,12 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     }
     LOG("Can NOT find tx %s on tick %u\n", txHash, requestedTick);
     return false;
+}
+
+bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick)
+{
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+    return checkTxOnTick(qc, txHash, requestedTick);
 }
 
 // @return:
