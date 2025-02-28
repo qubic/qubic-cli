@@ -589,10 +589,10 @@ int run(int argc, char* argv[])
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
             break;
         }
-        case TEST_QPI_FUNCTIONS_BEGIN_AND_END_TICK:
+        case TEST_QPI_FUNCTIONS_OUTPUT:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            testQpiFunctionsBeginAndEndTick(g_nodeIp, g_nodePort);
+            testQpiFunctionsOutput(g_nodeIp, g_nodePort, g_seed);
             break;
         }
         default:

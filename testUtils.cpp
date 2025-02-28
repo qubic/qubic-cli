@@ -2,6 +2,8 @@
 #include "nodeUtils.h"
 #include "connection.h"
 #include "logger.h"
+#include "keyUtils.h"
+#include "K12AndKeyUtil.h"
 
 // Change this index when new contracts are added
 #define TESTEXA_CONTRACT_INDEX 12
@@ -72,60 +74,223 @@ bool qpiFunctionsOutputMatches(const QpiFunctionsOutput& first, const QpiFunctio
     return matches;
 }
 
-void testQpiFunctionsBeginAndEndTick(const char* nodeIp, const int nodePort)
+bool qpiFunctionsOutputMatchesTickData(const QpiFunctionsOutput& qpiOutput, const TickData& tickData, const TickData& prevTickData)
+{
+    bool matches = true;
+    matches &= checkMatchAndLog(qpiOutput.tick, tickData.tick, "tick");
+    matches &= checkMatchAndLog(qpiOutput.epoch, tickData.epoch, "epoch");
+    matches &= checkMatchAndLog(qpiOutput.millisecond, prevTickData.millisecond, "millisecond");
+    matches &= checkMatchAndLog(qpiOutput.year, prevTickData.year, "year");
+    matches &= checkMatchAndLog(qpiOutput.month, prevTickData.month, "month");
+    matches &= checkMatchAndLog(qpiOutput.day, prevTickData.day, "day");
+    matches &= checkMatchAndLog(qpiOutput.hour, prevTickData.hour, "hour");
+    matches &= checkMatchAndLog(qpiOutput.minute, prevTickData.minute, "minute");
+    matches &= checkMatchAndLog(qpiOutput.second, prevTickData.second, "second");
+
+    if (tickData.epoch == 0) // empty tick
+    {
+        matches &= (qpiOutput.numberOfTickTransactions == -1);
+    }
+    else
+    {
+        int numTxsTickData = 0;
+        for (int tx = 0; tx < NUMBER_OF_TRANSACTIONS_PER_TICK; ++tx)
+        {
+            for (int b = 0; b < 32; ++b)
+            {
+                if (tickData.transactionDigests[tx][b] != 0)
+                {
+                    numTxsTickData++;
+                    break;
+                }
+            }
+        }
+        matches &= (numTxsTickData == qpiOutput.numberOfTickTransactions);
+    }
+
+    return matches;
+}
+
+bool qpiFunctionsOutputMatchesTick(const QpiFunctionsOutput& qpiOutput, const Tick& tickData)
+{
+    bool matches = true;
+    matches &= checkMatchAndLog(qpiOutput.tick, tickData.tick, "tick");
+    matches &= checkMatchAndLog(qpiOutput.epoch, tickData.epoch, "epoch");
+    matches &= checkMatchAndLog(qpiOutput.millisecond, tickData.millisecond, "millisecond");
+    matches &= checkMatchAndLog(qpiOutput.year, tickData.year, "year");
+    matches &= checkMatchAndLog(qpiOutput.month, tickData.month, "month");
+    matches &= checkMatchAndLog(qpiOutput.day, tickData.day, "day");
+    matches &= checkMatchAndLog(qpiOutput.hour, tickData.hour, "hour");
+    matches &= checkMatchAndLog(qpiOutput.minute, tickData.minute, "minute");
+    matches &= checkMatchAndLog(qpiOutput.second, tickData.second, "second");
+    return matches;
+}
+
+void queryQpiFunctionsOutputToState(QCPtr qc, const char* seed, uint32_t firstScheduledTick, uint32_t numTicks)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t subSeed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subSeed);
+    getPrivateKeyFromSubSeed(subSeed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    getPublicKeyFromIdentity(TESTEXA_ADDRESS, destPublicKey);
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        uint8_t sig[SIGNATURE_SIZE];
+    } packet;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 0;
+    packet.transaction.inputType = TESTEXA_QUERY_QPI_FUNCTIONS_TO_STATE;
+    packet.transaction.inputSize = 0;
+    // set header
+    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + SIGNATURE_SIZE);
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+
+    for (int tickOffset = 0; tickOffset < numTicks; ++tickOffset)
+    {
+        packet.transaction.tick = firstScheduledTick + tickOffset;
+        // sign the packet
+        KangarooTwelve((unsigned char*)&packet.transaction,
+            sizeof(Transaction),
+            digest,
+            32);
+        sign(subSeed, sourcePublicKey, digest, signature);
+        memcpy(packet.sig, signature, SIGNATURE_SIZE);
+
+        qc->sendData((uint8_t*)&packet, packet.header.size());
+    }
+}
+
+QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsigned short inputType)
+{
+    QpiFunctionsOutput output;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        uint32_t tick;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(uint32_t);
+    packet.rcf.contractIndex = TESTEXA_CONTRACT_INDEX;
+    packet.tick = requestedTick;
+    packet.rcf.inputType = inputType;
+
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    try
+    {
+        output = qc->receivePacketWithHeaderAs<QpiFunctionsOutput>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&output, 0, sizeof(output));
+    }
+    return output;
+}
+
+void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed)
 {
     // get current tick
     auto qc = make_qc(nodeIp, nodePort);
     uint32_t currentTick = getTickNumberFromNode(qc);
 
+    // send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
+    queryQpiFunctionsOutputToState(qc, seed, currentTick + 5, 16);
+
+    // wait until network reached last queried tick currentTick + 20
+    uint32_t lastQueriedTick = currentTick + 20;
+    for (; currentTick < lastQueriedTick; currentTick = getTickNumberFromNode(qc)) {}
+
     // request output of qpi functions that were saved at begin and end tick for the last 16 ticks
+    std::unique_ptr<TickData> prevTickData = nullptr;
+    TickData tickData;
     for (int tickOffset = 15; tickOffset >= 0; --tickOffset)
     {
-        QpiFunctionsOutput beginTickOutput, endTickOutput;
-        struct {
-            RequestResponseHeader header;
-            RequestContractFunction rcf;
-            uint32_t tick;
-        } packet;
-        packet.header.setSize(sizeof(packet));
-        packet.header.randomizeDejavu();
-        packet.header.setType(RequestContractFunction::type());
-        packet.rcf.inputSize = sizeof(uint32_t);
-        packet.rcf.contractIndex = TESTEXA_CONTRACT_INDEX;
         uint32_t requestedTick = currentTick - tickOffset;
-        packet.tick = requestedTick;
-
-        packet.rcf.inputType = TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK;
-        qc->sendData((uint8_t*)&packet, packet.header.size());
-        try
-        {
-            beginTickOutput = qc->receivePacketWithHeaderAs<QpiFunctionsOutput>();
-        }
-        catch (std::logic_error& e)
-        {
-            memset(&beginTickOutput, 0, sizeof(beginTickOutput));
-        }
-        packet.header.randomizeDejavu();
-        packet.rcf.inputType = TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK;
-        qc->sendData((uint8_t*)&packet, packet.header.size());
-        try
-        {
-            endTickOutput = qc->receivePacketWithHeaderAs<QpiFunctionsOutput>();
-        }
-        catch (std::logic_error& e)
-        {
-            memset(&endTickOutput, 0, sizeof(endTickOutput));
-        }
+        QpiFunctionsOutput beginTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK);
+        QpiFunctionsOutput endTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK);
+        QpiFunctionsOutput userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
 
         LOG("Tick %u\n", requestedTick);
-        if (beginTickOutput.tick == requestedTick && endTickOutput.tick == requestedTick)
+        if (beginTickOutput.tick == requestedTick)
         {
-            if (qpiFunctionsOutputMatches(beginTickOutput, endTickOutput))
-                LOG("\tBEGIN_TICK and END_TICK output matches\n");
+            if (endTickOutput.tick == requestedTick)
+            {
+                LOG("\tComparing BEGIN_TICK and END_TICK qpi functions output\n");
+                if (qpiFunctionsOutputMatches(beginTickOutput, endTickOutput))
+                    LOG("\t-> matches\n");
+            }
+            else
+                LOG("\tfailed to get END_TICK qpi functions output\n");
+            if (userProcOutput.tick == requestedTick)
+            {
+                LOG("\tComparing BEGIN_TICK and USER_PROC qpi functions output\n");
+                if (qpiFunctionsOutputMatches(beginTickOutput, userProcOutput))
+                    LOG("\t-> matches\n");
+            }
+            else
+                LOG("\tfailed to get USER_PROC qpi functions output\n");
         }
         else
         {
-            LOG("\tfailed to get qpi functions output\n");
+            LOG("\tfailed to get BEGIN_TICK qpi functions output\n");
+            continue;
         }
+
+        // also get TickData for comparison 
+        // ! the time stamps in TickData are offset because the TickData for tick N is generated at tick N-2 whereas the votes are generated at N-1
+        // ! we need to match the time stamps from the qpi functions output to the time stamp in prevTickData
+        if (!prevTickData)
+        {
+            prevTickData = std::make_unique<TickData>();
+            getTickData(qc, requestedTick - 1, *prevTickData);
+        }
+        getTickData(qc, requestedTick, tickData);
+        if (tickData.tick == requestedTick)
+        {
+            LOG("\tComparing BEGIN_TICK qpi functions output and TickData\n");
+            if (qpiFunctionsOutputMatchesTickData(beginTickOutput, tickData, *prevTickData))
+                LOG("\t-> matches\n");
+        }
+        else
+        {
+            LOG("\tfailed to get TickData\n");
+        }
+
+        // get quorum tick votyes for comparison
+        static struct
+        {
+            RequestResponseHeader header;
+            RequestedQuorumTick rqt;
+        } packetQT;
+        packetQT.header.setSize(sizeof(packetQT));
+        packetQT.header.randomizeDejavu();
+        packetQT.header.setType(RequestedQuorumTick::type); // REQUEST_TICK_DATA
+        packetQT.rqt.tick = requestedTick;
+        memset(packetQT.rqt.voteFlags, 0, (676 + 7) / 8);
+        qc->sendData(reinterpret_cast<uint8_t*>(&packetQT), sizeof(packetQT));
+        auto votes = qc->getLatestVectorPacketAs<Tick>();
+        LOG("\tComparing BEGIN_TICK qpi functions output and quorum tick votes\n");
+        LOG("\tReceived %d quorum tick votes for comparison\n", votes.size());
+        int voteMatchCtr = 0;
+        for (int v = 0; v < votes.size(); ++v)
+        {
+            if (qpiFunctionsOutputMatchesTick(beginTickOutput, votes[v]))
+                voteMatchCtr++;
+        }
+        LOG("\tBEGIN_TICK qpi functions output matches %d/%d votes\n", voteMatchCtr, votes.size());
+    
+        // save TickData as prevTickData for next loop iteration
+        *prevTickData = tickData;
     }
 }

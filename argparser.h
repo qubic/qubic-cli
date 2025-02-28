@@ -265,8 +265,8 @@ void print_help()
     printf("\t\tGet MsVault owners given vault ID.\n");
 
     printf("\n[TESTING COMMANDS]\n");
-    printf("\t-testqpifunctionsbeginandendtick\n");
-    printf("\t\tTests output of qpi functions that were saved at begin and end tick for the last 16 ticks. Requires the TESTEXA SC to be enabled.\n");
+    printf("\t-testqpifunctionsoutput\n");
+    printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for 16 ticks. Requires the TESTEXA SC to be enabled.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1481,9 +1481,9 @@ void parseArgument(int argc, char** argv)
          **** TESTING COMMANDS ****
          **************************/
         
-        if (strcmp(argv[i], "-testqpifunctionsbeginandendtick") == 0)
+        if (strcmp(argv[i], "-testqpifunctionsoutput") == 0)
         {
-            g_cmd = TEST_QPI_FUNCTIONS_BEGIN_AND_END_TICK;
+            g_cmd = TEST_QPI_FUNCTIONS_OUTPUT;
             i++;
             CHECK_OVER_PARAMETERS
             return;

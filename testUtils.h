@@ -27,4 +27,4 @@ struct QpiFunctionsOutput
     }
 };
 
-void testQpiFunctionsBeginAndEndTick(const char* nodeIp, const int nodePort);
+void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed);

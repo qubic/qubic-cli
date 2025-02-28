@@ -209,7 +209,13 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
 
 static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
-    static struct
+    auto qc = make_qc(nodeIp, nodePort);
+    getTickData(qc, tick, result);
+}
+
+void getTickData(QCPtr qc, const uint32_t tick, TickData& result)
+{
+    struct
     {
         RequestResponseHeader header;
         RequestTickData requestTickData;
@@ -218,14 +224,13 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_TICK_DATA);
     packet.requestTickData.requestedTickData.tick = tick;
-    auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData((uint8_t*)&packet, packet.header.size());
 
     try
     {
         result = qc->receivePacketWithHeaderAs<TickData>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error& e)
     {
         memset(&result, 0, sizeof(TickData));
     }
