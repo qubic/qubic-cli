@@ -259,15 +259,18 @@ Command:
 		Create an AMM pool via Qswap contract.
 	-qswapgetpoolbasicinfo <ASSET_NAME> <ISSUER_IN_HEX>
 		Get the basic info of a pool, totol liqudity, qu reserved, asset reserved.
-	-qswapliqudity add/remove <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_DESIRED>/<BURN_LIQUDITY_AMOUNT> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
-		Add/Remove liqudity with restriction to/from a pool via Qswap contract.
-	-qswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT_MIN>
+
+    -qswapaddliqudity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Add liqudity with restriction to an AMM pool via Qswap contract.
+    -qswapremoveliqudity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Remove liqudity with restriction from an AMM pool via Qswap contract.
+	-qswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>
 		Swap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.
-	-qswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN_MAX>
+	-qswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>
 		Swap qu for asset via Qswap contract, only execute if qu_amount_in <= QU_AMOUNT_IN_MAX.
-	-qswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT_MIN>
+	-qswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN> <QU_AMOUNT_OUT_MIN>
 		Swap asset for qu via Qswap contract, only execute if qu_amount_out >= QU_AMOUNT_OUT_MIN.
-	-qswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN_MAX>
+	-qswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>
 		Swap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.
 	-qswapliqudityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUDITY_STAKER(in qublic format)]
 		Get the staker's liqudity in a pool.
