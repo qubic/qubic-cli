@@ -55,13 +55,16 @@ bool checkMatchAndLog(const uint8_t* first, const uint8_t* second, uint32_t size
     return matches;
 }
 
-bool qpiFunctionsOutputMatches(const QpiFunctionsOutput& first, const QpiFunctionsOutput& second)
+bool qpiFunctionsOutputMatches(const QpiFunctionsOutput& first, const QpiFunctionsOutput& second, bool includeInvocatorAndOriginator = true)
 {
     bool matches = true;
     matches &= checkMatchAndLog(first.arbitrator, second.arbitrator, 32, "arbitrator");
     matches &= checkMatchAndLog(first.computor0, second.computor0, 32, "computor0");
-    matches &= checkMatchAndLog(first.invocator, second.invocator, 32, "invocator");
-    matches &= checkMatchAndLog(first.originator, second.originator, 32, "originator");
+    if (includeInvocatorAndOriginator)
+    {
+        matches &= checkMatchAndLog(first.invocator, second.invocator, 32, "invocator");
+        matches &= checkMatchAndLog(first.originator, second.originator, 32, "originator");
+    }
     matches &= checkMatchAndLog(first.invocationReward, second.invocationReward, "invocationReward");
     matches &= checkMatchAndLog(first.numberOfTickTransactions, second.numberOfTickTransactions, "numberOfTickTransactions");
     matches &= checkMatchAndLog(first.tick, second.tick, "tick");
@@ -216,10 +219,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     auto qc = make_qc(nodeIp, nodePort);
     uint32_t currentTick = getTickNumberFromNode(qc);
 
-    //uint32_t firstScheduledTick = currentTick - 15;
-    //uint32_t lastQueriedTick = currentTick;
-
-    // send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
+    // send tx to query qpi functions in user procedure for 16 ticks starting from currentTick + 5
     LOG("Sending txs to save qpi functions output to contract state... ");
     uint32_t firstScheduledTick = currentTick + 5;
     std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
@@ -234,7 +234,6 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
         if (tick == 0)
         {
             qc->resolveConnection();
-            LOG("resolved\n");
             continue;
         }
         if (tick != currentTick)
@@ -242,7 +241,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
             currentTick = tick;
             if (currentTick > firstScheduledTick)
             {
-                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - 1 - firstScheduledTick].data(), currentTick - 1);
+                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - firstScheduledTick - 1].data(), currentTick - 1, false);
             }
             else
                 LOG("\n");
@@ -257,7 +256,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     TickData tickData;
     for (uint32_t requestedTick = firstScheduledTick; requestedTick <= lastQueriedTick; ++requestedTick)
     {
-        //qc->resolveConnection();
+        qc->resolveConnection();
         QpiFunctionsOutput beginTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK);
         QpiFunctionsOutput endTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK);
         QpiFunctionsOutput userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
@@ -276,7 +275,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
             LOG("\tComparing BEGIN_TICK and USER_PROC qpi functions output\n");
             if (userProcOutput.tick == requestedTick)
             { 
-                if (qpiFunctionsOutputMatches(beginTickOutput, userProcOutput))
+                if (qpiFunctionsOutputMatches(beginTickOutput, userProcOutput, false))
                     LOG("\t\t-> matches\n");
             }
             else

@@ -291,7 +291,7 @@ int getMoneyFlewStatus(QCPtr qc, const char* txHash, const uint32_t requestedTic
     return (result.moneyFlew[tx_id >> 3] & (1<<(tx_id & 7))) ? 1 : 0;
 }
 
-bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick)
+bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool printTxReceipt)
 {
     // conditions:
     // - current Tick is higher than requested tick
@@ -329,9 +329,12 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick)
         if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
         {
             LOG("Found tx %s on tick %u\n", txHash, requestedTick);
-            // check for moneyflew status
-            int moneyFlew = getMoneyFlewStatus(qc, txHash, requestedTick);
-            printReceipt(txs[i], txHash, extraData[i].vecU8.data(), moneyFlew);
+            if (printTxReceipt)
+            {
+                // check for moneyflew status
+                int moneyFlew = getMoneyFlewStatus(qc, txHash, requestedTick);
+                printReceipt(txs[i], txHash, extraData[i].vecU8.data(), moneyFlew);
+            }
             return true;
         }
     }
@@ -339,10 +342,10 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick)
     return false;
 }
 
-bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick)
+bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick, bool printTxReceipt)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
-    return checkTxOnTick(qc, txHash, requestedTick);
+    return checkTxOnTick(qc, txHash, requestedTick, printTxReceipt);
 }
 
 // @return:
