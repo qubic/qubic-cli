@@ -20,6 +20,9 @@
 
 int run(int argc, char* argv[])
 {
+#ifdef __aarch64__
+    LOG("WARNING: qubic-cli (aarch64) is EXPERIMENTAL version, please use it with caution\n");
+#endif
     parseArgument(argc, argv);
     switch (g_cmd)
     {

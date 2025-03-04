@@ -14,7 +14,7 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
 int _GetTxInfo(QCPtr& qc, const char* txHash);
 int getTxInfo(const char* nodeIp, const int nodePort, const char* txHash);
 void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* compFileName);
-void getTickData(QCPtr qc, const uint32_t tick, TickData& result);
+bool getTickData(QCPtr qc, const uint32_t tick, TickData& result);
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName);
 void printTickDataFromFile(const char* fileName, const char* compFile);
 bool checkTxOnFile(const char* txHash, const char* fileName);
