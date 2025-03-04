@@ -204,6 +204,7 @@ QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsig
     }
     catch (std::logic_error& e)
     {
+        LOG("%s\n", e.what());
         memset(&output, 0, sizeof(output));
     }
     return output;
@@ -215,45 +216,48 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     auto qc = make_qc(nodeIp, nodePort);
     uint32_t currentTick = getTickNumberFromNode(qc);
 
-    // send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
-    LOG("Sending txs to save qpi functions output to contract state... ");
-    uint32_t firstScheduledTick = currentTick + 5;
-    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
-    LOG("Done.\n");
+    uint32_t firstScheduledTick = currentTick - 15;
+    uint32_t lastQueriedTick = currentTick;
 
-    // wait until network reached last queried tick
-    uint32_t lastQueriedTick = currentTick + 20;
-    LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
-    while (currentTick <= lastQueriedTick)
-    {
-        uint32_t tick = getTickNumberFromNode(qc);
-        if (tick == 0)
-        {
-            qc->resolveConnection();
-            continue;
-        }
-        if (tick != currentTick)
-        {
-            currentTick = tick;
-            if (currentTick > firstScheduledTick)
-            {
-                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - 1 - firstScheduledTick].data(), currentTick - 1);
-            }
-            else
-                LOG("\n");
-            LOG("\tTick %u ", currentTick);
-        }
-        Q_SLEEP(1000);
-    }
-    LOG("\nDone.\n");
+    //// send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
+    //LOG("Sending txs to save qpi functions output to contract state... ");
+    //uint32_t firstScheduledTick = currentTick + 5;
+    //std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
+    //LOG("Done.\n");
+
+    //// wait until network reached last queried tick
+    //uint32_t lastQueriedTick = currentTick + 20;
+    //LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
+    //while (currentTick <= lastQueriedTick)
+    //{
+    //    uint32_t tick = getTickNumberFromNode(qc);
+    //    if (tick == 0)
+    //    {
+    //        qc->resolveConnection();
+    //        LOG("resolved\n");
+    //        continue;
+    //    }
+    //    if (tick != currentTick)
+    //    {
+    //        currentTick = tick;
+    //        //if (currentTick > firstScheduledTick)
+    //        //{
+    //        //    bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - 1 - firstScheduledTick].data(), currentTick - 1);
+    //        //}
+    //        //else
+    //        //    LOG("\n");
+    //        LOG("\tTick %u ", currentTick);
+    //    }
+    //    Q_SLEEP(1000);
+    //}
+    //LOG("\nDone.\n");
 
     // request output of qpi functions that were saved at begin and end tick for the last 16 ticks
     std::unique_ptr<TickData> prevTickData = nullptr;
     TickData tickData;
-    for (int tickOffset = 15; tickOffset >= 0; --tickOffset)
+    for (uint32_t requestedTick = firstScheduledTick; requestedTick <= lastQueriedTick; ++requestedTick)
     {
         //qc->resolveConnection();
-        uint32_t requestedTick = currentTick - tickOffset;
         QpiFunctionsOutput beginTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK);
         QpiFunctionsOutput endTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK);
         QpiFunctionsOutput userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
@@ -318,14 +322,14 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
         qc->sendData(reinterpret_cast<uint8_t*>(&packetQT), sizeof(packetQT));
         auto votes = qc->getLatestVectorPacketAs<Tick>();
         LOG("\tComparing BEGIN_TICK qpi functions output and quorum tick votes\n");
-        LOG("\tReceived %d quorum tick votes for comparison\n", votes.size());
+        LOG("\t\tReceived %d quorum tick votes for comparison\n", votes.size());
         int voteMatchCtr = 0;
         for (int v = 0; v < votes.size(); ++v)
         {
             if (qpiFunctionsOutputMatchesTick(beginTickOutput, votes[v]))
                 voteMatchCtr++;
         }
-        LOG("\tBEGIN_TICK qpi functions output matches %d/%d votes\n", voteMatchCtr, votes.size());
+        LOG("\t\tBEGIN_TICK qpi functions output matches %d/%d votes\n", voteMatchCtr, votes.size());
     
         // save TickData as prevTickData for next loop iteration
         *prevTickData = tickData;

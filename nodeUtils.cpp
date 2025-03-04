@@ -232,6 +232,7 @@ void getTickData(QCPtr qc, const uint32_t tick, TickData& result)
     }
     catch (const std::exception& e) 
     {
+        LOG("%s\n", e.what());
         memset(&result, 0, sizeof(TickData));
     }
 }
