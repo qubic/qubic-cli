@@ -126,11 +126,11 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     // Ignore this message if it is here
     // This waits for timeout if RequestComputors is not sent. Temporarily reduce timeout to reduce waiting time.
     setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC / 5);
-    try{
+    try
+    {
         *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
     }
-    catch(std::logic_error& e){
-    }
+    catch(std::logic_error& e) {}
     setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC);
 }
 

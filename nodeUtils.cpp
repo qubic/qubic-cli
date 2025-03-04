@@ -207,7 +207,7 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
 
 }
 
-static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
+static bool getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
     static struct
     {
@@ -225,10 +225,18 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     {
         result = qc->receivePacketWithHeaderAs<TickData>();
     }
-    catch (const std::exception& e) 
+    catch (const std::logic_error& e)
     {
+        LOG("%s\n", e.what());
+        memset(&result, 0, sizeof(TickData));
+        return false;
+    }
+    catch (const EndResponseReceived& e)
+    {
+        // EndResponse is sent if tick is empty or not in tick storage
         memset(&result, 0, sizeof(TickData));
     }
+    return true;
 }
 
 int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
@@ -291,10 +299,13 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
         return false;
     }
     TickData td;
-    getTickData(nodeIp, nodePort, requestedTick, td);
-    if (td.epoch == 0)
+    if (!getTickData(nodeIp, nodePort, requestedTick, td))
     {
-        LOG("Tick %u is empty\n", requestedTick);
+        return false;
+    }
+    else if (td.epoch == 0)
+    {
+        LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return false;
     }
     int numTx = 0;
@@ -724,8 +735,11 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     TickData td;
-    getTickData(nodeIp, nodePort, requestedTick, td);
-    if (td.epoch == 0)
+    if (!getTickData(nodeIp, nodePort, requestedTick, td))
+    {
+        return;
+    }
+    else if (td.epoch == 0)
     {
         LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return;
@@ -1388,8 +1402,15 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
         result = qc->receivePacketWithHeaderAs<BroadcastComputors>();
         return true;
     }
-    catch (std::logic_error& e) 
+    catch (const std::logic_error& e)
     {
+        LOG("%s\n", e.what());
+        memset(&result, 0, sizeof(BroadcastComputors));
+        return false;
+    }
+    catch (const EndResponseReceived& e)
+    {
+        LOG("Node does not have a verified computor list yet\n");
         memset(&result, 0, sizeof(BroadcastComputors));
         return false;
     }
@@ -1400,7 +1421,7 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     BroadcastComputors bc;
     if (!getComputorFromNode(nodeIp, nodePort, bc))
     {
-        LOG("Failed to get valid computor list!");
+        LOG("Failed to get valid computor list!\n");
         return;
     }
     uint8_t digest[32] = {0};

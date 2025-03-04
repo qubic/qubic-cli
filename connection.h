@@ -30,7 +30,7 @@ public:
     void getHandshakeData(std::vector<uint8_t>& buffer);
 
     // Receive data of type T that is preceeded by a header. 
-    // May throw std::logic_error.
+    // May throw std::logic_error or EndResponseReceived.
     template <typename T> T receivePacketWithHeaderAs();
 
     // Receive data of type T without a header. 
