@@ -216,41 +216,41 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     auto qc = make_qc(nodeIp, nodePort);
     uint32_t currentTick = getTickNumberFromNode(qc);
 
-    uint32_t firstScheduledTick = currentTick - 15;
-    uint32_t lastQueriedTick = currentTick;
+    //uint32_t firstScheduledTick = currentTick - 15;
+    //uint32_t lastQueriedTick = currentTick;
 
-    //// send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
-    //LOG("Sending txs to save qpi functions output to contract state... ");
-    //uint32_t firstScheduledTick = currentTick + 5;
-    //std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
-    //LOG("Done.\n");
+    // send tx to query qpi functions in user procedure for 16 ticks starting from curentTick + 5
+    LOG("Sending txs to save qpi functions output to contract state... ");
+    uint32_t firstScheduledTick = currentTick + 5;
+    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
+    LOG("Done.\n");
 
-    //// wait until network reached last queried tick
-    //uint32_t lastQueriedTick = currentTick + 20;
-    //LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
-    //while (currentTick <= lastQueriedTick)
-    //{
-    //    uint32_t tick = getTickNumberFromNode(qc);
-    //    if (tick == 0)
-    //    {
-    //        qc->resolveConnection();
-    //        LOG("resolved\n");
-    //        continue;
-    //    }
-    //    if (tick != currentTick)
-    //    {
-    //        currentTick = tick;
-    //        //if (currentTick > firstScheduledTick)
-    //        //{
-    //        //    bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - 1 - firstScheduledTick].data(), currentTick - 1);
-    //        //}
-    //        //else
-    //        //    LOG("\n");
-    //        LOG("\tTick %u ", currentTick);
-    //    }
-    //    Q_SLEEP(1000);
-    //}
-    //LOG("\nDone.\n");
+    // wait until network reached last queried tick
+    uint32_t lastQueriedTick = currentTick + 20;
+    LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
+    while (currentTick <= lastQueriedTick)
+    {
+        uint32_t tick = getTickNumberFromNode(qc);
+        if (tick == 0)
+        {
+            qc->resolveConnection();
+            LOG("resolved\n");
+            continue;
+        }
+        if (tick != currentTick)
+        {
+            currentTick = tick;
+            if (currentTick > firstScheduledTick)
+            {
+                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - 1 - firstScheduledTick].data(), currentTick - 1);
+            }
+            else
+                LOG("\n");
+            LOG("\tTick %u ", currentTick);
+        }
+        Q_SLEEP(1000);
+    }
+    LOG("\nDone.\n");
 
     // request output of qpi functions that were saved at begin and end tick for the last 16 ticks
     std::unique_ptr<TickData> prevTickData = nullptr;
