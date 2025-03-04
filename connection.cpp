@@ -163,7 +163,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
         if (recvSz <= 0)
         {
-            // timemout, closed connection, or other error
+            // timeout, closed connection, or other error
             break;
         }
         totalRecvSz += recvSz;
@@ -189,47 +189,43 @@ void QubicConnection::resolveConnection()
         throw std::logic_error("Unable to establish connection.");
 }
 
-// Receive the next qubic packet with a RequestResponseHeader
+// Receive the next qubic packet with a RequestResponseHeader that matches T
 template <typename T>
 T QubicConnection::receivePacketWithHeaderAs()
 {
     // first receive the header
     RequestResponseHeader header;
-    int recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
-    if (recvByte != sizeof(RequestResponseHeader))
+    int recvByte = -1, packetSize = -1, remainingSize = -1;
+    while (true)
     {
-        throw std::logic_error("No connection.");
-    }
-    if (header.type() == END_RESPOND)
-    {
-        throw EndResponseReceived();
-    }
-    if (header.type() != T::type())
-    {
-        throw std::logic_error("Unexpected header type: " + std::to_string(header.type()) + " (expected: " + std::to_string(T::type()) + ").");
+        recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+        if (recvByte != sizeof(RequestResponseHeader))
+        {
+            throw std::logic_error("No connection.");
+        }
+        if (header.type() == END_RESPOND)
+        {
+            throw EndResponseReceived();
+        }
+        if (header.type() != T::type())
+        {
+            // skip this packet and keep receiving
+            packetSize = header.size();
+            remainingSize = packetSize - sizeof(RequestResponseHeader);
+            receiveAllDataOrThrowException(mBuffer, remainingSize);
+            continue;
+        }
+        break;
     }
     
-    int packetSize = header.size();
-    int remainingSize = packetSize - sizeof(RequestResponseHeader);
+    packetSize = header.size();
+    remainingSize = packetSize - sizeof(RequestResponseHeader);
     T result;
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
         memset(mBuffer, 0, sizeof(T));
-        // receive the rest, allow 5 tries because sometimes not all requested bytes are received
-        int recvByteTotal = 0;
-        for (int i = 0; i < 5; ++i)
-        {
-            recvByte = receiveData(mBuffer + recvByteTotal, remainingSize);
-            recvByteTotal += recvByte;
-            remainingSize -= recvByte;
-            if (!remainingSize)
-                break;
-        }
-        if (remainingSize)
-        {
-            throw std::logic_error("Unexpected data size: missing " + std::to_string(remainingSize) + " bytes, expected a total of " + std::to_string(packetSize) + " bytes (incl. header).");
-        }
+        receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer);
     }
     return result;
