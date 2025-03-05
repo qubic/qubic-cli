@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.1)
-project(qubic-cli C CXX)
-set (CMAKE_CXX_STANDARD 11)
+cmake_minimum_required(VERSION 3.12)
+project(qubic-cli CXX)
+set (CMAKE_CXX_STANDARD 17)
 SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/keyUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/nodeUtils.cpp

@@ -379,7 +379,7 @@ void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
     convertToString(result.boostedAmount, boostedAmount_S);
     convertToString(result.rewardedAmount, rewardedAmount_S);
 
-    printf("Burned Amount In QEarn SC: %s\nBurned Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent) / 100000.0);
+    printf("Burned Amount In QEarn SC: %s\nBurned Percent In QEarn SC: %.6f%%\nBoosted Amount In QEarn SC: %s\nBoosted Percent In QEarn SC: %.6f%%\nRewarded Amount In Qearn SC: %s\nRewarded Percent In QEarn SC: %.6f%%\n", burnedAmount_S, double(result.averageBurnedPercent) / 100000.0, boostedAmount_S, double(result.averageBoostedPercent) / 100000.0, rewardedAmount_S, double(result.averageRewardedPercent) / 100000.0);
 }
 
 void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch)
@@ -425,7 +425,7 @@ void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePor
     convertToString(result.boostedAmount, boostedAmount_S);
     convertToString(result.rewardedAmount, rewardedAmount_S);
 
-    printf("Burned Amount In Epoch %d: %s\nBurned Percent In Epoch %d: %.6f%%\nBoosted Amount In Epoch %d: %s\nBoosted Percent In Epoch %d: %.6f%%\nRewarded Amount In Epoch %d: %s\nRewarded Percent In Epoch %d: %.6f%%", epoch, burnedAmount_S, epoch, double(result.burnedPercent) / 100000.0, epoch, boostedAmount_S, epoch, double(result.boostedPercent) / 100000.0, epoch, rewardedAmount_S, epoch, double(result.rewardedPercent) / 100000.0);
+    printf("Burned Amount In Epoch %d: %s\nBurned Percent In Epoch %d: %.6f%%\nBoosted Amount In Epoch %d: %s\nBoosted Percent In Epoch %d: %.6f%%\nRewarded Amount In Epoch %d: %s\nRewarded Percent In Epoch %d: %.6f%%\n", epoch, burnedAmount_S, epoch, double(result.burnedPercent) / 100000.0, epoch, boostedAmount_S, epoch, double(result.boostedPercent) / 100000.0, epoch, rewardedAmount_S, epoch, double(result.rewardedPercent) / 100000.0);
 }
 
 void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Identity)
