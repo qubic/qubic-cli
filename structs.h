@@ -185,8 +185,11 @@ struct Tick
     unsigned char month;
     unsigned char year;
 
-    unsigned long long prevResourceTestingDigest;
-    unsigned long long saltedResourceTestingDigest;
+    unsigned int prevResourceTestingDigest;
+    unsigned int saltedResourceTestingDigest;
+
+    unsigned int prevTransactionBodyDigest;
+    unsigned int saltedTransactionBodyDigest;
 
     uint8_t prevSpectrumDigest[32];
     uint8_t prevUniverseDigest[32];
