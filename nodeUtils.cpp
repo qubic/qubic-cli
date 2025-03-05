@@ -1802,7 +1802,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
     unsigned int votes[676];
     int nTx = txs.size();
-    LOG("Finding in %d transactions", nTx);
+    LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
         if (extraData[i].vecU8.size() == 848)
