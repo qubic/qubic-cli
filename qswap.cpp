@@ -68,9 +68,10 @@ void printQswapFee(const char* nodeIp, const int nodePort)
     QswapFees_output result;
     getQswapFees(nodeIp, nodePort, result);
     LOG("Asset issuance fee: %u\n", result.assetIssuanceFee);
+    LOG("Pool creation fee: %u\n", result.poolCreationFee);
     LOG("Transfer fee: %u\n", result.transferFee);
-    LOG("Swap fee: %u\n", result.swapFee);
-    LOG("Protocol fee: %u\n", result.protocolFee);
+    LOG("Swap rate: %u / 10000 \n", result.swapRate);
+    LOG("Protocol rate: %u / 100 \n", result.protocolRate);
 }
 
 void qswapIssueAsset(const char* nodeIp, int nodePort,

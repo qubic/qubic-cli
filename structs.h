@@ -653,9 +653,10 @@ struct QxFees_output
 struct QswapFees_output
 {
     uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t poolCreationFee; // Amount of qus
     uint32_t transferFee; // Amount of qus
-    uint32_t swapFee; // Number of 10000ths
-    uint32_t protocolFee; // Number of 100ths
+    uint32_t swapRate; // Number of 10000ths
+    uint32_t protocolRate; // Number of 100ths
 
     static constexpr unsigned char type()
     {
