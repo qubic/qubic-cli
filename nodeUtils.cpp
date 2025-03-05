@@ -118,7 +118,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
     }
 }
 
-static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTick, int nTx,
+static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
                                 std::vector<Transaction>& txs, //out
                                 std::vector<TxhashStruct>* hashes, //out
                                 std::vector<extraDataStruct>* extraData, // out
@@ -200,14 +200,15 @@ static void getTickTransactions(QubicConnection* qc, const uint32_t requestedTic
                 sigs->push_back(sig);
             }
         }
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+        // check only after receive because response has an EndResponse header at the end
         if (recvTx == nTx)
             break;
-        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
 }
 
-static void getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
+static bool getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
 {
     static struct
     {
@@ -225,13 +226,21 @@ static void getTickData(const char* nodeIp, const int nodePort, const uint32_t t
     {
         result = qc->receivePacketWithHeaderAs<TickData>();
     }
-    catch (const std::exception& e) 
+    catch (const std::logic_error& e)
     {
+        LOG("%s\n", e.what());
+        memset(&result, 0, sizeof(TickData));
+        return false;
+    }
+    catch (const EndResponseReceived& e)
+    {
+        // EndResponse is sent if tick is empty or not in tick storage
         memset(&result, 0, sizeof(TickData));
     }
+    return true;
 }
 
-int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t requestedTick)
+int getMoneyFlewStatus(QCPtr qc, const char* txHash, const uint32_t requestedTick)
 {
     struct {
         RequestResponseHeader header;
@@ -239,7 +248,7 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_TX_STATUS); // REQUEST_TX_STATUS
+    packet.header.setType(REQUEST_TX_STATUS);
     packet.rts.tick = requestedTick;
     qc->sendData((uint8_t *) &packet, packet.header.size());
     RespondTxStatus result;
@@ -251,7 +260,7 @@ int getMoneyFlewStatus(QubicConnection* qc, const char* txHash, const uint32_t r
         // -> set remainder in array memory which may contain junk to 0
         memset(result.txDigests[result.txCount], 0, (NUMBER_OF_TRANSACTIONS_PER_TICK - result.txCount) * 32);
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error& e)
     {
         memset(&result, 0, sizeof(RespondTxStatus));
         // it's expected to catch this error on some node that not turn on tx status
@@ -291,10 +300,13 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
         return false;
     }
     TickData td;
-    getTickData(nodeIp, nodePort, requestedTick, td);
-    if (td.epoch == 0)
+    if (!getTickData(nodeIp, nodePort, requestedTick, td))
     {
-        LOG("Tick %u is empty\n", requestedTick);
+        return false;
+    }
+    else if (td.epoch == 0)
+    {
+        LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return false;
     }
     int numTx = 0;
@@ -307,14 +319,14 @@ bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, u
     std::vector<TxhashStruct> txHashesFromTick;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc.get(), requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    getTickTransactions(qc, requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
     for (int i = 0; i < txHashesFromTick.size(); i++)
     {
         if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
         {
             LOG("Found tx %s on tick %u\n", txHash, requestedTick);
             // check for moneyflew status
-            int moneyFlew = getMoneyFlewStatus(qc.get(), txHash, requestedTick);
+            int moneyFlew = getMoneyFlewStatus(qc, txHash, requestedTick);
             printReceipt(txs[i], txHash, extraData[i].vecU8.data(), moneyFlew);
             return true;
         }
@@ -737,8 +749,11 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
     TickData td;
-    getTickData(nodeIp, nodePort, requestedTick, td);
-    if (td.epoch == 0)
+    if (!getTickData(nodeIp, nodePort, requestedTick, td))
+    {
+        return;
+    }
+    else if (td.epoch == 0)
     {
         LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return;
@@ -752,7 +767,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatures;
-    getTickTransactions(qc.get(), requestedTick, numTx, txs, nullptr, &extraData, &signatures);
+    getTickTransactions(qc, requestedTick, numTx, txs, nullptr, &extraData, &signatures);
 
     FILE* f = fopen(fileName, "wb");
     fwrite(&td, 1, sizeof(TickData), f);
@@ -1401,8 +1416,15 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
         result = qc->receivePacketWithHeaderAs<BroadcastComputors>();
         return true;
     }
-    catch (std::logic_error& e) 
+    catch (const std::logic_error& e)
     {
+        LOG("%s\n", e.what());
+        memset(&result, 0, sizeof(BroadcastComputors));
+        return false;
+    }
+    catch (const EndResponseReceived& e)
+    {
+        LOG("Node does not have a verified computor list yet\n");
         memset(&result, 0, sizeof(BroadcastComputors));
         return false;
     }
@@ -1413,7 +1435,7 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     BroadcastComputors bc;
     if (!getComputorFromNode(nodeIp, nodePort, bc))
     {
-        LOG("Failed to get valid computor list!");
+        LOG("Failed to get valid computor list!\n");
         return;
     }
     uint8_t digest[32] = {0};
@@ -1764,10 +1786,10 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     std::vector<TxhashStruct> txHashesFromTick;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc.get(), requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
     unsigned int votes[676];
     int nTx = txs.size();
-    LOG("Finding in %d transactions", nTx);
+    LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
         if (extraData[i].vecU8.size() == 848)
