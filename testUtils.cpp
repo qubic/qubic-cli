@@ -213,7 +213,7 @@ QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsig
     return output;
 }
 
-void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed)
+void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset)
 {
     // get current tick
     auto qc = make_qc(nodeIp, nodePort);
@@ -221,12 +221,13 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
 
     // send tx to query qpi functions in user procedure for 16 ticks starting from currentTick + 5
     LOG("Sending txs to save qpi functions output to contract state... ");
-    uint32_t firstScheduledTick = currentTick + 5;
-    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, 16);
+    constexpr uint32_t numTicks = 15; // nodes currently save info from last 16 ticks
+    uint32_t firstScheduledTick = currentTick + scheduledTickOffset;
+    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, numTicks);
     LOG("Done.\n");
 
     // wait until network reached last queried tick
-    uint32_t lastQueriedTick = currentTick + 20;
+    uint32_t lastQueriedTick = firstScheduledTick + numTicks - 1;
     LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
     while (currentTick <= lastQueriedTick)
     {
@@ -307,7 +308,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
             LOG("\t\tfailed to get TickData\n");
         }
 
-        // get quorum tick votyes for comparison
+        // get quorum tick votes for comparison
         static struct
         {
             RequestResponseHeader header;
@@ -315,7 +316,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
         } packetQT;
         packetQT.header.setSize(sizeof(packetQT));
         packetQT.header.randomizeDejavu();
-        packetQT.header.setType(RequestedQuorumTick::type); // REQUEST_TICK_DATA
+        packetQT.header.setType(RequestedQuorumTick::type);
         packetQT.rqt.tick = requestedTick;
         memset(packetQT.rqt.voteFlags, 0, (676 + 7) / 8);
         qc->sendData(reinterpret_cast<uint8_t*>(&packetQT), sizeof(packetQT));

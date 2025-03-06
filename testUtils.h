@@ -27,4 +27,4 @@ struct QpiFunctionsOutput
     }
 };
 
-void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed);
+void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset);

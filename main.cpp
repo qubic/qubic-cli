@@ -599,7 +599,7 @@ int run(int argc, char* argv[])
         case TEST_QPI_FUNCTIONS_OUTPUT:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            testQpiFunctionsOutput(g_nodeIp, g_nodePort, g_seed);
+            testQpiFunctionsOutput(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
             break;
         }
         default:
