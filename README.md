@@ -245,6 +245,11 @@ Command:
 			Get MsVault fees.
 	-msvaultgetvaultowners <VAULT_ID>
 			Get MsVault owners given vault ID.
+
+[TESTING COMMANDS]
+	-testqpifunctionsoutput
+		Test that output of qpi functions matches TickData and quorum tick votes for 16 ticks. Requires the TESTEXA SC to be enabled.
+
 ```
 
 ### BUILD
