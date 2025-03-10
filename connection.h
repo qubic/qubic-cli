@@ -29,8 +29,8 @@ public:
     //void receiveDataAll(std::vector<uint8_t>& buffer);
     void getHandshakeData(std::vector<uint8_t>& buffer);
 
-    // Receive data of type T that is preceeded by a header. 
-    // May throw std::logic_error.
+    // Receive data of type T that is preceeded by a header. Skips data that does not match T.
+    // May throw std::logic_error or EndResponseReceived.
     template <typename T> T receivePacketWithHeaderAs();
 
     // Receive data of type T without a header. 
