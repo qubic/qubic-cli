@@ -1079,8 +1079,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
 }
 
-void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
-                   int command, std::string mode0, std::string mode1)
+void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std::string mode0, std::string mode1)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -1097,7 +1096,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     packet.header.randomizeDejavu();
     packet.header.setType(PROCESS_SPECIAL_COMMAND);
     uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    uint64_t commandByte = (uint64_t)(command) << 56;
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST) << 56;
     packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
     uint8_t flag = 0;
     if (mode0 == "MAIN") flag |= 1;
@@ -1144,8 +1143,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     }
 }
 
-void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
-                          int command, int epoch, int threshold)
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -1162,7 +1160,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     packet.header.randomizeDejavu();
     packet.header.setType(PROCESS_SPECIAL_COMMAND);
     uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    uint64_t commandByte = (uint64_t)(command) << 56;
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SET_SOLUTION_THRESHOLD_REQUEST) << 56;
     packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
     packet.cmd.epoch = epoch;
     packet.cmd.threshold = threshold;
@@ -1735,7 +1733,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
     fclose(f);
 }
 
-void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed, int command)
+void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};

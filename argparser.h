@@ -725,7 +725,6 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
-            g_requestedSpecialCommand = SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST;
             g_toggle_main_aux_0 = argv[i+1];
             g_toggle_main_aux_1 = argv[i+2];
             i+=3;
@@ -736,7 +735,6 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SET_SOLUTION_THRESHOLD;
-            g_requestedSpecialCommand = SPECIAL_COMMAND_SET_SOLUTION_THRESHOLD_REQUEST;
             g_set_solution_threshold_epoch = charToNumber(argv[i+1]);
             g_set_solution_threshold_value = charToNumber(argv[i+2]);
             i+=3;
@@ -788,7 +786,6 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-getminingscoreranking") == 0)
         {
             g_cmd = GET_MINING_SCORE_RANKING;
-            g_requestedSpecialCommand = SPECIAL_COMMAND_GET_MINING_SCORE_RANKING;
             i++;
             CHECK_OVER_PARAMETERS
             break;
