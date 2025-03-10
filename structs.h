@@ -112,6 +112,7 @@ enum COMMAND
     MSVAULT_GET_OWNERS_CMD = 101,
     QUERY_ASSETS = 102,
     TEST_QPI_FUNCTIONS_OUTPUT = 103,
+    SET_LOGGING_MODE = 104,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -732,6 +733,18 @@ struct SpecialCommandGetMiningScoreRanking
     }
 };
 #pragma pack(pop)
+
+struct SpecialCommandSetConsoleLoggingModeRequestAndResponse
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned char loggingMode; // 0 disabled, 1 low computational cost, 2 full logging
+    unsigned char padding[7];
+
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
 
 #define REQUEST_TX_STATUS 201
 

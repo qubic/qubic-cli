@@ -34,3 +34,4 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
 void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
                           int command, int epoch, int threshold);
 void syncTime(const char* nodeIp, const int nodePort, const char* seed);
+void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);

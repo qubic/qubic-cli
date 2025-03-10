@@ -119,6 +119,8 @@ void print_help()
     printf("\t\tGet current mining score ranking. Valid private key and node ip/port are required.\t\n");
     printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
     printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
+    printf("\t-setloggingmode <MODE>\n");
+    printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.\t\n");
 
     printf("\n[QX COMMANDS]\n");
     printf("\t-qxgetfee\n");
@@ -788,6 +790,15 @@ void parseArgument(int argc, char** argv)
             g_cmd = GET_MINING_SCORE_RANKING;
             g_requestedSpecialCommand = SPECIAL_COMMAND_GET_MINING_SCORE_RANKING;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-setloggingmode") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = SET_LOGGING_MODE;
+            g_loggingMode = charToNumber(argv[i+1]);
+            i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
