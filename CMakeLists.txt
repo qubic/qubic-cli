@@ -8,13 +8,14 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/walletUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/assetUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/SCUtils.cpp
+		  ${CMAKE_SOURCE_DIR}/testUtils.cpp
 		  ${CMAKE_SOURCE_DIR}/quottery.cpp
 		  ${CMAKE_SOURCE_DIR}/qutil.cpp
 		  ${CMAKE_SOURCE_DIR}/qx.cpp
 		  ${CMAKE_SOURCE_DIR}/proposal.cpp
 		  ${CMAKE_SOURCE_DIR}/qearn.cpp
 		  ${CMAKE_SOURCE_DIR}/qvault.cpp
-		  ${CMAKE_SOURCE_DIR}/msvault.cpp 
+		  ${CMAKE_SOURCE_DIR}/msvault.cpp
 )
 SET(HEADER_FILES
 	K12AndKeyUtil.h
@@ -35,6 +36,7 @@ SET(HEADER_FILES
 	structs.h
 	utils.h
 	walletUtils.h
+	testUtils.h
 	proposal.h
 	qx.h
 	qearn.h
