@@ -251,6 +251,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
             LOG("Error: Expected positive number (index in universe), found \"%s\"!\n", requestQueryString ? requestQueryString : "");
             exit(1);
         }
+        packet.header.setSize(sizeof(packet.header) + sizeof(packet.req.byUniverseIdx));
     }
     else if (strcasecmp(requestType, "issuances") == 0 || strcasecmp(requestType, "i") == 0)
     {
