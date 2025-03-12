@@ -25,12 +25,11 @@ void getNodeIpList(const char* nodeIp, const int nodePort);
 void getLogFromNode(const char* nodeIp, const int nodePort, uint64_t* passcode);
 void dumpSpectrumToCSV(const char* input, const char* output);
 void dumpUniverseToCSV(const char* input, const char* output);
-void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed, int command);
+void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed);
 void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName);
 void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, const char* seed, unsigned int tickOffset, const char* compressTool = nullptr);
 // remote tools:
-void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
-                   int command, std::string mode0, std::string mode1);
-void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
-                          int command, int epoch, int threshold);
+void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std::string mode0, std::string mode1);
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold);
 void syncTime(const char* nodeIp, const int nodePort, const char* seed);
+void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);

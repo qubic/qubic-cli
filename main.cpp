@@ -302,15 +302,14 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sanityCheckMainAuxStatus(g_toggle_main_aux_0);
             sanityCheckMainAuxStatus(g_toggle_main_aux_1);
-            toggleMainAux(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand, g_toggle_main_aux_0, g_toggle_main_aux_1);
+            toggleMainAux(g_nodeIp, g_nodePort, g_seed, g_toggle_main_aux_0, g_toggle_main_aux_1);
             break;
         case SET_SOLUTION_THRESHOLD:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             checkValidEpoch(g_set_solution_threshold_epoch);
             checkValidSolutionThreshold(g_set_solution_threshold_value);
-            setSolutionThreshold(g_nodeIp, g_nodePort, g_seed,
-                                 g_requestedSpecialCommand, g_set_solution_threshold_epoch, g_set_solution_threshold_value);
+            setSolutionThreshold(g_nodeIp, g_nodePort, g_seed, g_set_solution_threshold_epoch, g_set_solution_threshold_value);
             break;
         case SEND_SPECIAL_COMMAND:
         case REFRESH_PEER_LIST:
@@ -324,8 +323,7 @@ int run(int argc, char* argv[])
         case GET_MINING_SCORE_RANKING:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            sanityCheckSpecialCommand(g_requestedSpecialCommand);
-            sendSpecialCommandGetMiningScoreRanking(g_nodeIp, g_nodePort, g_seed, g_requestedSpecialCommand);
+            getMiningScoreRanking(g_nodeIp, g_nodePort, g_seed);
             break;
         case GET_VOTE_COUNTER_TX:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -335,6 +333,12 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             syncTime(g_nodeIp, g_nodePort, g_seed);
+            break;
+        case SET_LOGGING_MODE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckLoggingMode(g_loggingMode);
+            setLoggingMode(g_nodeIp, g_nodePort, g_seed, g_loggingMode);
             break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);

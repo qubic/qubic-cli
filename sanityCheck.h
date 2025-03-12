@@ -282,3 +282,12 @@ static void sanityCheckValidAssetName(const char * name)
         exit(1);
     }
 }
+
+static void sanityCheckLoggingMode(char mode)
+{
+    if (mode < 0 || mode > 2)
+    {
+        LOG("Invalid value for logging mode (valid values: 0, 1, 2)\n");
+        exit(1);
+    }
+}

@@ -7,6 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "defines.h"
 #include "structs.h"
 #include "connection.h"
 #include "nodeUtils.h"
@@ -1078,8 +1079,7 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     }
 }
 
-void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
-                   int command, std::string mode0, std::string mode1)
+void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std::string mode0, std::string mode1)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -1096,7 +1096,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     packet.header.randomizeDejavu();
     packet.header.setType(PROCESS_SPECIAL_COMMAND);
     uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    uint64_t commandByte = (uint64_t)(command) << 56;
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_TOGGLE_MAIN_MODE_REQUEST) << 56;
     packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
     uint8_t flag = 0;
     if (mode0 == "MAIN") flag |= 1;
@@ -1143,8 +1143,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed,
     }
 }
 
-void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed,
-                          int command, int epoch, int threshold)
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -1161,7 +1160,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     packet.header.randomizeDejavu();
     packet.header.setType(PROCESS_SPECIAL_COMMAND);
     uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    uint64_t commandByte = (uint64_t)(command) << 56;
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SET_SOLUTION_THRESHOLD_REQUEST) << 56;
     packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
     packet.cmd.epoch = epoch;
     packet.cmd.threshold = threshold;
@@ -1384,6 +1383,59 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         LOG("Clock status after sync:\n");
         LOG("\tNode time (UTC):  "); logTime(response.utcTime); LOG("  -  round trip time %llu ms\n", roundTripTimeNanosec / 1000000);
         LOG("\tLocal time (UTC): "); logTime(convertTime(nowLocal)); LOG("\n\n");
+    }
+}
+
+void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandSetConsoleLoggingModeRequestAndResponse cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SET_CONSOLE_LOGGING_MODE) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    packet.cmd.loggingMode = mode;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+        sizeof(packet.cmd),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    SpecialCommandSetConsoleLoggingModeRequestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSetConsoleLoggingModeRequestAndResponse>();
+    }
+    catch (std::logic_error& e)
+    {
+        memset(&response, 0, sizeof(SpecialCommandSetConsoleLoggingModeRequestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        LOG("Successfully set logging mode\n");
+    }
+    else
+    {
+        LOG("Failed set logging mode\n");
     }
 }
 
@@ -1681,7 +1733,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
     fclose(f);
 }
 
-void sendSpecialCommandGetMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed, int command)
+void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
