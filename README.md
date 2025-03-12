@@ -96,8 +96,9 @@ Command:
 	-getminingscoreranking
 		Get current mining score ranking. Valid private key and node ip/port are required.	
 	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
-		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) 	-setloggingmode <MODE>
-    		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.
+		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3)
+	-setloggingmode <MODE>
+		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.
 
 [QX COMMANDS]
 	-qxgetfee
