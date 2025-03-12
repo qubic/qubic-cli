@@ -213,54 +213,19 @@ QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsig
     return output;
 }
 
-void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset)
+static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick, uint32_t lastQueriedTick, bool useUserProc)
 {
-    // get current tick
-    auto qc = make_qc(nodeIp, nodePort);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-
-    // send tx to query qpi functions in user procedure for 16 ticks starting from currentTick + 5
-    LOG("Sending txs to save qpi functions output to contract state... ");
-    constexpr uint32_t numTicks = 15; // nodes currently save info from last 16 ticks
-    uint32_t firstScheduledTick = currentTick + scheduledTickOffset;
-    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, numTicks);
-    LOG("Done.\n");
-
-    // wait until network reached last queried tick
-    uint32_t lastQueriedTick = firstScheduledTick + numTicks - 1;
-    LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
-    while (currentTick <= lastQueriedTick)
-    {
-        uint32_t tick = getTickNumberFromNode(qc);
-        if (tick == 0)
-        {
-            qc->resolveConnection();
-            continue;
-        }
-        if (tick != currentTick)
-        {
-            currentTick = tick;
-            if (currentTick > firstScheduledTick)
-            {
-                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - firstScheduledTick - 1].data(), currentTick - 1, false);
-            }
-            else
-                LOG("\n");
-            LOG("\tTick %u ", currentTick);
-        }
-        Q_SLEEP(1000);
-    }
-    LOG("\nDone.\n");
-
-    // request output of qpi functions that were saved at begin and end tick for the last 16 ticks
     std::unique_ptr<TickData> prevTickData = nullptr;
     TickData tickData;
-    for (uint32_t requestedTick = firstScheduledTick; requestedTick <= lastQueriedTick; ++requestedTick)
+    for (uint32_t requestedTick = firstQueriedTick; requestedTick <= lastQueriedTick; ++requestedTick)
     {
         qc->resolveConnection();
+        // request output of qpi functions that were saved in the TESTEXA SC
         QpiFunctionsOutput beginTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK);
         QpiFunctionsOutput endTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK);
-        QpiFunctionsOutput userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
+        QpiFunctionsOutput userProcOutput;
+        if (useUserProc) 
+            userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
 
         LOG("Tick %u\n", requestedTick);
         if (beginTickOutput.tick == requestedTick)
@@ -273,14 +238,17 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
             }
             else
                 LOG("\t\tfailed to get END_TICK qpi functions output\n");
-            LOG("\tComparing BEGIN_TICK and USER_PROC qpi functions output\n");
-            if (userProcOutput.tick == requestedTick)
-            { 
-                if (qpiFunctionsOutputMatches(beginTickOutput, userProcOutput, false))
-                    LOG("\t\t-> matches\n");
+            if (useUserProc)
+            {
+                LOG("\tComparing BEGIN_TICK and USER_PROC qpi functions output\n");
+                if (userProcOutput.tick == requestedTick)
+                {
+                    if (qpiFunctionsOutputMatches(beginTickOutput, userProcOutput, false))
+                        LOG("\t\t-> matches\n");
+                }
+                else
+                    LOG("\t\tfailed to get USER_PROC qpi functions output\n");
             }
-            else
-                LOG("\t\tfailed to get USER_PROC qpi functions output\n");
         }
         else
         {
@@ -330,8 +298,59 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
                 voteMatchCtr++;
         }
         LOG("\t\tBEGIN_TICK qpi functions output matches %d/%d votes\n", voteMatchCtr, votes.size());
-    
+
         // save TickData as prevTickData for next loop iteration
         *prevTickData = tickData;
     }
+}
+
+void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset)
+{
+    // get current tick
+    auto qc = make_qc(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+
+    // send tx to query qpi functions in user procedure for numTicks ticks starting from currentTick + scheduledTickOffset
+    constexpr uint32_t numTicks = 15; // nodes currently save info from last 16 ticks but we miss one due to delay in matching
+    uint32_t firstScheduledTick = currentTick + scheduledTickOffset;
+    LOG("Sending txs to save qpi functions output to contract state... ");
+    std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, numTicks);
+    LOG("Done.\n");
+
+    // wait until network reached last queried tick
+    uint32_t lastQueriedTick = firstScheduledTick + numTicks - 1;
+    LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
+    while (currentTick <= lastQueriedTick)
+    {
+        uint32_t tick = getTickNumberFromNode(qc);
+        if (tick == 0)
+        {
+            qc->resolveConnection();
+            continue;
+        }
+        if (tick != currentTick)
+        {
+            currentTick = tick;
+            if (currentTick > firstScheduledTick)
+            {
+                bool txIncluded = checkTxOnTick(qc, txHashes[currentTick - firstScheduledTick - 1].data(), currentTick - 1, false);
+            }
+            else
+                LOG("\n");
+            LOG("\tTick %u ", currentTick);
+        }
+        Q_SLEEP(1000);
+    }
+    LOG("\nDone.\n");
+
+    queryAndMatchQpiFunctionsOutput(qc, firstScheduledTick, lastQueriedTick, true);
+}
+
+void testQpiFunctionsOutputPast(const char* nodeIp, const int nodePort)
+{
+    // get current tick
+    auto qc = make_qc(nodeIp, nodePort);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+
+    queryAndMatchQpiFunctionsOutput(qc, currentTick - 15, currentTick - 1, false);
 }
