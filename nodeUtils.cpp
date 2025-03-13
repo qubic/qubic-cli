@@ -25,7 +25,9 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_CURRENT_TICK_INFO);
+    LOG("Sending request for tick info... ");
     qc->sendData((uint8_t *) &packet, packet.header.size());
+    LOG("Done.\n");
 
     try
     {
