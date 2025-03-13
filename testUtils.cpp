@@ -293,6 +293,7 @@ static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick,
         }
 
         // get quorum tick votes for comparison
+        qc->resolveConnection();
         static struct
         {
             RequestResponseHeader header;
