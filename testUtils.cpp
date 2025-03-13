@@ -34,7 +34,7 @@ bool checkMatchAndLog(const T& first, const T& second, const std::string& name)
         return true;
     else
     {
-        LOG("\t\t- %s: differs! (%u vs. %u)\n", name, first, second);
+        LOG("\t\t- %s: differs! (%u vs. %u)\n", name.c_str(), first, second);
         return false;
     }
 }
@@ -50,7 +50,7 @@ bool checkMatchAndLog(const uint8_t* first, const uint8_t* second, uint32_t size
             break;
         }
     if (!matches)
-        LOG("\t\t- %s: differs in byte %d! (%u vs. %u)\n", name, i, first[i], second[i]);
+        LOG("\t\t- %s: differs in byte %d! (%u vs. %u)\n", name.c_str(), i, first[i], second[i]);
 
     return matches;
 }
@@ -215,6 +215,8 @@ QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsig
 
 static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick, uint32_t lastQueriedTick, bool useUserProc)
 {
+    constexpr int numRetries = 3;
+    int retryCtr = 0;
     std::unique_ptr<TickData> prevTickData = nullptr;
     TickData tickData;
     for (uint32_t requestedTick = firstQueriedTick; requestedTick <= lastQueriedTick; ++requestedTick)
@@ -259,21 +261,35 @@ static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick,
         // also get TickData for comparison 
         // ! the time stamps in TickData are offset because the TickData for tick N is generated at tick N-2 whereas the votes are generated at N-1
         // ! we need to match the time stamps from the qpi functions output to the time stamp in prevTickData
-        if (!prevTickData)
+        if (!prevTickData || prevTickData->epoch == 0)
         {
-            prevTickData = std::make_unique<TickData>();
-            getTickData(qc, requestedTick - 1, *prevTickData);
+            if (!prevTickData) prevTickData = std::make_unique<TickData>();
+            retryCtr = numRetries;
+            while (!getTickData(qc, requestedTick - 1, *prevTickData))
+            {
+                if (retryCtr == 0)
+                    break;
+                qc->resolveConnection();
+                retryCtr--;
+            }
         }
-        getTickData(qc, requestedTick, tickData);
+        retryCtr = numRetries;
+        while (!getTickData(qc, requestedTick, tickData))
+        {
+            if (retryCtr == 0)
+                break;
+            qc->resolveConnection();
+            retryCtr--;
+        }
         LOG("\tComparing BEGIN_TICK qpi functions output and TickData\n");
-        if (tickData.tick == requestedTick)
+        if (tickData.tick == requestedTick && prevTickData->tick == requestedTick - 1)
         {
             if (qpiFunctionsOutputMatchesTickData(beginTickOutput, tickData, *prevTickData))
                 LOG("\t\t-> matches\n");
         }
         else
         {
-            LOG("\t\tfailed to get TickData\n");
+            LOG("\t\tfailed to get TickData or tick is empty\n");
         }
 
         // get quorum tick votes for comparison
