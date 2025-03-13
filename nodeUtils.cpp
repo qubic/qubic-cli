@@ -33,6 +33,7 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     } 
     catch (std::exception& e)
     {
+        LOG("%s\n", e.what());
         memset(&result, 0, sizeof(CurrentTickInfo));
     }
 

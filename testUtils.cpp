@@ -355,7 +355,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
                 LOG("\n");
             LOG("\tTick %u ", currentTick);
         }
-        Q_SLEEP(1000);
+        //Q_SLEEP(1000);
     }
     LOG("\nDone.\n");
 
