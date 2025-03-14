@@ -339,14 +339,10 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     LOG("Waiting for network to reach last queried tick %u, currently at %u...", lastQueriedTick, currentTick);
     while (currentTick <= lastQueriedTick)
     {
-        LOG("Getting tick number from node: ");
         uint32_t tick = getTickNumberFromNode(qc);
-        LOG("%u\n", tick);
         if (tick == 0)
         {
-            LOG("Trying to resolve connection... ");
             qc->resolveConnection();
-            LOG("Done.\n");
             continue;
         }
         if (tick != currentTick)
