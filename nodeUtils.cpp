@@ -44,7 +44,10 @@ uint32_t getTickNumberFromNode(QCPtr qc)
     auto curTickInfo = getTickInfoFromNode(qc);
     int retryCounter = 0;
     while (curTickInfo.tick == 0 && retryCounter++ < 3)
+    {
+        qc->resolveConnection();
         curTickInfo = getTickInfoFromNode(qc);
+    }
     return curTickInfo.tick;
 }
 

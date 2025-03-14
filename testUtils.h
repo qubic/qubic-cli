@@ -28,3 +28,4 @@ struct QpiFunctionsOutput
 };
 
 void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset);
+void testQpiFunctionsOutputPast(const char* nodeIp, const int nodePort);

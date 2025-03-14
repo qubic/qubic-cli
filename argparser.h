@@ -270,7 +270,9 @@ void print_help()
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
-    printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for 16 ticks. Requires the TESTEXA SC to be enabled.\n");
+    printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.\n");
+    printf("\t-testqpifunctionsoutputpast\n");
+    printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for the last 15 ticks. Requires the TESTEXA SC to be enabled.\n");
 }
 
 static long long charToNumber(char* a)
@@ -1507,6 +1509,13 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-testqpifunctionsoutput") == 0)
         {
             g_cmd = TEST_QPI_FUNCTIONS_OUTPUT;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-testqpifunctionsoutputpast") == 0)
+        {
+            g_cmd = TEST_QPI_FUNCTIONS_OUTPUT_PAST;
             i++;
             CHECK_OVER_PARAMETERS
             return;
