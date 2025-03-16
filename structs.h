@@ -111,6 +111,9 @@ enum COMMAND
     MSVAULT_GET_FEES_CMD = 100,
     MSVAULT_GET_OWNERS_CMD = 101,
     QUERY_ASSETS = 102,
+    HM25_ECHO = 103,
+    HM25_BURN = 104,
+    HM25_GET_STAT = 105,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -914,4 +917,14 @@ struct FileFragmentTransactionPrefix : public Transaction
 
     unsigned long long fragmentIndex;
     uint8_t prevFileFragmentTransactionDigest[32];
+};
+
+struct GetStats_output
+{
+    uint64_t numberOfEchoCalls;
+    uint64_t numberOfBurnCalls;
+    static constexpr unsigned char type()
+    {
+        return 43;
+    }
 };

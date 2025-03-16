@@ -103,3 +103,6 @@ uint8_t g_msVaultVaultName[32] = { 0 };
 char* g_msVaultDestination = nullptr;
 char* g_msVaultPublicId = nullptr;
 char* g_msVaultOwnersCommaSeparated = nullptr;
+
+// hm25
+uint64_t g_hm25_amount;

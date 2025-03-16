@@ -16,7 +16,7 @@
 #include "qearn.h"
 #include "qvault.h"
 #include "msvault.h"
-
+#include "hm25.h"
 int run(int argc, char* argv[])
 {
 #ifdef __aarch64__
@@ -595,6 +595,27 @@ int run(int argc, char* argv[])
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
             break;
         }
+        case HM25_ECHO:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            hm25Echo(g_nodeIp, g_nodePort, g_seed, g_hm25_amount, g_offsetScheduledTick);
+            break;
+        }
+        case HM25_BURN:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            hm25Burn(g_nodeIp, g_nodePort, g_seed, g_hm25_amount, g_offsetScheduledTick);
+            break;
+        }
+        case HM25_GET_STAT:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            hm25GetStats(g_nodeIp, g_nodePort);
+            break;
+        }
+
         default:
             printf("Unexpected command!\n");
             break;

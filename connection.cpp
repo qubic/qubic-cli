@@ -158,7 +158,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         //   rather than waiting for receipt of the full amount requested."
         // Microsoft docs:
         //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
-        //   return as much data as is currently available—up to the size of the buffer specified. [...]
+        //   return as much data as is currently availableï¿½up to the size of the buffer specified. [...]
         //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
         int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
         if (recvSz <= 0)
@@ -340,3 +340,6 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+
+// HM25
+template GetStats_output QubicConnection::receivePacketWithHeaderAs<GetStats_output>();

@@ -1485,6 +1485,34 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
                 return;
         }
+
+        // HM25
+        if (strcmp(argv[i], "-hm25echo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = HM25_ECHO;
+            g_hm25_amount = charToNumber(argv[i+1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-hm25burn") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = HM25_BURN;
+            g_hm25_amount = charToNumber(argv[i+1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-hm25stat") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = HM25_GET_STAT;
+            i += 1;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
         i++;
     }
     if (g_configFile != nullptr)
