@@ -250,7 +250,9 @@ Command:
 
 [TESTING COMMANDS]
 	-testqpifunctionsoutput
-		Test that output of qpi functions matches TickData and quorum tick votes for 16 ticks. Requires the TESTEXA SC to be enabled.
+		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
+	-testqpifunctionsoutputpast
+		Test that output of qpi functions matches TickData and quorum tick votes for the last 15 ticks. Requires the TESTEXA SC to be enabled.
 
 ```
 
