@@ -523,6 +523,7 @@ bool compareVote(const Tick&A, const Tick&B)
            (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
            (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
            (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
+           (A.prevTransactionBodyDigest == B.prevTransactionBodyDigest) &&
            (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
            (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
 }
@@ -533,7 +534,8 @@ bool verifyVoteWithSalt(const Tick&A,
                         const uint8_t* prevSpectrumDigest,
                         const uint8_t* prevUniverseDigest,
                         const uint8_t* prevComputerDigest,
-                        const unsigned int prevTransactionBodyDigest)
+                        const unsigned int prevTransactionBodyDigest,
+                        const uint8_t* nextTickTransactionDigest)
 {
     int cid = A.computorIndex;
     uint8_t saltedData[64];
@@ -570,14 +572,16 @@ bool verifyVoteWithSalt(const Tick&A,
         LOG("Mismatched saltedComputerDigest. Computor index: %d\n", cid);
         return false;
     }
-
-    memset(saltedData+32, 0, 32);
-    memcpy(saltedData+32, &prevTransactionBodyDigest, 4);
-    KangarooTwelve(saltedData, 36, saltedDigest, 4);
-    if (A.saltedTransactionBodyDigest != *((unsigned int*)(saltedDigest)))
-    {
-        LOG("Mismatched saltedTransactionBodyDigest. Computor index: %d\n%u\n%u\n", cid, A.saltedTransactionBodyDigest, *((unsigned int*)(saltedDigest)));
-        return false;
+    bool should_check_txBodyDigest = isArrayZero(A.expectedNextTickTransactionDigest, 32) == isArrayZero(nextTickTransactionDigest, 32);
+    if(should_check_txBodyDigest){
+        memset(saltedData+32, 0, 32);
+        memcpy(saltedData+32, &prevTransactionBodyDigest, 4);
+        KangarooTwelve(saltedData, 36, saltedDigest, 4);
+        if (A.saltedTransactionBodyDigest != *((unsigned int*)(saltedDigest)))
+        {
+            LOG("Mismatched saltedTransactionBodyDigest. Computor index: %d\n%u\n%u\n", cid, A.saltedTransactionBodyDigest, *((unsigned int*)(saltedDigest)));
+            return false;
+        }
     }
     return true;
 }
@@ -596,7 +600,8 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
                     const uint8_t* prevSpectrumDigest = nullptr,
                     const uint8_t* prevUniverseDigest = nullptr,
                     const uint8_t* prevComputerDigest = nullptr,
-                    const unsigned int prevTransactionBodyDigest = 0)
+                    const unsigned int prevTransactionBodyDigest = 0,
+                    const uint8_t* nextTickTransactionDigest = 0)
 {
     if (votes.size() == 0) return;
     if (verifySalt)
@@ -606,7 +611,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
         bool all_passed = true;
         for (int i = 0; i < N; i++)
         {
-            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest, prevTransactionBodyDigest))
+            if (!verifyVoteWithSalt(votes[i], *pBC, prevResourceDigest, prevSpectrumDigest, prevUniverseDigest, prevComputerDigest, prevTransactionBodyDigest, nextTickTransactionDigest))
             {
                 LOG("Vote %d failed to pass salt check\n", i);
                 dumpQuorumTick(votes[i]);
@@ -735,7 +740,8 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
                        vote_next.prevSpectrumDigest,
                        vote_next.prevUniverseDigest,
                        vote_next.prevComputerDigest,
-                       vote_next.prevTransactionBodyDigest);
+                       vote_next.prevTransactionBodyDigest,
+                       vote_next.transactionDigest);
     }
 
     LOG("Number of unique votes: %d\n", uniqueVote.size());
@@ -772,7 +778,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     }
     else if (td.epoch == 0)
     {
-        LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
+        LOG("Tick %u not in current epoch or in the future\n", requestedTick);
         return;
     }
     int numTx = 0;
