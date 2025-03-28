@@ -30,7 +30,7 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     try
     {
         result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
-    } 
+    }
     catch (std::exception)
     {
         memset(&result, 0, sizeof(CurrentTickInfo));
@@ -80,7 +80,7 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     packet.header.setType(REQUEST_SYSTEM_INFO);
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    try 
+    try
     {
         result = qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
     }
@@ -1074,14 +1074,14 @@ void sendSpecialCommand(const char* nodeIp, const int nodePort, const char* seed
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
     {
         LOG("Node received special command\n");
-    } 
+    }
     else
     {
         if (command != SPECIAL_COMMAND_REFRESH_PEER_LIST)
         {
             LOG("Failed to send special command\n");
-        } 
-        else 
+        }
+        else
         {
             LOG("Sent special command\n"); // the connection is refreshed right after this command, no way to verify remotely
         }
@@ -1140,8 +1140,8 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std
         if (response.mainModeFlag == packet.cmd.mainModeFlag)
         {
             LOG("Successfully set MAINAUX flag\n");
-        } 
-        else 
+        }
+        else
         {
             LOG("The packet is successfully sent but failed set MAINAUX flag\n");
         }
@@ -1191,7 +1191,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
     }
-    catch (std::logic_error) 
+    catch (std::logic_error)
     {
         memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
     }
@@ -1201,12 +1201,12 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
         if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold)
         {
             LOG("Successfully set solution threshold\n");
-        } 
-        else 
+        }
+        else
         {
             LOG("The packet is successfully sent but failed set solution threshold\n");
         }
-    } 
+    }
     else
     {
         LOG("Failed set solution threshold\n");
@@ -1300,7 +1300,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto startTime = steady_clock::now();
 
         qc->sendData((uint8_t*)&queryTimeMsg, queryTimeMsg.header.size());
-        
+
         SpecialCommandSendTime response;
         try
         {
@@ -1309,12 +1309,12 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         catch (std::logic_error)
         {
             memset(&response, 0, sizeof(SpecialCommandSendTime));
-        }        
-        
+        }
+
         auto endTime = steady_clock::now();
         auto nowLocal = system_clock::now();
 
-        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF)) 
+        if ((response.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF) != (queryTimeMsg.cmd.everIncreasingNonceAndCommandType & 0xFFFFFFFFFFFFFF))
         {
             LOG("Failed to query node time!\n");
             return;
@@ -1365,7 +1365,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         memcpy(sendTimeMsg.signature, signature, 64);
 
         auto startTime = steady_clock::now();
-        
+
         qc->sendData((uint8_t*)&sendTimeMsg, sendTimeMsg.header.size());
 
         SpecialCommandSendTime response;
@@ -1373,7 +1373,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         {
             response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         }
-        catch (std::logic_error) 
+        catch (std::logic_error)
         {
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }
@@ -1381,7 +1381,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         auto endTime = steady_clock::now();
         auto nowLocal = system_clock::now();
 
-        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType) 
+        if (response.everIncreasingNonceAndCommandType != sendTimeMsg.cmd.everIncreasingNonceAndCommandType)
         {
             LOG("Failed to set node time!\n");
             return;
@@ -1507,8 +1507,8 @@ BroadcastComputors readComputorListFromFile(const char* fileName)
     if (verify(arbPubkey, digest, result.computors.signature))
     {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } 
-    else 
+    }
+    else
     {
         LOG("Computor list is NOT verified\n");
     }
@@ -1573,8 +1573,8 @@ void getComputorListToFile(const char* nodeIp, const int nodePort, const char* f
     if (verify(arbPubkey, digest, bc.computors.signature))
     {
         LOG("Computor list is VERIFIED (signed by ARBITRATOR)\n");
-    } 
-    else 
+    }
+    else
     {
         LOG("Computor list is NOT verified\n");
     }
@@ -1590,7 +1590,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
     try
     {
         qc = make_qc(nodeIp, nodePort);
-    } 
+    }
     catch (std::logic_error)
     {
         return result;
@@ -1908,7 +1908,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
-        if (extraData[i].vecU8.size() == 848)
+        if (extraData[i].vecU8.size() == 848 && txs[i].inputType == VOTE_COUNTER_INPUT_TYPE)
         {
             int comp_idx = requestedTick % 676;
             if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
@@ -1929,6 +1929,62 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                 if (votes[comp_idx] != 0)
                 {
                     LOG("Invalid comp votes\n");
+                }
+            }
+        }
+    }
+}
+
+void getCustomMiningSharesCountTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName)
+{
+    BroadcastComputors bc;
+    {
+        FILE* f = fopen(compFileName, "rb");
+        if (fread(&bc, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors))
+        {
+            LOG("Failed to read comp list\n");
+            fclose(f);
+            return;
+        }
+        fclose(f);
+    }
+    auto qc = make_qc(nodeIp, nodePort);
+    std::vector<Transaction> txs;
+    std::vector<TxhashStruct> txHashesFromTick;
+    std::vector<extraDataStruct> extraData;
+    std::vector<SignatureStruct> signatureStruct;
+    getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    unsigned int customminingSharesCount[676];
+    int nTx = txs.size();
+    LOG("Finding in %d transactions\n", nTx);
+    for (int i = 0; i < nTx; i++)
+    {
+        if (txs[i].inputType == CUSTOM_MINING_SHARE_COUNTER_INPUT_TYPE)
+        {
+            int comp_idx = -1;
+            // Find the computor index
+            for (int k = 0; k < NUMBER_OF_COMPUTORS; k++)
+            {
+                if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[k], 32) == 0)
+                {
+                    comp_idx = k;
+                }
+            }
+
+            if (comp_idx >= 0)
+            {
+                LOG("Report of %s\n", indexToAlphabet(comp_idx).c_str());
+                uint8_t* data = extraData[i].vecU8.data();
+                for (int j = 0; j < NUMBER_OF_COMPUTORS; j++)
+                {
+                    customminingSharesCount[j] = extract10Bit(data, j);
+                    auto alphabet = indexToAlphabet(j);
+                    LOG("%s: %u\n", alphabet.c_str(), customminingSharesCount[j]);
+                }
+
+                if (customminingSharesCount[comp_idx] != 0)
+                {
+                    LOG("Invalid comp share count\n");
                 }
             }
         }
