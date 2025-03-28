@@ -329,6 +329,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getVoteCounterTransaction(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
             break;
+        case GET_CUSTOM_MINING_SHARES_COUNTER_TX:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getCustomMiningSharesCountTransaction(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
+            break;
         case SYNC_TIME:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
