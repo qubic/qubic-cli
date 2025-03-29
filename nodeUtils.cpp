@@ -1990,3 +1990,37 @@ void getCustomMiningSharesCountTransaction(const char* nodeIp, const int nodePor
         }
     }
 }
+
+void dumpCustomMiningShareToCSV(const char* input, const char* output)
+{
+    RevenueScore customMiningRev;
+
+    FILE *file = fopen(input, "rb");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Read the old reveneue score
+    fread((char*)&customMiningRev, sizeof(RevenueScore), 1, file);
+
+    fclose(file);
+
+    file = fopen(output, "w");
+    if (!file) {
+        perror("Error opening file");
+        exit(EXIT_FAILURE);
+    }
+
+    // Write header (optional)
+    fprintf(file, "Index,OldFinalScore,CustomMiningScore\n");
+
+    // Write data
+    for (int i = 0; i < NUMBER_OF_COMPUTORS; i++) {
+        fprintf(file, "%d,%llu,%llu\n", i, customMiningRev._oldFinalScore[i], customMiningRev._customMiningScore[i]);
+    }
+
+    fclose(file);
+    printf("CSV file '%s' written successfully.\n", output);
+
+}

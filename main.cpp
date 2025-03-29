@@ -244,6 +244,10 @@ int run(int argc, char* argv[])
             sanityCheckValidString(g_dump_binary_file_output);
             dumpContractToCSV(g_dump_binary_file_input, g_dump_binary_contract_id, g_dump_binary_file_output);
             break;
+        case DUMP_CUSTOM_MINING_FILE:
+            sanityFileExist(g_dump_binary_file_input);
+            dumpCustomMiningShareToCSV(g_dump_binary_file_input, g_dump_binary_file_output);
+            break;
         case PRINT_QX_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printQxFee(g_nodeIp, g_nodePort);

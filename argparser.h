@@ -686,6 +686,16 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-dumpcustomminingfile") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = DUMP_CUSTOM_MINING_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if (strcmp(argv[i], "-makeipobid") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
