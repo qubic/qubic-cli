@@ -115,6 +115,7 @@ enum COMMAND
     SET_LOGGING_MODE = 104,
     TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
     GET_CUSTOM_MINING_SHARES_COUNTER_TX = 106,
+    DUMP_CUSTOM_MINING_FILE = 107,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -945,3 +946,10 @@ struct CustomMiningSharesCountTransaction : public Transaction
     unsigned char packedScore[CUSTOM_MINING_SHARES_COUNT_SIZE_IN_BYTES];
     unsigned char signature[SIGNATURE_SIZE];
 };
+
+struct RevenueScore
+{
+    unsigned long long _oldFinalScore[NUMBER_OF_COMPUTORS]; // old final score
+    unsigned long long _customMiningScore[NUMBER_OF_COMPUTORS]; // the new score with customming
+};
+
