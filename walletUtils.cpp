@@ -326,7 +326,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint16_t txType,
     uint64_t amount,
     int extraDataSize,
-    const uint8_t* extraData,
+    const void* extraData,
     uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -360,7 +360,8 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     packetTransaction.inputType = txType;
     packetTransaction.inputSize = extraDataSize;
 
-    memcpy(packetInputData, extraData, extraDataSize);
+    if (extraDataSize)
+        memcpy(packetInputData, extraData, extraDataSize);
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize,
@@ -376,7 +377,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
         32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
-    printReceipt(packetTransaction, txHash, extraData);
+    printReceipt(packetTransaction, txHash, (uint8_t*)extraData);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
     LOG("to check your tx confirmation status\n");
 }
