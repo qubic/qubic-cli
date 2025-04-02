@@ -206,7 +206,6 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amount;
-    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = txTick;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = 0;
@@ -231,6 +230,7 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     if (waitUntilFinish)
     {
         LOG("Waiting for tick:\n");
+        uint32_t currentTick = getTickNumberFromNode(qc);
         while (currentTick <= packet.transaction.tick)
         {
             LOG("%d/%d\n", currentTick, packet.transaction.tick);
