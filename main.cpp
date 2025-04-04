@@ -623,7 +623,7 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            testBidInIpoThroughContract(g_nodeIp, g_nodePort, g_paramString1, g_seed, g_ipo_contract_index, g_make_ipo_bid_price_per_share, g_make_ipo_bid_number_of_share, g_offsetScheduledTick);
+            testBidInIpoThroughContract(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_ipo_contract_index, g_make_ipo_bid_price_per_share, g_make_ipo_bid_number_of_share, g_offsetScheduledTick);
             break;
         }
         default:

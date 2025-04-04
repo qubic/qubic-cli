@@ -422,12 +422,12 @@ void testGetIncomingTransferAmounts(
         exit(1);
     }
 
-    LOG("incoming standardTransactionAmount:  %ll\n", output.standardTransactionAmount);
-    LOG("incoming procedureTransactionAmount: %ll\n", output.procedureTransactionAmount);
-    LOG("incoming qpiTransferAmount: %ll\n", output.qpiTransferAmount);
-    LOG("incoming qpiDistributeDividendsAmount: %ll\n", output.qpiDistributeDividendsAmount);
-    LOG("incoming revenueDonationAmount: %ll\n", output.revenueDonationAmount);
-    LOG("incoming ipoBidRefundAmount: %ll\n", output.ipoBidRefundAmount);
+    LOG("incoming standardTransactionAmount:  %lld\n", output.standardTransactionAmount);
+    LOG("incoming procedureTransactionAmount: %lld\n", output.procedureTransactionAmount);
+    LOG("incoming qpiTransferAmount: %lld\n", output.qpiTransferAmount);
+    LOG("incoming qpiDistributeDividendsAmount: %lld\n", output.qpiDistributeDividendsAmount);
+    LOG("incoming revenueDonationAmount: %lld\n", output.revenueDonationAmount);
+    LOG("incoming ipoBidRefundAmount: %lld\n", output.ipoBidRefundAmount);
 }
 
 void testBidInIpoThroughContract(
