@@ -446,7 +446,11 @@ void testBidInIpoThroughContract(
         uint32_t ipoContractIndex;
         int64_t pricePerShare;
         uint16_t numberOfShares;
-    } input = {contractIndexToBidFor, (int64_t)pricePerShare, numberOfShares};
+    } input;
+    memset(&input, 0, sizeof(input));
+    input.ipoContractIndex = contractIndexToBidFor;
+    input.pricePerShare = (int64_t)pricePerShare;
+    input.numberOfShares = numberOfShares;
 
     makeContractTransaction(nodeIp, nodePort, seed, contractIndexToBidThrough,
         TESTEXBC_QPI_BID_IN_IPO, 0, sizeof(input), &input, scheduledTickOffset);

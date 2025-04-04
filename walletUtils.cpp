@@ -456,6 +456,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
         ContractIPOBid ipo;
         unsigned char signature[64];
     } packet;
+    memset(&packet.ipo, 0, sizeof(packet.ipo));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;
