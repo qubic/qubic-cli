@@ -253,6 +253,11 @@ Command:
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
 	-testqpifunctionsoutputpast
 		Test that output of qpi functions matches TickData and quorum tick votes for the last 15 ticks. Requires the TESTEXA SC to be enabled.
+    -testgetincomingtransferamounts <B_OR_C>
+        Get incoming transfer amounts from either TESTEXB ("B") or TESTEXC ("C"). Requires the TESTEXB and TESTEXC SCs to be
+enabled.
+    -testbidinipothroughcontract <B_OR_C> <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>
+        Bid in an IPO either as TESTEXB ("B") or as TESTEXC ("C"). Requires the TESTEXB and TESTEXC SCs to be enabled.
 
 ```
 
