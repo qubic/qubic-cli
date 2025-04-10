@@ -631,6 +631,16 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-getcustomminingsharescountertx") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = GET_CUSTOM_MINING_SHARES_COUNTER_TX;
+            g_requestedFileName = argv[i+1];
+            g_requestedTickNumber = charToNumber(argv[i+2]);
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if (strcmp(argv[i], "-sendcustomtransaction") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
@@ -672,6 +682,16 @@ void parseArgument(int argc, char** argv)
             g_dump_binary_contract_id = charToNumber(argv[i+2]);
             g_dump_binary_file_output = argv[i+3];
             i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-dumpcustomminingfile") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = DUMP_CUSTOM_MINING_FILE;
+            g_dump_binary_file_input = argv[i+1];
+            g_dump_binary_file_output = argv[i+2];
+            i+=3;
             CHECK_OVER_PARAMETERS
             break;
         }
@@ -1505,7 +1525,7 @@ void parseArgument(int argc, char** argv)
         /**************************
          **** TESTING COMMANDS ****
          **************************/
-        
+
         if (strcmp(argv[i], "-testqpifunctionsoutput") == 0)
         {
             g_cmd = TEST_QPI_FUNCTIONS_OUTPUT;

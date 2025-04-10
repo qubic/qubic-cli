@@ -114,10 +114,12 @@ enum COMMAND
     TEST_QPI_FUNCTIONS_OUTPUT = 103,
     SET_LOGGING_MODE = 104,
     TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
+    GET_CUSTOM_MINING_SHARES_COUNTER_TX = 106,
+    DUMP_CUSTOM_MINING_FILE = 107,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
-struct RequestResponseHeader 
+struct RequestResponseHeader
 {
 private:
     uint8_t _size[3];
@@ -637,7 +639,7 @@ struct QxFees_output
     static constexpr unsigned char type()
     {
         return RespondContractFunction::type();
-    }    
+    }
 };
 struct GetSendToManyV1Fee_output
 {
@@ -933,3 +935,21 @@ struct FileFragmentTransactionPrefix : public Transaction
     unsigned long long fragmentIndex;
     uint8_t prevFileFragmentTransactionDigest[32];
 };
+
+struct CustomMiningSharesCountTransaction : public Transaction
+{
+    static constexpr unsigned long long CUSTOM_MINING_SHARES_COUNT_SIZE_IN_BYTES = 848;
+    static constexpr unsigned char transactionType()
+    {
+        return 8; // TODO: Set actual value
+    }
+    unsigned char packedScore[CUSTOM_MINING_SHARES_COUNT_SIZE_IN_BYTES];
+    unsigned char signature[SIGNATURE_SIZE];
+};
+
+struct RevenueScore
+{
+    unsigned long long _oldFinalScore[NUMBER_OF_COMPUTORS]; // old final score
+    unsigned long long _customMiningScore[NUMBER_OF_COMPUTORS]; // the new score with customming
+};
+
