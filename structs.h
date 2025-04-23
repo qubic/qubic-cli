@@ -400,7 +400,7 @@ struct Asset
             char padding[1];
             unsigned short managingContractIndex;
             unsigned int issuanceIndex;
-            long long numberOfUnits;
+            long long numberOfShares;
         } ownership;
 
         struct
@@ -410,7 +410,7 @@ struct Asset
             char padding[1];
             unsigned short managingContractIndex;
             unsigned int ownershipIndex;
-            long long numberOfUnits;
+            long long numberOfShares;
         } possession;
     } varStruct;
 };

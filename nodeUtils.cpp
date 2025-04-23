@@ -1682,7 +1682,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
                                + "," + std::to_string(i) + ","
                                + std::to_string(asset[i].varStruct.ownership.managingContractIndex) + "," + asset_name
                                + "," + issuerID
-                               + "," + std::to_string(asset[i].varStruct.ownership.numberOfUnits) + "\n";
+                               + "," + std::to_string(asset[i].varStruct.ownership.numberOfShares) + "\n";
             fwrite(line.c_str(), 1, line.size(), f);
         }
         if (asset[i].varStruct.ownership.type == POSSESSION)
@@ -1697,7 +1697,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
             int contract_index = asset[i].varStruct.possession.managingContractIndex;
             std::string str_owner_index = std::to_string(owner_index);
             std::string str_contract_index = std::to_string(contract_index);
-            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
+            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfShares);
             {
                 // get asset name
                 int issuance_index = asset[owner_index].varStruct.ownership.issuanceIndex;
@@ -1722,7 +1722,7 @@ void dumpUniverseToCSV(const char* input, const char* output){
             std::string str_index = std::to_string(i);
             std::string str_owner_index = std::to_string(0);
             std::string str_contract_index = std::to_string(1); // don't know how to get this yet
-            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfUnits);
+            std::string str_amount = std::to_string(asset[i].varStruct.possession.numberOfShares);
             {
                 // get asset name
                 memset(buffer, 0, 128);
