@@ -1448,6 +1448,48 @@ void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, ch
     }
 }
 
+void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    std::string compChatStr(compChatMsg);
+    char rand_str[5] = {0};
+    rand_str[0] = 'a' + (getRand32() % 26);
+    rand_str[1] = 'a' + (getRand32() % 26);
+    rand_str[2] = 'a' + (getRand32() % 26);
+    rand_str[3] = 'a' + (getRand32() % 26);
+    compChatStr = "DISCORD" + std::string(rand_str) + compChatStr;
+    std::vector<uint8_t> vData;
+    vData.resize(sizeof(RequestResponseHeader) + 32*3+ SIGNATURE_SIZE + compChatStr.size());
+    RequestResponseHeader* header = (RequestResponseHeader*)vData.data();
+    uint8_t* signature_ptr = (vData.data() + vData.size() - 64);
+    header->setSize(vData.size());
+    header->zeroDejavu();
+    header->setType(BROADCAST_MESSAGE);
+    uint8_t* ptr = vData.data() + sizeof(RequestResponseHeader);
+    memcpy(ptr, sourcePublicKey, 32);
+    ptr += 32;
+    memset(ptr, 0, 32);
+    ptr += 32;
+    memset(ptr, 0, 32);
+    ptr += 32;
+    memcpy(ptr, compChatStr.data(), compChatStr.size());
+
+    KangarooTwelve(vData.data() + sizeof(RequestResponseHeader),
+                   vData.size() - sizeof(RequestResponseHeader) - SIGNATURE_SIZE,
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature_ptr);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData(vData.data(), vData.size());
+    LOG("Broadcasted message to network\n");
+}
+
 BroadcastComputors readComputorListFromFile(const char* fileName)
 {
     BroadcastComputors result;

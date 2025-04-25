@@ -35,6 +35,7 @@ char* g_file_path = nullptr;
 char* g_compress_tool = nullptr;
 uint32_t g_contract_index = 0;
 char g_loggingMode = 0;
+char* g_compChatString = nullptr;
 
 
 uint32_t g_requestedTickNumber = 0;

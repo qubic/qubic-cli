@@ -27,6 +27,12 @@ static void rand32(uint32_t* r)
     std::uniform_int_distribution<uint32_t> distribution(0,UINT32_MAX);
     *r = distribution(generator);
 }
+static uint32_t getRand32()
+{
+    uint32_t r;
+    rand32(&r);
+    return r;
+}
 
 static void rand64(uint64_t* r)
 {

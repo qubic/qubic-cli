@@ -340,6 +340,11 @@ int run(int argc, char* argv[])
             sanityCheckLoggingMode(g_loggingMode);
             setLoggingMode(g_nodeIp, g_nodePort, g_seed, g_loggingMode);
             break;
+        case COMP_CHAT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            broadcastCompChat(g_nodeIp, g_nodePort, g_seed, g_compChatString);
+            break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
