@@ -281,6 +281,13 @@ struct CurrentSystemInfo
     // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
     unsigned long long currentEntityBalanceDustThreshold;
 
+    unsigned int targetTickVoteSignature;
+    unsigned long long _reserve0;
+    unsigned long long _reserve1;
+    unsigned long long _reserve2;
+    unsigned long long _reserve3;
+    unsigned long long _reserve4;
+
     static constexpr unsigned char type()
     {
         return RESPOND_SYSTEM_INFO;
