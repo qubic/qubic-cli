@@ -59,7 +59,7 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
         recvByte = qc->receiveData(tmp, 1024);
     }
     uint8_t* data = buffer.data();
-    recvByte = buffer.size();
+    recvByte = int(buffer.size());
     int ptr = 0;
     while (ptr < recvByte)
     {
@@ -173,7 +173,7 @@ bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signatur
     memcpy(buffer.data(), &tx, sizeof(Transaction));
     if (extraData && tx.inputSize) memcpy(buffer.data() + sizeof(Transaction), extraData, tx.inputSize);
     KangarooTwelve(buffer.data(),
-                   buffer.size(),
+                   uint32_t(buffer.size()),
                    digest,
                    32);
     return verify(tx.sourcePublicKey, digest, signature);
@@ -307,7 +307,7 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     temp_packet.header.zeroDejavu();
     temp_packet.header.setType(BROADCAST_TRANSACTION);
     memcpy(packet.data(), &temp_packet.header, sizeof(RequestResponseHeader));
-    qc->sendData(packet.data(), packet.size());
+    qc->sendData(packet.data(), uint32_t(packet.size()));
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
                    sizeof(Transaction) + extraDataSize + 64,
@@ -349,7 +349,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint8_t* packetInputData = &packet[sizeof(RequestResponseHeader) + sizeof(Transaction)];
     uint8_t* packetSignature = packetInputData + extraDataSize;
 
-    packetHeader.setSize(packet.size());
+    packetHeader.setSize(uint32_t(packet.size()));
     packetHeader.zeroDejavu();
     packetHeader.setType(BROADCAST_TRANSACTION);
 
@@ -368,7 +368,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
         32);
     sign(subseed, sourcePublicKey, digest, packetSignature);
 
-    qc->sendData(packet.data(), packet.size());
+    qc->sendData(packet.data(), int(packet.size()));
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize + 64,
@@ -396,10 +396,10 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     RequestContractFunction& packetRcf = (RequestContractFunction&)packet[sizeof(RequestResponseHeader)];
     uint8_t* packetInputData = (inputSize) ? &packet[sizeof(RequestResponseHeader) + sizeof(RequestContractFunction)] : nullptr;
 
-    packetHeader.setSize(packet.size());
+    packetHeader.setSize(uint32_t(packet.size()));
     packetHeader.randomizeDejavu();
     packetHeader.setType(RequestContractFunction::type());
-    packetRcf.inputSize = inputSize;
+    packetRcf.inputSize = uint16_t(inputSize);
     packetRcf.inputType = funcNumber;
     packetRcf.contractIndex = contractIndex;
     if (inputSize)
@@ -407,7 +407,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     qc->sendData(&packet[0], packetHeader.size());
 
     std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
-    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), buffer.size());
+    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() && 
@@ -503,7 +503,7 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     {
         result = qc->receivePacketWithHeaderAs<RespondContractIPO>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(RespondContractIPO));
     }

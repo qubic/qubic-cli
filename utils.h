@@ -1,5 +1,4 @@
 #pragma once
-
 #include <random>
 #include <cstring>
 #include <string>
@@ -50,7 +49,12 @@ static inline std::string strtok2string(char* s, const char* delimiter)
 static inline std::vector<std::string> splitString(const char* str, const char* delimiter)
 {
     std::vector<std::string> vec;
+#ifdef _MSC_VER
+    char* wStr = _strdup(str);
+#else
     char* wStr = strdup(str);
+#endif
+    
     const char* res = strtok(wStr, delimiter);
     while (res)
     {

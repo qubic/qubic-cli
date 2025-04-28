@@ -286,6 +286,13 @@ void printSetProposalHelp()
 	std::cout << std::endl;
 }
 
+#ifdef _MSC_VER
+#define STRDUP(x) _strdup(x)
+#else
+#define STRDUP(x) strdup(x)
+#endif
+
+
 bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 {
 	memset(&p, 0, sizeof(p));
@@ -297,12 +304,12 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	std::cout << "Parsing proposal string \"" << proposalString << "\" ..." << std::endl;
 
 	// split proposal string in main parts
-	char* writableProposalString = strdup(proposalString);
+	char* writableProposalString = STRDUP(proposalString);
 	std::string typeClassStr = strtok2string(writableProposalString, "|");
 	std::string proposalDataStr = strtok2string(NULL, "|");
 	std::string url = strtok2string(NULL, "|");
 	free(writableProposalString);
-	writableProposalString = strdup(proposalDataStr.c_str());
+	writableProposalString = STRDUP(proposalDataStr.c_str());
 	std::string numberOptionStr = strtok2string(writableProposalString, ":");
 	proposalDataStr = strtok2string(NULL, ":");
 	free(writableProposalString);
@@ -356,7 +363,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	else if (typeClass == ProposalTypes::Class::Transfer)
 	{
 		// split proposal string in main parts
-		writableProposalString = strdup(proposalDataStr.c_str());
+		writableProposalString = STRDUP(proposalDataStr.c_str());
 		std::string dstIdentity = strtok2string(writableProposalString, ",");
 		std::cout << "Checking destination identity " << dstIdentity << " ...\n";
 		sanityCheckIdentity(dstIdentity.c_str());

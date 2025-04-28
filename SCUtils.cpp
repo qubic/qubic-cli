@@ -56,7 +56,7 @@ void dumpQxContractToCSV(const char* input, const char* output)
     uint8_t povID[32];
     char buffer[128];
     char assetNameBuffer[8];
-    for (int64_t elementIdx = 0; elementIdx < qxState->_entityOrders.population(); elementIdx++)
+    for (uint64_t elementIdx = 0; elementIdx < qxState->_entityOrders.population(); elementIdx++)
     {
         if (elementIdx > 0)
         {

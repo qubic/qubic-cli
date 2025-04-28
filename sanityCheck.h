@@ -213,7 +213,7 @@ static void sanityCheckMainAuxStatus(const char* str)
         LOG("Invalid MAIN/AUX string\n");
         exit(1);
     }
-    int len = strlen(str);
+    int len = int(strlen(str));
     if (len == 4)
     {
         if (memcmp(str, "MAIN", 4) != 0)

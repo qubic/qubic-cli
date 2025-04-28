@@ -268,7 +268,7 @@ int run(int argc, char* argv[])
         case QUOTTERY_JOIN_BET:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
+            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, int(g_quottery_number_bet_slot), g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
             break;
         case QUOTTERY_GET_BET_DETAIL:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -359,7 +359,7 @@ int run(int argc, char* argv[])
         case QUTIL_SEND_TO_MANY_BENCHMARK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, g_qutil_sendtomanybenchmark_destination_count, g_qutil_sendtomanybenchmark_num_transfers_each, g_offsetScheduledTick);
+            qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, uint32_t(g_qutil_sendtomanybenchmark_destination_count), uint32_t(g_qutil_sendtomanybenchmark_num_transfers_each), g_offsetScheduledTick);
             break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);

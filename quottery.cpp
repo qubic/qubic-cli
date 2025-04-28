@@ -50,7 +50,7 @@ void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result)
     {
         result = qc->receivePacketWithHeaderAs<qtryBasicInfo_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(qtryBasicInfo_output));
     }
@@ -131,7 +131,7 @@ static void accumulatedDay(int month, uint64_t& res)
     }
 }
 
-static int dateCompare(uint32_t& A, uint32_t& B, int& i)
+static int dateCompare(uint32_t& A, uint32_t& B, uint32_t& i)
 {
     if (A == B) return 0;
     if (A < B) return -1;
@@ -139,7 +139,7 @@ static int dateCompare(uint32_t& A, uint32_t& B, int& i)
 }
 
 // return diff in number of second, A must be smaller than or equal B to have valid value
-static void diffDate(uint32_t& A, uint32_t& B, int& i, uint64_t& dayA, uint64_t& dayB, uint64_t& res)
+static void diffDate(uint32_t& A, uint32_t& B, uint32_t& i, uint64_t& dayA, uint64_t& dayB, uint64_t& res)
 {
     if (dateCompare(A, B, i) >= 0)
     {
@@ -200,7 +200,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     memcpy(packet.ibi.betDesc, buff, 32);
     promptStdin("Enter number of options (valid [2-8])", buff, 1);
     packet.ibi.numberOfOption = buff[0] - 48;
-    for (int i = 0; i < packet.ibi.numberOfOption; i++)
+    for (uint32_t i = 0; i < packet.ibi.numberOfOption; i++)
     {
         char buff2[128] = {0};
         sprintf(buff2, "Enter option #%d description (32 chars)", i);
@@ -277,7 +277,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         uint32_t curDate;
         packQuotteryDate(year, month, day, hour, minute, second, curDate);
         uint64_t diffhour = 0, tmp0, tmp1;
-        int tmp;
+        uint32_t tmp;
         diffDate(curDate, packet.ibi.endDate, tmp, tmp0, tmp1, diffhour);
         diffhour = (diffhour+3599)/3600;
         packet.transaction.amount = packet.ibi.maxBetSlotPerOption * packet.ibi.numberOfOption * quotteryBasicInfo.feePerSlotPerHour * diffhour;
@@ -392,7 +392,7 @@ void quotteryGetBetInfo(const char* nodeIp, const int nodePort, int betId, getBe
     {
         result = qc->receivePacketWithHeaderAs<getBetInfo_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(getBetInfo_output));
     }
@@ -424,7 +424,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId)
         memcpy(buf, result.betDesc, 32);
         LOG("Bet descriptions: %s\n", buf);
     }
-    for (int i = 0; i < result.nOption; i++)
+    for (uint32_t i = 0; i < result.nOption; i++)
     {
         memset(buf, 0 , 128);
         memcpy(buf, result.optionDesc + i * 32, 32);
@@ -432,7 +432,7 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId)
     }
     {
         LOG("Current state:\n");
-        for (int i = 0; i < result.nOption; i++)
+        for (uint32_t i = 0; i < result.nOption; i++)
         {
             LOG("Option #%d: %d | ", i, result.currentBetState[i]);
         }
@@ -497,7 +497,7 @@ bool quotteryGetBetOptionDetail(const char* nodeIp, const int nodePort, uint32_t
         result = qc->receivePacketWithHeaderAs<getBetOptionDetail_output>();
         return true;
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(getBetOptionDetail_output));
         return false;
@@ -547,7 +547,7 @@ void quotteryGetActiveBet(const char* nodeIp, const int nodePort, getActiveBet_o
     {
         result = qc->receivePacketWithHeaderAs<getActiveBet_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(getActiveBet_output));
     }
@@ -560,7 +560,7 @@ void quotteryPrintActiveBet(const char* nodeIp, const int nodePort)
     memset(&result, 0, sizeof(getActiveBet_output));
     quotteryGetActiveBet(nodeIp, nodePort, result);
     LOG("List of active bet (%d):\n", result.count);
-    for (int i = 0; i < result.count; i++)
+    for (uint32_t i = 0; i < result.count; i++)
     {
         LOG("%u, ", result.betId[i]);
     }
@@ -589,7 +589,7 @@ void quotteryGetActiveBetByCreator(const char* nodeIp, const int nodePort, getAc
     {
         result = qc->receivePacketWithHeaderAs<getActiveBetByCreator_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(getActiveBetByCreator_output));
     }
@@ -603,7 +603,7 @@ void quotteryPrintActiveBetByCreator(const char* nodeIp, const int nodePort, con
     memset(&result, 0, sizeof(getActiveBet_output));
     quotteryGetActiveBetByCreator(nodeIp, nodePort, result, creatorPubkey);
     LOG("List of active bet (%d):\n", result.count);
-    for (int i = 0; i < result.count; i++)
+    for (uint32_t i = 0; i < result.count; i++)
     {
         LOG("%u, ", result.betId[i]);
     }
