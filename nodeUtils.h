@@ -27,7 +27,9 @@ void dumpSpectrumToCSV(const char* input, const char* output);
 void dumpUniverseToCSV(const char* input, const char* output);
 void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed);
 void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName);
+void getCustomMiningSharesCountTransaction(const char* nodeIp, const int nodePort, unsigned int requestedTick, const char* compFileName);
 void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, const char* seed, unsigned int tickOffset, const char* compressTool = nullptr);
+void dumpCustomMiningShareToCSV(const char* input, const char* output);
 // remote tools:
 void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std::string mode0, std::string mode1);
 void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold);
