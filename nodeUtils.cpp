@@ -573,6 +573,13 @@ bool verifyVoteWithSalt(const Tick&A,
         return false;
     }
     bool should_check_txBodyDigest = isArrayZero(A.expectedNextTickTransactionDigest, 32) == isArrayZero(nextTickTransactionDigest, 32);
+    if (!isArrayZero(A.expectedNextTickTransactionDigest, 32) && !isArrayZero(nextTickTransactionDigest, 32))
+    {
+        if (A.expectedNextTickTransactionDigest != nextTickTransactionDigest)
+        {
+            should_check_txBodyDigest = false;
+        }
+    }
     if(should_check_txBodyDigest){
         memset(saltedData+32, 0, 32);
         memcpy(saltedData+32, &prevTransactionBodyDigest, 4);
@@ -734,14 +741,21 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
                 max_id = i;
             }
         }
-        auto vote_next = uniqueVoteNext[max_id];
-        getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
-                       vote_next.prevResourceTestingDigest,
-                       vote_next.prevSpectrumDigest,
-                       vote_next.prevUniverseDigest,
-                       vote_next.prevComputerDigest,
-                       vote_next.prevTransactionBodyDigest,
-                       vote_next.transactionDigest);
+        if (voteIndicesNext[max_id].size() >= 451)
+        {
+            auto vote_next = uniqueVoteNext[max_id];
+            getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
+                vote_next.prevResourceTestingDigest,
+                vote_next.prevSpectrumDigest,
+                vote_next.prevUniverseDigest,
+                vote_next.prevComputerDigest,
+                vote_next.prevTransactionBodyDigest,
+                vote_next.transactionDigest);
+        }
+        else
+        {
+            LOG("WARNING: No quorum on tick %u (maximum aligned vote: %d). Skip salt check...", requestedTick + 1, int(voteIndicesNext[max_id].size()));
+        }
     }
 
     LOG("Number of unique votes: %d\n", uniqueVote.size());
