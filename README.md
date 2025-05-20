@@ -197,33 +197,85 @@ Command:
 		Get the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC
 
 [QVAULT COMMANDS]
-	-qvaultsubmitauthaddress <NEW_ADDRESS>
-		Submit the new authaddress using multisig address.
-	-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>
-		Change the authaddress using multisig address. <NUMBER_OF_CHANGED_ADDRESS> is the one of (1, 2, 3).
-	-qvaultsubmitfees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>
-		Submit the new permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. 
-	-qvaultchangefees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>
-		Change the permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. Get the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.
-	-qvaultsubmitreinvestingaddress <NEW_ADDRESS>
-		Submit the new reinvesting address using multisig address. 
-	-qvaultchangereinvestingaddress <NEW_ADDRESS>
-		Change the address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitreinvestingaddress command.
-	-qvaultsubmitadminaddress <NEW_ADDRESS>
-		Submit the admin address using multisig address.
-	-qvaultchangeadminaddress <NEW_ADDRESS>
-		Change the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.
+	-qvaultstake <AMOUNT>
+		Stake the Qcap with <AMOUNT> amount
+	-qvaultunstake <AMOUNT>
+		Unstake the Qcap with <AMOUNT> amount
+	-qvaultsubmitgeneralproposal
+		Submit the general proposal
+	-qvaultsubmitquorumchangeproposal <NEW_QUORUM_PERMIllE>
+		Submit the quorum change proposal with new permille for quorum. it should be permille(0 ~ 1000) for sure. not percent
+	-qvaultsubmitipoproposal <IPO_CONTRACT_INDEX>
+		Submit the ipo proposal with <IPO_CONTRACT_INDEX>
+	-qvaultsubmitqearnproposal <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>
+		Submit the qearn proposal with <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCHES>
+		<AMOUNT_OF_QUBIC> - the amount per epoch, <NUMBER_OF_EPOCHES> - the number of epoches for locking
+	-qvaultsubmitfundproposal <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
+		Submit the fund proposal with <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
+		<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale
+	-qvaultsubmitmarketplaceproposal <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>
+		Submit the marketplace proposal with <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>
+		<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <ASSET_NAME> - the name of asset that want to sell to the SC
+		<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC
+	-qvaultsubmitpercentallocationproposal <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
+		Submit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
+		<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders
+	-qvaultsubmitmuslimproposal <SHARE_INDEX>
+		Submit the muslim proposal with <SHARE_INDEX>
+	-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
+		Vote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
+		<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B
+		<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0
+	-qvaultbuyqcap <AMOUNT_OF_QCAP> <PRICE_OF_QCAP>
+		Buy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap
+	-qvaulttransfersharemanagementrights <TOKEN_ISSUER> <TOKEN_NAME> <NUMBER_OF_TOKEN> <NEWMANAGING_CONTRACT_INDEX>
+		Transfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>
+	-qvaultsubmitmuslimid
+		Set your account as muslim id in the Qvault SC
+	-qvaultcancelmuslimid
+		Cancel your account from muslim id in the Qvault SC
 	-qvaultgetdata
-		Get the state data of smart contract. anyone can check the changes after using the any command.
-	-qvaultsubmitbannedaddress <NEW_ADDRESS>
-		Submit the banned address using multisig address.
-	-qvaultsavebannedaddress <NEW_ADDRESS>
-		Save the banned address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitbannedaddress command.
-	-qvaultsubmitunbannedaddress <NEW_ADDRESS>
-		Submit the unbanned address using multisig address.
-	-qvaultsaveunbannedaddress <NEW_ADDRESS>
-		Unban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.
-
+		Getting the state variables from the SC
+	-qvaultgetstakedamountandvotingpower <IDENTITY>
+		Getting the staked amount and voting power of <IDENTITY> from the SC
+	-qvaultgetgeneralproposal <PROPOSAL_ID>
+		Getting the general proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetquorumchangeproposal <PROPOSAL_ID>
+		Getting the quorum change proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetipoproposal <PROPOSAL_ID>
+		Getting the ipo proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetqearnproposal <PROPOSAL_ID>
+		Getting the qearn proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetfundproposal <PROPOSAL_ID>
+		Getting the fund proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetmarketplaceproposal <PROPOSAL_ID>
+		Getting the marketplace proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetallocationproposal <PROPOSAL_ID>
+		Getting the allocation proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetmuslimproposal <PROPOSAL_ID>
+		Getting the muslim proposal info of <PROPOSAL_ID> proposal
+	-qvaultgetidentitieshavingvotingpower <OFFSET> <COUNT>
+		Getting the identities having the voting power 
+		<OFFSET> - the point to read, <COUNT> - the number of fetching
+	-qvaultgetproposalcreationpower <IDENTITY>
+		Checking if the <IDENTITY> has the proposal creation power
+	-qvaultgetqcapburntamountinlastepoches <NUMBER_OF_EPOCH>
+		Getting the burnt qcap amount in the last <NUMBER_OF_EPOCH> epoches
+	-qvaultgetamounttobesoldperyear <YEAR>
+		Getting the amount to be sold per year
+	-qvaultgettotalrevenueinqcap
+		Getting the total revenue in Qcap
+	-qvaultgetrevenueinqcapperepoch <EPOCH>
+		Getting the revenue for Qcap in <EPOCH> epoch
+	-qvaultgetrevenuepershare <CONTRACT_INDEX>
+		Getting the revenue in share <CONTRACT_INDEX>
+	-qvaultgetamountofshareqvaulthold <ASSET_NAME> <ISSUER>
+		Getting the amount of share the SC hold
+	-qvaultgetnumberofholderandaverageamount
+		Getting the number of Qcap holder and average amount
+	-qvaultgetamountforqearninupcomingepoch <EPOCH>
+		Getting the amount that should be locked in Qearn SC in the <EPOCH>
+	
 [MSVAULT COMMANDS]
 	-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>
 			Register a vault. Vault's number of votes for proposal approval <REQUIRED_APPROVALS>, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.

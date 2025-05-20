@@ -473,58 +473,162 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qearnGetBurnedAndBoostedStatsPerEpoch(g_nodeIp, g_nodePort, g_qearn_getstats_epoch);
             break;
-        case QVAULT_SUBMIT_AUTH_ADDRESS:
+        case QVAULT_COMMAND_STAKE:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            sanityCheckSeed(g_seed);
+            stake(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_stake_amount);
             break;
-        case QVAULT_CHANGE_AUTH_ADDRESS:
+        case QVAULT_COMMAND_UNSTAKE:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            changeAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_numberOfChangedAddress);
+            sanityCheckSeed(g_seed);
+            unStake(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_stake_amount);
             break;
-        case QVAULT_SUBMIT_FEES:
+        case QVAULT_COMMAND_SUBMIT_GP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolder_fee, g_qvault_newreinvesting_fee, g_qvault_newdev_fee);
+            sanityCheckSeed(g_seed);
+            submitGP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
             break;
-        case QVAULT_CHANGE_FEES:
+        case QVAULT_COMMAND_SUBMIT_QCP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            changeFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolder_fee, g_qvault_newreinvesting_fee, g_qvault_newdev_fee);
+            sanityCheckSeed(g_seed);
+            submitQCP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_permille);
             break;
-        case QVAULT_SUBMIT_REINVESTING_ADDRESS:
+        case QVAULT_COMMAND_SUBMIT_IPOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitReinvestingAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            sanityCheckSeed(g_seed);
+            submitIPOP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_ipo_contract_index);
             break;
-        case QVAULT_CHANGE_REINVESTING_ADDRESS:
+        case QVAULT_COMMAND_SUBMIT_QEARNP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            changeReinvestingAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            sanityCheckSeed(g_seed);
+            submitQEarnP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_number_of_epoch);
             break;
-        case QVAULT_SUBMIT_ADMIN_ADDRESS:
+        case QVAULT_COMMAND_SUBMIT_FUNDP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitAdminAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            sanityCheckSeed(g_seed);
+            submitFundP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_price_of_qcap, g_qvault_amount_of_qcap);
             break;
-        case QVAULT_CHANGE_ADMIN_ADDRESS:
+        case QVAULT_COMMAND_SUBMIT_MKTP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            changeAdminAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            sanityCheckSeed(g_seed);
+            submitMKTP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_share_name, g_qvault_amount_of_qcap, g_qvault_index_of_share, g_qvault_amount_of_share);
             break;
-        case QVAULT_GET_DATA:
+        case QVAULT_COMMAND_SUBMIT_ALLOP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_team, g_qvault_burn, g_qvault_distribute);
+            break;
+        case QVAULT_COMMAND_SUBMIT_MSP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            submitMSP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_share_index);
+            break;
+        case QVAULT_COMMAND_VOTE_IN_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            voteInProposal(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_price_of_ipo, g_qvault_proposal_type, g_qvault_proposal_id, g_qvault_yes);
+            break;
+        case QVAULT_COMMAND_BUY_QCAP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            buyQcap(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qcap, g_qvault_price_of_qcap);
+            break;
+        case QVAULT_COMMAND_TRANSFER_SHARE_MANAGEMENT_RIGHTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            TransferShareManagementRights(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity, g_qvault_assetname, g_qvault_number_of_share, g_qvault_newmanagement_contract_index);
+            break;
+        case QVAULT_COMMAND_SUBMIT_MUSLIMID:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            submitMuslimId(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case QVAULT_COMMAND_CANCEL_MUSLIMID:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            cancelMuslimId(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            break;
+        case QVAULT_COMMAND_GETDATA:
             sanityCheckNode(g_nodeIp, g_nodePort);
             getData(g_nodeIp, g_nodePort);
             break;
-        case QVAULT_SUBMIT_BANNED_ADDRESS:
+        case QVAULT_COMMAND_GET_STAKED_AMOUNT_AND_VOTING_POWER:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitBannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            getStakedAmountAndVotingPower(g_nodeIp, g_nodePort, g_qvaultIdentity);
             break;
-        case QVAULT_SAVE_BANNED_ADDRESS:
+        case QVAULT_COMMAND_GET_GP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            saveBannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            getGP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
             break;
-        case QVAULT_SUBMIT_UNBANNED_ADDRESS:
+        case QVAULT_COMMAND_GET_QCP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            submitUnbannedannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity);
+            getQCP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
             break;
-        case QVAULT_SAVE_UNBANNED_ADDRESS:
+        case QVAULT_COMMAND_GET_IPOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            saveUnbannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvaultIdentity);
+            getIPOP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
             break;
+        case QVAULT_COMMAND_GET_QEARNP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getQEarnP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
+            break;
+        case QVAULT_COMMAND_GET_FUNDP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getFundP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
+            break;
+        case QVAULT_COMMAND_GET_MKTP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getMKTP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
+            break;
+        case QVAULT_COMMAND_GET_ALLOP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getAlloP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
+            break;
+        case QVAULT_COMMAND_GET_MSP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getMSP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
+            break;
+        case QVAULT_COMMAND_GET_IDENTITIES_HV_VT_PW:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getIdentitiesHvVtPw(g_nodeIp, g_nodePort, g_qvault_offset, g_qvault_count);
+            break;
+        case QVAULT_COMMAND_GET_PP_CREATION_POWER:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ppCreationPower(g_nodeIp, g_nodePort, g_qvaultIdentity);
+            break;
+        case QVAULT_COMMAND_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getQcapBurntAmountInLastEpoches(g_nodeIp, g_nodePort, g_qvault_number_of_epoch);
+            break;
+        case QVAULT_COMMAND_GET_AMOUNT_TO_BE_SOLD_PER_YEAR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getAmountToBeSoldPerYear(g_nodeIp, g_nodePort, g_qvault_year);
+            break;
+        case QVAULT_COMMAND_GET_TOTAL_REVENUE_IN_QCAP:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getTotalRevenueInQcap(g_nodeIp, g_nodePort);
+            break;
+        case QVAULT_COMMAND_GET_REVENUE_IN_QCAP_PER_EPOCH:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getRevenueInQcapPerEpoch(g_nodeIp, g_nodePort, g_qvault_epoch);
+            break;
+        case QVAULT_COMMAND_GET_REVENUE_PER_SHARE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getRevenuePerShare(g_nodeIp, g_nodePort, g_qvault_contract_index);
+            break;
+        case QVAULT_COMMAND_GET_AMOUNT_OF_SHARE_QVAULT_HOLD:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getAmountOfShareQvaultHold(g_nodeIp, g_nodePort, g_qvault_assetname, g_qvaultIdentity);
+            break;
+        case QVAULT_COMMAND_GET_NUMBER_OF_HOLDER_AND_AVG_AM:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getNumberOfHolderAndAvgAm(g_nodeIp, g_nodePort);
+            break;
+        case QVAULT_COMMAND_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            getAmountForQearnInUpcomingEpoch(g_nodeIp, g_nodePort, g_qvault_epoch);
+            break;
+
         // MSVAULT
         case MSVAULT_REGISTER_VAULT_CMD:
         {
