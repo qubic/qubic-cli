@@ -159,7 +159,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         //   rather than waiting for receipt of the full amount requested."
         // Microsoft docs:
         //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
-        //   return as much data as is currently available—up to the size of the buffer specified. [...]
+        //   return as much data as is currently availableï¿½up to the size of the buffer specified. [...]
         //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
         int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
         if (recvSz <= 0)
@@ -311,6 +311,26 @@ template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGet
 template qxGetEntityOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetEntityOrder_output>();
 // QVAULT
 template QVaultGetData_output QubicConnection::receivePacketWithHeaderAs<QVaultGetData_output>();
+template QvaultGetStakedAmountAndVotingPower_output QubicConnection::receivePacketWithHeaderAs<QvaultGetStakedAmountAndVotingPower_output>();
+template QvaultGetGP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetGP_output>();
+template QvaultGetQCP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetQCP_output>();
+template QvaultGetIPOP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetIPOP_output>();
+template QvaultGetQEarnP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetQEarnP_output>();
+template QvaultGetFundP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetFundP_output>();
+template QvaultGetMKTP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetMKTP_output>();
+template QvaultGetAlloP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetAlloP_output>();
+template QvaultGetMSP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetMSP_output>();
+template QvaultGetIdentitiesHvVtPw_output QubicConnection::receivePacketWithHeaderAs<QvaultGetIdentitiesHvVtPw_output>();
+template QvaultppCreationPower_output QubicConnection::receivePacketWithHeaderAs<QvaultppCreationPower_output>();
+template QvaultGetQcapBurntAmountInLastEpoches_output QubicConnection::receivePacketWithHeaderAs<QvaultGetQcapBurntAmountInLastEpoches_output>();
+template QvaultGetAmountToBeSoldPerYear_output QubicConnection::receivePacketWithHeaderAs<QvaultGetAmountToBeSoldPerYear_output>();
+template QvaultGetTotalRevenueInQcap_output QubicConnection::receivePacketWithHeaderAs<QvaultGetTotalRevenueInQcap_output>();
+template QvaultGetRevenueInQcapPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QvaultGetRevenueInQcapPerEpoch_output>();
+template QvaultGetRevenuePerShare_output QubicConnection::receivePacketWithHeaderAs<QvaultGetRevenuePerShare_output>();
+template QvaultGetAmountOfShareQvaultHold_output QubicConnection::receivePacketWithHeaderAs<QvaultGetAmountOfShareQvaultHold_output>();
+template QvaultGetNumberOfHolderAndAvgAm_output QubicConnection::receivePacketWithHeaderAs<QvaultGetNumberOfHolderAndAvgAm_output>();
+template QvaultGetAmountForQearnInUpcomingEpoch_output QubicConnection::receivePacketWithHeaderAs<QvaultGetAmountForQearnInUpcomingEpoch_output>();
+
 // QEARN
 template QEarnGetLockInfoPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetLockInfoPerEpoch_output>();
 template QEarnGetUserLockedInfo_output QubicConnection::receivePacketWithHeaderAs<QEarnGetUserLockedInfo_output>();
