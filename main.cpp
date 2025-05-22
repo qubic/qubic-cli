@@ -361,6 +361,34 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, uint32_t(g_qutil_sendtomanybenchmark_destination_count), uint32_t(g_qutil_sendtomanybenchmark_num_transfers_each), g_offsetScheduledTick);
             break;
+        case QUTIL_CREATE_POLL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidString(g_qutil_poll_name_str);
+            sanityCheckTxAmount(g_qutil_min_amount);
+            sanityCheckValidString(g_qutil_github_link_str);
+            sanityCheckValidString(g_qutil_comma_separated_asset_names);
+            sanityCheckValidString(g_qutil_comma_separated_asset_issuers);
+            qutilCreatePoll(g_nodeIp, g_nodePort, g_seed, g_qutil_poll_name_str, g_qutil_poll_type,
+                g_qutil_min_amount, g_qutil_github_link_str, g_qutil_comma_separated_asset_names,
+                g_qutil_comma_separated_asset_issuers, g_offsetScheduledTick);
+            break;
+        case QUTIL_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckTxAmount(g_qutil_vote_amount);
+            qutilVote(g_nodeIp, g_nodePort, g_seed, g_qutil_vote_poll_id, g_qutil_vote_amount,
+                g_qutil_vote_chosen_option, g_offsetScheduledTick);
+            break;
+        case QUTIL_GET_CURRENT_RESULT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetCurrentResult(g_nodeIp, g_nodePort, g_qutil_get_result_poll_id);
+            break;
+        case QUTIL_GET_POLLS_BY_CREATOR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_qutil_get_polls_creator_address);
+            qutilGetPollsByCreator(g_nodeIp, g_nodePort, g_qutil_get_polls_creator_address);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

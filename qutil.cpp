@@ -16,18 +16,6 @@
 
 constexpr int QUTIL_CONTRACT_ID = 4;
 
-enum qutilFunctionId
-{
-    GetSendToManyV1Fee = 1,
-};
-
-enum qutilProcedureId
-{
-    SendToManyV1 = 1,
-    BurnQubic = 2,
-    SendToManyBenchmark = 3,
-};
-
 struct SendToManyV1_input
 {
     uint8_t addresses[25][32];
@@ -291,4 +279,284 @@ void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+// **********************
+// *** Voting related ***
+// **********************
+
+// Helper function
+std::vector<std::string> split(const std::string& s, char delimiter) 
+{
+    std::vector<std::string> tokens;
+    std::string token;
+    std::istringstream tokenStream(s);
+    while (std::getline(tokenStream, token, delimiter)) 
+    {
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
+void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
+    const char* poll_name, uint64_t poll_type, uint64_t min_amount,
+    const char* github_link, const char* comma_separated_asset_names,
+    const char* comma_separated_asset_issuers, uint32_t scheduledTickOffset) 
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    std::vector<std::string> asset_names = split(comma_separated_asset_names, ',');
+    std::vector<std::string> asset_issuers = split(comma_separated_asset_issuers, ',');
+    if (asset_names.size() != asset_issuers.size()) 
+    {
+        LOG("Mismatch between number of asset names and issuers.\n");
+        return;
+    }
+    if (asset_names.size() > QUTIL_MAX_ASSETS_PER_POLL) 
+    {
+        LOG("Too many assets specified. Maximum is %llu.\n", QUTIL_MAX_ASSETS_PER_POLL);
+        return;
+    }
+
+    CreatePoll_input input;
+    memset(&input, 0, sizeof(input));
+    strncpy((char*)input.poll_name, poll_name, 32);
+    input.poll_type = poll_type;
+    input.min_amount = min_amount;
+    strncpy((char*)input.github_link, github_link, 256);
+    input.num_assets = asset_names.size();
+    for (size_t i = 0; i < asset_names.size(); ++i) 
+    {
+        qpi::Asset& asset = input.allowed_assets[i];
+        memset(&asset, 0, sizeof(qpi::Asset));
+        getPublicKeyFromIdentity(asset_issuers[i].c_str(), asset.issuer);
+        char assetNameBuf[8] = { 0 };
+        strncpy(assetNameBuf, asset_names[i].c_str(), 8);
+        memcpy(&asset.assetName, assetNameBuf, sizeof(uint64_t));
+    }
+
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
+
+    struct 
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        CreatePoll_input inputData;
+        unsigned char signature[64];
+    } packet;
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = QUTIL_POLL_CREATION_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = qutilProcedureId::CreatePoll;
+    packet.transaction.inputSize = sizeof(CreatePoll_input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+        digest,
+        32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("CreatePoll transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void qutilVote(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t poll_id, uint64_t amount, uint64_t chosen_option,
+    uint32_t scheduledTickOffset) 
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) 
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    Vote_input input;
+    memset(&input, 0, sizeof(input));
+    input.poll_id = poll_id;
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    memcpy(input.address, sourcePublicKey, 32);
+    input.amount = amount;
+    input.chosen_option = chosen_option;
+
+    uint8_t destPublicKey[32] = { 0 };
+    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char txHash[128] = { 0 };
+
+    struct 
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        Vote_input inputData;
+        unsigned char signature[64];
+    } packet;
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = amount + QUTIL_VOTE_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = qutilProcedureId::Vote;
+    packet.transaction.inputSize = sizeof(Vote_input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+        digest,
+        32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("Vote transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id) 
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) 
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    struct 
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        GetCurrentResult_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = QUTIL_CONTRACT_ID;
+    req.rcf.inputType = qutilFunctionId::GetCurrentResult;
+    req.rcf.inputSize = sizeof(GetCurrentResult_input);
+    req.input.poll_id = poll_id;
+    req.header.setSize(sizeof(req));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    GetCurrentResult_output output;
+    try 
+    {
+        output = qc->receivePacketWithHeaderAs<GetCurrentResult_output>();
+    }
+    catch (std::logic_error& e) 
+    {
+        LOG("Failed to get current result: %s\n", e.what());
+        return;
+    }
+
+    if (output.poll_id == 0) 
+    {
+        LOG("Poll not found or invalid poll ID.\n");
+        return;
+    }
+
+    LOG("Poll ID: %llu\n", output.poll_id);
+    for (int i = 0; i < QUTIL_MAX_OPTIONS; i++) 
+    {
+        if (output.votes[i] > 0) {
+            LOG("Option %d: %llu votes\n", i, output.votes[i]);
+        }
+    }
+}
+
+void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creator_address)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    uint8_t creator_pubkey[32];
+    getPublicKeyFromIdentity(creator_address, creator_pubkey);
+
+    struct
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        GetPollsByCreator_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = QUTIL_CONTRACT_ID;
+    req.rcf.inputType = qutilFunctionId::GetPollsByCreator;
+    req.rcf.inputSize = sizeof(GetPollsByCreator_input);
+    memcpy(req.input.creator, creator_pubkey, 32);
+    req.header.setSize(sizeof(req));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    GetPollsByCreator_output output;
+    try
+    {
+        output = qc->receivePacketWithHeaderAs<GetPollsByCreator_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to get polls by creator: %s\n", e.what());
+        return;
+    }
+
+    if (output.num_polls == 0)
+    {
+        LOG("No polls found for creator %s.\n", creator_address);
+        return;
+    }
+
+    LOG("Polls created by %s:\n", creator_address);
+    for (uint64_t i = 0; i < output.num_polls; i++)
+    {
+        LOG("Poll ID: %llu\n", output.poll_ids[i]);
+    }
 }
