@@ -51,8 +51,9 @@ struct GetPollsByCreator_input
 
 struct GetCurrentResult_output
 {
-    uint64_t poll_id;
     uint64_t votes[QUTIL_MAX_OPTIONS];
+    uint64_t voter_count[QUTIL_MAX_OPTIONS];
+    uint64_t is_active;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -60,8 +61,19 @@ struct GetCurrentResult_output
 
 struct GetPollsByCreator_output
 {
-    uint64_t num_polls;
     uint64_t poll_ids[QUTIL_MAX_POLL];
+    uint64_t num_polls;
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct GetCurrentPollId_input {};
+
+struct GetCurrentPollId_output {
+    uint64_t current_poll_id;
+    uint64_t active_poll_ids[QUTIL_MAX_POLL];
+    uint64_t active_count;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -81,6 +93,7 @@ enum qutilFunctionId
     GetSendToManyV1Fee = 1,
     GetCurrentResult = 2,
     GetPollsByCreator = 3,
+    GetCurrentPollId = 4,
 };
 
 
@@ -100,3 +113,6 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
 void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id);
 
 void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creator_address);
+
+void qutilGetCurrentPollId(const char* nodeIp, int nodePort);
+

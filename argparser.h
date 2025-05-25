@@ -133,6 +133,7 @@ void print_help()
     printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.\t\n");
     printf("\t-compmessage \"<MESSAGE>\"\n");
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
+
     printf("\n[QX COMMANDS]\n");
     printf("\t-qxgetfee\n");
     printf("\t\tShow current Qx fee.\n");
@@ -254,6 +255,8 @@ void print_help()
     printf("\t\tSubmit the unbanned address using multisig address.\n");
     printf("\t-qvaultsaveunbannedaddress <NEW_ADDRESS>\n");
     printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
+    printf("\t-qutilgetcurrentpollid\n");
+    printf("\t\tGet the current poll ID and list of active polls.\n");
 
     printf("\n[MSVAULT COMMANDS]\n");
     printf("\t-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
@@ -1078,6 +1081,12 @@ void parseArgument(int argc, char** argv)
             g_cmd = QUTIL_GET_POLLS_BY_CREATOR;
             g_qutil_get_polls_creator_address = argv[i + 1];
             i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilgetcurrentpollid") == 0) {
+            g_cmd = QUTIL_GET_CURRENT_POLL_ID;
+            i++;
             CHECK_OVER_PARAMETERS
             break;
         }

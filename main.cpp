@@ -389,6 +389,10 @@ int run(int argc, char* argv[])
             sanityCheckIdentity(g_qutil_get_polls_creator_address);
             qutilGetPollsByCreator(g_nodeIp, g_nodePort, g_qutil_get_polls_creator_address);
             break;
+        case QUTIL_GET_CURRENT_POLL_ID:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetCurrentPollId(g_nodeIp, g_nodePort);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

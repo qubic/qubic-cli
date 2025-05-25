@@ -346,3 +346,4 @@ template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFuncti
 // QUTIL
 template GetCurrentResult_output QubicConnection::receivePacketWithHeaderAs<GetCurrentResult_output>();
 template GetPollsByCreator_output QubicConnection::receivePacketWithHeaderAs<GetPollsByCreator_output>();
+template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetCurrentPollId_output>();

@@ -369,9 +369,9 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     packet.transaction.inputSize = sizeof(CreatePoll_input);
     memcpy(&packet.inputData, &input, sizeof(input));
     KangarooTwelve((uint8_t*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(input),
-        digest,
-        32);
+                    sizeof(packet.transaction) + sizeof(input),
+                    digest,
+                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
     packet.header.setSize(sizeof(packet));
@@ -379,9 +379,9 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setType(BROADCAST_TRANSACTION);
     qc->sendData((uint8_t*)&packet, packet.header.size());
     KangarooTwelve((uint8_t*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
-        digest,
-        32);
+                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+                    digest,
+                    32);
     getTxHashFromDigest(digest, txHash);
     LOG("CreatePoll transaction sent.\n");
     printReceipt(packet.transaction, txHash, nullptr);
@@ -436,9 +436,9 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     packet.transaction.inputSize = sizeof(Vote_input);
     memcpy(&packet.inputData, &input, sizeof(input));
     KangarooTwelve((uint8_t*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(input),
-        digest,
-        32);
+                    sizeof(packet.transaction) + sizeof(input),
+                    digest,
+                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
     packet.header.setSize(sizeof(packet));
@@ -446,9 +446,9 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setType(BROADCAST_TRANSACTION);
     qc->sendData((uint8_t*)&packet, packet.header.size());
     KangarooTwelve((uint8_t*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
-        digest,
-        32);
+                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+                    digest,
+                    32);
     getTxHashFromDigest(digest, txHash);
     LOG("Vote transaction sent.\n");
     printReceipt(packet.transaction, txHash, nullptr);
@@ -493,17 +493,24 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
         return;
     }
 
-    if (output.poll_id == 0) 
+    if (output.is_active != 0)
     {
-        LOG("Poll not found or invalid poll ID.\n");
-        return;
+        LOG("Poll %llu status is ACTIVE.\n", poll_id);
+        for (int i = 0; i < QUTIL_MAX_OPTIONS; i++)
+        {
+            if (output.votes[i] > 0) {
+                LOG("Option %d: %llu votes\n", i, output.votes[i]);
+            }
+        }
     }
-
-    LOG("Poll ID: %llu\n", output.poll_id);
-    for (int i = 0; i < QUTIL_MAX_OPTIONS; i++) 
+    else
     {
-        if (output.votes[i] > 0) {
-            LOG("Option %d: %llu votes\n", i, output.votes[i]);
+        LOG("Poll %llu status is INactive.\n", poll_id);
+        for (int i = 0; i < QUTIL_MAX_OPTIONS; i++)
+        {
+            if (output.votes[i] > 0) {
+                LOG("Result: option %d is the dominant the vote.\n", i);
+            }
         }
     }
 }
@@ -558,5 +565,40 @@ void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creato
     for (uint64_t i = 0; i < output.num_polls; i++)
     {
         LOG("Poll ID: %llu\n", output.poll_ids[i]);
+    }
+}
+
+void qutilGetCurrentPollId(const char* nodeIp, int nodePort) {
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = 0;
+    packet.rcf.inputType = qutilFunctionId::GetCurrentPollId;
+    packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    GetCurrentPollId_output output;
+    try {
+        output = qc->receivePacketWithHeaderAs<GetCurrentPollId_output>();
+    }
+    catch (std::logic_error& e) {
+        LOG("Failed to get current poll ID: %s\n", e.what());
+        return;
+    }
+
+    LOG("Current Poll ID: %llu\n", output.current_poll_id);
+    LOG("Active Polls: %llu\n", output.active_count);
+    for (uint64_t i = 0; i < output.active_count; i++) {
+        LOG("Poll ID: %llu\n", output.active_poll_ids[i]);
     }
 }
