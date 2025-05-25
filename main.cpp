@@ -367,8 +367,11 @@ int run(int argc, char* argv[])
             sanityCheckValidString(g_qutil_poll_name_str);
             sanityCheckTxAmount(g_qutil_min_amount);
             sanityCheckValidString(g_qutil_github_link_str);
-            sanityCheckValidString(g_qutil_comma_separated_asset_names);
-            sanityCheckValidString(g_qutil_comma_separated_asset_issuers);
+            if (g_qutil_poll_type == 2)
+            {
+                sanityCheckValidString(g_qutil_comma_separated_asset_names);
+                sanityCheckValidString(g_qutil_comma_separated_asset_issuers);
+            }
             qutilCreatePoll(g_nodeIp, g_nodePort, g_seed, g_qutil_poll_name_str, g_qutil_poll_type,
                 g_qutil_min_amount, g_qutil_github_link_str, g_qutil_comma_separated_asset_names,
                 g_qutil_comma_separated_asset_issuers, g_offsetScheduledTick);

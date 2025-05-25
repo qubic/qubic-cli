@@ -68,6 +68,8 @@ void print_help()
     printf("\t\tGet the current results of a poll. <POLL_ID> is the poll's ID. Valid node ip/port are required.\n");
     printf("\t-qutilgetpollsbycreator <CREATOR_ADDRESS>\n");
     printf("\t\tGet polls created by a specific user. <CREATOR_ADDRESS> is the creator's identity. Valid node ip/port are required.\n");
+    printf("\t-qutilgetcurrentpollid\n");
+    printf("\t\tGet the current poll ID and list of active polls.\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -255,8 +257,6 @@ void print_help()
     printf("\t\tSubmit the unbanned address using multisig address.\n");
     printf("\t-qvaultsaveunbannedaddress <NEW_ADDRESS>\n");
     printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
-    printf("\t-qutilgetcurrentpollid\n");
-    printf("\t\tGet the current poll ID and list of active polls.\n");
 
     printf("\n[MSVAULT COMMANDS]\n");
     printf("\t-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
@@ -1019,39 +1019,42 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qutilcreatepoll") == 0)
         {
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QUTIL_CREATE_POLL;
-            if (i + 4 >= argc)
+            int base_params = 4;
+            if (i + base_params >= argc)
             {
                 LOG("Not enough parameters provided for command, expected at least 4.\nRun qubic-cli -h to display help.\n");
                 exit(1);
             }
-            g_qutil_poll_name_str = argv[i+1];
-            g_qutil_poll_type = charToUnsignedNumber(argv[i+2]);
-            g_qutil_min_amount = charToUnsignedNumber(argv[i+3]);
-            g_qutil_github_link_str = argv[i+4];
+            g_qutil_poll_name_str = argv[i + 1];
+            g_qutil_poll_type = charToUnsignedNumber(argv[i + 2]);
+            g_qutil_min_amount = charToUnsignedNumber(argv[i + 3]);
+            g_qutil_github_link_str = argv[i + 4];
 
+            int params_consumed = base_params;
             if (g_qutil_poll_type == 2) // Asset poll
             {
-                if (i + 6 >= argc)
+                params_consumed = 6;
+                if (i + params_consumed >= argc)
                 {
                     LOG("Not enough parameters for Asset poll, expected 6 parameters.\n");
                     exit(1);
                 }
-                g_qutil_comma_separated_asset_names = argv[i+5];
-                g_qutil_comma_separated_asset_issuers = argv[i+6];
-                i += 6;
+                g_qutil_comma_separated_asset_names = argv[i + 5];
+                g_qutil_comma_separated_asset_issuers = argv[i + 6];
             }
             else if (g_qutil_poll_type == 1) // Qubic poll
             {
                 g_qutil_comma_separated_asset_names = nullptr;
                 g_qutil_comma_separated_asset_issuers = nullptr;
-                i += 4;
             }
             else
             {
                 LOG("Invalid POLL_TYPE. Must be 1 (Qubic) or 2 (Asset).\n");
                 exit(1);
             }
+            i += 1 + params_consumed;
             CHECK_OVER_PARAMETERS
             break;
         }
