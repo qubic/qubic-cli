@@ -24,6 +24,7 @@
 #include "qearn.h"
 #include "msvault.h"
 #include "testUtils.h"
+#include "qutil.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
@@ -341,3 +342,9 @@ template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();
+
+// QUTIL
+template GetCurrentResult_output QubicConnection::receivePacketWithHeaderAs<GetCurrentResult_output>();
+template GetPollsByCreator_output QubicConnection::receivePacketWithHeaderAs<GetPollsByCreator_output>();
+template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetCurrentPollId_output>();
+template GetPollInfo_output QubicConnection::receivePacketWithHeaderAs<GetPollInfo_output>();
