@@ -649,7 +649,7 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
             char buf[128] = { 0 };
             LOG("Poll Info:\n");
             char poll_name[33] = { 0 };
-            memcpy(output.poll_info.poll_name, poll_name, 32);
+            memcpy(poll_name, output.poll_info.poll_name, 32);
             poll_name[32] = '\0';
             LOG("Poll Name: %s\n", poll_name);
             LOG("Poll Type: %llu\n", output.poll_info.poll_type);
