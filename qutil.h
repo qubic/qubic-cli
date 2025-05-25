@@ -31,6 +31,16 @@ struct CreatePoll_input
     uint64_t num_assets;
 };
 
+struct QUtilPoll {
+    uint8_t poll_name[32];
+    uint64_t poll_type;
+    uint64_t min_amount;
+    uint64_t is_active;
+    uint8_t creator[32];
+    qpi::Asset allowed_assets[QUTIL_MAX_ASSETS_PER_POLL];
+    uint64_t num_assets;
+};
+
 struct Vote_input
 {
     uint64_t poll_id;
@@ -47,6 +57,10 @@ struct GetCurrentResult_input
 struct GetPollsByCreator_input
 {
     uint8_t creator[32];
+};
+
+struct GetPollInfo_input {
+    uint64_t poll_id;
 };
 
 struct GetCurrentResult_output
@@ -68,12 +82,20 @@ struct GetPollsByCreator_output
     }
 };
 
-struct GetCurrentPollId_input {};
-
 struct GetCurrentPollId_output {
     uint64_t current_poll_id;
     uint64_t active_poll_ids[QUTIL_MAX_POLL];
     uint64_t active_count;
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct GetPollInfo_output
+{
+    uint64_t found;
+    QUtilPoll poll_info;
+    uint8_t poll_link[256];
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -94,6 +116,7 @@ enum qutilFunctionId
     GetCurrentResult = 2,
     GetPollsByCreator = 3,
     GetCurrentPollId = 4,
+    GetPollInfo = 5,
 };
 
 
@@ -116,3 +139,4 @@ void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creato
 
 void qutilGetCurrentPollId(const char* nodeIp, int nodePort);
 
+void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id);

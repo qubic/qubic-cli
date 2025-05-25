@@ -396,6 +396,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qutilGetCurrentPollId(g_nodeIp, g_nodePort);
             break;
+        case QUTIL_GET_POLL_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetPollInfo(g_nodeIp, g_nodePort, g_qutil_get_poll_info_poll_id);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

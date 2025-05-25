@@ -70,6 +70,8 @@ void print_help()
     printf("\t\tGet polls created by a specific user. <CREATOR_ADDRESS> is the creator's identity. Valid node ip/port are required.\n");
     printf("\t-qutilgetcurrentpollid\n");
     printf("\t\tGet the current poll ID and list of active polls.\n");
+    printf("\t-qutilgetpollinfo <POLL_ID>\n");
+    printf("\t\tGet information about a specific poll by its ID.\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -1090,6 +1092,15 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qutilgetcurrentpollid") == 0) {
             g_cmd = QUTIL_GET_CURRENT_POLL_ID;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilgetpollinfo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QUTIL_GET_POLL_INFO;
+            g_qutil_get_poll_info_poll_id = charToUnsignedNumber(argv[i + 1]);
+            i += 2;
             CHECK_OVER_PARAMETERS
             break;
         }

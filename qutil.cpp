@@ -609,3 +609,73 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort) {
         LOG("Poll ID: %llu\n", output.active_poll_ids[i]);
     }
 }
+
+void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id) 
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) 
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    GetPollInfo_input input;
+    input.poll_id = poll_id;
+
+    struct 
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        GetPollInfo_input inputData;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(GetPollInfo_input);
+    packet.rcf.inputType = qutilFunctionId::GetPollInfo;
+    packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
+    memcpy(&packet.inputData, &input, sizeof(input));
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    try 
+    {
+        GetPollInfo_output output = qc->receivePacketWithHeaderAs<GetPollInfo_output>();
+        if (output.found == 0) 
+        {
+            LOG("Poll not found.\n");
+        }
+        else 
+        {
+            char buf[128] = { 0 };
+            LOG("Poll Info:\n");
+            char poll_name[33] = { 0 };
+            memcpy(output.poll_info.poll_name, poll_name, 32);
+            poll_name[32] = '\0';
+            LOG("Poll Name: %s\n", poll_name);
+            LOG("Poll Type: %llu\n", output.poll_info.poll_type);
+            LOG("Min Amount: %llu\n", output.poll_info.min_amount);
+            LOG("Is Active: %llu\n", output.poll_info.is_active);
+            memset(buf, 0, 128);
+            getIdentityFromPublicKey(output.poll_info.creator, buf, false);
+            LOG("Creator: %s\n", buf);
+            LOG("Num Assets: %llu\n", output.poll_info.num_assets);
+            if (output.poll_info.num_assets > 0) 
+            {
+                LOG("Allowed Assets:\n");
+                for (uint64_t i = 0; i < output.poll_info.num_assets; i++) 
+                {
+                    memset(buf, 0, 128);
+                    getIdentityFromPublicKey(output.poll_info.allowed_assets[i].issuer, buf, false);
+                    LOG("Asset %llu: Issuer %s, Name %llu\n", i,
+                        buf,
+                        output.poll_info.allowed_assets[i].assetName);
+                }
+            }
+            LOG("GitHub Link: %s\n", output.poll_link);
+        }
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Error receiving poll info: %s\n", e.what());
+    }
+}
