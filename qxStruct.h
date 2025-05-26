@@ -5,7 +5,7 @@
 struct IssueAsset_input
 {
     uint64_t name;
-    int64_t numberOfUnits;
+    int64_t numberOfShares;
     uint64_t unitOfMeasurement;
     char numberOfDecimalPlaces;
 };
@@ -142,7 +142,7 @@ struct TransferAssetOwnershipAndPossession_input
     uint8_t issuer[32];
     uint8_t newOwnerAndPossessor[32];
     unsigned long long assetName;
-    long long numberOfUnits;
+    long long numberOfShares;
 };
 
 struct AddToAskOrder_input

@@ -33,3 +33,4 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std
 void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold);
 void syncTime(const char* nodeIp, const int nodePort, const char* seed);
 void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);
+void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg);

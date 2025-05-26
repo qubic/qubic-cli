@@ -115,16 +115,16 @@ bool uploadFragment(QCPtr& qc, const char* seed, const uint64_t fragmentId,
     memcpy(fftp.prevFileFragmentTransactionDigest, prevFragmentTxHash, 32);
     memcpy(payload.fragmentPostfix, fragmentData, fragmentSize);
     fftp.inputType = FileFragmentTransactionPrefix::transactionType();
-    fftp.inputSize = FileFragmentTransactionPrefix::minInputSize() + fragmentSize;
+    fftp.inputSize = uint16_t(FileFragmentTransactionPrefix::minInputSize() + fragmentSize);
     uint8_t* ptr_signature =  payload.fragmentPostfix + fragmentSize;
     size_t payloadSize = sizeof(RequestResponseHeader) + sizeof(FileFragmentTransactionPrefix) + fragmentSize + SIGNATURE_SIZE; // not send full in trailer
-    payload.header.setSize(payloadSize);
+    payload.header.setSize(uint16_t(payloadSize));
     payload.header.zeroDejavu();
     payload.header.setType(BROADCAST_TRANSACTION);
     signData(seed, (uint8_t*)&payload.fftp, sizeof(FileFragmentTransactionPrefix) + fragmentSize, ptr_signature);
 
     qc->sendData((uint8_t *) &payload, payload.header.size());
-    KangarooTwelve((uint8_t*)&payload.fftp, sizeof(FileFragmentTransactionPrefix) + fragmentSize + SIGNATURE_SIZE, outTxHash, 32);
+    KangarooTwelve((uint8_t*)&payload.fftp, uint16_t(sizeof(FileFragmentTransactionPrefix) + fragmentSize + SIGNATURE_SIZE), outTxHash, 32);
     LOG("Waiting for tx to be included at tick %d\n", txTick);
     currentTick = getTickNumberFromNode(qc);
     while (currentTick < txTick + 1)
@@ -244,7 +244,7 @@ void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, co
     }
 
     std::vector<fullFragment> file_fragments;
-    int numberOfFragments = (fileSize + fullFragmentSize - 1) / fullFragmentSize;
+    int numberOfFragments = int((fileSize + fullFragmentSize - 1) / fullFragmentSize);
     auto qc = make_qc(nodeIp, nodePort);
     std::vector<uint8_t> fragmentData;
     fragmentData.resize(fileSize);

@@ -114,8 +114,9 @@ enum COMMAND
     TEST_QPI_FUNCTIONS_OUTPUT = 103,
     SET_LOGGING_MODE = 104,
     TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
-    TEST_GET_INCOMING_TRANSFER_AMOUNTS = 106,
-    TEST_BID_IN_IPO_THROUGH_CONTRACT = 107,
+    COMP_CHAT = 106,
+    TEST_GET_INCOMING_TRANSFER_AMOUNTS = 107,
+    TEST_BID_IN_IPO_THROUGH_CONTRACT = 108,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -282,6 +283,13 @@ struct CurrentSystemInfo
     // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
     unsigned long long currentEntityBalanceDustThreshold;
 
+    unsigned int targetTickVoteSignature;
+    unsigned long long _reserve0;
+    unsigned long long _reserve1;
+    unsigned long long _reserve2;
+    unsigned long long _reserve3;
+    unsigned long long _reserve4;
+
     static constexpr unsigned char type()
     {
         return RESPOND_SYSTEM_INFO;
@@ -402,7 +410,7 @@ struct Asset
             char padding[1];
             unsigned short managingContractIndex;
             unsigned int issuanceIndex;
-            long long numberOfUnits;
+            long long numberOfShares;
         } ownership;
 
         struct
@@ -412,7 +420,7 @@ struct Asset
             char padding[1];
             unsigned short managingContractIndex;
             unsigned int ownershipIndex;
-            long long numberOfUnits;
+            long long numberOfShares;
         } possession;
     } varStruct;
 };

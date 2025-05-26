@@ -52,7 +52,7 @@ bool checkMatchAndLog(const T& first, const T& second, const std::string& name)
 bool checkMatchAndLog(const uint8_t* first, const uint8_t* second, uint32_t size, const std::string& name)
 {
     bool matches = true;
-    int i;
+    uint32_t i;
     for (i = 0; i < size; ++i)
         if (first[i] != second[i])
         {
@@ -172,7 +172,7 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
     packet.header.setType(BROADCAST_TRANSACTION);
 
     std::vector<std::array<char, 128>> txHashes(numTicks);
-    for (int tickOffset = 0; tickOffset < numTicks; ++tickOffset)
+    for (uint32_t tickOffset = 0; tickOffset < numTicks; ++tickOffset)
     {
         packet.transaction.tick = firstScheduledTick + tickOffset;
         // sign the packet

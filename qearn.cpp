@@ -201,7 +201,7 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetLockInfoPerEpoch_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -252,7 +252,7 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identi
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetUserLockedInfo_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -284,7 +284,7 @@ void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetStateOfRound_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -319,7 +319,7 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetStatsPerEpoch_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -360,7 +360,7 @@ void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStats_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -406,7 +406,7 @@ void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePor
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStatsPerEpoch_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -456,7 +456,7 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetUserLockStatus_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;
@@ -508,7 +508,7 @@ void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity)
     {
         result = qc->receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;

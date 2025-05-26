@@ -53,7 +53,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result)
     {
         result = qc->receivePacketWithHeaderAs<QxFees_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(result));
     }
@@ -72,7 +72,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
                   const char* seed,
                   const char* assetName,
                   const char* unitOfMeasurement,
-                  int64_t numberOfUnits,
+                  int64_t numberOfShares,
                   char numberOfDecimalPlaces,
                   uint32_t scheduledTickOffset)
 {
@@ -119,7 +119,7 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     // fill the input
     memcpy(&packet.ia.name, assetNameS1, 8);
     memcpy(&packet.ia.unitOfMeasurement, UoMS1, 8);
-    packet.ia.numberOfUnits = numberOfUnits;
+    packet.ia.numberOfShares = numberOfShares;
     packet.ia.numberOfDecimalPlaces = numberOfDecimalPlaces;
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
@@ -150,7 +150,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
                      const char* pAssetName,
                      const char* pIssuerInQubicFormat,
                      const char* newOwnerIdentity,
-                     long long numberOfUnits,
+                     long long numberOfShares,
                      uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -197,7 +197,7 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     memcpy(&packet.ta.assetName, assetNameU1, 8);
     memcpy(packet.ta.issuer, issuer, 32);
     memcpy(packet.ta.newOwnerAndPossessor, newOwnerPublicKey, 32);
-    packet.ta.numberOfUnits = numberOfUnits;
+    packet.ta.numberOfShares = numberOfShares;
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction) + sizeof(TransferAssetOwnershipAndPossession_input),
@@ -432,7 +432,7 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
         qxGetAssetOrder_output orders = qc->receivePacketWithHeaderAs<qxGetAssetOrder_output>();
         printAssetOrders(orders);
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error) {}
 }
 
 void qxGetAssetAskOrder(const char* nodeIp, int nodePort,
@@ -509,7 +509,7 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
         qxGetEntityOrder_output orders = qc->receivePacketWithHeaderAs<qxGetEntityOrder_output>();
         printEntityOrders(orders);
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error) {}
 }
 
 void qxGetEntityAskOrder(const char* nodeIp, int nodePort,

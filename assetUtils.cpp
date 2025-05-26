@@ -100,7 +100,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
     LOG("Asset name: %s\n", name);
     LOG("Managing contract index: %d\n", owned.varStruct.ownership.managingContractIndex);
     LOG("Issuance Index: %d\n", owned.varStruct.ownership.issuanceIndex);
-    LOG("Number Of Units: %lld\n", owned.varStruct.ownership.numberOfUnits);
+    LOG("Number Of Shares: %lld\n", owned.varStruct.ownership.numberOfShares);
 }
 
 static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
@@ -116,7 +116,7 @@ static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
     LOG("Managing contract index: %d\n", possession.varStruct.possession.managingContractIndex);
     LOG("Owner index: %u\n", possession.varStruct.possession.ownershipIndex);
     LOG("Owner ID: %s\n", ownerId);
-    LOG("Number Of Units: %lld\n", possession.varStruct.possession.numberOfUnits);
+    LOG("Number Of Shares: %lld\n", possession.varStruct.possession.numberOfShares);
 }
 
 void printOwnedAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
@@ -165,7 +165,7 @@ void printAssetResponse(const RespondAssets& response, bool verbose)
         getIdentityFromPublicKey(response.asset.varStruct.ownership.publicKey, identity, false);
         LOG("Share ownership\n");
         LOG("\towner = %s\n", identity);
-        LOG("\tnumber of shares = %lld\n", response.asset.varStruct.ownership.numberOfUnits);
+        LOG("\tnumber of shares = %lld\n", response.asset.varStruct.ownership.numberOfShares);
         LOG("\tmanaging contract = %u\n", (unsigned int)response.asset.varStruct.ownership.managingContractIndex);
         if (verbose)
         {
@@ -176,7 +176,7 @@ void printAssetResponse(const RespondAssets& response, bool verbose)
         getIdentityFromPublicKey(response.asset.varStruct.possession.publicKey, identity, false);
         LOG("Share possession\n");
         LOG("\tpossessor = %s\n", identity);
-        LOG("\tnumber of shares = %lld\n", response.asset.varStruct.possession.numberOfUnits);
+        LOG("\tnumber of shares = %lld\n", response.asset.varStruct.possession.numberOfShares);
         LOG("\tmanaging contract = %u\n", (unsigned int)response.asset.varStruct.possession.managingContractIndex);
         if (verbose)
         {

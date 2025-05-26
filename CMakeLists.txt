@@ -43,7 +43,11 @@ SET(HEADER_FILES
 	qvault.h
 	msvault.h
 )
+if(MSVC)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif()
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
+set_property(TARGET qubic-cli PROPERTY COMPILE_WARNING_AS_ERROR ON)
 ADD_LIBRARY(fourq-qubic SHARED fourq-qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
