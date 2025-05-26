@@ -390,7 +390,7 @@ struct SpecialCommand
 #define OWNERSHIP 2
 #define POSSESSION 3
 
-struct Asset
+struct AssetRecord
 {
     union
     {
@@ -432,7 +432,7 @@ typedef struct
 
 typedef struct
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -445,8 +445,8 @@ typedef struct
 
 struct RespondOwnedAssets
 {
-    Asset asset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -464,9 +464,9 @@ typedef struct
 
 struct RespondPossessedAssets
 {
-    Asset asset;
-    Asset ownershipAsset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord ownershipAsset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -540,7 +540,7 @@ static_assert(sizeof(RequestAssets) == 112, "Something is wrong with the struct 
 // Response message after RequestAssets without flag getSiblings
 struct RespondAssets
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
 

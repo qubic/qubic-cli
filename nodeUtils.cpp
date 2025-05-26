@@ -1702,9 +1702,9 @@ void dumpSpectrumToCSV(const char* input, const char* output){
 // only print ownership
 void dumpUniverseToCSV(const char* input, const char* output){
     const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
-    Asset* asset = (Asset*)malloc(ASSETS_CAPACITY*sizeof(Entity));
+    AssetRecord* asset = (AssetRecord*)malloc(ASSETS_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
-    fread(asset, 1, ASSETS_CAPACITY*sizeof(Asset), f);
+    fread(asset, 1, ASSETS_CAPACITY*sizeof(AssetRecord), f);
     fclose(f);
     f = fopen(output, "w");
     {
