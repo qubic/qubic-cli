@@ -8,7 +8,7 @@ static void byteToHex(const uint8_t* byte, char* hex, const int sizeInByte)
 {
     for (int i = 0; i < sizeInByte; i++)
     {
-        snprintf(hex+i*2, 2, "%02x", byte[i]);
+        snprintf(hex+i*2, 3, "%02x", byte[i]);
     }
 }
 static void hexToByte(const char* hex, uint8_t* byte, const int sizeInByte)
