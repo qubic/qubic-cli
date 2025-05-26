@@ -69,3 +69,10 @@ static inline std::vector<std::string> splitString(const std::string& str, const
 {
     return splitString(str.c_str(), delimiter);
 }
+
+#ifdef _MSC_VER
+static inline int strcasecmp(const char* s1, const char* s2)
+{
+    return _stricmp(s1, s2);
+}
+#endif
