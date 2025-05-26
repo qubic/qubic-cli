@@ -111,10 +111,26 @@ enum COMMAND
     MSVAULT_GET_FEES_CMD = 100,
     MSVAULT_GET_OWNERS_CMD = 101,
     QUERY_ASSETS = 102,
-    TEST_QPI_FUNCTIONS_OUTPUT = 103,
-    SET_LOGGING_MODE = 104,
-    TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
-    COMP_CHAT = 106,
+
+    PRINT_QSWAP_FEE = 103,
+    QSWAP_ISSUE_ASSET = 104,
+    QSWAP_TRANSFER_ASSET = 105,
+    QSWAP_CREATE_POOL = 106,
+    QSWAP_GET_POOL_BASIC = 107,
+    QSWAP_ADD_LIQUDITY = 108,
+    QSWAP_REMOVE_LIQUDITY = 109,
+    QSWAP_GET_LIQUDITY_OF = 110,
+    QSWAP_SWAP_EXACT_QU_FOR_ASSET = 111,
+    QSWAP_SWAP_QU_FOR_EXACT_ASSET = 112,
+    QSWAP_SWAP_EXACT_ASSET_FOR_QU = 113,
+    QSWAP_SWAP_ASSET_FOR_EXACT_QU = 114,
+    QSWAP_QUOTE = 115,
+
+    TEST_QPI_FUNCTIONS_OUTPUT = 116,
+    SET_LOGGING_MODE = 117,
+    TEST_QPI_FUNCTIONS_OUTPUT_PAST = 118,
+    COMP_CHAT = 119,
+
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -641,6 +657,19 @@ struct QxFees_output
     uint32_t assetIssuanceFee; // Amount of qus
     uint32_t transferFee; // Amount of qus
     uint32_t tradeFee; // Number of billionths
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }    
+};
+struct QswapFees_output
+{
+    uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t poolCreationFee; // Amount of qus
+    uint32_t transferFee; // Amount of qus
+    uint32_t swapRate; // Number of 10000ths
+    uint32_t protocolRate; // Number of 100ths
 
     static constexpr unsigned char type()
     {
