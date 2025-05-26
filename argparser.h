@@ -495,10 +495,8 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-gettotalnumberofassetshares") == 0)
         {
             g_cmd = GET_TOTAL_NUMBER_OF_ASSET_SHARES;
-            if (i + 1 < argc)
-                g_paramString1 = argv[i + 1];
-            if (i + 2 < argc)
-                g_paramString2 = argv[i + 2];
+            g_paramString1 = argv[i + 1];
+            g_paramString2 = argv[i + 2];
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
