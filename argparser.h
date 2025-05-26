@@ -1540,8 +1540,8 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = TEST_BID_IN_IPO_THROUGH_CONTRACT;
             g_paramString1 = argv[i + 1];
-            g_ipo_contract_index = charToNumber(argv[i + 2]);
-            g_make_ipo_bid_number_of_share = charToNumber(argv[i + 3]);
+            g_ipo_contract_index = (uint32_t)charToNumber(argv[i + 2]);
+            g_make_ipo_bid_number_of_share = (uint32_t)charToNumber(argv[i + 3]);
             g_make_ipo_bid_price_per_share = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
