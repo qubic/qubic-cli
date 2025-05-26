@@ -275,7 +275,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 {
                     packet.req.byFilter.flags &= ~RequestAssets::anyAssetName;
                     sanityCheckValidAssetName(value.c_str());
-                    memcpy(&packet.req.byFilter.assetName, value.c_str(), 7);
+                    memcpy(&packet.req.byFilter.assetName, value.c_str(), std::min(size_t(7), value.length()));
                 }
                 else
                 {
