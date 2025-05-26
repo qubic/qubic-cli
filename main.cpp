@@ -53,6 +53,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printAssetRecords(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case GET_TOTAL_NUMBER_OF_ASSET_SHARES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetTotalNumberOfAssetShares(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
+            break;
         case SEND_COIN:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

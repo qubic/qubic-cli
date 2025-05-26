@@ -48,6 +48,8 @@ void print_help()
     printf("\t\tPrint a list of assets of an identity\n");
     printf("\t-queryassets <QUERY_TYPE> <QUERY_STING>\n");
     printf("\t\tQuery and print assets information. Skip arguments to get detailed documentation.\n");
+    printf("\t-gettotalnumberofassetshares <ISSUER_ID> <ASSET_NAME>\n");
+    printf("\t\tGet total number of shares currently existing of a specific asset.\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.\n");
     printf("\t-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>\n");
@@ -491,6 +493,17 @@ void parseArgument(int argc, char** argv)
             i += 3;
             CHECK_OVER_PARAMETERS
              break;
+        }
+        if (strcmp(argv[i], "-gettotalnumberofassetshares") == 0)
+        {
+            g_cmd = GET_TOTAL_NUMBER_OF_ASSET_SHARES;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_paramString2 = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
         }
         if (strcmp(argv[i], "-sendtoaddress") == 0)
         {
