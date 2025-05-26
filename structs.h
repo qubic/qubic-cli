@@ -115,7 +115,9 @@ enum COMMAND
     SET_LOGGING_MODE = 104,
     TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
     COMP_CHAT = 106,
-    GET_TOTAL_NUMBER_OF_ASSET_SHARES = 107,
+    TEST_GET_INCOMING_TRANSFER_AMOUNTS = 107,
+    TEST_BID_IN_IPO_THROUGH_CONTRACT = 108,
+    GET_TOTAL_NUMBER_OF_ASSET_SHARES = 109,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -389,7 +391,7 @@ struct SpecialCommand
 #define OWNERSHIP 2
 #define POSSESSION 3
 
-struct Asset
+struct AssetRecord
 {
     union
     {
@@ -431,7 +433,7 @@ typedef struct
 
 typedef struct
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -444,8 +446,8 @@ typedef struct
 
 struct RespondOwnedAssets
 {
-    Asset asset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -463,9 +465,9 @@ typedef struct
 
 struct RespondPossessedAssets
 {
-    Asset asset;
-    Asset ownershipAsset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord ownershipAsset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -539,7 +541,7 @@ static_assert(sizeof(RequestAssets) == 112, "Something is wrong with the struct 
 // Response message after RequestAssets without flag getSiblings
 struct RespondAssets
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
 

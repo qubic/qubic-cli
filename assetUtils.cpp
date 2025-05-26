@@ -88,7 +88,7 @@ void printAssetDigest(T& respondedAsset)
     LOG("Asset Digest: %s\n", hex_digest);
 }
 
-static void printOwnedAsset(Asset owned, Asset iss)
+static void printOwnedAsset(const AssetRecord& owned, const AssetRecord& iss)
 {
     char issuer[128] = {0};
     char name[8] = {0};
@@ -103,7 +103,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
     LOG("Number Of Shares: %lld\n", owned.varStruct.ownership.numberOfShares);
 }
 
-static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
+static void printPossessionAsset(const AssetRecord& owner, const AssetRecord& possession, const AssetRecord& iss)
 {
     char issuer[128] = {0};
     char name[8] = {0};
