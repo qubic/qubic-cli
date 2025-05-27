@@ -241,12 +241,14 @@ void stake(const char* nodeIp, int nodePort, const char* seed, uint32_t schedule
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         stake_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amount = amount;
     packet.transaction.amount = 0;
@@ -300,12 +302,14 @@ void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t schedu
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         unStake_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amount = amount;
     packet.transaction.amount = 0;
@@ -359,12 +363,14 @@ void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t sched
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitGP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
@@ -417,12 +423,14 @@ void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t sche
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitQCP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.newQuorumPercent = newQuorumPercent;
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
@@ -476,12 +484,14 @@ void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitIPOP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.ipoContractIndex = ipoContractIndex;
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
@@ -535,12 +545,14 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitQEarnP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amountPerEpoch = amountPerEpoch;
     packet.input.numberOfEpoch = numberOfEpoch;
@@ -595,12 +607,14 @@ void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitFundP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amountOfQcap = amountOfQcap;
     packet.input.priceOfOneQcap = priceOfOneQcap;
@@ -659,12 +673,14 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitMKTP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amountOfQcap = amountOfQcap;
     packet.input.amountOfQubic = amountOfQubic;
@@ -723,12 +739,14 @@ void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitAlloP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.burn = burn;
     packet.input.distribute = distribute;
@@ -786,12 +804,14 @@ void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t sche
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitMSP_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.shareIndex = shareIndex;
     
@@ -846,12 +866,14 @@ void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         voteInProposal_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.priceOfIPO = priceOfIPO;
     packet.input.proposalId = proposalId;
@@ -909,12 +931,14 @@ void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t schedu
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         buyQcap_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amount = amount;
     
@@ -974,12 +998,14 @@ void TransferShareManagementRights(const char* nodeIp, int nodePort, const char*
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         TransferShareManagementRights_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     memcpy(&packet.input.asset.assetName, assetNameS1, 8);
     memcpy(packet.input.asset.issuer, pubKey, 32);
@@ -1037,12 +1063,14 @@ void submitMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         submitMuslimId_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
     
     packet.transaction.amount = 0;
 
@@ -1095,12 +1123,14 @@ void cancelMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         cancelMuslimId_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
     
     packet.transaction.amount = 0;
 
@@ -1135,10 +1165,12 @@ void getData(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1172,11 +1204,14 @@ void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char*
     uint8_t pubKey[32] = {0};
     getPublicKeyFromIdentity(address, pubKey);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetStakedAmountAndVotingPower_input input;
     } packet;
+    #pragma pack(pop)
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1206,11 +1241,13 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetGP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1242,11 +1279,13 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetQCP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1278,11 +1317,13 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetIPOP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1314,11 +1355,13 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetQEarnP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1350,11 +1393,13 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetFundP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1386,11 +1431,13 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetMKTP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1422,11 +1469,13 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetAlloP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1458,11 +1507,13 @@ void getMSP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetMSP_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1494,11 +1545,13 @@ void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetIdentitiesHvVtPw_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1535,11 +1588,13 @@ void ppCreationPower(const char* nodeIp, int nodePort, const char* address)
     uint8_t pubKey[32] = {0};
     getPublicKeyFromIdentity(address, pubKey);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultppCreationPower_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1568,11 +1623,13 @@ void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t 
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetQcapBurntAmountInLastEpoches_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1601,11 +1658,13 @@ void getAmountToBeSoldPerYear(const char* nodeIp, int nodePort, uint32_t year)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetAmountToBeSoldPerYear_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1634,10 +1693,12 @@ void getTotalRevenueInQcap(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1665,11 +1726,13 @@ void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetRevenueInQcapPerEpoch_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1698,11 +1761,13 @@ void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetRevenuePerShare_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1735,11 +1800,13 @@ void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* as
     memcpy(assetNameS1, assetName, strlen(assetName));
     getPublicKeyFromIdentity(issuer, pubKey);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetAmountOfShareQvaultHold_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1769,10 +1836,12 @@ void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1800,11 +1869,13 @@ void getAmountForQearnInUpcomingEpoch(const char* nodeIp, int nodePort, uint32_t
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         QvaultGetAmountForQearnInUpcomingEpoch_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
