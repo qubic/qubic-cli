@@ -13,12 +13,14 @@
 #include "K12AndKeyUtil.h"
 #include "connection.h"
 #include "walletUtils.h"
+#include "sanityCheck.h"
 
 constexpr int QUTIL_CONTRACT_ID = 4;
 
 enum qutilFunctionId
 {
     GetSendToManyV1Fee = 1,
+    GetTotalNumberOfAssetShares = 2,
 };
 
 enum qutilProcedureId
@@ -291,4 +293,30 @@ void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const char* issuerIdentity, const char* assetName)
+{
+    struct
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+    } input;
+    uint64_t output;
+
+    sanityCheckIdentity(issuerIdentity);
+    getPublicKeyFromIdentity(issuerIdentity, input.issuer);
+
+    sanityCheckValidAssetName(assetName);
+    input.assetName = 0;
+    memcpy(&input.assetName, assetName, std::min(size_t(7), strlen(assetName)));
+
+    if (!runContractFunction(nodeIp, nodePort, QUTIL_CONTRACT_ID,
+        GetTotalNumberOfAssetShares, &input, sizeof(input), &output, sizeof(output)))
+    {
+        LOG("ERROR: Didn't receive valid response from GetTotalNumberOfAssetShares!\n");
+        return;
+    }
+
+    LOG("%llu\n", output);
 }
