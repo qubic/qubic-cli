@@ -23,6 +23,7 @@
 #include "qvault.h"
 #include "qearn.h"
 #include "msvault.h"
+#include "nostromo.h"
 #include "testUtils.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
@@ -159,7 +160,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         //   rather than waiting for receipt of the full amount requested."
         // Microsoft docs:
         //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
-        //   return as much data as is currently available—up to the size of the buffer specified. [...]
+        //   return as much data as is currently availableï¿½up to the size of the buffer specified. [...]
         //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
         int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
         if (recvSz <= 0)
@@ -338,6 +339,16 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+
+// NOSTROMO
+template NOSTROMOGetStats_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetStats_output>();
+template NOSTROMOGetTierLevelByUser_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetTierLevelByUser_output>();
+template NOSTROMOGetUserVoteStatus_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetUserVoteStatus_output>();
+template NOSTROMOCheckTokenCreatability_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOCheckTokenCreatability_output>();
+template NOSTROMOGetNumberOfInvestedAndClaimedProjects_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedAndClaimedProjects_output>();
+template NOSTROMOGetProjectByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectByIndex_output>();
+template NOSTROMOGetFundarasingByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetFundarasingByIndex_output>();
+template NOSTROMOGetProjectIndexListByCreator_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectIndexListByCreator_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();

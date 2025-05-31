@@ -105,3 +105,74 @@ uint8_t g_msVaultVaultName[32] = { 0 };
 char* g_msVaultDestination = nullptr;
 char* g_msVaultPublicId = nullptr;
 char* g_msVaultOwnersCommaSeparated = nullptr;
+
+// nostromo
+
+char* g_nostTokenName = nullptr;
+uint64_t g_nostSupply = 0;
+uint32_t g_nost_tierlevel = 0;
+uint32_t g_noststartyear = 0;
+uint32_t g_noststartmonth = 0;
+uint32_t g_noststartday = 0;
+uint32_t g_noststarthour = 0;
+uint32_t g_nostendyear = 0;
+uint32_t g_nostendmonth = 0;
+uint32_t g_nostendday = 0;
+uint32_t g_nostendhour = 0;
+uint32_t g_nostindexofproject = 0;
+bool g_nostdecsion = 0;
+uint64_t g_nost_tokenPrice;
+uint64_t g_nost_soldAmount;
+uint64_t g_nost_requiredFunds;
+
+uint32_t g_nost_indexOfProject = 0;
+uint32_t g_nost_firstPhaseStartYear;
+uint32_t g_nost_firstPhaseStartMonth;
+uint32_t g_nost_firstPhaseStartDay;
+uint32_t g_nost_firstPhaseStartHour;
+uint32_t g_nost_firstPhaseEndYear;
+uint32_t g_nost_firstPhaseEndMonth;
+uint32_t g_nost_firstPhaseEndDay;
+uint32_t g_nost_firstPhaseEndHour;
+
+uint32_t g_nost_secondPhaseStartYear;
+uint32_t g_nost_secondPhaseStartMonth;
+uint32_t g_nost_secondPhaseStartDay;
+uint32_t g_nost_secondPhaseStartHour;
+uint32_t g_nost_secondPhaseEndYear;
+uint32_t g_nost_secondPhaseEndMonth;
+uint32_t g_nost_secondPhaseEndDay;
+uint32_t g_nost_secondPhaseEndHour;
+
+uint32_t g_nost_thirdPhaseStartYear;
+uint32_t g_nost_thirdPhaseStartMonth;
+uint32_t g_nost_thirdPhaseStartDay;
+uint32_t g_nost_thirdPhaseStartHour;
+uint32_t g_nost_thirdPhaseEndYear;
+uint32_t g_nost_thirdPhaseEndMonth;
+uint32_t g_nost_thirdPhaseEndDay;
+uint32_t g_nost_thirdPhaseEndHour;
+
+uint32_t g_nost_listingStartYear;
+uint32_t g_nost_listingStartMonth;
+uint32_t g_nost_listingStartDay;
+uint32_t g_nost_listingStartHour;
+
+uint32_t g_nost_cliffEndYear;
+uint32_t g_nost_cliffEndMonth;
+uint32_t g_nost_cliffEndDay;
+uint32_t g_nost_cliffEndHour;
+
+uint32_t g_nost_vestingEndYear;
+uint32_t g_nost_vestingEndMonth;
+uint32_t g_nost_vestingEndDay;
+uint32_t g_nost_vestingEndHour;
+
+uint8_t g_nost_threshold;
+uint8_t g_nost_TGE;
+uint8_t g_nost_stepOfVesting;
+
+uint64_t g_nost_amount = 0;
+uint32_t g_nost_indexOfFundaraising;
+
+char* g_nost_identity = nullptr;

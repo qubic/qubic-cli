@@ -1523,6 +1523,204 @@ void parseArgument(int argc, char** argv)
         }
 
         /**************************
+         **** NOSTROMO SC COMMANDS ****
+         **************************/
+
+        if (strcmp(argv[i], "-nostromoregisterintier") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_REGISTER_IN_TIER;
+            g_nost_tierlevel = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromologoutfromtier") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = NOSTROMO_LOGOUT_FROM_TIER;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromocreateproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(10)
+            g_cmd = NOSTROMO_CREATE_PROJECT;
+            g_nostTokenName = argv[i + 1];
+            g_nostSupply = charToNumber(argv[i + 2]);
+            g_noststartyear = (uint32_t)charToNumber(argv[i + 3]);
+            g_noststartmonth = (uint32_t)charToNumber(argv[i + 4]);
+            g_noststartday = (uint32_t)charToNumber(argv[i + 5]);
+            g_noststarthour = (uint32_t)charToNumber(argv[i + 6]);
+            g_nostendyear = (uint32_t)charToNumber(argv[i + 7]);
+            g_nostendmonth = (uint32_t)charToNumber(argv[i + 8]);
+            g_nostendday = (uint32_t)charToNumber(argv[i + 9]);
+            g_nostendhour = (uint32_t)charToNumber(argv[i + 10]);
+            i += 11;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromovoteinproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_VOTE_IN_PROJECT;
+            g_nostindexofproject = (uint32_t)charToNumber(argv[i + 1]);
+            g_nostdecsion = (bool)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromocreatefundaraising") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(43)
+            g_cmd = NOSTROMO_CREATE_FUNDARAISING;
+            g_nost_tokenPrice = charToNumber(argv[i + 1]);
+            g_nost_soldAmount = charToNumber(argv[i + 2]);
+            g_nost_requiredFunds = charToNumber(argv[i + 3]);
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 4]);
+            g_nost_firstPhaseStartYear = (uint32_t)charToNumber(argv[i + 5]);
+            g_nost_firstPhaseStartMonth = (uint32_t)charToNumber(argv[i + 6]);
+            g_nost_firstPhaseStartDay = (uint32_t)charToNumber(argv[i + 7]);
+            g_nost_firstPhaseStartHour = (uint32_t)charToNumber(argv[i + 8]);
+            g_nost_firstPhaseEndYear = (uint32_t)charToNumber(argv[i + 9]);
+            g_nost_firstPhaseEndMonth = (uint32_t)charToNumber(argv[i + 10]);
+            g_nost_firstPhaseEndDay = (uint32_t)charToNumber(argv[i + 11]);
+            g_nost_firstPhaseEndHour = (uint32_t)charToNumber(argv[i + 12]);
+
+            g_nost_secondPhaseStartYear = (uint32_t)charToNumber(argv[i + 13]);
+            g_nost_secondPhaseStartMonth = (uint32_t)charToNumber(argv[i + 14]);
+            g_nost_secondPhaseStartDay = (uint32_t)charToNumber(argv[i + 15]);
+            g_nost_secondPhaseStartHour = (uint32_t)charToNumber(argv[i + 16]);
+            g_nost_secondPhaseEndYear = (uint32_t)charToNumber(argv[i + 17]);
+            g_nost_secondPhaseEndMonth = (uint32_t)charToNumber(argv[i + 18]);
+            g_nost_secondPhaseEndDay = (uint32_t)charToNumber(argv[i + 19]);
+            g_nost_secondPhaseEndHour = (uint32_t)charToNumber(argv[i + 20]);
+
+            g_nost_thirdPhaseStartYear = (uint32_t)charToNumber(argv[i + 21]);
+            g_nost_thirdPhaseStartMonth = (uint32_t)charToNumber(argv[i + 22]);
+            g_nost_thirdPhaseStartDay = (uint32_t)charToNumber(argv[i + 23]);
+            g_nost_thirdPhaseStartHour = (uint32_t)charToNumber(argv[i + 24]);
+            g_nost_thirdPhaseEndYear = (uint32_t)charToNumber(argv[i + 25]);
+            g_nost_thirdPhaseEndMonth = (uint32_t)charToNumber(argv[i + 26]);
+            g_nost_thirdPhaseEndDay = (uint32_t)charToNumber(argv[i + 27]);
+            g_nost_thirdPhaseEndHour = (uint32_t)charToNumber(argv[i + 28]);
+
+            g_nost_listingStartYear = (uint32_t)charToNumber(argv[i + 29]);
+            g_nost_listingStartMonth = (uint32_t)charToNumber(argv[i + 30]);
+            g_nost_listingStartDay = (uint32_t)charToNumber(argv[i + 31]);
+            g_nost_listingStartHour = (uint32_t)charToNumber(argv[i + 32]);
+
+            g_nost_cliffEndYear = (uint32_t)charToNumber(argv[i + 33]);
+            g_nost_cliffEndMonth = (uint32_t)charToNumber(argv[i + 34]);
+            g_nost_cliffEndDay = (uint32_t)charToNumber(argv[i + 35]);
+            g_nost_cliffEndHour = (uint32_t)charToNumber(argv[i + 36]);
+
+            g_nost_vestingEndYear = (uint32_t)charToNumber(argv[i + 37]);
+            g_nost_vestingEndMonth = (uint32_t)charToNumber(argv[i + 38]);
+            g_nost_vestingEndDay = (uint32_t)charToNumber(argv[i + 39]);
+            g_nost_vestingEndHour = (uint32_t)charToNumber(argv[i + 40]);
+
+            g_nost_threshold = (uint8_t)charToNumber(argv[i + 41]);
+            g_nost_TGE = (uint8_t)charToNumber(argv[i + 42]);
+            g_nost_stepOfVesting = (uint8_t)charToNumber(argv[i + 43]);
+            i += 44;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoinvestinproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_INVEST_IN_FUNDARAISING;
+            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_amount = charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoclaimtoken") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_CLAIM_TOKEN;
+            g_nost_amount = charToNumber(argv[i + 1]);
+            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetstats") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = NOSTROMO_GET_STATS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogettierlevelbyuser") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_TIER_LEVEL_BY_USER;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetuservotestatus") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_USER_VOTE_STATUS;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromochecktokencreatability") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_CHECK_TOKEN_CREATABILITY;
+            g_nostTokenName = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetnumberofinvestedandclaimedprojects") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetprojectbyindex") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_PROJECT_BY_INDEX;
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetfundaraisingbyindex") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_FUNDARAISING_BY_INDEX;
+            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetprojectindexlistbycreator") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+
+        /**************************
          **** TESTING COMMANDS ****
          **************************/
         

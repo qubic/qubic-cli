@@ -16,6 +16,7 @@
 #include "qearn.h"
 #include "qvault.h"
 #include "msvault.h"
+#include "nostromo.h"
 #include "testUtils.h"
 
 int run(int argc, char* argv[])
@@ -607,6 +608,151 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
+            break;
+        }
+        case NOSTROMO_REGISTER_IN_TIER:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            registerInTier(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick, g_nost_tierlevel);
+            break;
+        }
+        case NOSTROMO_LOGOUT_FROM_TIER:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            logoutFromTier(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick);
+            break;
+        }
+        case NOSTROMO_CREATE_PROJECT:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_nostTokenName);
+            createProject(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nostTokenName, g_nostSupply,
+                        g_noststartyear, g_noststartmonth, g_noststartday, g_noststarthour,
+                        g_nostendyear, g_nostendmonth, g_nostendday, g_nostendhour);
+            break;
+        }
+        case NOSTROMO_VOTE_IN_PROJECT:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            voteInProject(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nostindexofproject, g_nostdecsion);
+            break;
+        }
+        case NOSTROMO_CREATE_FUNDARAISING:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            createFundaraising(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_tokenPrice, g_nost_soldAmount, g_nost_requiredFunds,
+                        g_nost_indexOfProject ,g_nost_firstPhaseStartYear, g_nost_firstPhaseStartMonth, g_nost_firstPhaseStartDay,
+                        g_nost_firstPhaseStartHour, g_nost_firstPhaseEndYear, g_nost_firstPhaseEndMonth, g_nost_firstPhaseEndDay, g_nost_firstPhaseEndHour,
+                        g_nost_secondPhaseStartYear, g_nost_secondPhaseStartMonth, g_nost_secondPhaseStartDay, g_nost_secondPhaseStartHour,
+                        g_nost_secondPhaseEndYear, g_nost_secondPhaseEndMonth, g_nost_secondPhaseEndDay, g_nost_secondPhaseEndHour,
+                        g_nost_thirdPhaseStartYear, g_nost_thirdPhaseStartMonth, g_nost_thirdPhaseStartDay, g_nost_thirdPhaseStartHour, g_nost_thirdPhaseEndYear,
+                        g_nost_thirdPhaseEndMonth, g_nost_thirdPhaseEndDay, g_nost_thirdPhaseEndHour,
+                        g_nost_listingStartYear, g_nost_listingStartMonth, g_nost_listingStartDay, g_nost_listingStartHour,
+                        g_nost_cliffEndYear, g_nost_cliffEndMonth, g_nost_cliffEndDay, g_nost_cliffEndHour,
+                        g_nost_vestingEndYear, g_nost_vestingEndMonth, g_nost_vestingEndDay, g_nost_vestingEndHour,
+                        g_nost_threshold, g_nost_TGE, g_nost_stepOfVesting);
+            break;
+        }
+        case NOSTROMO_INVEST_IN_FUNDARAISING:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            investInProject(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_indexOfFundaraising, g_nost_amount);
+            break;
+        }
+        case NOSTROMO_CLAIM_TOKEN:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            claimToken(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_amount, g_nost_indexOfFundaraising);
+            break;
+        }
+        case NOSTROMO_GET_STATS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getStats(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick);
+            break;
+        }
+        case NOSTROMO_GET_TIER_LEVEL_BY_USER:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getTierLevelByUser(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_identity);
+            break;
+        }
+        case NOSTROMO_GET_USER_VOTE_STATUS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getUserVoteStatus(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_identity);
+            break;
+        }
+        case NOSTROMO_CHECK_TOKEN_CREATABILITY:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            checkTokenCreatability(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nostTokenName);
+            break;
+        }
+        case NOSTROMO_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getNumberOfInvestedAndClaimedProjects(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_identity);
+            break;
+        }
+        case NOSTROMO_GET_PROJECT_BY_INDEX:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getProjectByIndex(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_indexOfProject);
+            break;
+        }
+        case NOSTROMO_GET_FUNDARAISING_BY_INDEX:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getFundarasingByIndex(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_indexOfFundaraising);
+            break;
+        }
+        case NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getProjectIndexListByCreator(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_identity);
             break;
         }
         case TEST_QPI_FUNCTIONS_OUTPUT:
