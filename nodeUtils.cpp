@@ -1932,6 +1932,14 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
             {
                 uint8_t* data = extraData[i].vecU8.data();
                 uint32_t sum = 0;
+                if (txs[i].inputType == 1)
+                {
+                    LOG("---Type: vote counter---\n");
+                }
+                if (txs[i].inputType == 8)
+                {
+                    LOG("---Type: custom mining counter---\n");
+                }
                 if (memcmp(td.timelock, data + 848, 32) == 0)
                 {
                     LOG("Matched data lock\n");
@@ -1939,11 +1947,15 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                 else
                 {
                     LOG("Mismatched data lock\n");
+                    char hex[128] = { 0 };
+                    byteToHex(data + 848, hex, 32);
+                    LOG("have: %s\n", hex);
+                    byteToHex(td.timelock, hex, 32);
+                    LOG("want: %s\n", hex);
                     continue;
                 }
                 if (txs[i].inputType == 1)
                 {
-                    LOG("---Type: vote counter---\n");
                     for (int j = 0; j < 676; j++)
                     {
                         votes[j] = extract10Bit(data, j);
@@ -1963,7 +1975,6 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                 }
                 if (txs[i].inputType == 8)
                 {
-                    LOG("---Type: custom mining counter---\n");
                     for (int j = 0; j < 676; j++)
                     {
                         votes[j] = extract10Bit(data, j);
