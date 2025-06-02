@@ -250,6 +250,50 @@ Command:
 	-msvaultgetvaultowners <VAULT_ID>
 			Get MsVault owners given vault ID.
 
+[NOSTROMO COMMANDS]
+
+	-nostromoregisterintier <TIER_LEVEL>
+			Register in tier. you need to send the <TIER_LEVEL> to SC as param.
+	-nostromologoutfromtier 
+			Please use this command to logout from tier. there is no any param.
+	-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>
+			Please create the project using this command. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> the infos for token
+			<START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project
+	-nostromovoteinproject <PROJECT_INDEX> <DECISION>
+			Please vote in project using this command. <DECISION> -> if you want to vote with yes, it should be 1. otherwise it is 0.
+	-nostromocreatefundaraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> 
+			<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>
+			<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>
+			<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>
+			<SECOND_PHASE_END_YEAR> <SECOND_PHASE_END_MONTH> <SECOND_PHASE_END_DAY> <SECOND_PHASE_END_HOUR>
+			<THIRD_PHASE_START_YEAR> <THIRD_PHASE_START_MONTH> <THIRD_PHASE_START_DAY> <THIRD_PHASE_START_HOUR>
+			<THIRD_PHASE_END_YEAR> <THIRD_PHASE_END_MONTH> <THIRD_PHASE_END_DAY> <THIRD_PHASE_END_HOUR>
+			<LISTING_START_YEAR> <LISTING_START_MONTH> <LISTING_START_DAY> <LISTING_START_HOUR>
+			<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>
+			<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>
+			<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>
+	-nostromoinvestinproject <FUNDARAISING_INDEX> <INVESTMENT_AMOUNT>
+			Please invest in fundaraising using thic command. 
+	-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDARAISING_INDEX>
+			If you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.
+	-nostromogetstats
+			Please get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
+	-nostromogettierlevelbyuser <USER_ID>
+			Please get the tier_level for <USER_ID>.
+	-nostromogetuservotestatus <USER_ID>
+			Please get the list of project index voted by <USER_ID>.
+	-nostromochecktokencreatability <TOKEN_NAME>
+			Please check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.
+	-nostromogetnumberofinvestedandclaimedprojects <USER_ID>
+			Please get the number invested and claimed project. you can check if the <USER_ID> can invest and claim using this command.
+			The max number that can invest and claim by one user at once in SC is 64 currently.
+	-nostromogetprojectbyindex <PRJECT_INDEX>
+			Please get the infos of project using this command.
+	-nostromogetfundaraisingbyindex <FUNDARAISING_INDEX>
+			Please get the infos of fundaraising using this command.
+	-nostromogetprojectindexlistbycreator <USER_ID>
+			Please get the list of project that <USER_ID> created using this command.
+
 [TESTING COMMANDS]
 	-testqpifunctionsoutput
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
