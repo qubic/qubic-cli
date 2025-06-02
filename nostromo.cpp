@@ -198,12 +198,14 @@ void registerInTier(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         registerInTier_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.tierLevel = tierLevel;
 
@@ -278,12 +280,14 @@ void logoutFromTier(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         logoutFromTier_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.transaction.amount = 0;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -350,12 +354,14 @@ void createProject(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         createProject_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     memcpy(&packet.input.tokenName, assetNameS1, 8);
     packet.input.supply = supply;
@@ -422,12 +428,14 @@ void voteInProject(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         voteInProject_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.decision = decision;
     packet.input.indexOfProject = indexOfProject;
@@ -533,12 +541,14 @@ void createFundaraising(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         createFundaraising_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.tokenPrice = tokenPrice;
     packet.input.soldAmount = soldAmount;
@@ -643,12 +653,14 @@ void investInProject(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         investInProject_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.indexOfFundaraising = indexOfFundaraising;
 
@@ -706,12 +718,14 @@ void claimToken(const char* nodeIp, int nodePort,
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         claimToken_input input;
         unsigned char signature[64];
     } packet;
+    #pragma pack(pop)
 
     packet.input.amount = amount;
     packet.input.indexOfFundaraising = indexOfFundaraising;
@@ -750,10 +764,13 @@ void getStats(const char* nodeIp, int nodePort,
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
     } packet;
+    #pragma pack(pop)
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -787,11 +804,14 @@ void getTierLevelByUser(const char* nodeIp, int nodePort,
     uint8_t publicKey[32] = {0};
     getPublicKeyFromIdentity(userId, publicKey);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOGetTierLevelByUser_input input;
     } packet;
+    #pragma pack(pop)
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -879,11 +899,13 @@ void checkTokenCreatability(const char* nodeIp, int nodePort,
     char assetNameS1[8] = {0};
     memcpy(assetNameS1, tokenName, strlen(tokenName));
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOCheckTokenCreatability_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -924,11 +946,13 @@ void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort,
     uint8_t publicKey[32] = {0};
     getPublicKeyFromIdentity(userId, publicKey);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOGetNumberOfInvestedAndClaimedProjects_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -961,11 +985,14 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOGetProjectByIndex_input input;
     } packet;
+    #pragma pack(pop)
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1014,11 +1041,13 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
 {
     auto qc = make_qc(nodeIp, nodePort);
     
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOGetFundarasingByIndex_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1076,11 +1105,13 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
     uint8_t publicKey[32] = {0};
     getPublicKeyFromIdentity(creator, publicKey);
 
+    #pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
         NOSTROMOGetProjectIndexListByCreator_input input;
     } packet;
+    #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
