@@ -12,6 +12,7 @@ struct GPInfo                   // General proposal
     uint32_t numberOfNo;
     uint32_t proposedEpoch;
     uint32_t currentQuorumPercent;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
@@ -24,6 +25,7 @@ struct QCPInfo                   // Quorum change proposal
     uint32_t proposedEpoch;
     uint32_t currentQuorumPercent;
     uint32_t newQuorumPercent;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
@@ -38,6 +40,7 @@ struct IPOPInfo         // IPO participation
     uint32_t proposedEpoch;
     uint32_t ipoContractIndex;
     uint32_t currentQuorumPercent;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient invest funds.
 };
 
@@ -51,6 +54,7 @@ struct QEarnPInfo       // Qearn participation proposal
     uint32_t numberOfNo;
     uint32_t proposedEpoch;
     uint32_t currentQuorumPercent;
+    uint8_t url[256];
     uint8_t numberOfEpoch;
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient funds.
 };
@@ -66,6 +70,7 @@ struct FundPInfo            // Fundraising proposal
     uint32_t restSaleAmount;
     uint32_t proposedEpoch;
     uint32_t currentQuorumPercent;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
@@ -82,6 +87,7 @@ struct MKTPInfo                 //  Marketplace proposal
     uint32_t proposedEpoch;
     uint32_t shareIndex;
     uint32_t amountOfShare;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient funds. 4 is the insufficient Qcap.
 };
 
@@ -97,6 +103,7 @@ struct AlloPInfo
     uint32_t distributed;
     uint32_t team;
     uint32_t burnQcap;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
@@ -109,6 +116,7 @@ struct MSPInfo
     uint32_t proposedEpoch;
     uint32_t muslimShareIndex;
     uint32_t currentQuorumPercent;
+    uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
@@ -464,14 +472,14 @@ struct QvaultGetAmountForQearnInUpcomingEpoch_output
 
 void stake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount);
 void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount);
-void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset);
-void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent);
-void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex);
-void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch);
-void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap);
-void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare);
-void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute);
-void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex);
+void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* url);
+void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent, const char* url);
+void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex, const char* url);
+void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url);
+void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url);
+void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url);
+void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute, const char* url);
+void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex, const char* url);
 void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes);
 void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap);
 void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex);

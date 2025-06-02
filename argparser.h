@@ -222,26 +222,26 @@ void print_help()
     printf("\t\tStake the Qcap with <AMOUNT> amount\n");
     printf("\t-qvaultunstake <AMOUNT>\n");
     printf("\t\tUnstake the Qcap with <AMOUNT> amount\n");
-    printf("\t-qvaultsubmitgeneralproposal\n");
-    printf("\t\tSubmit the general proposal\n");
-    printf("\t-qvaultsubmitquorumchangeproposal <NEW_QUORUM_PERMIllE>\n");
+    printf("\t-qvaultsubmitgeneralproposal <URL>\n");
+    printf("\t\tSubmit the general proposal. <URL> can be a website or github url. the max number of letters is 255\n");
+    printf("\t-qvaultsubmitquorumchangeproposal <URL> <NEW_QUORUM_PERMIllE>\n");
     printf("\t\tSubmit the quorum change proposal with new permille for quorum. it should be permille(0 ~ 1000) for sure. not percent\n");
-    printf("\t-qvaultsubmitipoproposal <IPO_CONTRACT_INDEX>\n");
+    printf("\t-qvaultsubmitipoproposal <URL> <IPO_CONTRACT_INDEX>\n");
     printf("\t\tSubmit the ipo proposal with <IPO_CONTRACT_INDEX>\n");
-    printf("\t-qvaultsubmitqearnproposal <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>\n");
+    printf("\t-qvaultsubmitqearnproposal <URL> <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>\n");
     printf("\t\tSubmit the qearn proposal with <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCHES>\n");
     printf("\t\t<AMOUNT_OF_QUBIC> - the amount per epoch, <NUMBER_OF_EPOCHES> - the number of epoches for locking\n");
-    printf("\t-qvaultsubmitfundproposal <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
+    printf("\t-qvaultsubmitfundproposal <URL> <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
     printf("\t\tSubmit the fund proposal with <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
     printf("\t\t<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale\n");
-    printf("\t-qvaultsubmitmarketplaceproposal <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
+    printf("\t-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
 	printf("\t\tSubmit the marketplace proposal with <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
 	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <ASSET_NAME> - the name of asset that want to sell to the SC\n");
 	printf("\t\t<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC\n");
-	printf("\t-qvaultsubmitpercentallocationproposal <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
+	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
 	printf("\t\tSubmit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
 	printf("\t\t<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders\n");
-	printf("\t-qvaultsubmitmuslimproposal <SHARE_INDEX>\n");
+	printf("\t-qvaultsubmitmuslimproposal <URL> <SHARE_INDEX>\n");
 	printf("\t\tSubmit the muslim proposal with <SHARE_INDEX>\n");
 	printf("\t-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\tVote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
@@ -1354,81 +1354,89 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qvaultsubmitgeneralproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(0)
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_COMMAND_SUBMIT_GP;
-            i += 1;
+            g_qvaulturl = argv[i + 1];
+            i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitquorumchangeproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QVAULT_COMMAND_SUBMIT_QCP;
-            g_qvault_permille = uint32_t(charToNumber(argv[i + 1]));
-            i += 2;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_permille = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitipoproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QVAULT_COMMAND_SUBMIT_IPOP;
-            g_qvault_ipo_contract_index = uint32_t(charToNumber(argv[i + 1]));
-            i += 2;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_ipo_contract_index = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitqearnproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(2)
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_COMMAND_SUBMIT_QEARNP;
-            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 1]));
-            g_qvault_number_of_epoch = uint32_t(charToNumber(argv[i + 2]));
-            i += 3;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_number_of_epoch = uint32_t(charToNumber(argv[i + 3]));
+            i += 4;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitfundproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(2)
+            CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_COMMAND_SUBMIT_FUNDP;
-            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 1]));
-            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 2]));
-            i += 3;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 3]));
+            i += 4;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitmarketplaceproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(5)
+            CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QVAULT_COMMAND_SUBMIT_MKTP;
-            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 1]));
-            g_qvault_share_name = argv[i + 2];
-            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 3]));
-            g_qvault_index_of_share = uint32_t(charToNumber(argv[i + 4]));
-            g_qvault_amount_of_share = uint32_t(charToNumber(argv[i + 5]));
-            i += 6;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_share_name = argv[i + 3];
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 4]));
+            g_qvault_index_of_share = uint32_t(charToNumber(argv[i + 5]));
+            g_qvault_amount_of_share = uint32_t(charToNumber(argv[i + 6]));
+            i += 7;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitpercentallocationproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(4)
+            CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QVAULT_COMMAND_SUBMIT_ALLOP;
-            g_qvault_reinvested = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_team = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_burn = uint32_t(charToNumber(argv[i + 3]));
-            g_qvault_distribute = uint32_t(charToNumber(argv[i + 4]));
-            i += 5;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_reinvested = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_team = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_burn = uint32_t(charToNumber(argv[i + 4]));
+            g_qvault_distribute = uint32_t(charToNumber(argv[i + 5]));
+            i += 6;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultsubmitmuslimproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QVAULT_COMMAND_SUBMIT_MSP;
-            g_qvault_share_index = uint32_t(charToNumber(argv[i + 1]));
-            i += 2;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_share_index = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
             CHECK_OVER_PARAMETERS;
             break;
         }

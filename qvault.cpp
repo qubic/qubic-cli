@@ -77,7 +77,7 @@ struct unStake_output
 
 struct submitGP_input
 {
-
+    uint8_t url[256];
 };
 
 struct submitGP_output
@@ -88,6 +88,7 @@ struct submitGP_output
 struct submitQCP_input
 {
     uint32_t newQuorumPercent;
+    uint8_t url[256];
 };
 
 struct submitQCP_output
@@ -98,6 +99,7 @@ struct submitQCP_output
 struct submitIPOP_input
 {
     uint32_t ipoContractIndex;
+    uint8_t url[256];
 };
 
 struct submitIPOP_output
@@ -109,6 +111,7 @@ struct submitQEarnP_input
 {
     uint64_t amountPerEpoch;
     uint32_t numberOfEpoch;
+    uint8_t url[256];
 };
 
 struct submitQEarnP_output
@@ -120,6 +123,7 @@ struct submitFundP_input
 {
     uint64_t priceOfOneQcap;
     uint32_t amountOfQcap;
+    uint8_t url[256];
 };
 
 struct submitFundP_output
@@ -134,6 +138,7 @@ struct submitMKTP_input
     uint32_t amountOfQcap;
     uint32_t indexOfShare;
     uint32_t amountOfShare;
+    uint8_t url[256];
 };
 
 struct submitMKTP_output
@@ -147,6 +152,7 @@ struct submitAlloP_input
     uint32_t team;
     uint32_t burn;
     uint32_t distribute;
+    uint8_t url[256];
 };
 
 struct submitAlloP_output
@@ -157,6 +163,7 @@ struct submitAlloP_output
 struct submitMSP_input
 {
     uint32_t shareIndex;
+    uint8_t url[256];
 };
 
 struct submitMSP_output
@@ -341,8 +348,13 @@ void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t schedu
     LOG("to check your tx confirmation status\n");
 }
 
-void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset)
+void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -373,6 +385,7 @@ void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t sched
     #pragma pack(pop)
 
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
+    memcpy(&packet.input.url, url, 256);
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
@@ -401,8 +414,13 @@ void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t sched
     LOG("to check your tx confirmation status\n");
 }
 
-void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent)
+void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -433,6 +451,7 @@ void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t sche
     #pragma pack(pop)
 
     packet.input.newQuorumPercent = newQuorumPercent;
+    memcpy(&packet.input.url, url, 256);
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -462,8 +481,13 @@ void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t sche
     LOG("to check your tx confirmation status\n");
 }
 
-void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex)
+void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -494,6 +518,7 @@ void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     #pragma pack(pop)
 
     packet.input.ipoContractIndex = ipoContractIndex;
+    memcpy(&packet.input.url, url, 256);
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -523,8 +548,13 @@ void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     LOG("to check your tx confirmation status\n");
 }
 
-void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch)
+void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -556,6 +586,7 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
 
     packet.input.amountPerEpoch = amountPerEpoch;
     packet.input.numberOfEpoch = numberOfEpoch;
+    memcpy(&packet.input.url, url, 256);
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -585,8 +616,13 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
     LOG("to check your tx confirmation status\n");
 }
 
-void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap)
+void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -618,6 +654,7 @@ void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
 
     packet.input.amountOfQcap = amountOfQcap;
     packet.input.priceOfOneQcap = priceOfOneQcap;
+    memcpy(&packet.input.url, url, 256);
 
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
@@ -648,8 +685,13 @@ void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     LOG("to check your tx confirmation status\n");
 }
 
-void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare)
+void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     char assetNameS1[8] = {0};
@@ -686,6 +728,7 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     packet.input.amountOfQubic = amountOfQubic;
     packet.input.amountOfShare = amountOfShare;
     packet.input.indexOfShare = indexOfShare;
+    memcpy(&packet.input.url, url, 256);
     memcpy(&packet.input.shareName, assetNameS1, 8);
     
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
@@ -717,8 +760,13 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     LOG("to check your tx confirmation status\n");
 }
 
-void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute)
+void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -752,6 +800,7 @@ void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     packet.input.distribute = distribute;
     packet.input.reinvested = reinvested;
     packet.input.team = team;
+    memcpy(&packet.input.url, url, 256);
     
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
@@ -782,8 +831,13 @@ void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     LOG("to check your tx confirmation status\n");
 }
 
-void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex)
+void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex, const char* url)
 {
+    if (strlen(url) > 255)
+    {
+        printf("The url should be less than 255.\nThe command is failed"); 
+        return ;
+    }
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -814,6 +868,7 @@ void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t sche
     #pragma pack(pop)
 
     packet.input.shareIndex = shareIndex;
+    memcpy(&packet.input.url, url, 256);
     
     packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
@@ -1272,7 +1327,7 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result);
 }
 
 void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1310,7 +1365,7 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nnewQuorumPercent: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.newQuorumPercent);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nnewQuorumPercent: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.newQuorumPercent);
 }
 
 void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1348,7 +1403,7 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\ntotalWeight: %llu\nassignedFund: %llu\nipoContractIndex: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\ntotalWeight: %llu\nassignedFund: %llu\nipoContractIndex: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
 }
 
 void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1386,7 +1441,7 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfInvestPerEpoch: %llu\nassignedFundPerEpoch: %llu\nnumberOfEpoch: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfInvestPerEpoch: %llu\nassignedFundPerEpoch: %llu\nnumberOfEpoch: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
 }
 
 void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1424,7 +1479,7 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\npricePerOneQcap: %llu\namountOfQcap: %u\nrestSaleAmount: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\npricePerOneQcap: %llu\namountOfQcap: %u\nrestSaleAmount: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
 }
 
 void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1462,7 +1517,7 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfQubic: %llu\nshareName: %llu\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfQubic: %llu\nshareName: %llu\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
 }
 
 void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1500,7 +1555,7 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
 }
 
 void getMSP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1538,7 +1593,7 @@ void getMSP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("proposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nmuslimShareIndex: %u\n", proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.muslimShareIndex);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nmuslimShareIndex: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.muslimShareIndex);
 }
 
 void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count)

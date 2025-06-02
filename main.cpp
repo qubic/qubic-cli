@@ -486,42 +486,42 @@ int run(int argc, char* argv[])
         case QVAULT_COMMAND_SUBMIT_GP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitGP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
+            submitGP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_QCP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitQCP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_permille);
+            submitQCP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_permille, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_IPOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitIPOP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_ipo_contract_index);
+            submitIPOP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_ipo_contract_index, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_QEARNP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitQEarnP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_number_of_epoch);
+            submitQEarnP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_number_of_epoch, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_FUNDP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitFundP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_price_of_qcap, g_qvault_amount_of_qcap);
+            submitFundP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_price_of_qcap, g_qvault_amount_of_qcap, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_MKTP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitMKTP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_share_name, g_qvault_amount_of_qcap, g_qvault_index_of_share, g_qvault_amount_of_share);
+            submitMKTP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_amount_of_qubic, g_qvault_share_name, g_qvault_amount_of_qcap, g_qvault_index_of_share, g_qvault_amount_of_share, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_ALLOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_team, g_qvault_burn, g_qvault_distribute);
+            submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_team, g_qvault_burn, g_qvault_distribute, g_qvaulturl);
             break;
         case QVAULT_COMMAND_SUBMIT_MSP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitMSP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_share_index);
+            submitMSP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_share_index, g_qvaulturl);
             break;
         case QVAULT_COMMAND_VOTE_IN_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);

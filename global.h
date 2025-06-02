@@ -92,6 +92,7 @@ uint32_t g_qearn_getinfo_epoch = 0;
 uint32_t g_qearn_getstats_epoch = 0;
 
 // qvault
+char* g_qvaulturl = nullptr;
 char* g_qvaultIdentity = nullptr;
 uint32_t g_qvault_stake_amount = 0;
 uint32_t g_qvault_permille = 0;

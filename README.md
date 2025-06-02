@@ -201,26 +201,26 @@ Command:
 		Stake the Qcap with <AMOUNT> amount
 	-qvaultunstake <AMOUNT>
 		Unstake the Qcap with <AMOUNT> amount
-	-qvaultsubmitgeneralproposal
-		Submit the general proposal
-	-qvaultsubmitquorumchangeproposal <NEW_QUORUM_PERMIllE>
+	-qvaultsubmitgeneralproposal <URL>
+		Submit the general proposal <URL> can be a website or github url. the max number of letters is 255.
+	-qvaultsubmitquorumchangeproposal <URL> <NEW_QUORUM_PERMIllE>
 		Submit the quorum change proposal with new permille for quorum. it should be permille(0 ~ 1000) for sure. not percent
-	-qvaultsubmitipoproposal <IPO_CONTRACT_INDEX>
+	-qvaultsubmitipoproposal <URL> <IPO_CONTRACT_INDEX>
 		Submit the ipo proposal with <IPO_CONTRACT_INDEX>
-	-qvaultsubmitqearnproposal <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>
+	-qvaultsubmitqearnproposal <URL> <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>
 		Submit the qearn proposal with <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCHES>
 		<AMOUNT_OF_QUBIC> - the amount per epoch, <NUMBER_OF_EPOCHES> - the number of epoches for locking
-	-qvaultsubmitfundproposal <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
+	-qvaultsubmitfundproposal <URL> <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
 		Submit the fund proposal with <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
 		<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale
-	-qvaultsubmitmarketplaceproposal <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>
+	-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>
 		Submit the marketplace proposal with <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>
 		<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <ASSET_NAME> - the name of asset that want to sell to the SC
 		<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC
-	-qvaultsubmitpercentallocationproposal <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
+	-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
 		Submit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
 		<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders
-	-qvaultsubmitmuslimproposal <SHARE_INDEX>
+	-qvaultsubmitmuslimproposal <URL> <SHARE_INDEX>
 		Submit the muslim proposal with <SHARE_INDEX>
 	-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
 		Vote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
