@@ -687,7 +687,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_STATS:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getStats(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick);
             break;
@@ -695,7 +694,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_TIER_LEVEL_BY_USER:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getTierLevelByUser(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_identity);
@@ -704,7 +702,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_USER_VOTE_STATUS:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getUserVoteStatus(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_identity);
@@ -713,7 +710,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_CHECK_TOKEN_CREATABILITY:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             checkTokenCreatability(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nostTokenName);
@@ -722,7 +718,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getNumberOfInvestedAndClaimedProjects(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_identity);
@@ -731,7 +726,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_PROJECT_BY_INDEX:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getProjectByIndex(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_indexOfProject);
@@ -740,7 +734,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_FUNDARAISING_BY_INDEX:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getFundarasingByIndex(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_indexOfFundaraising);
@@ -749,7 +742,6 @@ int run(int argc, char* argv[])
         case NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
             getProjectIndexListByCreator(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_identity);
