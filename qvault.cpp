@@ -1623,7 +1623,7 @@ void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* as
         return;
     }
 
-    printf("revenue: %u\n", result.amount);
+    printf("The amount of %s that SC held: %u\n", assetName, result.amount);
 }
 
 void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort)
