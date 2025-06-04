@@ -319,7 +319,6 @@ template QvaultGetQEarnP_output QubicConnection::receivePacketWithHeaderAs<Qvaul
 template QvaultGetFundP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetFundP_output>();
 template QvaultGetMKTP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetMKTP_output>();
 template QvaultGetAlloP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetAlloP_output>();
-template QvaultGetMSP_output QubicConnection::receivePacketWithHeaderAs<QvaultGetMSP_output>();
 template QvaultGetIdentitiesHvVtPw_output QubicConnection::receivePacketWithHeaderAs<QvaultGetIdentitiesHvVtPw_output>();
 template QvaultppCreationPower_output QubicConnection::receivePacketWithHeaderAs<QvaultppCreationPower_output>();
 template QvaultGetQcapBurntAmountInLastEpoches_output QubicConnection::receivePacketWithHeaderAs<QvaultGetQcapBurntAmountInLastEpoches_output>();

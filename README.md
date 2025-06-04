@@ -220,8 +220,6 @@ Command:
 	-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
 		Submit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>
 		<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders
-	-qvaultsubmitmuslimproposal <URL> <SHARE_INDEX>
-		Submit the muslim proposal with <SHARE_INDEX>
 	-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
 		Vote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
 		<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B
@@ -230,10 +228,6 @@ Command:
 		Buy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap
 	-qvaulttransfersharemanagementrights <TOKEN_ISSUER> <TOKEN_NAME> <NUMBER_OF_TOKEN> <NEWMANAGING_CONTRACT_INDEX>
 		Transfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>
-	-qvaultsubmitmuslimid
-		Set your account as muslim id in the Qvault SC
-	-qvaultcancelmuslimid
-		Cancel your account from muslim id in the Qvault SC
 	-qvaultgetdata
 		Getting the state variables from the SC
 	-qvaultgetstakedamountandvotingpower <IDENTITY>
@@ -252,8 +246,6 @@ Command:
 		Getting the marketplace proposal info of <PROPOSAL_ID> proposal
 	-qvaultgetallocationproposal <PROPOSAL_ID>
 		Getting the allocation proposal info of <PROPOSAL_ID> proposal
-	-qvaultgetmuslimproposal <PROPOSAL_ID>
-		Getting the muslim proposal info of <PROPOSAL_ID> proposal
 	-qvaultgetidentitieshavingvotingpower <OFFSET> <COUNT>
 		Getting the identities having the voting power 
 		<OFFSET> - the point to read, <COUNT> - the number of fetching

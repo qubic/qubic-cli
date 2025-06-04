@@ -26,7 +26,6 @@
 #define QVAULT_GET_FUNDP 7
 #define QVAULT_GET_MKTP 8
 #define QVAULT_GET_ALLOP 9
-#define QVAULT_GET_MSP 10
 #define QVAULT_GET_IDENTITIES_HV_VT_PW 11
 #define QVAULT_GET_PP_CREATION_POWER 12
 #define QVAULT_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES 13
@@ -48,12 +47,9 @@
 #define QVAULT_SUBMIT_FUNDP 7
 #define QVAULT_SUBMIT_MKTP 8
 #define QVAULT_SUBMIT_ALLOP 9
-#define QVAULT_SUBMIT_MSP 10
 #define QVAULT_VOTE_IN_PROPOSAL 11
 #define QVAULT_BUY_QCAP 12
 #define QVAULT_TRANSFER_SHARE_MANAGEMENT_RIGHTS 13
-#define QVAULT_SUBMIT_MUSLIMID 14
-#define QVAULT_CANCEL_MUSLIMID 15
 
 struct stake_input
 {
@@ -160,17 +156,6 @@ struct submitAlloP_output
     uint32_t returnCode;
 };
 
-struct submitMSP_input
-{
-    uint32_t shareIndex;
-    uint8_t url[256];
-};
-
-struct submitMSP_output
-{
-    uint32_t returnCode;
-};
-
 struct voteInProposal_input
 {
     uint64_t priceOfIPO;
@@ -203,26 +188,6 @@ struct TransferShareManagementRights_input
 struct TransferShareManagementRights_output
 {
     int64_t transferredNumberOfShares;
-    uint32_t returnCode;
-};
-
-struct submitMuslimId_input
-{
-};
-
-struct submitMuslimId_output
-{
-    uint64_t elementIndex;
-    uint32_t returnCode;
-};
-
-struct cancelMuslimId_input
-{
-
-};
-
-struct cancelMuslimId_output
-{
     uint32_t returnCode;
 };
 
@@ -831,74 +796,6 @@ void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
     LOG("to check your tx confirmation status\n");
 }
 
-void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex, const char* url)
-{
-    if (strlen(url) > 255)
-    {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
-    }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitMSP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.shareIndex = shareIndex;
-    memcpy(&packet.input.url, url, 256);
-    
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_MSP;
-    packet.transaction.inputSize = sizeof(submitMSP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMSP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMSP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitMSP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
-}
-
 void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1096,126 +993,6 @@ void TransferShareManagementRights(const char* nodeIp, int nodePort, const char*
     LOG("to check your tx confirmation status\n");
 }
 
-void submitMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset)
-{
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitMuslimId_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-    
-    packet.transaction.amount = 0;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_MUSLIMID;
-    packet.transaction.inputSize = sizeof(submitMuslimId_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMuslimId_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMuslimId_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitMuslimId tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
-}
-
-void cancelMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset)
-{
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        cancelMuslimId_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-    
-    packet.transaction.amount = 0;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_CANCEL_MUSLIMID;
-    packet.transaction.inputSize = sizeof(cancelMuslimId_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(cancelMuslimId_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(cancelMuslimId_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("cancelMuslimId tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
-}
-
 void getData(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1250,7 +1027,7 @@ void getData(const char* nodeIp, int nodePort)
     getIdentityFromPublicKey(result.adminAddress , adminAddress, false);
 
     printf("adminAddress: %s\n", adminAddress);
-    printf("totalVotingPower: %llu\nproposalCreateFund: %llu\nreinvestingFund: %llu\ntotalNotMSRevenue: %llu\ntotalMuslimRevenue: %llu\nfundForBurn: %llu\ntotalStakedQcapAmount: %llu\nqcapMarketCap: %llu\nraisedFundByQcap: %llu\nlastRoundPriceOfQcap: %llu\nrevenueByQearn:%llu\nqcapSoldAmount: %u\nshareholderDividend: %u\nQCAPHolderPermille: %u\nreinvestingPermille: %u\ndevPermille: %u\nburnPermille: %u\nqcapBurnPermille: %u\nnumberOfStaker: %u\nnumberOfVotingPower: %u\nnumberOfGP: %u\nnumberOfQCP: %u\nnumberOfIPOP: %u\nnumberOfQEarnP: %u\nnumberOfFundP: %u\nnumberOfMKTP: %u\nnumberOfAlloP: %u\ntransferRightsFee: %u\nnumberOfMuslim: %u\nnumberOfMuslimShare: %u\nminQuorumRq: %u\nmaxQuorumRq: %u\ntotalQcapBurntAmount: %u\ncirculatingSupply: %u\nquorumPercent: %u\n", result.totalVotingPower, result.proposalCreateFund, result.reinvestingFund, result.totalNotMSRevenue, result.totalMuslimRevenue, result.fundForBurn, result.totalStakedQcapAmount, result.qcapMarketCap, result.raisedFundByQcap, result.lastRoundPriceOfQcap, result.revenueByQearn, result.qcapSoldAmount, result.shareholderDividend, result.QCAPHolderPermille, result.reinvestingPermille, result.devPermille, result.burnPermille, result.qcapBurnPermille, result.numberOfStaker, result.numberOfVotingPower, result.numberOfGP, result.numberOfQCP, result.numberOfIPOP, result.numberOfQEarnP, result.numberOfFundP, result.numberOfMKTP, result.numberOfAlloP, result.transferRightsFee, result.numberOfMuslim, result.numberOfMuslimShare, result.minQuorumRq, result.maxQuorumRq, result.totalQcapBurntAmount, result.circulatingSupply, result.quorumPercent);
+    printf("totalVotingPower: %llu\nproposalCreateFund: %llu\nreinvestingFund: %llu\ntotalEpochRevenue: %llu\nfundForBurn: %llu\ntotalStakedQcapAmount: %llu\nqcapMarketCap: %llu\nraisedFundByQcap: %llu\nlastRoundPriceOfQcap: %llu\nrevenueByQearn:%llu\nqcapSoldAmount: %u\nshareholderDividend: %u\nQCAPHolderPermille: %u\nreinvestingPermille: %u\ndevPermille: %u\nburnPermille: %u\nqcapBurnPermille: %u\nnumberOfStaker: %u\nnumberOfVotingPower: %u\nnumberOfGP: %u\nnumberOfQCP: %u\nnumberOfIPOP: %u\nnumberOfQEarnP: %u\nnumberOfFundP: %u\nnumberOfMKTP: %u\nnumberOfAlloP: %u\ntransferRightsFee: %u\nminQuorumRq: %u\nmaxQuorumRq: %u\ntotalQcapBurntAmount: %u\ncirculatingSupply: %u\nquorumPercent: %u\n", result.totalVotingPower, result.proposalCreateFund, result.reinvestingFund, result.totalEpochRevenue, result.fundForBurn, result.totalStakedQcapAmount, result.qcapMarketCap, result.raisedFundByQcap, result.lastRoundPriceOfQcap, result.revenueByQearn, result.qcapSoldAmount, result.shareholderDividend, result.QCAPHolderPermille, result.reinvestingPermille, result.devPermille, result.burnPermille, result.qcapBurnPermille, result.numberOfStaker, result.numberOfVotingPower, result.numberOfGP, result.numberOfQCP, result.numberOfIPOP, result.numberOfQEarnP, result.numberOfFundP, result.numberOfMKTP, result.numberOfAlloP, result.transferRightsFee, result.minQuorumRq, result.maxQuorumRq, result.totalQcapBurntAmount, result.circulatingSupply, result.quorumPercent);
 }
 
 void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address)
@@ -1558,44 +1335,6 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
     printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
 }
 
-void getMSP(const char* nodeIp, int nodePort, uint32_t proposalId)
-{
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetMSP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetMSP_input);
-    packet.rcf.inputType = QVAULT_GET_MSP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetMSP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetMSP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
-        return;
-    }
-
-    char proposer[128] = {0};
-    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
-
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nmuslimShareIndex: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.muslimShareIndex);
-}
-
 void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1809,7 +1548,7 @@ void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
         return;
     }
 
-    printf("epochTotalRevenue: %llu\nepochOneQcapRevenue: %llu\nepochOneMuslimRevenue: %llu\nepochOneQvaultRevenue: %llu\nepochReinvestAmount: %llu\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneMuslimRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
+    printf("epochTotalRevenue: %llu\nepochOneQcapRevenue: %llu\nepochOneQvaultRevenue: %llu\nepochReinvestAmount: %llu\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
 }
 
 void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex)

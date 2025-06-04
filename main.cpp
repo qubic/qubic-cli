@@ -518,11 +518,6 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_team, g_qvault_burn, g_qvault_distribute, g_qvaulturl);
             break;
-        case QVAULT_COMMAND_SUBMIT_MSP:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            submitMSP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_share_index, g_qvaulturl);
-            break;
         case QVAULT_COMMAND_VOTE_IN_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -537,16 +532,6 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             TransferShareManagementRights(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvaultIdentity, g_qvault_assetname, g_qvault_number_of_share, g_qvault_newmanagement_contract_index);
-            break;
-        case QVAULT_COMMAND_SUBMIT_MUSLIMID:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            submitMuslimId(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
-            break;
-        case QVAULT_COMMAND_CANCEL_MUSLIMID:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            cancelMuslimId(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
             break;
         case QVAULT_COMMAND_GETDATA:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -583,10 +568,6 @@ int run(int argc, char* argv[])
         case QVAULT_COMMAND_GET_ALLOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             getAlloP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
-            break;
-        case QVAULT_COMMAND_GET_MSP:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            getMSP(g_nodeIp, g_nodePort, g_qvault_proposal_id);
             break;
         case QVAULT_COMMAND_GET_IDENTITIES_HV_VT_PW:
             sanityCheckNode(g_nodeIp, g_nodePort);

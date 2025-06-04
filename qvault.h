@@ -107,19 +107,6 @@ struct AlloPInfo
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
 };
 
-struct MSPInfo
-{
-    uint8_t proposer[32];
-    uint32_t currentTotalVotingPower;
-    uint32_t numberOfYes;
-    uint32_t numberOfNo;
-    uint32_t proposedEpoch;
-    uint32_t muslimShareIndex;
-    uint32_t currentQuorumPercent;
-    uint8_t url[256];
-    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
-};
-
 struct QVaultGetData_input
 {
 };
@@ -129,8 +116,7 @@ struct QVaultGetData_output
     uint64_t totalVotingPower;
     uint64_t proposalCreateFund;
     uint64_t reinvestingFund;
-    uint64_t totalNotMSRevenue;
-    uint64_t totalMuslimRevenue;
+    uint64_t totalEpochRevenue;
     uint64_t fundForBurn;
     uint64_t totalStakedQcapAmount;
     uint64_t qcapMarketCap;
@@ -154,8 +140,6 @@ struct QVaultGetData_output
     uint32_t numberOfMKTP;
     uint32_t numberOfAlloP;
     uint32_t transferRightsFee;
-    uint32_t numberOfMuslim;
-    uint32_t numberOfMuslimShare;
     uint32_t minQuorumRq;
     uint32_t maxQuorumRq;
     uint32_t totalQcapBurntAmount;
@@ -289,21 +273,6 @@ struct QvaultGetAlloP_output
     }
 };
 
-struct QvaultGetMSP_input
-{
-    uint32_t proposalId;
-};
-
-struct QvaultGetMSP_output
-{
-    MSPInfo proposal;
-
-    static constexpr unsigned char type()
-    {
-        return RespondContractFunction::type();
-    }
-};
-
 struct QvaultGetIdentitiesHvVtPw_input
 {
     uint32_t offset;
@@ -394,7 +363,6 @@ struct QvaultGetRevenueInQcapPerEpoch_output
 {
     uint64_t epochTotalRevenue;
     uint64_t epochOneQcapRevenue;
-    uint64_t epochOneMuslimRevenue;
     uint64_t epochOneQvaultRevenue;
     uint64_t epochReinvestAmount;
 
@@ -479,12 +447,9 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
 void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url);
 void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url);
 void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute, const char* url);
-void submitMSP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t shareIndex, const char* url);
 void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes);
 void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap);
 void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex);
-void submitMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset);
-void cancelMuslimId(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset);
 
 void getData(const char* nodeIp, int nodePort);
 void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address);
@@ -495,7 +460,6 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId);
 void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId);
 void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId);
 void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId);
-void getMSP(const char* nodeIp, int nodePort, uint32_t proposalId);
 void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count);
 void ppCreationPower(const char* nodeIp, int nodePort, const char* address);
 void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t numberOfLastEpoches);

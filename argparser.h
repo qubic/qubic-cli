@@ -241,8 +241,6 @@ void print_help()
 	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
 	printf("\t\tSubmit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
 	printf("\t\t<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders\n");
-	printf("\t-qvaultsubmitmuslimproposal <URL> <SHARE_INDEX>\n");
-	printf("\t\tSubmit the muslim proposal with <SHARE_INDEX>\n");
 	printf("\t-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\tVote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\t<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B\n");
@@ -251,10 +249,6 @@ void print_help()
 	printf("\t\tBuy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap\n");
 	printf("\t-qvaulttransfersharemanagementrights <TOKEN_ISSUER> <TOKEN_NAME> <NUMBER_OF_TOKEN> <NEWMANAGING_CONTRACT_INDEX>\n");
 	printf("\t\tTransfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>\n");
-	printf("\t-qvaultsubmitmuslimid\n");
-	printf("\t\tSet your account as muslim id in the Qvault SC\n");
-	printf("\t-qvaultcancelmuslimid\n");
-	printf("\t\tCancel your account from muslim id in the Qvault SC\n");
 	printf("\t-qvaultgetdata\n");
 	printf("\t\tGetting the state variables from the SC\n");
     printf("\t-qvaultgetstakedamountandvotingpower <IDENTITY>\n");
@@ -273,8 +267,6 @@ void print_help()
 	printf("\t\tGetting the marketplace proposal info of <PROPOSAL_ID> proposal\n");
 	printf("\t-qvaultgetallocationproposal <PROPOSAL_ID>\n");
 	printf("\t\tGetting the allocation proposal info of <PROPOSAL_ID> proposal\n");
-	printf("\t-qvaultgetmuslimproposal <PROPOSAL_ID>\n");
-	printf("\t\tGetting the muslim proposal info of <PROPOSAL_ID> proposal\n");
 	printf("\t-qvaultgetidentitieshavingvotingpower <OFFSET> <COUNT>\n");
 	printf("\t\tGetting the identities having the voting power\n");
 	printf("\t\t<OFFSET> - the point to read, <COUNT> - the number of fetching\n");
@@ -1430,16 +1422,6 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitmuslimproposal") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(2)
-            g_cmd = QVAULT_COMMAND_SUBMIT_MSP;
-            g_qvaulturl = argv[i + 1];
-            g_qvault_share_index = uint32_t(charToNumber(argv[i + 2]));
-            i += 3;
-            CHECK_OVER_PARAMETERS;
-            break;
-        }
         if (strcmp(argv[i], "-qvaultvoteinproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
@@ -1471,22 +1453,6 @@ void parseArgument(int argc, char** argv)
             g_qvault_number_of_share = int64_t(charToNumber(argv[i + 3]));
             g_qvault_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 4]));
             i += 5;
-            CHECK_OVER_PARAMETERS;
-            break;
-        }
-        if (strcmp(argv[i], "-qvaultsubmitmuslimid") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(0)
-            g_cmd = QVAULT_COMMAND_SUBMIT_MUSLIMID;
-            i += 1;
-            CHECK_OVER_PARAMETERS;
-            break;
-        }
-        if (strcmp(argv[i], "-qvaultcancelmuslimid") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(0)
-            g_cmd = QVAULT_COMMAND_CANCEL_MUSLIMID;
-            i += 1;
             CHECK_OVER_PARAMETERS;
             break;
         }
@@ -1565,15 +1531,6 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_COMMAND_GET_ALLOP;
-            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
-            i += 2;
-            CHECK_OVER_PARAMETERS;
-            break;
-        }
-        if (strcmp(argv[i], "-qvaultgetmuslimproposal") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_COMMAND_GET_MSP;
             g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
