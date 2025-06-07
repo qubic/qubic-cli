@@ -48,6 +48,8 @@ void print_help()
     printf("\t\tPrint a list of assets of an identity\n");
     printf("\t-queryassets <QUERY_TYPE> <QUERY_STING>\n");
     printf("\t\tQuery and print assets information. Skip arguments to get detailed documentation.\n");
+    printf("\t-gettotalnumberofassetshares <ISSUER_ID> <ASSET_NAME>\n");
+    printf("\t\tGet total number of shares currently existing of a specific asset.\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
     printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.\n");
     printf("\t-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>\n");
@@ -289,6 +291,10 @@ void print_help()
     printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.\n");
     printf("\t-testqpifunctionsoutputpast\n");
     printf("\t\tTest that output of qpi functions matches TickData and quorum tick votes for the last 15 ticks. Requires the TESTEXA SC to be enabled.\n");
+    printf("\t-testgetincomingtransferamounts <B_OR_C>\n");
+    printf("\t\tGet incoming transfer amounts from either TESTEXB (\"B\") or TESTEXC (\"C\"). Requires the TESTEXB and TESTEXC SCs to be enabled.\n");
+    printf("\t-testbidinipothroughcontract <B_OR_C> <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>\n");
+    printf("\t\tBid in an IPO either as TESTEXB (\"B\") or as TESTEXC (\"C\"). Requires the TESTEXB and TESTEXC SCs to be enabled.\n");
 }
 
 static long long charToNumber(char* a)
@@ -309,9 +315,6 @@ static uint64_t charToUnsignedNumber(char* a)
 
 static uint32_t getContractIndex(const char* str)
 {
-#ifdef _MSC_VER
-#define strcasecmp _stricmp
-#endif
     uint32_t idx = 0;
     if (strcasecmp(str, "QX") == 0)
         idx = 1;
@@ -343,9 +346,6 @@ static uint32_t getContractIndex(const char* str)
         }
     }
     return idx;
-#ifdef _MSC_VER
-#undef strcasecmp
-#endif
 }
 
 void readConfigFile(const char* path)
@@ -506,6 +506,16 @@ void parseArgument(int argc, char** argv)
             i += 3;
             CHECK_OVER_PARAMETERS
              break;
+        }
+        if (strcmp(argv[i], "-gettotalnumberofassetshares") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = GET_TOTAL_NUMBER_OF_ASSET_SHARES;
+            g_paramString1 = argv[i + 1];
+            g_paramString2 = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
         }
         if (strcmp(argv[i], "-sendtoaddress") == 0)
         {
@@ -1631,6 +1641,25 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = TEST_QPI_FUNCTIONS_OUTPUT_PAST;
             i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-testgetincomingtransferamounts") == 0)
+        {
+            g_cmd = TEST_GET_INCOMING_TRANSFER_AMOUNTS;
+            g_paramString1 = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-testbidinipothroughcontract") == 0)
+        {
+            g_cmd = TEST_BID_IN_IPO_THROUGH_CONTRACT;
+            g_paramString1 = argv[i + 1];
+            g_ipo_contract_index = (uint32_t)charToNumber(argv[i + 2]);
+            g_make_ipo_bid_number_of_share = (uint32_t)charToNumber(argv[i + 3]);
+            g_make_ipo_bid_price_per_share = charToNumber(argv[i + 4]);
+            i += 5;
             CHECK_OVER_PARAMETERS
             return;
         }

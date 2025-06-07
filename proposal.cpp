@@ -752,7 +752,7 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 		std::cout << voteValue << "\n";
 
 	std::cout << "\nSending vote (you need to be computor to do so) ..." << std::endl;
-	makeContractTransaction(nodeIp, nodePort, seed, contractIdx, castVoteInputType, 0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
+	makeContractTransaction(nodeIp, nodePort, seed, contractIdx, castVoteInputType, 0, sizeof(v), &v, scheduledTickOffset);
 }
 
 void gqmpropSetProposal(const char* nodeIp, int nodePort, const char* seed,
@@ -776,7 +776,7 @@ void gqmpropSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	std::cout << "\nSending transaction to set your general quorum proposal (you need to be computor to do so)..." << std::endl;
 	makeContractTransaction(nodeIp, nodePort, seed,
 		GQMPROP_CONTRACT_INDEX, GQMPROP_PROC_SET_PROPOSAL, 0,
-		sizeof(p), (uint8_t*)&p, scheduledTickOffset);
+		sizeof(p), &p, scheduledTickOffset);
 }
 
 void gqmpropClearProposal(const char* nodeIp, int nodePort, const char* seed,
@@ -788,7 +788,7 @@ void gqmpropClearProposal(const char* nodeIp, int nodePort, const char* seed,
 	p.epoch = 0;	// epoch 0 clears proposal
 	makeContractTransaction(nodeIp, nodePort, seed,
 		GQMPROP_CONTRACT_INDEX, GQMPROP_PROC_SET_PROPOSAL, 0,
-		sizeof(p), (uint8_t*)&p, scheduledTickOffset);
+		sizeof(p), &p, scheduledTickOffset);
 }
 
 void gqmpropGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString)
@@ -903,7 +903,7 @@ void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	std::cout << "\nSending transaction to set your CCF proposal ..." << std::endl;
 	makeContractTransaction(nodeIp, nodePort, seed,
 		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
-		sizeof(pyn), (uint8_t*)&pyn, scheduledTickOffset);
+		sizeof(pyn), &pyn, scheduledTickOffset);
 }
 
 void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
@@ -918,7 +918,7 @@ void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
 	p.epoch = 0;	// epoch 0 clears proposal
 	makeContractTransaction(nodeIp, nodePort, seed,
 		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
-		sizeof(p), (uint8_t*)&p, scheduledTickOffset);
+		sizeof(p), &p, scheduledTickOffset);
 }
 
 void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString)

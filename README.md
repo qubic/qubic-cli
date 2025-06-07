@@ -30,6 +30,8 @@ Command:
 		Print a list of assets of an identity
 	-queryassets <QUERY_TYPE> <QUERY_STING>
 		Query and print assets information. Skip arguments to get detailed documentation.
+	-gettotalnumberofassetshares <ISSUER_ID> <ASSET_NAME>
+		Get total number of shares currently existing of a specific asset.
 	-sendtoaddress <TARGET_IDENTITY> <AMOUNT>
 		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.
 	-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>
@@ -253,6 +255,11 @@ Command:
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
 	-testqpifunctionsoutputpast
 		Test that output of qpi functions matches TickData and quorum tick votes for the last 15 ticks. Requires the TESTEXA SC to be enabled.
+    -testgetincomingtransferamounts <B_OR_C>
+        Get incoming transfer amounts from either TESTEXB ("B") or TESTEXC ("C"). Requires the TESTEXB and TESTEXC SCs to be
+enabled.
+    -testbidinipothroughcontract <B_OR_C> <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>
+        Bid in an IPO either as TESTEXB ("B") or as TESTEXC ("C"). Requires the TESTEXB and TESTEXC SCs to be enabled.
 
 ```
 

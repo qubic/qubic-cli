@@ -3,8 +3,8 @@
 #include "defines.h"
 
 COMMAND g_cmd;
-char* g_seed = DEFAULT_SEED;
-char* g_nodeIp = DEFAULT_NODE_IP;
+char* g_seed = (char*)DEFAULT_SEED;
+char* g_nodeIp = (char*)DEFAULT_NODE_IP;
 char* g_targetIdentity = nullptr;
 char* g_configFile = nullptr;
 char* g_requestedFileName = nullptr;

@@ -115,12 +115,15 @@ enum COMMAND
     SET_LOGGING_MODE = 104,
     TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
     COMP_CHAT = 106,
-    QUTIL_CREATE_POLL = 107,
-    QUTIL_VOTE = 108,
-    QUTIL_GET_CURRENT_RESULT = 109,
-    QUTIL_GET_POLLS_BY_CREATOR = 110,
-    QUTIL_GET_CURRENT_POLL_ID = 111,
-    QUTIL_GET_POLL_INFO = 112,
+    TEST_GET_INCOMING_TRANSFER_AMOUNTS = 107,
+    TEST_BID_IN_IPO_THROUGH_CONTRACT = 108,
+    GET_TOTAL_NUMBER_OF_ASSET_SHARES = 109,
+    QUTIL_CREATE_POLL = 110,
+    QUTIL_VOTE = 111,
+    QUTIL_GET_CURRENT_RESULT = 112,
+    QUTIL_GET_POLLS_BY_CREATOR = 113,
+    QUTIL_GET_CURRENT_POLL_ID = 114,
+    QUTIL_GET_POLL_INFO = 115,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -394,7 +397,7 @@ struct SpecialCommand
 #define OWNERSHIP 2
 #define POSSESSION 3
 
-struct Asset
+struct AssetRecord
 {
     union
     {
@@ -436,7 +439,7 @@ typedef struct
 
 typedef struct
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -449,8 +452,8 @@ typedef struct
 
 struct RespondOwnedAssets
 {
-    Asset asset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -468,9 +471,9 @@ typedef struct
 
 struct RespondPossessedAssets
 {
-    Asset asset;
-    Asset ownershipAsset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord ownershipAsset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -544,7 +547,7 @@ static_assert(sizeof(RequestAssets) == 112, "Something is wrong with the struct 
 // Response message after RequestAssets without flag getSiblings
 struct RespondAssets
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
 

@@ -53,6 +53,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printAssetRecords(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case GET_TOTAL_NUMBER_OF_ASSET_SHARES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetTotalNumberOfAssetShares(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
+            break;
         case SEND_COIN:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -655,6 +659,19 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             testQpiFunctionsOutputPast(g_nodeIp, g_nodePort);
+            break;
+        }
+        case TEST_GET_INCOMING_TRANSFER_AMOUNTS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            testGetIncomingTransferAmounts(g_nodeIp, g_nodePort, g_paramString1);
+            break;
+        }
+        case TEST_BID_IN_IPO_THROUGH_CONTRACT:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            testBidInIpoThroughContract(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_ipo_contract_index, g_make_ipo_bid_price_per_share, g_make_ipo_bid_number_of_share, g_offsetScheduledTick);
             break;
         }
         default:

@@ -113,16 +113,19 @@ enum qutilProcedureId
 enum qutilFunctionId
 {
     GetSendToManyV1Fee = 1,
-    GetCurrentResult = 2,
-    GetPollsByCreator = 3,
-    GetCurrentPollId = 4,
-    GetPollInfo = 5,
+    GetTotalNumberOfAssetShares = 2,
+    GetCurrentResult = 3,
+    GetPollsByCreator = 4,
+    GetCurrentPollId = 5,
+    GetPollInfo = 6,
 };
 
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset);
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset);
 void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed, uint32_t destinationCount, uint32_t numTransfersEach, uint32_t scheduledTickOffset);
+void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const char* issuerIdentity, const char* assetName);
+
 
 void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     const char* poll_name, uint64_t poll_type, uint64_t min_amount,

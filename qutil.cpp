@@ -13,8 +13,21 @@
 #include "K12AndKeyUtil.h"
 #include "connection.h"
 #include "walletUtils.h"
+#include "sanityCheck.h"
 
 constexpr int QUTIL_CONTRACT_ID = 4;
+
+enum qutilFunctionId
+{
+    GetSendToManyV1Fee = 1,
+};
+
+enum qutilProcedureId
+{
+    SendToManyV1 = 1,
+    BurnQubic = 2,
+    SendToManyBenchmark = 3,
+};
 
 struct SendToManyV1_input
 {
@@ -281,17 +294,44 @@ void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed
     LOG("to check your tx confirmation status\n");
 }
 
+void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const char* issuerIdentity, const char* assetName)
+{
+    struct
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+    } input;
+    uint64_t output;
+
+    sanityCheckIdentity(issuerIdentity);
+    getPublicKeyFromIdentity(issuerIdentity, input.issuer);
+
+    sanityCheckValidAssetName(assetName);
+    input.assetName = 0;
+    memcpy(&input.assetName, assetName, std::min(size_t(7), strlen(assetName)));
+
+    if (!runContractFunction(nodeIp, nodePort, QUTIL_CONTRACT_ID,
+        GetTotalNumberOfAssetShares, &input, sizeof(input), &output, sizeof(output)))
+    {
+        LOG("ERROR: Didn't receive valid response from GetTotalNumberOfAssetShares!\n");
+        return;
+    }
+
+    LOG("%llu\n", output);
+}
+
+
 // **********************
 // *** Voting related ***
 // **********************
 
 // Helper function
-std::vector<std::string> split(const std::string& s, char delimiter) 
+std::vector<std::string> split(const std::string& s, char delimiter)
 {
     std::vector<std::string> tokens;
     std::string token;
     std::istringstream tokenStream(s);
-    while (std::getline(tokenStream, token, delimiter)) 
+    while (std::getline(tokenStream, token, delimiter))
     {
         tokens.push_back(token);
     }
@@ -398,10 +438,10 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
 
 void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     uint64_t poll_id, uint64_t amount, uint64_t chosen_option,
-    uint32_t scheduledTickOffset) 
+    uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
-    if (!qc) 
+    if (!qc)
     {
         LOG("Failed to connect to node.\n");
         return;
@@ -426,7 +466,7 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     uint8_t signature[64] = { 0 };
     char txHash[128] = { 0 };
 
-    struct 
+    struct
     {
         RequestResponseHeader header;
         Transaction transaction;
@@ -463,16 +503,16 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     LOG("to check your tx confirmation status\n");
 }
 
-void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id) 
+void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
 {
     auto qc = make_qc(nodeIp, nodePort);
-    if (!qc) 
+    if (!qc)
     {
         LOG("Failed to connect to node.\n");
         return;
     }
 
-    struct 
+    struct
     {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -490,11 +530,11 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
     qc->sendData((uint8_t*)&req, req.header.size());
 
     GetCurrentResult_output output;
-    try 
+    try
     {
         output = qc->receivePacketWithHeaderAs<GetCurrentResult_output>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error& e)
     {
         LOG("Failed to get current result: %s\n", e.what());
         return;
@@ -610,10 +650,10 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort) {
     }
 }
 
-void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id) 
+void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
 {
     auto qc = make_qc(nodeIp, nodePort);
-    if (!qc) 
+    if (!qc)
     {
         LOG("Failed to connect to node.\n");
         return;
@@ -622,7 +662,7 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
     GetPollInfo_input input;
     input.poll_id = poll_id;
 
-    struct 
+    struct
     {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -637,14 +677,14 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
     memcpy(&packet.inputData, &input, sizeof(input));
     qc->sendData((uint8_t*)&packet, packet.header.size());
 
-    try 
+    try
     {
         GetPollInfo_output output = qc->receivePacketWithHeaderAs<GetPollInfo_output>();
-        if (output.found == 0) 
+        if (output.found == 0)
         {
             LOG("Poll not found.\n");
         }
-        else 
+        else
         {
             char buf[128] = { 0 };
             LOG("Poll Info:\n");
@@ -659,10 +699,10 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
             getIdentityFromPublicKey(output.poll_info.creator, buf, false);
             LOG("Creator: %s\n", buf);
             LOG("Num Assets: %llu\n", output.poll_info.num_assets);
-            if (output.poll_info.num_assets > 0) 
+            if (output.poll_info.num_assets > 0)
             {
                 LOG("Allowed Assets:\n");
-                for (uint64_t i = 0; i < output.poll_info.num_assets; i++) 
+                for (uint64_t i = 0; i < output.poll_info.num_assets; i++)
                 {
                     memset(buf, 0, 128);
                     getIdentityFromPublicKey(output.poll_info.allowed_assets[i].issuer, buf, false);

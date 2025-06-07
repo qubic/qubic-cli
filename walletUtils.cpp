@@ -149,7 +149,7 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     {
         char hex_tring[1024*2+1] = {0};
         for (int i = 0; i < tx.inputSize; i++)
-            sprintf(hex_tring + i * 2, "%02x", extraData[i]);
+            snprintf(hex_tring + i * 2, 2, "%02x", extraData[i]);
 
         LOG("Extra data: %s\n", hex_tring);
     }
@@ -206,7 +206,6 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amount;
-    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = txTick;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = 0;
@@ -231,6 +230,7 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     if (waitUntilFinish)
     {
         LOG("Waiting for tick:\n");
+        uint32_t currentTick = getTickNumberFromNode(qc);
         while (currentTick <= packet.transaction.tick)
         {
             LOG("%d/%d\n", currentTick, packet.transaction.tick);
@@ -326,7 +326,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint16_t txType,
     uint64_t amount,
     int extraDataSize,
-    const uint8_t* extraData,
+    const void* extraData,
     uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -360,7 +360,8 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     packetTransaction.inputType = txType;
     packetTransaction.inputSize = extraDataSize;
 
-    memcpy(packetInputData, extraData, extraDataSize);
+    if (extraDataSize)
+        memcpy(packetInputData, extraData, extraDataSize);
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize,
@@ -376,7 +377,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
         32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
-    printReceipt(packetTransaction, txHash, extraData);
+    printReceipt(packetTransaction, txHash, (uint8_t*)extraData);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
     LOG("to check your tx confirmation status\n");
 }
@@ -455,6 +456,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
         ContractIPOBid ipo;
         unsigned char signature[64];
     } packet;
+    memset(&packet.ipo, 0, sizeof(packet.ipo));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;

@@ -203,7 +203,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     for (uint32_t i = 0; i < packet.ibi.numberOfOption; i++)
     {
         char buff2[128] = {0};
-        sprintf(buff2, "Enter option #%d description (32 chars)", i);
+        snprintf(buff2, 128, "Enter option #%d description (32 chars)", i);
         promptStdin(buff2, buff, 32);
         memcpy(packet.ibi.optionDesc + i*32, buff, 32);
     }
@@ -213,7 +213,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     {
         char buff2[128] = {0};
         uint8_t buf3[32] = {0};
-        sprintf(buff2, "Enter oracle provider #%d ID (60 chars)", i);
+        snprintf(buff2, 128, "Enter oracle provider #%d ID (60 chars)", i);
         promptStdin(buff2, buff, 60);
         getPublicKeyFromIdentity(buff, buf3);
         memcpy(packet.ibi.oracleProviderId + i * 32, buf3, 32);
@@ -221,7 +221,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
     for (int i = 0; i < numberOP; i++)
     {
         char buff2[128] = {0};
-        sprintf(buff2, "Enter fee for oracle provider #%d ID [4 digits number, format ABCD (meaning AB.CD%%)]", i);
+        snprintf(buff2, 128, "Enter fee for oracle provider #%d ID [4 digits number, format ABCD (meaning AB.CD%%)]", i);
         promptStdin(buff2, buff, 4);
         uint32_t op_fee = std::atoi(buff);
         packet.ibi.oracleFees[i] = op_fee;
