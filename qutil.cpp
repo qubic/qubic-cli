@@ -17,18 +17,6 @@
 
 constexpr int QUTIL_CONTRACT_ID = 4;
 
-enum qutilFunctionId
-{
-    GetSendToManyV1Fee = 1,
-};
-
-enum qutilProcedureId
-{
-    SendToManyV1 = 1,
-    BurnQubic = 2,
-    SendToManyBenchmark = 3,
-};
-
 struct SendToManyV1_input
 {
     uint8_t addresses[25][32];
