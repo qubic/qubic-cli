@@ -276,6 +276,8 @@ Command:
 			Please invest in fundaraising using thic command. 
 	-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDARAISING_INDEX>
 			If you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.
+	-nostromoupgradetierlevel <NEW_TIER_LEVEL>
+			Please upgrade your tierlevel to <NEW_TIER_LEVEL>
 	-nostromogetstats
 			Please get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
 	-nostromogettierlevelbyuser <USER_ID>

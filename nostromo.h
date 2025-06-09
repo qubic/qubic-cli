@@ -251,6 +251,10 @@ void claimToken(const char* nodeIp, int nodePort,
                     uint32_t scheduledTickOffset,
                     uint64_t amount,
 		            uint32_t indexOfFundaraising);
+void upgradeTierLevel(const char* nodeIp, int nodePort, 
+                    const char* seed, 
+                    uint32_t scheduledTickOffset,
+                    uint32_t tierLevel);
 
 void getStats(const char* nodeIp, int nodePort, 
                     const char* seed, 

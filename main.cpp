@@ -684,6 +684,15 @@ int run(int argc, char* argv[])
                         g_nost_amount, g_nost_indexOfFundaraising);
             break;
         }
+        case NOSTROMO_UPGRADE_TIER_LEVEL:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            upgradeTierLevel(g_nodeIp,g_nodePort,g_seed,
+                           g_offsetScheduledTick,
+                        g_nost_tierlevel);
+            break;
+        }
         case NOSTROMO_GET_STATS:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);

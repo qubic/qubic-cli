@@ -295,6 +295,8 @@ void print_help()
     printf("\t\tPlease invest in fundaraising using thic command. \n");
     printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDARAISING_INDEX>\n");
     printf("\t\tIf you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.\n");
+    printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
+    printf("\t\tPlease upgrade your tierlevel to <NEW_TIER_LEVEL>\n");
     printf("\t-nostromogetstats\n");
     printf("\t\tPlease get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.\n");
     printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
@@ -1687,6 +1689,15 @@ void parseArgument(int argc, char** argv)
             g_nost_amount = charToNumber(argv[i + 1]);
             g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoupgradetierlevel") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_UPGRADE_TIER_LEVEL;
+            g_nost_tierlevel = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
             CHECK_OVER_PARAMETERS
             return;
         }

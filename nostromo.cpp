@@ -34,6 +34,7 @@
 #define NOSTROMO_TYPE_CREATE_FUNDARAISING 5
 #define NOSTROMO_TYPE_INVEST_IN_FUNDARAISING 6
 #define NOSTROMO_TYPE_CLAIM_TOKEN 7
+#define NOSTROMO_TYPE_UPGRADE_TIER 8
 
 constexpr uint32_t NOSTROMO_CREATE_PROJECT_FEE = 100000000;
 constexpr uint64_t NOSTROMO_TIER_FACEHUGGER_STAKE_AMOUNT = 20000000ULL;
@@ -169,6 +170,16 @@ struct claimToken_input
 };
 
 struct claimToken_output
+{
+
+};
+
+struct upgradeTier_input
+{
+    uint32_t newTierLevel;
+};
+
+struct upgradeTier_output
 {
 
 };
@@ -753,6 +764,95 @@ void claimToken(const char* nodeIp, int nodePort,
                    32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
     LOG("claimToken tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+
+void upgradeTierLevel(const char* nodeIp, int nodePort, 
+                    const char* seed, 
+                    uint32_t scheduledTickOffset,
+                    uint32_t tierLevel)
+{
+
+    if (tierLevel < 2 || tierLevel > 5)
+    {
+        printf("Wrong Tierlevel for upgrading!");
+        return ;
+    }
+    
+    auto qc = make_qc(nodeIp, nodePort);
+
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};  
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char publicIdentity[128] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    ((uint64_t*)destPublicKey)[0] = NOSTROMO_CONTRACT_INDEX;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    #pragma pack(push, 1)
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        upgradeTier_input input;
+        unsigned char signature[64];
+    } packet;
+    #pragma pack(pop)
+
+    packet.input.newTierLevel = tierLevel;
+    
+    switch (tierLevel)
+    {
+    case 2:
+        packet.transaction.amount = NOSTROMO_TIER_CHESTBURST_STAKE_AMOUNT - NOSTROMO_TIER_FACEHUGGER_STAKE_AMOUNT;
+        break;
+    case 3:
+        packet.transaction.amount = NOSTROMO_TIER_DOG_STAKE_AMOUNT - NOSTROMO_TIER_CHESTBURST_STAKE_AMOUNT;
+        break;
+    case 4:
+        packet.transaction.amount = NOSTROMO_TIER_XENOMORPH_STAKE_AMOUNT - NOSTROMO_TIER_DOG_STAKE_AMOUNT;
+        break;
+    case 5:
+        packet.transaction.amount = NOSTROMO_TIER_WARRIOR_STAKE_AMOUNT - NOSTROMO_TIER_XENOMORPH_STAKE_AMOUNT;
+        break;
+    default:
+        break;
+    }
+
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = NOSTROMO_TYPE_UPGRADE_TIER;
+    packet.transaction.inputSize = sizeof(upgradeTier_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(upgradeTier_input),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(upgradeTier_input) + SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("upgradeTierLevel tx has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
