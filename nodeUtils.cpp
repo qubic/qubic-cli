@@ -1917,32 +1917,72 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
     getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    TickData td;
+    getTickData(qc, requestedTick, td);
+
     unsigned int votes[676];
     int nTx = int(txs.size());
     LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
-        if (extraData[i].vecU8.size() == 848)
+        if (extraData[i].vecU8.size() == 848 + 32)
         {
             int comp_idx = requestedTick % 676;
             if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
             {
                 uint8_t* data = extraData[i].vecU8.data();
                 uint32_t sum = 0;
-                for (int j = 0; j < 676; j++)
+                if (txs[i].inputType == 1)
                 {
-                    votes[j] = extract10Bit(data, j);
-                    sum += votes[j];
-                    auto alphabet = indexToAlphabet(j);
-                    LOG("%s: %u\n", alphabet.c_str(), votes[j]);
+                    LOG("---Type: vote counter---\n");
                 }
-                if (sum < 676*451)
+                if (txs[i].inputType == 8)
                 {
-                    LOG("Invalid sum votes: %u\n", sum);
+                    LOG("---Type: custom mining counter---\n");
                 }
-                if (votes[comp_idx] != 0)
+                if (memcmp(td.timelock, data + 848, 32) == 0)
                 {
-                    LOG("Invalid comp votes\n");
+                    LOG("Matched data lock\n");
+                }
+                else
+                {
+                    LOG("Mismatched data lock\n");
+                    char hex[128] = { 0 };
+                    byteToHex(data + 848, hex, 32);
+                    LOG("have: %s\n", hex);
+                    byteToHex(td.timelock, hex, 32);
+                    LOG("want: %s\n", hex);
+                    continue;
+                }
+                if (txs[i].inputType == 1)
+                {
+                    for (int j = 0; j < 676; j++)
+                    {
+                        votes[j] = extract10Bit(data, j);
+                        sum += votes[j];
+                        auto alphabet = indexToAlphabet(j);
+                        LOG("%s: %u | ", alphabet.c_str(), votes[j]);
+                        if ((j + 1) % 26 == 0) LOG("\n");
+                    }
+                    if (sum < 676 * 451)
+                    {
+                        LOG("Invalid sum votes: %u\n", sum);
+                    }
+                    if (votes[comp_idx] != 0)
+                    {
+                        LOG("Invalid comp votes\n");
+                    }
+                }
+                if (txs[i].inputType == 8)
+                {
+                    for (int j = 0; j < 676; j++)
+                    {
+                        votes[j] = extract10Bit(data, j);
+                        sum += votes[j];
+                        auto alphabet = indexToAlphabet(j);
+                        LOG("%s: %u | ", alphabet.c_str(), votes[j]);
+                        if ((j + 1) % 26 == 0) LOG("\n");
+                    }
                 }
             }
         }
