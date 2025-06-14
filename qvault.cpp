@@ -1371,8 +1371,12 @@ void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint
     for (uint32_t i = 0; i < count; i++)
     {
         char stakerAddress[128] = {0};
-        getIdentityFromPublicKey(result.list[i].stakerAddress, stakerAddress, false);
-        printf("stakerAddress: %s amount: %u\n", stakerAddress, result.list[i].amount);
+        getIdentityFromPublicKey(result.idList[i], stakerAddress, false);
+        if (strcmp(stakerAddress, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+        {
+            break;
+        }
+        printf("stakerAddress: %s amount: %u\n", stakerAddress, result.amountList[i]);
     }
 }
 

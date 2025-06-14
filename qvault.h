@@ -287,7 +287,8 @@ struct stakingInfo
 
 struct QvaultGetIdentitiesHvVtPw_output
 {
-    stakingInfo list[256];
+    uint8_t idList[256][32];
+    uint32_t amountList[256];
 
     static constexpr unsigned char type()
     {
