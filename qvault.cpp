@@ -552,7 +552,7 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
     packet.input.amountPerEpoch = amountPerEpoch;
     packet.input.numberOfEpoch = numberOfEpoch;
     memcpy(&packet.input.url, url, 256);
-    packet.transaction.amount = 0;
+    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
@@ -696,7 +696,7 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     memcpy(&packet.input.url, url, 256);
     memcpy(&packet.input.shareName, assetNameS1, 8);
     
-    packet.transaction.amount = 0;
+    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
