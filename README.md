@@ -226,7 +226,7 @@ Command:
 		<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0
 	-qvaultbuyqcap <AMOUNT_OF_QCAP> <PRICE_OF_QCAP>
 		Buy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap
-	-qvaulttransfersharemanagementrights <TOKEN_ISSUER> <TOKEN_NAME> <NUMBER_OF_TOKEN> <NEWMANAGING_CONTRACT_INDEX>
+	-qvaulttransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEWMANAGING_CONTRACT_INDEX> <NUMBER_OF_TOKEN>
 		Transfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>
 	-qvaultgetdata
 		Getting the state variables from the SC

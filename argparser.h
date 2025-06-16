@@ -247,7 +247,7 @@ void print_help()
 	printf("\t\t<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0\n");
 	printf("\t-qvaultbuyqcap <AMOUNT_OF_QCAP> <PRICE_OF_QCAP>\n");
 	printf("\t\tBuy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap\n");
-	printf("\t-qvaulttransfersharemanagementrights <TOKEN_ISSUER> <TOKEN_NAME> <NUMBER_OF_TOKEN> <NEWMANAGING_CONTRACT_INDEX>\n");
+	printf("\t-qvaulttransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEWMANAGING_CONTRACT_INDEX> <NUMBER_OF_TOKEN>\n");
 	printf("\t\tTransfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>\n");
 	printf("\t-qvaultgetdata\n");
 	printf("\t\tGetting the state variables from the SC\n");
@@ -1448,10 +1448,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QVAULT_COMMAND_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
-            g_qvaultIdentity = argv[i + 1];
-            g_qvault_assetname = argv[i + 2];
-            g_qvault_number_of_share = int64_t(charToNumber(argv[i + 3]));
-            g_qvault_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 4]));
+            g_qvault_assetname = argv[i + 1];
+            g_qvaultIdentity = argv[i + 2];
+            g_qvault_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_number_of_share = int64_t(charToNumber(argv[i + 4]));
             i += 5;
             CHECK_OVER_PARAMETERS;
             break;

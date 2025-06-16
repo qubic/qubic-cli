@@ -552,7 +552,7 @@ void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t s
     packet.input.amountPerEpoch = amountPerEpoch;
     packet.input.numberOfEpoch = numberOfEpoch;
     memcpy(&packet.input.url, url, 256);
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
+    packet.transaction.amount = 0;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
@@ -696,7 +696,7 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     memcpy(&packet.input.url, url, 256);
     memcpy(&packet.input.shareName, assetNameS1, 8);
     
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
+    packet.transaction.amount = 0;
 
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
@@ -1104,7 +1104,23 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1142,7 +1158,28 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nnewQuorumPercent: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.newQuorumPercent);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nnewQuorumPercent: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.newQuorumPercent);
+
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 3)
+    {
+        printf("The proposal has been rejected due to another proposal with more yes vote!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1180,7 +1217,23 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\ntotalWeight: %llu\nassignedFund: %llu\nipoContractIndex: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %utotalWeight: %llu\nassignedFund: %llu\nipoContractIndex: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1218,7 +1271,23 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfInvestPerEpoch: %llu\nassignedFundPerEpoch: %llu\nnumberOfEpoch: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfInvestPerEpoch: %llu\nassignedFundPerEpoch: %llu\nnumberOfEpoch: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1256,7 +1325,27 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\npricePerOneQcap: %llu\namountOfQcap: %u\nrestSaleAmount: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\npricePerOneQcap: %llu\namountOfQcap: %u\nrestSaleAmount: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 3)
+    {
+        printf("The proposal has been rejected due to overflow sale amount per year!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1294,7 +1383,27 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\namountOfQubic: %llu\nshareName: %llu\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %llu\nshareName: %llu\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 3)
+    {
+        printf("The proposal has been rejected due to overflow sale amount per year!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
@@ -1332,7 +1441,27 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nresult: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.result, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
+    printf("%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
+    if (result.proposal.result == 0)
+    {
+        printf("The proposal has been approved!");
+    }
+    else if (result.proposal.result == 1)
+    {
+        printf("The proposal has been rejected due to more no vote!");
+    }
+    else if (result.proposal.result == 2)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!");
+    }
+    else if (result.proposal.result == 3)
+    {
+        printf("The proposal has been rejected due to another proposal with more yes vote!");
+    }
+    else if (result.proposal.result == 4)
+    {
+        printf("Active proposal!");
+    }
 }
 
 void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count)
