@@ -224,7 +224,7 @@ Command:
 		Vote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>
 		<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B
 		<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0
-	-qvaultbuyqcap <AMOUNT_OF_QCAP> <PRICE_OF_QCAP>
+	-qvaultbuyqcap <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>
 		Buy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap
 	-qvaulttransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEWMANAGING_CONTRACT_INDEX> <NUMBER_OF_TOKEN>
 		Transfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>

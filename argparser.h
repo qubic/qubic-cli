@@ -245,7 +245,7 @@ void print_help()
 	printf("\t\tVote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\t<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B\n");
 	printf("\t\t<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0\n");
-	printf("\t-qvaultbuyqcap <AMOUNT_OF_QCAP> <PRICE_OF_QCAP>\n");
+	printf("\t-qvaultbuyqcap <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
 	printf("\t\tBuy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap\n");
 	printf("\t-qvaulttransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEWMANAGING_CONTRACT_INDEX> <NUMBER_OF_TOKEN>\n");
 	printf("\t\tTransfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>\n");
@@ -1438,8 +1438,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QVAULT_COMMAND_BUY_QCAP;
-            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 1]));
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 2]));
             i += 3;
             CHECK_OVER_PARAMETERS;
             break;
