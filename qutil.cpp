@@ -707,3 +707,64 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
         LOG("Error receiving poll info: %s\n", e.what());
     }
 }
+
+void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_t poll_id, uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc) 
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    CancelPoll_input input;
+    input.poll_id = poll_id;
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+
+    uint8_t destPublicKey[32] = { 0 };
+    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char txHash[128] = { 0 };
+
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        CancelPoll_input inputData;
+        unsigned char signature[64];
+    } packet;
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = QUTIL_POLL_CREATION_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = qutilProcedureId::CancelPoll;
+    packet.transaction.inputSize = sizeof(CancelPoll_input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(CancelPoll_input),
+                    digest,
+                    32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(CancelPoll_input) + SIGNATURE_SIZE,
+                    digest,
+                    32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("CancelPoll transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}

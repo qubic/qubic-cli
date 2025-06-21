@@ -101,6 +101,10 @@ struct GetPollInfo_output
     }
 };
 
+struct CancelPoll_input {
+    uint64_t poll_id;
+};
+
 enum qutilProcedureId
 {
     SendToManyV1 = 1,
@@ -108,6 +112,7 @@ enum qutilProcedureId
     SendToManyBenchmark = 3,
     CreatePoll = 4,
     Vote = 5,
+    CancelPoll = 6,
 };
 
 enum qutilFunctionId
@@ -143,3 +148,5 @@ void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creato
 void qutilGetCurrentPollId(const char* nodeIp, int nodePort);
 
 void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id);
+
+void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_t poll_id, uint32_t scheduledTickOffset);

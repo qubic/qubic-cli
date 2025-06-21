@@ -119,3 +119,4 @@ uint64_t g_qutil_vote_chosen_option = 64;
 uint64_t g_qutil_get_result_poll_id = 0;
 char* g_qutil_get_polls_creator_address = nullptr;
 uint64_t g_qutil_get_poll_info_poll_id = 0;
+uint64_t g_qutil_cancel_poll_id = 0;

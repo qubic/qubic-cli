@@ -74,6 +74,8 @@ void print_help()
     printf("\t\tGet the current poll ID and list of active polls.\n");
     printf("\t-qutilgetpollinfo <POLL_ID>\n");
     printf("\t\tGet information about a specific poll by its ID.\n");
+    printf("\t-qutilcancelpoll <POLL_ID>\n");
+    printf("\t\tCancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -1110,6 +1112,14 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_POLL_INFO;
             g_qutil_get_poll_info_poll_id = charToUnsignedNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilcancelpoll") == 0) {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QUTIL_CANCEL_POLL;
+            g_qutil_cancel_poll_id = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
