@@ -139,6 +139,48 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 			std::cout << std::endl;
 		}
 	}
+	else if (cls == ProposalTypes::Class::TransferInEpoch)
+	{
+		const auto& transfer = p.data.transferInEpoch;
+		std::cout << "\ttype = Transfer in future epoch with " << options << " options";
+		if (options != 2)
+		{
+			std::cout << " (ERROR: unsupported option count; must be 2)";
+			okay = false;
+		}
+		std::cout << std::endl;
+
+		char dstIdentity[128] = { 0 };
+		bool isLowerCase = false;
+		getIdentityFromPublicKey(transfer.destination, dstIdentity, isLowerCase);
+		std::cout << "\tdestination address = " << dstIdentity;
+		uint64_t* dstU64 = (uint64_t*)transfer.destination;
+		if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
+		{
+			if (dstU64[0] == 0)
+				std::cout << " (ERROR: invalid destination address)";
+			else
+				std::cout << " (contract " << dstU64[0] << ")";
+		}
+		std::cout << std::endl;
+
+		std::cout << "\t\ttarget epoch = " << transfer.targetEpoch << std::endl;
+
+		std::cout << "\t\tvote value 0 = " << ((contract == CCF_CONTRACT_INDEX) ? "no transfer" : "no change to current status") << std::endl;
+		std::cout << "\t\tvote value 1 = ";
+		if (contract == GQMPROP_CONTRACT_INDEX)
+			std::cout << double(transfer.amount) / 10000.0 << "%"; // For GQMPROP amount is relative in millionth
+		else
+		{
+			std::cout << transfer.amount;
+			if (p.data.transfer.amounts < 0)
+			{
+				std::cout << " (ERROR: negative amount)";
+				okay = false;
+			}
+		}
+		std::cout << std::endl;
+	}
 	else if (cls == ProposalTypes::Class::Variable)
 	{
 		std::cout << "\ttype = Variable with " << options << " options";
@@ -280,8 +322,13 @@ void printSetProposalHelp()
 	std::cout << "\t\tNumberOfVoteOptions is 2, 3, ..., 7, or 8. AdditionalProposalData is unused/empty.\n";	
 	std::cout << "\t- Transfer: Propose to transfer/donate an amount to a destination address.\n";
 	std::cout << "\t\tAdditionalProposalData is comma-separated list of destination identity, amount of option 1,\n";
-	std::cout << "\t\tamount of option 2, ... (options 0 is no change to current state. In GQMPROP contract, the\n";
+	std::cout << "\t\tamount of option 2, ... (options 0 is no change to current state). In GQMPROP contract, the\n";
 	std::cout << "\t\tamount is relative in millionth, for example 150000 = 15% and 1000 = 0.1%.\n";
+	std::cout << "\t- TransferInEpoch: Propose to transfer/donate an amount to a destination address, starting in.\n";
+	std::cout << "\t\ta specified future epoch. Currently only supported in GQMPROP with two options. \n";
+	std::cout << "\t\tAdditionalProposalData is comma-separated list of destination identity, epoch, and amount of\n";
+	std::cout << "\t\toption 1 (options 0 is no change to current state). In GQMPROP contract, the amount is\n";
+	std::cout << "\t\trelative in millionth, for example 150000 = 15% and 1000 = 0.1%.\n";
 	std::cout << "\t- Variable: Propose to set variable in contract state to specific value. Not supported yet.\n";
 	std::cout << std::endl;
 }
@@ -318,6 +365,8 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	uint16 typeClass = 0;
 	if (typeClassStr == "transfer")
 		typeClass = ProposalTypes::Class::Transfer;
+	else if (typeClassStr == "transferinepoch")
+		typeClass = ProposalTypes::Class::TransferInEpoch;
 	else if (typeClassStr == "generaloptions")
 		typeClass = ProposalTypes::Class::GeneralOptions;
 	else if (typeClassStr == "variable")
@@ -327,6 +376,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		std::cout << "ERROR: ProposalTypeClass must be one of the following:\n"
 			<< "   - GeneralOptions\n"
 			<< "   - Transfer\n"
+			<< "   - TransferInEpoch\n"
 			<< "   - Variable\n"
 			<< std::endl;
 		printSetProposalHelp();
@@ -383,6 +433,42 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 				printSetProposalHelp();
 				return false;
 			}
+		}
+		free(writableProposalString);
+	}
+	else if (typeClass == ProposalTypes::Class::TransferInEpoch)
+	{
+		// split proposal string in main parts
+		writableProposalString = STRDUP(proposalDataStr.c_str());
+		std::string dstIdentity = strtok2string(writableProposalString, ",");
+		std::cout << "Checking destination identity " << dstIdentity << " ...\n";
+		sanityCheckIdentity(dstIdentity.c_str());
+		getPublicKeyFromIdentity(dstIdentity.c_str(), p.data.transferInEpoch.destination);
+		std::string epochStr = strtok2string(NULL, ",");
+		sint64 epochInt;
+		if (sscanf(epochStr.c_str(), "%lli", &epochInt) == 1 && epochInt > 0 && epochInt < 0xffff)
+		{
+			p.data.transferInEpoch.targetEpoch = static_cast<uint16>(epochInt);
+		}
+		else
+		{
+			std::cout << "ERROR: Epoch number must be a positive integer < 65536." << std::endl;
+			std::cout << "Got target epoch=\"" << epochStr << "\"." << std::endl;
+			printSetProposalHelp();
+			return false;
+		}
+		std::string amountStr = strtok2string(NULL, ",");
+		sint64 amountInt;
+		if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
+		{
+			p.data.transferInEpoch.amount = amountInt;
+		}
+		else
+		{
+			std::cout << "ERROR: option 1 amount should be integer number." << std::endl;
+			std::cout << "Got amount=\"" << amountStr << "\"." << std::endl;
+			printSetProposalHelp();
+			return false;
 		}
 		free(writableProposalString);
 	}
