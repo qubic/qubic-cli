@@ -173,7 +173,7 @@ bool printAndCheckProposal(const ProposalDataV1& p, int contract, const uint8_t*
 		else
 		{
 			std::cout << transfer.amount;
-			if (p.data.transfer.amounts < 0)
+			if (transfer.amount < 0)
 			{
 				std::cout << " (ERROR: negative amount)";
 				okay = false;
