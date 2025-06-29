@@ -63,6 +63,18 @@ static std::string assetNameFromInt64(unsigned long long assetName)
     return std::string(buffer);
 }
 
+static unsigned long long assetNameFromString(const char* assetName)
+{
+    size_t n = strlen(assetName);
+    if (n > 7) {
+        LOG("Asset name too long, max 7 characters: %s\n", assetName);
+        n = 7;
+    }
+    unsigned long long integer = 0;
+    memcpy(&integer, assetName, n);
+    return integer;
+}
+
 long long getSendToManyV1Fee(QCPtr qc)
 {
     struct {
@@ -336,8 +348,8 @@ std::vector<std::string> split(const std::string& s, char delimiter)
 
 void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     const char* poll_name, uint64_t poll_type, uint64_t min_amount,
-    const char* github_link, const char* comma_separated_asset_names,
-    const char* comma_separated_asset_issuers, uint32_t scheduledTickOffset)
+    const char* github_link, const char* semicolon_separated_assets,
+    uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc)
@@ -353,34 +365,45 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     input.min_amount = min_amount;
     strncpy((char*)input.github_link, github_link, 256);
 
-    if (poll_type == 2 && comma_separated_asset_names != nullptr && comma_separated_asset_issuers != nullptr)
+    if (poll_type == QUTIL_POLL_TYPE_ASSET && semicolon_separated_assets != nullptr)
     {
-        std::vector<std::string> asset_names = split(comma_separated_asset_names, ',');
-        std::vector<std::string> asset_issuers = split(comma_separated_asset_issuers, ',');
-        if (asset_names.size() != asset_issuers.size())
+        std::string assets_str(semicolon_separated_assets);
+        std::vector<std::string> asset_entries = split(assets_str, ';');
+        if (asset_entries.empty() || asset_entries.size() > QUTIL_MAX_ASSETS_PER_POLL)
         {
-            LOG("Mismatch between number of asset names and issuers.\n");
+            LOG("Invalid number of assets. Must be between 1 and %llu.\n", QUTIL_MAX_ASSETS_PER_POLL);
             return;
         }
-        if (asset_names.size() > QUTIL_MAX_ASSETS_PER_POLL)
+        input.num_assets = asset_entries.size();
+        for (size_t i = 0; i < asset_entries.size(); ++i)
         {
-            LOG("Too many assets specified. Maximum is %llu.\n", QUTIL_MAX_ASSETS_PER_POLL);
-            return;
-        }
-        input.num_assets = asset_names.size();
-        for (size_t i = 0; i < asset_names.size(); ++i)
-        {
+            std::vector<std::string> asset_pair = split(asset_entries[i], ',');
+            if (asset_pair.size() != 2)
+            {
+                LOG("Invalid asset format at index %zu: expected 'asset_name,issuer'.\n", i);
+                return;
+            }
+            const std::string& asset_name = asset_pair[0];
+            const std::string& issuer = asset_pair[1];
+            if (asset_name.empty() || issuer.empty())
+            {
+                LOG("Asset name or issuer cannot be empty at index %zu.\n", i);
+                return;
+            }
             qpi::Asset& asset = input.allowed_assets[i];
             memset(&asset, 0, sizeof(qpi::Asset));
-            getPublicKeyFromIdentity(asset_issuers[i].c_str(), asset.issuer);
-            char assetNameBuf[8] = { 0 };
-            strncpy(assetNameBuf, asset_names[i].c_str(), 8);
-            memcpy(&asset.assetName, assetNameBuf, sizeof(uint64_t));
+            getPublicKeyFromIdentity(issuer.c_str(), asset.issuer);
+            asset.assetName = assetNameFromString(asset_name.c_str());
         }
+    }
+    else if (poll_type == QUTIL_POLL_TYPE_QUBIC)
+    {
+        input.num_assets = 0;
     }
     else
     {
-        input.num_assets = 0;
+        LOG("Invalid poll type: %llu. Must be 1 (Qubic) or 2 (Asset).\n", poll_type);
+        return;
     }
 
     uint8_t subseed[32] = { 0 };
@@ -412,9 +435,9 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     packet.transaction.inputSize = sizeof(CreatePoll_input);
     memcpy(&packet.inputData, &input, sizeof(input));
     KangarooTwelve((uint8_t*)&packet.transaction,
-                    sizeof(packet.transaction) + sizeof(input),
-                    digest,
-                    32);
+        sizeof(packet.transaction) + sizeof(input),
+        digest,
+        32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
     packet.header.setSize(sizeof(packet));
@@ -422,9 +445,9 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setType(BROADCAST_TRANSACTION);
     qc->sendData((uint8_t*)&packet, packet.header.size());
     KangarooTwelve((uint8_t*)&packet.transaction,
-                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
-                    digest,
-                    32);
+        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+        digest,
+        32);
     getTxHashFromDigest(digest, txHash);
     LOG("CreatePoll transaction sent.\n");
     printReceipt(packet.transaction, txHash, nullptr);

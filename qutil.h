@@ -134,8 +134,8 @@ void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const ch
 
 void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     const char* poll_name, uint64_t poll_type, uint64_t min_amount,
-    const char* github_link, const char* comma_separated_asset_names,
-    const char* comma_separated_asset_issuers, uint32_t scheduledTickOffset);
+    const char* github_link, const char* semicolon_separated_assets,
+    uint32_t scheduledTickOffset);
 
 void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     uint64_t poll_id, uint64_t amount, uint64_t chosen_option,

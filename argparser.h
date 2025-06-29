@@ -62,9 +62,8 @@ void print_help()
     printf("\t\tPerforms burning qubic, valid private key and node ip/port are required.\n");
     printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
     printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.\n");
-    printf("\t-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <COMMA_SEPARATED_ASSET_NAME> <COMMA_SEPARATED_ASSET_ISSUER>\n");
-    printf("\t\tCreate a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide lists of asset names and issuers (comma-separated). Valid private key and node ip/port are required.\n");
-    printf("\t-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>\n");
+    printf("\t-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <SEMICOLON_SEPARATED_ASSETS>\n");
+    printf("\t\tCreate a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid private key and node ip/port are required.\n");    printf("\t-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>\n");
     printf("\t\tVote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid private key and node ip/port are required.\n");
     printf("\t-qutilgetcurrentresult <POLL_ID>\n");
     printf("\t\tGet the current results of a poll. <POLL_ID> is the poll's ID. Valid node ip/port are required.\n");
@@ -1034,7 +1033,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qutilcreatepoll") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
-            g_cmd = QUTIL_CREATE_POLL;
+                g_cmd = QUTIL_CREATE_POLL;
             int base_params = 4;
             if (i + base_params >= argc)
             {
@@ -1049,19 +1048,17 @@ void parseArgument(int argc, char** argv)
             int params_consumed = base_params;
             if (g_qutil_poll_type == 2) // Asset poll
             {
-                params_consumed = 6;
+                params_consumed = 5;
                 if (i + params_consumed >= argc)
                 {
-                    LOG("Not enough parameters for Asset poll, expected 6 parameters.\n");
+                    LOG("Not enough parameters for Asset poll, expected 5 parameters.\n");
                     exit(1);
                 }
-                g_qutil_comma_separated_asset_names = argv[i + 5];
-                g_qutil_comma_separated_asset_issuers = argv[i + 6];
+                g_qutil_semicolon_separated_assets = argv[i + 5];
             }
             else if (g_qutil_poll_type == 1) // Qubic poll
             {
-                g_qutil_comma_separated_asset_names = nullptr;
-                g_qutil_comma_separated_asset_issuers = nullptr;
+                g_qutil_semicolon_separated_assets = nullptr;
             }
             else
             {
@@ -1070,7 +1067,7 @@ void parseArgument(int argc, char** argv)
             }
             i += 1 + params_consumed;
             CHECK_OVER_PARAMETERS
-            break;
+                break;
         }
         if (strcmp(argv[i], "-qutilvote") == 0)
         {
