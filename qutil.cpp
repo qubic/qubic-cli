@@ -55,6 +55,14 @@ void readPayoutList(const char* payoutListFile, std::vector<std::string>& addres
     }
 }
 
+static std::string assetNameFromInt64(unsigned long long assetName)
+{
+    char buffer[8];
+    memcpy(buffer, &assetName, sizeof(assetName));
+    buffer[7] = '\0';
+    return std::string(buffer);
+}
+
 long long getSendToManyV1Fee(QCPtr qc)
 {
     struct {
@@ -531,21 +539,18 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
     if (output.is_active != 0)
     {
         LOG("Poll %llu status is ACTIVE.\n", poll_id);
-        for (int i = 0; i < QUTIL_MAX_OPTIONS; i++)
-        {
-            if (output.votes[i] > 0) {
-                LOG("Option %d: %llu votes\n", i, output.votes[i]);
-            }
-        }
     }
     else
     {
-        LOG("Poll %llu status is INactive.\n", poll_id);
-        for (int i = 0; i < QUTIL_MAX_OPTIONS; i++)
+        LOG("Poll %llu status is INACTIVE.\n", poll_id);
+    }
+
+    // Log the votes for each option with votes > 0
+    for (int i = 0; i < QUTIL_MAX_OPTIONS; i++)
+    {
+        if (output.votes[i] > 0)
         {
-            if (output.votes[i] > 0) {
-                LOG("Result: option %d is the dominant the vote.\n", i);
-            }
+            LOG("Option %d: %llu votes\n", i, output.votes[i]);
         }
     }
 }
@@ -680,7 +685,8 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
             memcpy(poll_name, output.poll_info.poll_name, 32);
             poll_name[32] = '\0';
             LOG("Poll Name: %s\n", poll_name);
-            LOG("Poll Type: %llu\n", output.poll_info.poll_type);
+            LOG("Poll Type: %llu (%s)\n", output.poll_info.poll_type,
+                output.poll_info.poll_type == QUTIL_POLL_TYPE_QUBIC ? "Qubic" : "Asset");
             LOG("Min Amount: %llu\n", output.poll_info.min_amount);
             LOG("Is Active: %llu\n", output.poll_info.is_active);
             memset(buf, 0, 128);
@@ -694,9 +700,8 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
                 {
                     memset(buf, 0, 128);
                     getIdentityFromPublicKey(output.poll_info.allowed_assets[i].issuer, buf, false);
-                    LOG("Asset %llu: Issuer %s, Name %llu\n", i,
-                        buf,
-                        output.poll_info.allowed_assets[i].assetName);
+                    std::string assetNameStr = assetNameFromInt64(output.poll_info.allowed_assets[i].assetName);
+                    LOG("Asset %llu: Issuer %s, Name %s\n", i, buf, assetNameStr.c_str());
                 }
             }
             LOG("GitHub Link: %s\n", output.poll_link);
