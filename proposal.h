@@ -116,6 +116,9 @@ struct ProposalTypes
 
 		// Propose to set variable to a value. Supported options: 2 <= N <= 5; N == 0 means scalar voting.
 		static constexpr uint16 Variable = 0x200;
+
+		// Propose to transfer amount to address in a specific epoch. Supported options: 1 with ProposalDataV1.
+		static constexpr uint16 TransferInEpoch = 0x400;
 	};
 
 	// Options yes and no without extra data -> result is histogram of options
@@ -201,6 +204,14 @@ struct ProposalDataV1
 			uint8 destination[32];
 			sint64 amounts[4];   // N first amounts are the proposed options (non-negative, sorted without duplicates), rest zero
 		} transfer;
+
+		// Used if type class is TransferInEpoch
+		struct TransferInEpoch
+		{
+			uint8 destination[32];
+			sint64 amount;              // non-negative
+			uint16 targetEpoch;         // not checked by isValid()!
+		} transferInEpoch;
 
 		// Used if type class is Variable and type is not VariableScalarMean
 		struct VariableOptions
