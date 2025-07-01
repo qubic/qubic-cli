@@ -105,3 +105,17 @@ uint8_t g_msVaultVaultName[32] = { 0 };
 char* g_msVaultDestination = nullptr;
 char* g_msVaultPublicId = nullptr;
 char* g_msVaultOwnersCommaSeparated = nullptr;
+
+// Qutil poll-related variables
+char* g_qutil_poll_name_str = nullptr;
+uint64_t g_qutil_poll_type = 0; // 1 for Qubic, 2 for Asset
+uint64_t g_qutil_min_amount = 0;
+char* g_qutil_github_link_str = nullptr;
+char* g_qutil_semicolon_separated_assets = nullptr;
+uint64_t g_qutil_vote_poll_id = 0;
+uint64_t g_qutil_vote_amount = 0;
+uint64_t g_qutil_vote_chosen_option = 64;
+uint64_t g_qutil_get_result_poll_id = 0;
+char* g_qutil_get_polls_creator_address = nullptr;
+uint64_t g_qutil_get_poll_info_poll_id = 0;
+uint64_t g_qutil_cancel_poll_id = 0;
