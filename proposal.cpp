@@ -324,7 +324,7 @@ void printSetProposalHelp()
 	std::cout << "\t\tAdditionalProposalData is comma-separated list of destination identity, amount of option 1,\n";
 	std::cout << "\t\tamount of option 2, ... (options 0 is no change to current state). In GQMPROP contract, the\n";
 	std::cout << "\t\tamount is relative in millionth, for example 150000 = 15% and 1000 = 0.1%.\n";
-	std::cout << "\t- TransferInEpoch: Propose to transfer/donate an amount to a destination address, starting in.\n";
+	std::cout << "\t- TransferInEpoch: Propose to transfer/donate an amount to a destination address, starting in\n";
 	std::cout << "\t\ta specified future epoch. Currently only supported in GQMPROP with two options. \n";
 	std::cout << "\t\tAdditionalProposalData is comma-separated list of destination identity, epoch, and amount of\n";
 	std::cout << "\t\toption 1 (options 0 is no change to current state). In GQMPROP contract, the amount is\n";
