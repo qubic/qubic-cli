@@ -98,15 +98,14 @@ struct NOSTROMOCheckTokenCreatability_output
     }
 };
 
-struct NOSTROMOGetNumberOfInvestedAndClaimedProjects_input
+struct NOSTROMOGetNumberOfInvestedProjects_input
 {
     uint8_t userId[32];
 };
 
-struct NOSTROMOGetNumberOfInvestedAndClaimedProjects_output
+struct NOSTROMOGetNumberOfInvestedProjects_output
 {
     uint32_t numberOfInvestedProjects;
-    uint32_t numberOfClaimedProjects;
     
     static constexpr unsigned char type()
     {
@@ -153,6 +152,44 @@ struct NOSTROMOGetProjectIndexListByCreator_output
 {
     uint32_t indexListForProjects[64];
     
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct investInfo
+{
+    uint64_t investedAmount;
+    uint64_t claimedAmount;
+    uint32_t indexOfFundaraising;
+}; 
+
+struct NOSTROMOGetInfoUserInvested_input
+{
+    uint8_t investorId[32];
+};
+
+struct NOSTROMOGetInfoUserInvested_output
+{
+    investInfo listUserInvested[128];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct NOSTROMOGetMaxClaimAmount_input
+{
+    uint8_t investorId[32];
+    uint32_t indexOfFundaraising;
+};
+
+struct NOSTROMOGetMaxClaimAmount_output
+{
+    uint64_t amount;
+
     static constexpr unsigned char type()
     {
         return RespondContractFunction::type();
@@ -256,41 +293,40 @@ void upgradeTierLevel(const char* nodeIp, int nodePort,
                     uint32_t scheduledTickOffset,
                     uint32_t tierLevel);
 
-void getStats(const char* nodeIp, int nodePort, 
+void nostromoTransferShareManagementRights(const char* nodeIp, int nodePort, 
                     const char* seed, 
-                    uint32_t scheduledTickOffset);
+                    uint32_t scheduledTickOffset, 
+                    const char* issuer, 
+                    const char* assetName, 
+                    int64_t numberOfShares, 
+                    uint32_t newManagingContractIndex);
 
-void getTierLevelByUser(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getStats(const char* nodeIp, int nodePort);
+
+void getTierLevelByUser(const char* nodeIp, int nodePort,
                     const char* userId);
 
-void getUserVoteStatus(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getUserVoteStatus(const char* nodeIp, int nodePort,
                     const char* userId);
 
-void checkTokenCreatability(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void checkTokenCreatability(const char* nodeIp, int nodePort,
                     const char* tokenName);
 
-void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getNumberOfInvestedProjects(const char* nodeIp, int nodePort,
                     const char* userId);
 
-void getProjectByIndex(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getProjectByIndex(const char* nodeIp, int nodePort,
                     uint32_t indexOfProject);
 
-void getFundarasingByIndex(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getFundarasingByIndex(const char* nodeIp, int nodePort,
                     uint32_t indexOfFundarasing);
 
-void getProjectIndexListByCreator(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
                     const char* creator);
+
+void getInfoUserInvested(const char* nodeIp, int nodePort,
+                    const char* invsetorId);
+
+void getMaxClaimAmount(const char* nodeIp, int nodePort,
+                    const char* invsetorId, 
+                    uint32_t indexOfFundarasing);

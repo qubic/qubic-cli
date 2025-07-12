@@ -24,6 +24,8 @@
 #define NOSTROMO_TYPE_GET_PROJECT_BY_INDEX 6
 #define NOSTROMO_TYPE_GET_FUNDARAISING_BY_INDEX 7
 #define NOSTROMO_TYPE_GET_PROJECT_INDEX_LIST_BY_CREATOR 8
+#define NOSTROMO_TYPE_GET_INFO_USER_INVESTED 9
+#define NOSTROMO_TYPE_GET_MAX_CLAIM_AMOUNT 10
 
 // NOSTROMO PROCEDURES
 
@@ -35,6 +37,7 @@
 #define NOSTROMO_TYPE_INVEST_IN_FUNDARAISING 6
 #define NOSTROMO_TYPE_CLAIM_TOKEN 7
 #define NOSTROMO_TYPE_UPGRADE_TIER 8
+#define NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS 9
 
 constexpr uint32_t NOSTROMO_CREATE_PROJECT_FEE = 100000000;
 constexpr uint64_t NOSTROMO_TIER_FACEHUGGER_STAKE_AMOUNT = 20000000ULL;
@@ -43,6 +46,7 @@ constexpr uint64_t NOSTROMO_TIER_DOG_STAKE_AMOUNT = 200000000ULL;
 constexpr uint64_t NOSTROMO_TIER_XENOMORPH_STAKE_AMOUNT = 800000000ULL;
 constexpr uint64_t NOSTROMO_TIER_WARRIOR_STAKE_AMOUNT = 3200000000ULL;
 constexpr uint64_t NOSTROMO_QX_TOKEN_ISSUANCE_FEE = 1000000000ULL;
+constexpr uint32_t NOSTROMO_SHARE_MANAGEMENT_TRANSFER_FEE = 100;
 
 struct registerInTier_input
 {
@@ -183,6 +187,24 @@ struct upgradeTier_output
 {
 
 };
+
+struct Asset
+{
+    uint8_t issuer[32];
+    uint64_t assetName;
+};
+
+struct nostromoTransferShareManagementRights_input
+{
+    Asset asset;
+	int64_t numberOfShares;
+	uint32_t newManagingContractIndex;
+};
+struct nostromoTransferShareManagementRights_output
+{
+    int64_t transferredNumberOfShares;
+};
+
 
 void registerInTier(const char* nodeIp, int nodePort,
                     const char* seed, 
@@ -858,9 +880,83 @@ void upgradeTierLevel(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
-void getStats(const char* nodeIp, int nodePort, 
+void nostromoTransferShareManagementRights(const char* nodeIp, int nodePort, 
                     const char* seed, 
-                    uint32_t scheduledTickOffset)
+                    uint32_t scheduledTickOffset, 
+                    const char* issuer, 
+                    const char* assetName, 
+                    int64_t numberOfShares, 
+                    uint32_t newManagingContractIndex)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    uint8_t pubKey[32] = {0};
+    char assetNameS1[8] = {0};
+    memcpy(assetNameS1, assetName, strlen(assetName));
+    getPublicKeyFromIdentity(issuer, pubKey);
+
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};  
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char publicIdentity[128] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    const bool isLowerCase = false;
+    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
+    ((uint64_t*)destPublicKey)[0] = NOSTROMO_CONTRACT_INDEX;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    #pragma pack(push, 1)
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        nostromoTransferShareManagementRights_input input;
+        unsigned char signature[64];
+    } packet;
+    #pragma pack(pop)
+
+    memcpy(&packet.input.asset.assetName, assetNameS1, 8);
+    memcpy(packet.input.asset.issuer, pubKey, 32);
+    packet.input.newManagingContractIndex = newManagingContractIndex;
+    packet.input.numberOfShares = numberOfShares;
+    
+    packet.transaction.amount = NOSTROMO_SHARE_MANAGEMENT_TRANSFER_FEE;
+
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
+    packet.transaction.inputSize = sizeof(nostromoTransferShareManagementRights_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(nostromoTransferShareManagementRights_input),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(nostromoTransferShareManagementRights_input) + SIGNATURE_SIZE,
+                   digest,
+                   32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("nostromoTransferShareManagementRights tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void getStats(const char* nodeIp, int nodePort)
 {
     auto qc = make_qc(nodeIp, nodePort);
     
@@ -894,9 +990,7 @@ void getStats(const char* nodeIp, int nodePort,
     printf("The Epoch Revenue: %llu\nThe Total Pool Weight: %llu\nThe number of Register: %u\nThe number of created project: %u\nThe number of fundaraising: %u\n", result.epochRevenue, result.totalPoolWeight, result.numberOfRegister, result.numberOfCreatedProject, result.numberOfFundaraising);
 }
 
-void getTierLevelByUser(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getTierLevelByUser(const char* nodeIp, int nodePort,
                     const char* userId)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -937,9 +1031,7 @@ void getTierLevelByUser(const char* nodeIp, int nodePort,
     printf("The tierLevel: %u\n", result.tierLevel);
 }
 
-void getUserVoteStatus(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getUserVoteStatus(const char* nodeIp, int nodePort,
                     const char* userId)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -989,9 +1081,7 @@ void getUserVoteStatus(const char* nodeIp, int nodePort,
     }
 }
 
-void checkTokenCreatability(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void checkTokenCreatability(const char* nodeIp, int nodePort,
                     const char* tokenName)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1036,9 +1126,7 @@ void checkTokenCreatability(const char* nodeIp, int nodePort,
     }
 }
 
-void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getNumberOfInvestedProjects(const char* nodeIp, int nodePort,
                     const char* userId)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1050,13 +1138,13 @@ void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort,
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        NOSTROMOGetNumberOfInvestedAndClaimedProjects_input input;
+        NOSTROMOGetNumberOfInvestedProjects_input input;
     } packet;
     #pragma pack(pop)
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(NOSTROMOGetNumberOfInvestedAndClaimedProjects_input);
+    packet.rcf.inputSize = sizeof(NOSTROMOGetNumberOfInvestedProjects_input);
     packet.rcf.inputType = NOSTROMO_TYPE_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS;
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     
@@ -1064,10 +1152,10 @@ void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort,
     
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    NOSTROMOGetNumberOfInvestedAndClaimedProjects_output result;
+    NOSTROMOGetNumberOfInvestedProjects_output result;
     try
     {
-        result = qc->receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedAndClaimedProjects_output>();
+        result = qc->receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedProjects_output>();
     }
     catch (std::logic_error)
     {
@@ -1075,12 +1163,10 @@ void getNumberOfInvestedAndClaimedProjects(const char* nodeIp, int nodePort,
         return;
     }
 
-    printf("The number Of invested project: %u\nThe number of claimed project: %u\n", result.numberOfInvestedProjects, result.numberOfClaimedProjects);
+    printf("The number Of invested project: %u\n", result.numberOfInvestedProjects);
 }
 
-void getProjectByIndex(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getProjectByIndex(const char* nodeIp, int nodePort,
                     uint32_t indexOfProject)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1134,9 +1220,7 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
     }
 }
 
-void getFundarasingByIndex(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
+void getFundarasingByIndex(const char* nodeIp, int nodePort,
                     uint32_t indexOfFundarasing)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1196,8 +1280,6 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
 }
 
 void getProjectIndexListByCreator(const char* nodeIp, int nodePort, 
-                    const char* seed, 
-                    uint32_t scheduledTickOffset,
                     const char* creator)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -1244,4 +1326,90 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
         flag = 1;
         printf("%u, ", result.indexListForProjects[i]);
     }
+}
+
+void getInfoUserInvested(const char* nodeIp, int nodePort,
+                    const char* invsetorId)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+   
+    uint8_t publicKey[32] = {0};
+    getPublicKeyFromIdentity(invsetorId, publicKey);
+
+    #pragma pack(push, 1)
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        NOSTROMOGetInfoUserInvested_input input;
+    } packet;
+    #pragma pack(pop)
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(NOSTROMOGetInfoUserInvested_input);
+    packet.rcf.inputType = NOSTROMO_TYPE_GET_INFO_USER_INVESTED;
+    packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
+
+    memcpy(packet.input.investorId, publicKey, 32);
+    
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    NOSTROMOGetInfoUserInvested_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<NOSTROMOGetInfoUserInvested_output>();
+    }
+    catch (std::logic_error)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+    for (uint32_t i = 0; i < 128; i++)
+    {
+        if (result.listUserInvested->investedAmount == 0 && result.listUserInvested->claimedAmount == 0)
+        {
+            break;
+        }
+        printf("IndexOfFundaraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested->indexOfFundaraising, result.listUserInvested->investedAmount, result.listUserInvested->claimedAmount);
+    }
+}
+
+void getMaxClaimAmount(const char* nodeIp, int nodePort,
+                    const char* invsetorId, 
+                    uint32_t indexOfFundarasing)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+   
+    uint8_t publicKey[32] = {0};
+    getPublicKeyFromIdentity(invsetorId, publicKey);
+
+    #pragma pack(push, 1)
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        NOSTROMOGetMaxClaimAmount_input input;
+    } packet;
+    #pragma pack(pop)
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestContractFunction::type());
+    packet.rcf.inputSize = sizeof(NOSTROMOGetMaxClaimAmount_input);
+    packet.rcf.inputType = NOSTROMO_TYPE_GET_MAX_CLAIM_AMOUNT;
+    packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
+
+    memcpy(packet.input.investorId, publicKey, 32);
+    
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    NOSTROMOGetMaxClaimAmount_output result;
+    try
+    {
+        result = qc->receivePacketWithHeaderAs<NOSTROMOGetMaxClaimAmount_output>();
+    }
+    catch (std::logic_error)
+    {
+        LOG("Failed to receive data\n");
+        return;
+    }
+    printf("Max Claim Amount: %llu\n", result.amount);
 }

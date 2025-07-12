@@ -278,6 +278,8 @@ Command:
 			If you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.
 	-nostromoupgradetierlevel <NEW_TIER_LEVEL>
 			Please upgrade your tierlevel to <NEW_TIER_LEVEL>
+	-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>
+			Please transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>
 	-nostromogetstats
 			Please get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
 	-nostromogettierlevelbyuser <USER_ID>
@@ -286,15 +288,19 @@ Command:
 			Please get the list of project index voted by <USER_ID>.
 	-nostromochecktokencreatability <TOKEN_NAME>
 			Please check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.
-	-nostromogetnumberofinvestedandclaimedprojects <USER_ID>
-			Please get the number invested and claimed project. you can check if the <USER_ID> can invest and claim using this command.
-			The max number that can invest and claim by one user at once in SC is 64 currently.
+	-nostromogetnumberofinvestedprojects <USER_ID>
+			Please get the number invested and project. you can check if the <USER_ID> can invest using this command.
+			The max number that can invest by one user at once in SC is 128 currently.
 	-nostromogetprojectbyindex <PRJECT_INDEX>
 			Please get the infos of project using this command.
 	-nostromogetfundaraisingbyindex <FUNDARAISING_INDEX>
 			Please get the infos of fundaraising using this command.
 	-nostromogetprojectindexlistbycreator <USER_ID>
 			Please get the list of project that <USER_ID> created using this command.
+	-nostromogetInfoUserInvested <INVESTOR_ADDRESS>
+			You can get the invseted infos(indexOfFundaraising, InvestedAmount, ClaimedAmount).
+	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDARAISING>
+			Please get the max claim amount at the moment.
 
 [TESTING COMMANDS]
 	-testqpifunctionsoutput

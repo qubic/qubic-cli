@@ -174,5 +174,7 @@ uint8_t g_nost_stepOfVesting;
 
 uint64_t g_nost_amount = 0;
 uint32_t g_nost_indexOfFundaraising;
+uint32_t g_nostromo_newmanagement_contract_index = 0;
+int64_t g_nostromo_number_of_share = 0;
 
 char* g_nost_identity = nullptr;

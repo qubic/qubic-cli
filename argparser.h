@@ -297,6 +297,8 @@ void print_help()
     printf("\t\tIf you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.\n");
     printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
     printf("\t\tPlease upgrade your tierlevel to <NEW_TIER_LEVEL>\n");
+    printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
+    printf("\t\tPlease transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
     printf("\t-nostromogetstats\n");
     printf("\t\tPlease get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.\n");
     printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
@@ -305,15 +307,19 @@ void print_help()
     printf("\t\tPlease get the list of project index voted by <USER_ID>.\n");
     printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
     printf("\t\tPlease check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
-    printf("\t-nostromogetnumberofinvestedandclaimedprojects <USER_ID>\n");
-    printf("\t\tPlease get the number invested and claimed project. you can check if the <USER_ID> can invest and claim using this command.\n");
-	printf("\t\tThe max number that can invest and claim by one user at once in SC is 64 currently.\n");
+    printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
+    printf("\t\tPlease get the number invested project. you can check if the <USER_ID> can invest using this command.\n");
+	printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
     printf("\t-nostromogetprojectbyindex <PRJECT_INDEX>\n");
     printf("\t\tPlease get the infos of project using this command.\n");
     printf("\t-nostromogetfundaraisingbyindex <FUNDARAISING_INDEX>\n");
     printf("\t\tPlease get the infos of fundaraising using this command.\n");
     printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
     printf("\t\tPlease get the list of project that <USER_ID> created using this command.\n");
+    printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
+    printf("\t\tYou can get the invseted infos(indexOfFundaraising, InvestedAmount, ClaimedAmount).\n");
+    printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDARAISING>\n");
+    printf("\t\tPlease get the max claim amount at the moment.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -1701,6 +1707,18 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             return;
         }
+        if (strcmp(argv[i], "-nostromotransfersharemanagementrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
+            g_nostTokenName = argv[i + 1];
+            g_nost_identity = argv[i + 2];
+            g_nostromo_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 3]));
+            g_nostromo_number_of_share = int64_t(charToNumber(argv[i + 4]));
+            i += 5;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
         if (strcmp(argv[i], "-nostromogetstats") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(0)
@@ -1736,10 +1754,10 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             return;
         }
-        if (strcmp(argv[i], "-nostromogetnumberofinvestedandclaimedprojects") == 0)
+        if (strcmp(argv[i], "-nostromogetnumberofinvestedprojects") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = NOSTROMO_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS;
+            g_cmd = NOSTROMO_GET_NUMBER_OF_INVESTED_PROJECTS;
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
@@ -1769,6 +1787,25 @@ void parseArgument(int argc, char** argv)
             g_cmd = NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR;
             g_nost_identity = argv[i + 1];
             i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetInfoUserInvested") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_INFO_USER_INVESTED;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetmaxclaimamount") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_GET_MAX_CLAIM_AMOUNT;
+            g_nost_identity = argv[i + 1];
+            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 2]);
+            i += 3;
             CHECK_OVER_PARAMETERS
             return;
         }
