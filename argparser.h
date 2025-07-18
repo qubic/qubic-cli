@@ -289,12 +289,11 @@ void print_help()
 
     printf("\n[NOSTROMO COMMANDS]\n");
     printf("\t-nostromoregisterintier <TIER_LEVEL>\n");
-	printf("\t\tRegister in tier. you need to send the <TIER_LEVEL> to SC as param.\n");
+	printf("\t\tRegister in tier.\n");
 	printf("\t-nostromologoutfromtier \n");
 	printf("\t\tLogout from tier.\n");
 	printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>\n");
-	printf("\t\tCreate a project with the specified token info and start and end date for voting. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> Token information\n");
-	printf("\t\t<START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project\n");
+	printf("\t\tCreate a project with the specified token info and start and end date for voting.\n");
 	printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION>\n");
 	printf("\t\tVote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
 	printf("\t-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> \n");
@@ -319,22 +318,23 @@ void print_help()
 	printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
 	printf("\t\tTransfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
 	printf("\t-nostromogetstats\n");
-	printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.\n");
+	printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...)\n");
 	printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
 	printf("\t\tGet the tier_level for <USER_ID>.\n");
 	printf("\t-nostromogetuservotestatus <USER_ID>\n");
 	printf("\t\tGet the list of project index voted by <USER_ID>.\n");
 	printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
-	printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
+	printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC.\n");
+    printf("\t\tIf <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
 	printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
-	printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest using this command.\n");
+	printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest.\n");
 	printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
 	printf("\t-nostromogetprojectbyindex <PROJECT_INDEX>\n");
-	printf("\t\tGet the infos of project using this command.\n");
+	printf("\t\tGet the infos of project.\n");
 	printf("\t-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>\n");
-	printf("\t\tGet the infos of fundraising using this command.\n");
+	printf("\t\tGet the infos of fundraising.\n");
 	printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
-	printf("\t\tGet the list of project that <USER_ID> created using this command.\n");
+	printf("\t\tGet the list of project that <USER_ID> created.\n");
 	printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
 	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
 	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
@@ -1730,7 +1730,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = NOSTROMO_VOTE_IN_PROJECT;
             g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
-            g_nost_decsion = (bool)charToNumber(argv[i + 2]);
+            g_nost_decision = (bool)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             return;

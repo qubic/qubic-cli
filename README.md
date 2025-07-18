@@ -253,12 +253,11 @@ Command:
 [NOSTROMO COMMANDS]
 
 	-nostromoregisterintier <TIER_LEVEL>
-			Register in tier. you need to send the <TIER_LEVEL> to SC as param.
+			Register in tier.
 	-nostromologoutfromtier 
 			Logout from tier.
 	-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>
-			Create a project with the specified token info and start and end date for voting. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> Token information
-			<START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project
+			Create a project with the specified token info and start and end date for voting.
 	-nostromovoteinproject <PROJECT_INDEX> <DECISION>
 			Vote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.
 	-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> 
@@ -283,22 +282,23 @@ Command:
 	-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>
 			Transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>
 	-nostromogetstats
-			Get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
+			Get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...).
 	-nostromogettierlevelbyuser <USER_ID>
 			Get the tier_level for <USER_ID>.
 	-nostromogetuservotestatus <USER_ID>
 			Get the list of project index voted by <USER_ID>.
 	-nostromochecktokencreatability <TOKEN_NAME>
-			Check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.
+			Check if the <TOKEN_NAME> can be issued by SC.
+			If <TOKEN_NAME> is already created by SC, it can not be issued anymore.
 	-nostromogetnumberofinvestedprojects <USER_ID>
-			Get the number invested and project. you can check if the <USER_ID> can invest using this command.
+			Get the number invested and project. you can check if the <USER_ID> can invest.
 			The max number that can invest by one user at once in SC is 128 currently.
 	-nostromogetprojectbyindex <PROJECT_INDEX>
-			Get the infos of project using this command.
+			Get the infos of project.
 	-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>
-			Get the infos of fundraising using this command.
+			Get the infos of fundraising.
 	-nostromogetprojectindexlistbycreator <USER_ID>
-			Get the list of project that <USER_ID> created using this command.
+			Get the list of project that <USER_ID> created.
 	-nostromogetInfoUserInvested <INVESTOR_ADDRESS>
 			Get the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).
 	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>

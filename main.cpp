@@ -688,7 +688,7 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             voteInProject(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nost_indexOfProject, g_nost_decsion);
+                        g_nost_indexOfProject, g_nost_decision);
             break;
         }
         case NOSTROMO_CREATE_FUNDRAISING:
