@@ -108,73 +108,72 @@ char* g_msVaultOwnersCommaSeparated = nullptr;
 
 // nostromo
 
-char* g_nostTokenName = nullptr;
-uint64_t g_nostSupply = 0;
-uint32_t g_nost_tierlevel = 0;
-uint32_t g_noststartyear = 0;
-uint32_t g_noststartmonth = 0;
-uint32_t g_noststartday = 0;
-uint32_t g_noststarthour = 0;
-uint32_t g_nostendyear = 0;
-uint32_t g_nostendmonth = 0;
-uint32_t g_nostendday = 0;
-uint32_t g_nostendhour = 0;
-uint32_t g_nostindexofproject = 0;
-bool g_nostdecsion = 0;
-uint64_t g_nost_tokenPrice;
-uint64_t g_nost_soldAmount;
-uint64_t g_nost_requiredFunds;
-
+char* g_nost_tokenName = nullptr;
+uint64_t g_nost_supply = 0;
+uint32_t g_nost_tierLevel = 0;
+uint32_t g_nost_startYear = 0;
+uint32_t g_nost_startMonth = 0;
+uint32_t g_nost_startDay = 0;
+uint32_t g_nost_startHour = 0;
+uint32_t g_nost_endYear = 0;
+uint32_t g_nost_endMonth = 0;
+uint32_t g_nost_endDay = 0;
+uint32_t g_nost_endHour = 0;
 uint32_t g_nost_indexOfProject = 0;
-uint32_t g_nost_firstPhaseStartYear;
-uint32_t g_nost_firstPhaseStartMonth;
-uint32_t g_nost_firstPhaseStartDay;
-uint32_t g_nost_firstPhaseStartHour;
-uint32_t g_nost_firstPhaseEndYear;
-uint32_t g_nost_firstPhaseEndMonth;
-uint32_t g_nost_firstPhaseEndDay;
-uint32_t g_nost_firstPhaseEndHour;
+bool g_nost_decsion = 0;
+uint64_t g_nost_tokenPrice = 0;
+uint64_t g_nost_soldAmount = 0;
+uint64_t g_nost_requiredFunds = 0;
 
-uint32_t g_nost_secondPhaseStartYear;
-uint32_t g_nost_secondPhaseStartMonth;
-uint32_t g_nost_secondPhaseStartDay;
-uint32_t g_nost_secondPhaseStartHour;
-uint32_t g_nost_secondPhaseEndYear;
-uint32_t g_nost_secondPhaseEndMonth;
-uint32_t g_nost_secondPhaseEndDay;
-uint32_t g_nost_secondPhaseEndHour;
+uint32_t g_nost_firstPhaseStartYear = 0;
+uint32_t g_nost_firstPhaseStartMonth = 0;
+uint32_t g_nost_firstPhaseStartDay = 0;
+uint32_t g_nost_firstPhaseStartHour = 0;
+uint32_t g_nost_firstPhaseEndYear = 0;
+uint32_t g_nost_firstPhaseEndMonth = 0;
+uint32_t g_nost_firstPhaseEndDay = 0;
+uint32_t g_nost_firstPhaseEndHour = 0;
 
-uint32_t g_nost_thirdPhaseStartYear;
-uint32_t g_nost_thirdPhaseStartMonth;
-uint32_t g_nost_thirdPhaseStartDay;
-uint32_t g_nost_thirdPhaseStartHour;
-uint32_t g_nost_thirdPhaseEndYear;
-uint32_t g_nost_thirdPhaseEndMonth;
-uint32_t g_nost_thirdPhaseEndDay;
-uint32_t g_nost_thirdPhaseEndHour;
+uint32_t g_nost_secondPhaseStartYear = 0;
+uint32_t g_nost_secondPhaseStartMonth = 0;
+uint32_t g_nost_secondPhaseStartDay = 0;
+uint32_t g_nost_secondPhaseStartHour = 0;
+uint32_t g_nost_secondPhaseEndYear = 0;
+uint32_t g_nost_secondPhaseEndMonth = 0;
+uint32_t g_nost_secondPhaseEndDay = 0;
+uint32_t g_nost_secondPhaseEndHour = 0;
 
-uint32_t g_nost_listingStartYear;
-uint32_t g_nost_listingStartMonth;
-uint32_t g_nost_listingStartDay;
-uint32_t g_nost_listingStartHour;
+uint32_t g_nost_thirdPhaseStartYear = 0;
+uint32_t g_nost_thirdPhaseStartMonth = 0;
+uint32_t g_nost_thirdPhaseStartDay = 0;
+uint32_t g_nost_thirdPhaseStartHour = 0;
+uint32_t g_nost_thirdPhaseEndYear = 0;
+uint32_t g_nost_thirdPhaseEndMonth = 0;
+uint32_t g_nost_thirdPhaseEndDay = 0;
+uint32_t g_nost_thirdPhaseEndHour = 0;
 
-uint32_t g_nost_cliffEndYear;
-uint32_t g_nost_cliffEndMonth;
-uint32_t g_nost_cliffEndDay;
-uint32_t g_nost_cliffEndHour;
+uint32_t g_nost_listingStartYear = 0;
+uint32_t g_nost_listingStartMonth = 0;
+uint32_t g_nost_listingStartDay = 0;
+uint32_t g_nost_listingStartHour = 0;
 
-uint32_t g_nost_vestingEndYear;
-uint32_t g_nost_vestingEndMonth;
-uint32_t g_nost_vestingEndDay;
-uint32_t g_nost_vestingEndHour;
+uint32_t g_nost_cliffEndYear = 0;
+uint32_t g_nost_cliffEndMonth = 0;
+uint32_t g_nost_cliffEndDay = 0;
+uint32_t g_nost_cliffEndHour = 0;
 
-uint8_t g_nost_threshold;
-uint8_t g_nost_TGE;
-uint8_t g_nost_stepOfVesting;
+uint32_t g_nost_vestingEndYear = 0;
+uint32_t g_nost_vestingEndMonth = 0;
+uint32_t g_nost_vestingEndDay = 0;
+uint32_t g_nost_vestingEndHour = 0;
+
+uint8_t g_nost_threshold = 0;
+uint8_t g_nost_TGE = 0;
+uint8_t g_nost_stepOfVesting = 0;
 
 uint64_t g_nost_amount = 0;
-uint32_t g_nost_indexOfFundaraising;
-uint32_t g_nostromo_newmanagement_contract_index = 0;
-int64_t g_nostromo_number_of_share = 0;
+uint32_t g_nost_indexOfFundraising = 0;
+uint32_t g_nost_newManagementContractIndex = 0;
+int64_t g_nost_numberOfShare = 0;
 
 char* g_nost_identity = nullptr;

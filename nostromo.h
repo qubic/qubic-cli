@@ -14,7 +14,7 @@ struct projectInfo
     bool isCreatedFundarasing;
 };
 
-struct fundaraisingInfo
+struct fundraisingInfo
 {
     uint64_t tokenPrice;
     uint64_t soldAmount;
@@ -44,7 +44,7 @@ struct NOSTROMOGetStats_input
 struct NOSTROMOGetStats_output
 {
     uint64_t epochRevenue, totalPoolWeight;
-    uint32_t numberOfRegister, numberOfCreatedProject, numberOfFundaraising;
+    uint32_t numberOfRegister, numberOfCreatedProject, numberOfFundraising;
 
     static constexpr unsigned char type()
     {
@@ -135,7 +135,7 @@ struct NOSTROMOGetFundarasingByIndex_input
 
 struct NOSTROMOGetFundarasingByIndex_output
 {
-    fundaraisingInfo fundarasing;
+    fundraisingInfo fundarasing;
     
     static constexpr unsigned char type()
     {
@@ -162,7 +162,7 @@ struct investInfo
 {
     uint64_t investedAmount;
     uint64_t claimedAmount;
-    uint32_t indexOfFundaraising;
+    uint32_t indexOfFundraising;
 }; 
 
 struct NOSTROMOGetInfoUserInvested_input
@@ -183,7 +183,7 @@ struct NOSTROMOGetInfoUserInvested_output
 struct NOSTROMOGetMaxClaimAmount_input
 {
     uint8_t investorId[32];
-    uint32_t indexOfFundaraising;
+    uint32_t indexOfFundraising;
 };
 
 struct NOSTROMOGetMaxClaimAmount_output
@@ -225,7 +225,7 @@ void voteInProject(const char* nodeIp, int nodePort,
                     uint32_t indexOfProject,
 		            bool decision);
 
-void createFundaraising(const char* nodeIp, int nodePort, 
+void createFundraising(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,
                     uint64_t tokenPrice,
@@ -281,13 +281,13 @@ void createFundaraising(const char* nodeIp, int nodePort,
 void investInProject(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,
-                    uint32_t indexOfFundaraising, uint64_t amount);
+                    uint32_t indexOfFundraising, uint64_t amount);
 
 void claimToken(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,
                     uint64_t amount,
-		            uint32_t indexOfFundaraising);
+		            uint32_t indexOfFundraising);
 void upgradeTierLevel(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,

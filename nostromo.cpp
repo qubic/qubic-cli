@@ -12,7 +12,7 @@
 #include "K12AndKeyUtil.h"
 #include "nostromo.h"
 
-#define NOSTROMO_CONTRACT_INDEX 13
+#define NOSTROMO_CONTRACT_INDEX 14
 
 // NOSTROMO FUNCTIONS
 
@@ -22,7 +22,7 @@
 #define NOSTROMO_TYPE_CHECK_TOKEN_CREATABILITY 4
 #define NOSTROMO_TYPE_GET_NUMBER_OF_INVESTED_AND_CLAIMED_PROJECTS 5
 #define NOSTROMO_TYPE_GET_PROJECT_BY_INDEX 6
-#define NOSTROMO_TYPE_GET_FUNDARAISING_BY_INDEX 7
+#define NOSTROMO_TYPE_GET_FUNDRAISING_BY_INDEX 7
 #define NOSTROMO_TYPE_GET_PROJECT_INDEX_LIST_BY_CREATOR 8
 #define NOSTROMO_TYPE_GET_INFO_USER_INVESTED 9
 #define NOSTROMO_TYPE_GET_MAX_CLAIM_AMOUNT 10
@@ -33,8 +33,8 @@
 #define NOSTROMO_TYPE_LOGOUT_FROM_TIER 2
 #define NOSTROMO_TYPE_CREATE_PROJECT 3
 #define NOSTROMO_TYPE_VOTE_IN_PROJECT 4
-#define NOSTROMO_TYPE_CREATE_FUNDARAISING 5
-#define NOSTROMO_TYPE_INVEST_IN_FUNDARAISING 6
+#define NOSTROMO_TYPE_CREATE_FUNDRAISING 5
+#define NOSTROMO_TYPE_INVEST_IN_FUNDRAISING 6
 #define NOSTROMO_TYPE_CLAIM_TOKEN 7
 #define NOSTROMO_TYPE_UPGRADE_TIER 8
 #define NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS 9
@@ -98,7 +98,7 @@ struct voteInProject_output
 
 };
 
-struct createFundaraising_input
+struct createFundraising_input
 {
     uint64_t tokenPrice;
     uint64_t soldAmount;
@@ -152,14 +152,14 @@ struct createFundaraising_input
     uint8_t stepOfVesting;
 };
 
-struct createFundaraising_output
+struct createFundraising_output
 {
 
 };
 
 struct investInProject_input
 {
-    uint32_t indexOfFundaraising;
+    uint32_t indexOfFundraising;
 };
 
 struct investInProject_output
@@ -170,7 +170,7 @@ struct investInProject_output
 struct claimToken_input
 {
     uint64_t amount;
-    uint32_t indexOfFundaraising;
+    uint32_t indexOfFundraising;
 };
 
 struct claimToken_output
@@ -501,7 +501,7 @@ void voteInProject(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
-void createFundaraising(const char* nodeIp, int nodePort, 
+void createFundraising(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,
                     uint64_t tokenPrice,
@@ -578,7 +578,7 @@ void createFundaraising(const char* nodeIp, int nodePort,
     struct {
         RequestResponseHeader header;
         Transaction transaction;
-        createFundaraising_input input;
+        createFundraising_input input;
         unsigned char signature[64];
     } packet;
     #pragma pack(pop)
@@ -638,10 +638,10 @@ void createFundaraising(const char* nodeIp, int nodePort,
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = NOSTROMO_TYPE_CREATE_FUNDARAISING;
-    packet.transaction.inputSize = sizeof(createFundaraising_input);
+    packet.transaction.inputType = NOSTROMO_TYPE_CREATE_FUNDRAISING;
+    packet.transaction.inputSize = sizeof(createFundraising_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(createFundaraising_input),
+                   sizeof(packet.transaction) + sizeof(createFundraising_input),
                    digest,
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
@@ -651,11 +651,11 @@ void createFundaraising(const char* nodeIp, int nodePort,
     packet.header.setType(BROADCAST_TRANSACTION);
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(createFundaraising_input) + SIGNATURE_SIZE,
+                   sizeof(packet.transaction) + sizeof(createFundraising_input) + SIGNATURE_SIZE,
                    digest,
                    32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
-    LOG("createFundaraising tx has been sent!\n");
+    LOG("createFundraising tx has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
@@ -664,7 +664,7 @@ void createFundaraising(const char* nodeIp, int nodePort,
 void investInProject(const char* nodeIp, int nodePort, 
                     const char* seed, 
                     uint32_t scheduledTickOffset,
-                    uint32_t indexOfFundaraising, uint64_t amount)
+                    uint32_t indexOfFundraising, uint64_t amount)
 {
     auto qc = make_qc(nodeIp, nodePort);
 
@@ -695,14 +695,14 @@ void investInProject(const char* nodeIp, int nodePort,
     } packet;
     #pragma pack(pop)
 
-    packet.input.indexOfFundaraising = indexOfFundaraising;
+    packet.input.indexOfFundraising = indexOfFundraising;
 
     packet.transaction.amount = amount;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = NOSTROMO_TYPE_INVEST_IN_FUNDARAISING;
+    packet.transaction.inputType = NOSTROMO_TYPE_INVEST_IN_FUNDRAISING;
     packet.transaction.inputSize = sizeof(investInProject_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(investInProject_input),
@@ -729,7 +729,7 @@ void claimToken(const char* nodeIp, int nodePort,
                     const char* seed, 
                     uint32_t scheduledTickOffset,
                     uint64_t amount,
-		            uint32_t indexOfFundaraising)
+		            uint32_t indexOfFundraising)
 {
     auto qc = make_qc(nodeIp, nodePort);
 
@@ -761,7 +761,7 @@ void claimToken(const char* nodeIp, int nodePort,
     #pragma pack(pop)
 
     packet.input.amount = amount;
-    packet.input.indexOfFundaraising = indexOfFundaraising;
+    packet.input.indexOfFundraising = indexOfFundraising;
 
     packet.transaction.amount = 0;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -987,7 +987,7 @@ void getStats(const char* nodeIp, int nodePort)
         return;
     }
 
-    printf("The Epoch Revenue: %llu\nThe Total Pool Weight: %llu\nThe number of Register: %u\nThe number of created project: %u\nThe number of fundaraising: %u\n", result.epochRevenue, result.totalPoolWeight, result.numberOfRegister, result.numberOfCreatedProject, result.numberOfFundaraising);
+    printf("The Epoch Revenue: %llu\nThe Total Pool Weight: %llu\nThe number of Register: %u\nThe number of created project: %u\nThe number of fundraising: %u\n", result.epochRevenue, result.totalPoolWeight, result.numberOfRegister, result.numberOfCreatedProject, result.numberOfFundraising);
 }
 
 void getTierLevelByUser(const char* nodeIp, int nodePort,
@@ -1212,11 +1212,11 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
     printf("The number of no: %u\n", result.project.numberOfNo);
     if (result.project.isCreatedFundarasing)
     {
-        printf("This project created the fundaraising.");
+        printf("This project created the fundraising.");
     }
     else
     {
-        printf("This project does not create the fundaraising");
+        printf("This project does not create the fundraising");
     }
 }
 
@@ -1236,7 +1236,7 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
     packet.rcf.inputSize = sizeof(NOSTROMOGetFundarasingByIndex_input);
-    packet.rcf.inputType = NOSTROMO_TYPE_GET_FUNDARAISING_BY_INDEX;
+    packet.rcf.inputType = NOSTROMO_TYPE_GET_FUNDRAISING_BY_INDEX;
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     packet.input.indexOfFundarasing = indexOfFundarasing;
     
@@ -1370,7 +1370,7 @@ void getInfoUserInvested(const char* nodeIp, int nodePort,
         {
             break;
         }
-        printf("IndexOfFundaraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested->indexOfFundaraising, result.listUserInvested->investedAmount, result.listUserInvested->claimedAmount);
+        printf("IndexOfFundraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested->indexOfFundraising, result.listUserInvested->investedAmount, result.listUserInvested->claimedAmount);
     }
 }
 

@@ -615,7 +615,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             registerInTier(g_nodeIp,g_nodePort,g_seed,
-                           g_offsetScheduledTick, g_nost_tierlevel);
+                           g_offsetScheduledTick, g_nost_tierLevel);
             break;
         }
         case NOSTROMO_LOGOUT_FROM_TIER:
@@ -630,12 +630,12 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            sanityCheckValidAssetName(g_nostTokenName);
+            sanityCheckValidAssetName(g_nost_tokenName);
             createProject(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nostTokenName, g_nostSupply,
-                        g_noststartyear, g_noststartmonth, g_noststartday, g_noststarthour,
-                        g_nostendyear, g_nostendmonth, g_nostendday, g_nostendhour);
+                        g_nost_tokenName, g_nost_supply,
+                        g_nost_startYear, g_nost_startMonth, g_nost_startDay, g_nost_startHour,
+                        g_nost_endYear, g_nost_endMonth, g_nost_endDay, g_nost_endHour);
             break;
         }
         case NOSTROMO_VOTE_IN_PROJECT:
@@ -644,14 +644,14 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             voteInProject(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nostindexofproject, g_nostdecsion);
+                        g_nost_indexOfProject, g_nost_decsion);
             break;
         }
-        case NOSTROMO_CREATE_FUNDARAISING:
+        case NOSTROMO_CREATE_FUNDRAISING:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            createFundaraising(g_nodeIp,g_nodePort,g_seed,
+            createFundraising(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
                         g_nost_tokenPrice, g_nost_soldAmount, g_nost_requiredFunds,
                         g_nost_indexOfProject ,g_nost_firstPhaseStartYear, g_nost_firstPhaseStartMonth, g_nost_firstPhaseStartDay,
@@ -666,13 +666,13 @@ int run(int argc, char* argv[])
                         g_nost_threshold, g_nost_TGE, g_nost_stepOfVesting);
             break;
         }
-        case NOSTROMO_INVEST_IN_FUNDARAISING:
+        case NOSTROMO_INVEST_IN_FUNDRAISING:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             investInProject(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nost_indexOfFundaraising, g_nost_amount);
+                        g_nost_indexOfFundraising, g_nost_amount);
             break;
         }
         case NOSTROMO_CLAIM_TOKEN:
@@ -681,7 +681,7 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             claimToken(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nost_amount, g_nost_indexOfFundaraising);
+                        g_nost_amount, g_nost_indexOfFundraising);
             break;
         }
         case NOSTROMO_UPGRADE_TIER_LEVEL:
@@ -690,7 +690,7 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             upgradeTierLevel(g_nodeIp,g_nodePort,g_seed,
                            g_offsetScheduledTick,
-                        g_nost_tierlevel);
+                        g_nost_tierLevel);
             break;
         }
         case NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS:
@@ -700,9 +700,9 @@ int run(int argc, char* argv[])
             nostromoTransferShareManagementRights(g_nodeIp, g_nodePort, g_seed, 
                 g_offsetScheduledTick, 
                 g_nost_identity, 
-                g_nostTokenName, 
-                g_nostromo_number_of_share, 
-                g_nostromo_newmanagement_contract_index);
+                g_nost_tokenName, 
+                g_nost_numberOfShare, 
+                g_nost_newManagementContractIndex);
             break;
         }
         case NOSTROMO_GET_STATS:
@@ -729,7 +729,7 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             checkTokenCreatability(g_nodeIp,g_nodePort,
-                        g_nostTokenName);
+                        g_nost_tokenName);
             break;
         }
         case NOSTROMO_GET_NUMBER_OF_INVESTED_PROJECTS:
@@ -746,11 +746,11 @@ int run(int argc, char* argv[])
                         g_nost_indexOfProject);
             break;
         }
-        case NOSTROMO_GET_FUNDARAISING_BY_INDEX:
+        case NOSTROMO_GET_FUNDRAISING_BY_INDEX:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             getFundarasingByIndex(g_nodeIp,g_nodePort,
-                        g_nost_indexOfFundaraising);
+                        g_nost_indexOfFundraising);
             break;
         }
         case NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR:
@@ -772,7 +772,7 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getMaxClaimAmount(g_nodeIp,g_nodePort,
                         g_nost_identity,
-                        g_nost_indexOfFundaraising);
+                        g_nost_indexOfFundraising);
             break;
         }
         case TEST_QPI_FUNCTIONS_OUTPUT:

@@ -255,13 +255,13 @@ Command:
 	-nostromoregisterintier <TIER_LEVEL>
 			Register in tier. you need to send the <TIER_LEVEL> to SC as param.
 	-nostromologoutfromtier 
-			Please use this command to logout from tier. there is no any param.
+			Logout from tier.
 	-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>
-			Please create the project using this command. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> the infos for token
+			Create a project with the specified token info and start and end date for voting. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> Token information
 			<START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project
 	-nostromovoteinproject <PROJECT_INDEX> <DECISION>
-			Please vote in project using this command. <DECISION> -> if you want to vote with yes, it should be 1. otherwise it is 0.
-	-nostromocreatefundaraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> 
+			Vote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.
+	-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> 
 			<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>
 			<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>
 			<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>
@@ -272,35 +272,37 @@ Command:
 			<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>
 			<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>
 			<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>
-	-nostromoinvestinproject <FUNDARAISING_INDEX> <INVESTMENT_AMOUNT>
-			Please invest in fundaraising using thic command. 
-	-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDARAISING_INDEX>
-			If you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.
+			Create a fundraising with the specified token and project infos.
+	-nostromoinvestinproject <FUNDRAISING_INDEX> <INVESTMENT_AMOUNT>
+			Invest in the fundraising.
+	-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDRAISING_INDEX>
+			Claim your token from SC.
+			If you invest in the fundraising and also it is the time for claiming, you can receive the token from SC.
 	-nostromoupgradetierlevel <NEW_TIER_LEVEL>
-			Please upgrade your tierlevel to <NEW_TIER_LEVEL>
+			Upgrade your tierlevel to <NEW_TIER_LEVEL>
 	-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>
-			Please transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>
+			Transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>
 	-nostromogetstats
-			Please get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
+			Get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.
 	-nostromogettierlevelbyuser <USER_ID>
-			Please get the tier_level for <USER_ID>.
+			Get the tier_level for <USER_ID>.
 	-nostromogetuservotestatus <USER_ID>
-			Please get the list of project index voted by <USER_ID>.
+			Get the list of project index voted by <USER_ID>.
 	-nostromochecktokencreatability <TOKEN_NAME>
-			Please check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.
+			Check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.
 	-nostromogetnumberofinvestedprojects <USER_ID>
-			Please get the number invested and project. you can check if the <USER_ID> can invest using this command.
+			Get the number invested and project. you can check if the <USER_ID> can invest using this command.
 			The max number that can invest by one user at once in SC is 128 currently.
-	-nostromogetprojectbyindex <PRJECT_INDEX>
-			Please get the infos of project using this command.
-	-nostromogetfundaraisingbyindex <FUNDARAISING_INDEX>
-			Please get the infos of fundaraising using this command.
+	-nostromogetprojectbyindex <PROJECT_INDEX>
+			Get the infos of project using this command.
+	-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>
+			Get the infos of fundraising using this command.
 	-nostromogetprojectindexlistbycreator <USER_ID>
-			Please get the list of project that <USER_ID> created using this command.
+			Get the list of project that <USER_ID> created using this command.
 	-nostromogetInfoUserInvested <INVESTOR_ADDRESS>
-			You can get the invseted infos(indexOfFundaraising, InvestedAmount, ClaimedAmount).
-	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDARAISING>
-			Please get the max claim amount at the moment.
+			Get the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).
+	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>
+			Get the max claim amount at the moment.
 
 [TESTING COMMANDS]
 	-testqpifunctionsoutput

@@ -273,15 +273,16 @@ void print_help()
 
     printf("\n[NOSTROMO COMMANDS]\n");
     printf("\t-nostromoregisterintier <TIER_LEVEL>\n");
-    printf("\t\tRegister in tier. you need to send the <TIER_LEVEL> to SC as param.\n");
-    printf("\t-nostromologoutfromtier \n");
-    printf("\t\tPlease use this command to logout from tier. there is no any param.\n");
-    printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> \n");
-    printf("\t\tPlease create the project using this command. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> the infos for token <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project\n");
-    printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION> \n");
-    printf("\t\tPlease vote in project using this command. <DECISION> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
-    printf("\t-nostromocreatefundaraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX>\n");
-    printf("\t\t<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>\n");
+	printf("\t\tRegister in tier. you need to send the <TIER_LEVEL> to SC as param.\n");
+	printf("\t-nostromologoutfromtier \n");
+	printf("\t\tLogout from tier.\n");
+	printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>\n");
+	printf("\t\tCreate a project with the specified token info and start and end date for voting. <TOKEN_NAME> <SUPPLY_OF_TOKEN> -> Token information\n");
+	printf("\t\t<START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR> -> the start date and end date for voting of project\n");
+	printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION>\n");
+	printf("\t\tVote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
+	printf("\t-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> \n");
+	printf("\t\t<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>\n");
 	printf("\t\t<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>\n");
 	printf("\t\t<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>\n");
 	printf("\t\t<SECOND_PHASE_END_YEAR> <SECOND_PHASE_END_MONTH> <SECOND_PHASE_END_DAY> <SECOND_PHASE_END_HOUR>\n");
@@ -291,35 +292,37 @@ void print_help()
 	printf("\t\t<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>\n");
 	printf("\t\t<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>\n");
 	printf("\t\t<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>\n");
-    printf("\t-nostromoinvestinproject <FUNDARAISING_INDEX> <INVESTMENT_AMOUNT>\n");
-    printf("\t\tPlease invest in fundaraising using thic command. \n");
-    printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDARAISING_INDEX>\n");
-    printf("\t\tIf you invest in the fundaraising and also it is the time for claiming, you can receive the token from SC.\n");
-    printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
-    printf("\t\tPlease upgrade your tierlevel to <NEW_TIER_LEVEL>\n");
-    printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
-    printf("\t\tPlease transfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
-    printf("\t-nostromogetstats\n");
-    printf("\t\tPlease get the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.\n");
-    printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
-    printf("\t\tPlease get the tier_level for <USER_ID>.\n");
-    printf("\t-nostromogetuservotestatus <USER_ID>\n");
-    printf("\t\tPlease get the list of project index voted by <USER_ID>.\n");
-    printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
-    printf("\t\tPlease check if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
-    printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
-    printf("\t\tPlease get the number invested project. you can check if the <USER_ID> can invest using this command.\n");
+	printf("\t\tCreate a fundraising with the specified token and project infos.\n");
+	printf("\t-nostromoinvestinproject <FUNDRAISING_INDEX> <INVESTMENT_AMOUNT>\n");
+	printf("\t\tInvest in the fundraising.\n");
+	printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDRAISING_INDEX>\n");
+	printf("\t\tClaim your token from SC.\n");
+	printf("\t\tIf you invest in the fundraising and also it is the time for claiming, you can receive the token from SC.\n");
+	printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
+	printf("\t\tUpgrade your tierlevel to <NEW_TIER_LEVEL>\n");
+	printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
+	printf("\t\tTransfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
+	printf("\t-nostromogetstats\n");
+	printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...) from SC.\n");
+	printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
+	printf("\t\tGet the tier_level for <USER_ID>.\n");
+	printf("\t-nostromogetuservotestatus <USER_ID>\n");
+	printf("\t\tGet the list of project index voted by <USER_ID>.\n");
+	printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
+	printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC. if <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
+	printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
+	printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest using this command.\n");
 	printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
-    printf("\t-nostromogetprojectbyindex <PRJECT_INDEX>\n");
-    printf("\t\tPlease get the infos of project using this command.\n");
-    printf("\t-nostromogetfundaraisingbyindex <FUNDARAISING_INDEX>\n");
-    printf("\t\tPlease get the infos of fundaraising using this command.\n");
-    printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
-    printf("\t\tPlease get the list of project that <USER_ID> created using this command.\n");
-    printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
-    printf("\t\tYou can get the invseted infos(indexOfFundaraising, InvestedAmount, ClaimedAmount).\n");
-    printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDARAISING>\n");
-    printf("\t\tPlease get the max claim amount at the moment.\n");
+	printf("\t-nostromogetprojectbyindex <PROJECT_INDEX>\n");
+	printf("\t\tGet the infos of project using this command.\n");
+	printf("\t-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>\n");
+	printf("\t\tGet the infos of fundraising using this command.\n");
+	printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
+	printf("\t\tGet the list of project that <USER_ID> created using this command.\n");
+	printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
+	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
+	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
+	printf("\t\tGet the max claim amount at the moment.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -1573,14 +1576,14 @@ void parseArgument(int argc, char** argv)
         }
 
         /**************************
-         **** NOSTROMO SC COMMANDS ****
+         **** NOSTROMO COMMANDS ****
          **************************/
 
         if (strcmp(argv[i], "-nostromoregisterintier") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = NOSTROMO_REGISTER_IN_TIER;
-            g_nost_tierlevel = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1597,16 +1600,16 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(10)
             g_cmd = NOSTROMO_CREATE_PROJECT;
-            g_nostTokenName = argv[i + 1];
-            g_nostSupply = charToNumber(argv[i + 2]);
-            g_noststartyear = (uint32_t)charToNumber(argv[i + 3]);
-            g_noststartmonth = (uint32_t)charToNumber(argv[i + 4]);
-            g_noststartday = (uint32_t)charToNumber(argv[i + 5]);
-            g_noststarthour = (uint32_t)charToNumber(argv[i + 6]);
-            g_nostendyear = (uint32_t)charToNumber(argv[i + 7]);
-            g_nostendmonth = (uint32_t)charToNumber(argv[i + 8]);
-            g_nostendday = (uint32_t)charToNumber(argv[i + 9]);
-            g_nostendhour = (uint32_t)charToNumber(argv[i + 10]);
+            g_nost_tokenName = argv[i + 1];
+            g_nost_supply = charToNumber(argv[i + 2]);
+            g_nost_startYear = (uint32_t)charToNumber(argv[i + 3]);
+            g_nost_startMonth = (uint32_t)charToNumber(argv[i + 4]);
+            g_nost_startDay = (uint32_t)charToNumber(argv[i + 5]);
+            g_nost_startHour = (uint32_t)charToNumber(argv[i + 6]);
+            g_nost_endYear = (uint32_t)charToNumber(argv[i + 7]);
+            g_nost_endMonth = (uint32_t)charToNumber(argv[i + 8]);
+            g_nost_endDay = (uint32_t)charToNumber(argv[i + 9]);
+            g_nost_endHour = (uint32_t)charToNumber(argv[i + 10]);
             i += 11;
             CHECK_OVER_PARAMETERS
             return;
@@ -1615,20 +1618,21 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = NOSTROMO_VOTE_IN_PROJECT;
-            g_nostindexofproject = (uint32_t)charToNumber(argv[i + 1]);
-            g_nostdecsion = (bool)charToNumber(argv[i + 2]);
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_decsion = (bool)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             return;
         }
-        if (strcmp(argv[i], "-nostromocreatefundaraising") == 0)
+        if (strcmp(argv[i], "-nostromocreatefundraising") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(43)
-            g_cmd = NOSTROMO_CREATE_FUNDARAISING;
+            g_cmd = NOSTROMO_CREATE_FUNDRAISING;
             g_nost_tokenPrice = charToNumber(argv[i + 1]);
             g_nost_soldAmount = charToNumber(argv[i + 2]);
             g_nost_requiredFunds = charToNumber(argv[i + 3]);
             g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 4]);
+
             g_nost_firstPhaseStartYear = (uint32_t)charToNumber(argv[i + 5]);
             g_nost_firstPhaseStartMonth = (uint32_t)charToNumber(argv[i + 6]);
             g_nost_firstPhaseStartDay = (uint32_t)charToNumber(argv[i + 7]);
@@ -1681,8 +1685,8 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-nostromoinvestinproject") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
-            g_cmd = NOSTROMO_INVEST_IN_FUNDARAISING;
-            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 1]);
+            g_cmd = NOSTROMO_INVEST_IN_FUNDRAISING;
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 1]);
             g_nost_amount = charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
@@ -1693,7 +1697,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = NOSTROMO_CLAIM_TOKEN;
             g_nost_amount = charToNumber(argv[i + 1]);
-            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 2]);
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             return;
@@ -1702,7 +1706,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = NOSTROMO_UPGRADE_TIER_LEVEL;
-            g_nost_tierlevel = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1711,10 +1715,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
-            g_nostTokenName = argv[i + 1];
+            g_nost_tokenName = argv[i + 1];
             g_nost_identity = argv[i + 2];
-            g_nostromo_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 3]));
-            g_nostromo_number_of_share = int64_t(charToNumber(argv[i + 4]));
+            g_nost_newManagementContractIndex = uint32_t(charToNumber(argv[i + 3]));
+            g_nost_numberOfShare = int64_t(charToNumber(argv[i + 4]));
             i += 5;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1749,7 +1753,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = NOSTROMO_CHECK_TOKEN_CREATABILITY;
-            g_nostTokenName = argv[i + 1];
+            g_nost_tokenName = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1772,11 +1776,11 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             return;
         }
-        if (strcmp(argv[i], "-nostromogetfundaraisingbyindex") == 0)
+        if (strcmp(argv[i], "-nostromogetfundraisingbyindex") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = NOSTROMO_GET_FUNDARAISING_BY_INDEX;
-            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 1]);
+            g_cmd = NOSTROMO_GET_FUNDRAISING_BY_INDEX;
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1804,7 +1808,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = NOSTROMO_GET_MAX_CLAIM_AMOUNT;
             g_nost_identity = argv[i + 1];
-            g_nost_indexOfFundaraising = (uint32_t)charToNumber(argv[i + 2]);
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             return;
