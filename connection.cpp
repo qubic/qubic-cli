@@ -25,6 +25,7 @@
 #include "msvault.h"
 #include "qswapStruct.h"
 #include "testUtils.h"
+#include "qutil.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
@@ -46,7 +47,7 @@ static int connect(const char* nodeIp, int nodePort)
     WSADATA wsa_data;
     WSAStartup(MAKEWORD(2, 0), &wsa_data);
 
-    int serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    int serverSocket = int(socket(AF_INET, SOCK_STREAM, 0));
     if (!setTimeout(serverSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC))
         return -1;
     if (!setTimeout(serverSocket, SO_SNDTIMEO, DEFAULT_TIMEOUT_MSEC))
@@ -132,7 +133,7 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
     {
         *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
     }
-    catch(std::logic_error& e) {}
+    catch(std::logic_error) {}
     setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC);
 }
 
@@ -259,7 +260,7 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
         {
             results.push_back(receivePacketWithHeaderAs<T>());
         }
-        catch (EndResponseReceived& e)
+        catch (EndResponseReceived)
         {
             break;
         }
@@ -347,3 +348,9 @@ template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();
+
+// QUTIL
+template GetCurrentResult_output QubicConnection::receivePacketWithHeaderAs<GetCurrentResult_output>();
+template GetPollsByCreator_output QubicConnection::receivePacketWithHeaderAs<GetPollsByCreator_output>();
+template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetCurrentPollId_output>();
+template GetPollInfo_output QubicConnection::receivePacketWithHeaderAs<GetPollInfo_output>();

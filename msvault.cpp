@@ -490,7 +490,7 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
     try {
         output = qc->receivePacketWithHeaderAs<MsVaultGetReleaseStatus_output>();
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error) {
         LOG("Failed to get release status.\n");
         return;
     }
@@ -545,7 +545,7 @@ void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
     try {
         output = qc->receivePacketWithHeaderAs<MsVaultGetBalanceOf_output>();
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error) {
         LOG("Failed to get balance.\n");
         return;
     }
@@ -591,7 +591,7 @@ void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
     try {
         output = qc->receivePacketWithHeaderAs<MsVaultGetVaultName_output>();
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error) {
         LOG("Failed to get vault name.\n");
         return;
     }
@@ -635,7 +635,7 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
     try {
         output = qc->receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error) {
         LOG("Failed to get revenue info.\n");
         return;
     }
@@ -727,7 +727,7 @@ void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
     try {
         output = qc->receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
     }
-    catch (std::logic_error& e) {
+    catch (std::logic_error) {
         LOG("Failed to get vault owners.\n");
         return;
     }

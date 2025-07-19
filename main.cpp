@@ -54,6 +54,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printAssetRecords(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case GET_TOTAL_NUMBER_OF_ASSET_SHARES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetTotalNumberOfAssetShares(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
+            break;
         case SEND_COIN:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -269,7 +273,7 @@ int run(int argc, char* argv[])
         case QUOTTERY_JOIN_BET:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, g_quottery_number_bet_slot, g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
+            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_bet_id, int(g_quottery_number_bet_slot), g_quottery_amount_per_bet_slot, g_quottery_picked_option, g_offsetScheduledTick);
             break;
         case QUOTTERY_GET_BET_DETAIL:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -360,8 +364,52 @@ int run(int argc, char* argv[])
         case QUTIL_SEND_TO_MANY_BENCHMARK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, g_qutil_sendtomanybenchmark_destination_count, g_qutil_sendtomanybenchmark_num_transfers_each, g_offsetScheduledTick);
+            qutilSendToManyBenchmark(g_nodeIp, g_nodePort, g_seed, uint32_t(g_qutil_sendtomanybenchmark_destination_count), uint32_t(g_qutil_sendtomanybenchmark_num_transfers_each), g_offsetScheduledTick);
             break;
+        case QUTIL_CREATE_POLL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidString(g_qutil_poll_name_str);
+            sanityCheckTxAmount(g_qutil_min_amount);
+            sanityCheckValidString(g_qutil_github_link_str);
+            if (g_qutil_poll_type == 2)
+            {
+                sanityCheckValidString(g_qutil_semicolon_separated_assets);
+            }
+            qutilCreatePoll(g_nodeIp, g_nodePort, g_seed, g_qutil_poll_name_str, g_qutil_poll_type,
+                g_qutil_min_amount, g_qutil_github_link_str, g_qutil_semicolon_separated_assets,
+                g_offsetScheduledTick);
+            break;
+        case QUTIL_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckTxAmount(g_qutil_vote_amount);
+            qutilVote(g_nodeIp, g_nodePort, g_seed, g_qutil_vote_poll_id, g_qutil_vote_amount,
+                g_qutil_vote_chosen_option, g_offsetScheduledTick);
+            break;
+        case QUTIL_GET_CURRENT_RESULT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetCurrentResult(g_nodeIp, g_nodePort, g_qutil_get_result_poll_id);
+            break;
+        case QUTIL_GET_POLLS_BY_CREATOR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_qutil_get_polls_creator_address);
+            qutilGetPollsByCreator(g_nodeIp, g_nodePort, g_qutil_get_polls_creator_address);
+            break;
+        case QUTIL_GET_CURRENT_POLL_ID:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetCurrentPollId(g_nodeIp, g_nodePort);
+            break;
+        case QUTIL_GET_POLL_INFO:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilGetPollInfo(g_nodeIp, g_nodePort, g_qutil_get_poll_info_poll_id);
+            break;
+        case QUTIL_CANCEL_POLL: {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qutilCancelPoll(g_nodeIp, g_nodePort, g_seed, g_qutil_cancel_poll_id, g_offsetScheduledTick);
+            break;
+        }
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -796,6 +844,19 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             testQpiFunctionsOutputPast(g_nodeIp, g_nodePort);
+            break;
+        }
+        case TEST_GET_INCOMING_TRANSFER_AMOUNTS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            testGetIncomingTransferAmounts(g_nodeIp, g_nodePort, g_paramString1);
+            break;
+        }
+        case TEST_BID_IN_IPO_THROUGH_CONTRACT:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            testBidInIpoThroughContract(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_ipo_contract_index, g_make_ipo_bid_price_per_share, g_make_ipo_bid_number_of_share, g_offsetScheduledTick);
             break;
         }
         default:

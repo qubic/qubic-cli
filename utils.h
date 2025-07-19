@@ -1,5 +1,4 @@
 #pragma once
-
 #include <random>
 #include <cstring>
 #include <string>
@@ -9,7 +8,7 @@ static void byteToHex(const uint8_t* byte, char* hex, const int sizeInByte)
 {
     for (int i = 0; i < sizeInByte; i++)
     {
-        sprintf(hex+i*2, "%02x", byte[i]);
+        snprintf(hex+i*2, 3, "%02x", byte[i]);
     }
 }
 static void hexToByte(const char* hex, uint8_t* byte, const int sizeInByte)
@@ -50,7 +49,12 @@ static inline std::string strtok2string(char* s, const char* delimiter)
 static inline std::vector<std::string> splitString(const char* str, const char* delimiter)
 {
     std::vector<std::string> vec;
+#ifdef _MSC_VER
+    char* wStr = _strdup(str);
+#else
     char* wStr = strdup(str);
+#endif
+    
     const char* res = strtok(wStr, delimiter);
     while (res)
     {
@@ -65,3 +69,10 @@ static inline std::vector<std::string> splitString(const std::string& str, const
 {
     return splitString(str.c_str(), delimiter);
 }
+
+#ifdef _MSC_VER
+static inline int strcasecmp(const char* s1, const char* s2)
+{
+    return _stricmp(s1, s2);
+}
+#endif

@@ -646,7 +646,7 @@ void getData(const char* nodeIp, int nodePort)
     {
         result = qc->receivePacketWithHeaderAs<QVaultGetData_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         LOG("Failed to receive data\n");
         return;

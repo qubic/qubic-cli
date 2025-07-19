@@ -31,7 +31,7 @@ static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
     {
         result = qc->receivePacketWithHeaderAs<CurrentTickInfo>();
     } 
-    catch (std::exception& e)
+    catch (std::exception)
     {
         memset(&result, 0, sizeof(CurrentTickInfo));
     }
@@ -84,7 +84,7 @@ CurrentSystemInfo getSystemInfoFromNode(QCPtr qc)
     {
         result = qc->receivePacketWithHeaderAs<CurrentSystemInfo>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(CurrentSystemInfo));
     }
@@ -241,7 +241,7 @@ bool getTickData(QCPtr qc, const uint32_t tick, TickData& result)
         memset(&result, 0, sizeof(TickData));
         return false;
     }
-    catch (const EndResponseReceived& e)
+    catch (const EndResponseReceived)
     {
         // EndResponse is sent if tick is empty or not in tick storage
         memset(&result, 0, sizeof(TickData));
@@ -269,7 +269,7 @@ int getMoneyFlewStatus(QCPtr qc, const char* txHash, const uint32_t requestedTic
         // -> set remainder in array memory which may contain junk to 0
         memset(result.txDigests[result.txCount], 0, (NUMBER_OF_TRANSACTIONS_PER_TICK - result.txCount) * 32);
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(RespondTxStatus));
         // it's expected to catch this error on some node that not turn on tx status
@@ -277,7 +277,7 @@ int getMoneyFlewStatus(QCPtr qc, const char* txHash, const uint32_t requestedTic
     }
 
     int tx_id = -1;
-    for (int i = 0; i < result.txCount; i++)
+    for (uint32_t i = 0; i < result.txCount; i++)
     {
         char tx_hash[60];
         memset(tx_hash, 0, 60);
@@ -573,6 +573,13 @@ bool verifyVoteWithSalt(const Tick&A,
         return false;
     }
     bool should_check_txBodyDigest = isArrayZero(A.expectedNextTickTransactionDigest, 32) == isArrayZero(nextTickTransactionDigest, 32);
+    if (!isArrayZero(A.expectedNextTickTransactionDigest, 32) && !isArrayZero(nextTickTransactionDigest, 32))
+    {
+        if (A.expectedNextTickTransactionDigest != nextTickTransactionDigest)
+        {
+            should_check_txBodyDigest = false;
+        }
+    }
     if(should_check_txBodyDigest){
         memset(saltedData+32, 0, 32);
         memcpy(saltedData+32, &prevTransactionBodyDigest, 4);
@@ -654,7 +661,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
         {
             uniqueVote.push_back(votes[i]);
             voteIndices.resize(voteIndices.size() + 1);
-            int M = voteIndices.size() -1;
+            int M = int(voteIndices.size() -1);
             voteIndices[M].resize(0);
             voteIndices[M].push_back(votes[i].computorIndex);
         }
@@ -696,7 +703,7 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     auto votes_next = qc->getLatestVectorPacketAs<Tick>();
     LOG("Received %d quorum tick #%u (votes)\n", votes_next.size(), requestedTick+1);
 
-    int N = votes.size();
+    int N = int(votes.size());
     if (N == 0)
     {
         return;
@@ -734,14 +741,21 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
                 max_id = i;
             }
         }
-        auto vote_next = uniqueVoteNext[max_id];
-        getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
-                       vote_next.prevResourceTestingDigest,
-                       vote_next.prevSpectrumDigest,
-                       vote_next.prevUniverseDigest,
-                       vote_next.prevComputerDigest,
-                       vote_next.prevTransactionBodyDigest,
-                       vote_next.transactionDigest);
+        if (voteIndicesNext[max_id].size() >= 451)
+        {
+            auto vote_next = uniqueVoteNext[max_id];
+            getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
+                vote_next.prevResourceTestingDigest,
+                vote_next.prevSpectrumDigest,
+                vote_next.prevUniverseDigest,
+                vote_next.prevComputerDigest,
+                vote_next.prevTransactionBodyDigest,
+                vote_next.transactionDigest);
+        }
+        else
+        {
+            LOG("WARNING: No quorum on tick %u (maximum aligned vote: %d). Skip salt check...", requestedTick + 1, int(voteIndicesNext[max_id].size()));
+        }
     }
 
     LOG("Number of unique votes: %d\n", uniqueVote.size());
@@ -868,7 +882,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
             memcpy(ptr + sizeof(Transaction), extraDataBuffer, tx.inputSize);
             memcpy(ptr + sizeof(Transaction) + tx.inputSize, signatureBuffer, SIGNATURE_SIZE);
             KangarooTwelve(ptr,
-                           raw_data.size(),
+                           uint32_t(raw_data.size()),
                            digest,
                            32);
             memcpy(vDigests.data() + i * 32, digest, 32);
@@ -1010,7 +1024,7 @@ void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, ui
     {
         unsigned long long remainingSize = header.size() - sizeof(RequestResponseHeader);
         buffer.resize(remainingSize);
-        qc->receiveData(buffer.data(), remainingSize);
+        qc->receiveData(buffer.data(), int(remainingSize));
     }
     LOG("Received %d bytes\n", header.size());
     for (int i = 0; i < sizeof(RequestResponseHeader); ++i)
@@ -1130,7 +1144,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandToggleMainModeResquestAndResponse>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error)
     {
         memset(&response, 0, sizeof(SpecialCommandToggleMainModeResquestAndResponse));
     }
@@ -1191,7 +1205,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
     }
-    catch (std::logic_error& e) 
+    catch (std::logic_error) 
     {
         memset(&response, 0, sizeof(SpecialCommandSetSolutionThresholdResquestAndResponse));
     }
@@ -1244,7 +1258,7 @@ UtcTime convertTime(std::chrono::system_clock::time_point time)
     tp -= m;
     seconds s = duration_cast<seconds>(tp);
     tp -= s;
-    utcTime.nanosecond = duration_cast<nanoseconds>(tp).count();
+    utcTime.nanosecond = uint32_t(duration_cast<nanoseconds>(tp).count());
 
     return utcTime;
 }
@@ -1306,7 +1320,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         {
             response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         }
-        catch (std::logic_error& e) 
+        catch (std::logic_error)
         {
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }        
@@ -1373,7 +1387,7 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed)
         {
             response = qc->receivePacketWithHeaderAs<SpecialCommandSendTime>();
         }
-        catch (std::logic_error& e) 
+        catch (std::logic_error) 
         {
             memset(&response, 0, sizeof(SpecialCommandSendTime));
         }
@@ -1433,7 +1447,7 @@ void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, ch
     {
         response = qc->receivePacketWithHeaderAs<SpecialCommandSetConsoleLoggingModeRequestAndResponse>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&response, 0, sizeof(SpecialCommandSetConsoleLoggingModeRequestAndResponse));
     }
@@ -1468,7 +1482,7 @@ void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed,
     vData.resize(sizeof(RequestResponseHeader) + 32*3+ SIGNATURE_SIZE + compChatStr.size());
     RequestResponseHeader* header = (RequestResponseHeader*)vData.data();
     uint8_t* signature_ptr = (vData.data() + vData.size() - 64);
-    header->setSize(vData.size());
+    header->setSize(uint32_t(vData.size()));
     header->zeroDejavu();
     header->setType(BROADCAST_MESSAGE);
     uint8_t* ptr = vData.data() + sizeof(RequestResponseHeader);
@@ -1481,12 +1495,12 @@ void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed,
     memcpy(ptr, compChatStr.data(), compChatStr.size());
 
     KangarooTwelve(vData.data() + sizeof(RequestResponseHeader),
-                   vData.size() - sizeof(RequestResponseHeader) - SIGNATURE_SIZE,
+                   uint32_t(vData.size() - sizeof(RequestResponseHeader) - SIGNATURE_SIZE),
                    digest,
                    32);
     sign(subseed, sourcePublicKey, digest, signature_ptr);
     auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData(vData.data(), vData.size());
+    qc->sendData(vData.data(), int(vData.size()));
     LOG("Broadcasted message to network\n");
 }
 
@@ -1538,7 +1552,7 @@ bool getComputorFromNode(const char* nodeIp, const int nodePort, BroadcastComput
         memset(&result, 0, sizeof(BroadcastComputors));
         return false;
     }
-    catch (const EndResponseReceived& e)
+    catch (const EndResponseReceived)
     {
         LOG("Node does not have a verified computor list yet\n");
         memset(&result, 0, sizeof(BroadcastComputors));
@@ -1591,7 +1605,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
     {
         qc = make_qc(nodeIp, nodePort);
     } 
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         return result;
     }
@@ -1604,7 +1618,7 @@ std::vector<std::string> _getNodeIpList(const char* nodeIp, const int nodePort)
     std::vector<uint8_t> buffer;
     qc->getHandshakeData(buffer);
     uint8_t* data = buffer.data();
-    int recvByte = buffer.size();
+    int recvByte = int(buffer.size());
     if (recvByte == 0)
     {
         return result;
@@ -1688,9 +1702,9 @@ void dumpSpectrumToCSV(const char* input, const char* output){
 // only print ownership
 void dumpUniverseToCSV(const char* input, const char* output){
     const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
-    Asset* asset = (Asset*)malloc(ASSETS_CAPACITY*sizeof(Entity));
+    AssetRecord* asset = (AssetRecord*)malloc(ASSETS_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
-    fread(asset, 1, ASSETS_CAPACITY*sizeof(Asset), f);
+    fread(asset, 1, ASSETS_CAPACITY*sizeof(AssetRecord), f);
     fclose(f);
     f = fopen(output, "w");
     {
@@ -1903,32 +1917,72 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
     getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    TickData td;
+    getTickData(qc, requestedTick, td);
+
     unsigned int votes[676];
-    int nTx = txs.size();
+    int nTx = int(txs.size());
     LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
-        if (extraData[i].vecU8.size() == 848)
+        if (extraData[i].vecU8.size() == 848 + 32)
         {
             int comp_idx = requestedTick % 676;
             if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
             {
                 uint8_t* data = extraData[i].vecU8.data();
                 uint32_t sum = 0;
-                for (int j = 0; j < 676; j++)
+                if (txs[i].inputType == 1)
                 {
-                    votes[j] = extract10Bit(data, j);
-                    sum += votes[j];
-                    auto alphabet = indexToAlphabet(j);
-                    LOG("%s: %u\n", alphabet.c_str(), votes[j]);
+                    LOG("---Type: vote counter---\n");
                 }
-                if (sum < 676*451)
+                if (txs[i].inputType == 8)
                 {
-                    LOG("Invalid sum votes: %u\n", sum);
+                    LOG("---Type: custom mining counter---\n");
                 }
-                if (votes[comp_idx] != 0)
+                if (memcmp(td.timelock, data + 848, 32) == 0)
                 {
-                    LOG("Invalid comp votes\n");
+                    LOG("Matched data lock\n");
+                }
+                else
+                {
+                    LOG("Mismatched data lock\n");
+                    char hex[128] = { 0 };
+                    byteToHex(data + 848, hex, 32);
+                    LOG("have: %s\n", hex);
+                    byteToHex(td.timelock, hex, 32);
+                    LOG("want: %s\n", hex);
+                    continue;
+                }
+                if (txs[i].inputType == 1)
+                {
+                    for (int j = 0; j < 676; j++)
+                    {
+                        votes[j] = extract10Bit(data, j);
+                        sum += votes[j];
+                        auto alphabet = indexToAlphabet(j);
+                        LOG("%s: %u | ", alphabet.c_str(), votes[j]);
+                        if ((j + 1) % 26 == 0) LOG("\n");
+                    }
+                    if (sum < 676 * 451)
+                    {
+                        LOG("Invalid sum votes: %u\n", sum);
+                    }
+                    if (votes[comp_idx] != 0)
+                    {
+                        LOG("Invalid comp votes\n");
+                    }
+                }
+                if (txs[i].inputType == 8)
+                {
+                    for (int j = 0; j < 676; j++)
+                    {
+                        votes[j] = extract10Bit(data, j);
+                        sum += votes[j];
+                        auto alphabet = indexToAlphabet(j);
+                        LOG("%s: %u | ", alphabet.c_str(), votes[j]);
+                        if ((j + 1) % 26 == 0) LOG("\n");
+                    }
                 }
             }
         }

@@ -111,25 +111,34 @@ enum COMMAND
     MSVAULT_GET_FEES_CMD = 100,
     MSVAULT_GET_OWNERS_CMD = 101,
     QUERY_ASSETS = 102,
+    TEST_QPI_FUNCTIONS_OUTPUT = 103,
+    SET_LOGGING_MODE = 104,
+    TEST_QPI_FUNCTIONS_OUTPUT_PAST = 105,
+    COMP_CHAT = 106,
+    TEST_GET_INCOMING_TRANSFER_AMOUNTS = 107,
+    TEST_BID_IN_IPO_THROUGH_CONTRACT = 108,
+    GET_TOTAL_NUMBER_OF_ASSET_SHARES = 109,
+    QUTIL_CREATE_POLL = 110,
+    QUTIL_VOTE = 111,
+    QUTIL_GET_CURRENT_RESULT = 112,
+    QUTIL_GET_POLLS_BY_CREATOR = 113,
+    QUTIL_GET_CURRENT_POLL_ID = 114,
+    QUTIL_GET_POLL_INFO = 115,
+    QUTIL_CANCEL_POLL = 116,
 
-    PRINT_QSWAP_FEE = 103,
-    QSWAP_ISSUE_ASSET = 104,
-    QSWAP_TRANSFER_ASSET = 105,
-    QSWAP_CREATE_POOL = 106,
-    QSWAP_GET_POOL_BASIC = 107,
-    QSWAP_ADD_LIQUDITY = 108,
-    QSWAP_REMOVE_LIQUDITY = 109,
-    QSWAP_GET_LIQUDITY_OF = 110,
-    QSWAP_SWAP_EXACT_QU_FOR_ASSET = 111,
-    QSWAP_SWAP_QU_FOR_EXACT_ASSET = 112,
-    QSWAP_SWAP_EXACT_ASSET_FOR_QU = 113,
-    QSWAP_SWAP_ASSET_FOR_EXACT_QU = 114,
-    QSWAP_QUOTE = 115,
-
-    TEST_QPI_FUNCTIONS_OUTPUT = 116,
-    SET_LOGGING_MODE = 117,
-    TEST_QPI_FUNCTIONS_OUTPUT_PAST = 118,
-    COMP_CHAT = 119,
+    PRINT_QSWAP_FEE = 117,
+    QSWAP_ISSUE_ASSET = 118,
+    QSWAP_TRANSFER_ASSET = 119,
+    QSWAP_CREATE_POOL = 120,
+    QSWAP_GET_POOL_BASIC = 121,
+    QSWAP_ADD_LIQUDITY = 122,
+    QSWAP_REMOVE_LIQUDITY = 123,
+    QSWAP_GET_LIQUDITY_OF = 124,
+    QSWAP_SWAP_EXACT_QU_FOR_ASSET = 125,
+    QSWAP_SWAP_QU_FOR_EXACT_ASSET = 126,
+    QSWAP_SWAP_EXACT_ASSET_FOR_QU = 127,
+    QSWAP_SWAP_ASSET_FOR_EXACT_QU = 128,
+    QSWAP_QUOTE = 129,
 
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
@@ -297,6 +306,13 @@ struct CurrentSystemInfo
     // Starts to be meaningful if >50% of spectrum is filled but may still change after that.
     unsigned long long currentEntityBalanceDustThreshold;
 
+    unsigned int targetTickVoteSignature;
+    unsigned long long _reserve0;
+    unsigned long long _reserve1;
+    unsigned long long _reserve2;
+    unsigned long long _reserve3;
+    unsigned long long _reserve4;
+
     static constexpr unsigned char type()
     {
         return RESPOND_SYSTEM_INFO;
@@ -397,7 +413,7 @@ struct SpecialCommand
 #define OWNERSHIP 2
 #define POSSESSION 3
 
-struct Asset
+struct AssetRecord
 {
     union
     {
@@ -439,7 +455,7 @@ typedef struct
 
 typedef struct
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -452,8 +468,8 @@ typedef struct
 
 struct RespondOwnedAssets
 {
-    Asset asset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -471,9 +487,9 @@ typedef struct
 
 struct RespondPossessedAssets
 {
-    Asset asset;
-    Asset ownershipAsset;
-    Asset issuanceAsset;
+    AssetRecord asset;
+    AssetRecord ownershipAsset;
+    AssetRecord issuanceAsset;
     unsigned int tick;
     unsigned int universeIndex;
     unsigned char siblings[ASSETS_DEPTH][32];
@@ -547,7 +563,7 @@ static_assert(sizeof(RequestAssets) == 112, "Something is wrong with the struct 
 // Response message after RequestAssets without flag getSiblings
 struct RespondAssets
 {
-    Asset asset;
+    AssetRecord asset;
     unsigned int tick;
     unsigned int universeIndex;
 

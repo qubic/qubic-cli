@@ -2382,6 +2382,6 @@ static void signData(const char* seed, const uint8_t* data, const size_t dataLen
     getPrivateKeyFromSubSeed(subseed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     uint8_t digest[32];
-    KangarooTwelve(data, dataLength, digest, 32);
+    KangarooTwelve(data, uint32_t(dataLength), digest, 32);
     sign(subseed, sourcePublicKey, digest, signature);
 }
