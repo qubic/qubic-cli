@@ -125,15 +125,14 @@ enum COMMAND
     QUTIL_GET_CURRENT_POLL_ID = 114,
     QUTIL_GET_POLL_INFO = 115,
     QUTIL_CANCEL_POLL = 116,
-
     PRINT_QSWAP_FEE = 117,
     QSWAP_ISSUE_ASSET = 118,
     QSWAP_TRANSFER_ASSET = 119,
     QSWAP_CREATE_POOL = 120,
     QSWAP_GET_POOL_BASIC = 121,
-    QSWAP_ADD_LIQUDITY = 122,
-    QSWAP_REMOVE_LIQUDITY = 123,
-    QSWAP_GET_LIQUDITY_OF = 124,
+    QSWAP_ADD_LIQUIDITY = 122,
+    QSWAP_REMOVE_LIQUIDITY = 123,
+    QSWAP_GET_LIQUIDITY_OF = 124,
     QSWAP_SWAP_EXACT_QU_FOR_ASSET = 125,
     QSWAP_SWAP_QU_FOR_EXACT_ASSET = 126,
     QSWAP_SWAP_EXACT_ASSET_FOR_QU = 127,
@@ -679,6 +678,7 @@ struct QswapFees_output
     uint32_t transferFee; // Amount of qus
     uint32_t swapRate; // Number of 10000ths
     uint32_t protocolRate; // Number of 100ths
+    uint32_t teamRate; // Number of 100ths
 
     static constexpr unsigned char type()
     {

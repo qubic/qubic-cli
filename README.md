@@ -260,12 +260,12 @@ Command:
 	-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>
 		Create an AMM pool via Qswap contract.
 	-qswapgetpoolbasicinfo <ASSET_NAME> <ISSUER_IN_HEX>
-		Get the basic info of a pool, totol liqudity, qu reserved, asset reserved.
+		Get the basic info of a pool, totol liquidity, qu reserved, asset reserved.
 
-    -qswapaddliqudity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
-    	Add liqudity with restriction to an AMM pool via Qswap contract.
-    -qswapremoveliqudity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
-    	Remove liqudity with restriction from an AMM pool via Qswap contract.
+    -qswapaddliquidity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Add liquidity with restriction to an AMM pool via Qswap contract.
+    -qswapremoveliquidity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUIDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Remove liquidity with restriction from an AMM pool via Qswap contract.
 	-qswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>
 		Swap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.
 	-qswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>
@@ -274,8 +274,8 @@ Command:
 		Swap asset for qu via Qswap contract, only execute if qu_amount_out >= QU_AMOUNT_OUT_MIN.
 	-qswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>
 		Swap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.
-	-qswapliqudityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUDITY_STAKER(in qublic format)]
-		Get the staker's liqudity in a pool.
+	-qswapgetliquidityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUIDITY_STAKER(in qublic format)]
+		Get the staker's liquidity in a pool.
 	-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>
     	Quote amount_out/amount_in with given amount_in/amount_out.
 

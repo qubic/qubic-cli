@@ -79,14 +79,14 @@ int64_t g_qswap_asset_transfer_amount = -1;
 char* g_qswap_asset_transfer_asset_name = nullptr;
 char* g_qswap_asset_transfer_issuer = nullptr;
 
-int64_t g_qswap_add_liqudity_qu_amount = -1;
-int64_t g_qswap_add_liqudity_asset_amount_desired = -1;
-int64_t g_qswap_remove_liqudity_burn_liqudity = -1;
+int64_t g_qswap_add_liquidity_qu_amount = -1;
+int64_t g_qswap_add_liquidity_asset_amount_desired = -1;
+int64_t g_qswap_remove_liquidity_burn_liquidity = -1;
 
-int64_t g_qswap_liqudity_qu_amount_min = -1;
-int64_t g_qswap_liqudity_asset_amount_min = -1;
+int64_t g_qswap_liquidity_qu_amount_min = -1;
+int64_t g_qswap_liquidity_asset_amount_min = -1;
 
-char* g_qswap_get_liqudity_of_staker_issuer = nullptr;
+char* g_qswap_get_liquidity_of_staker_issuer = nullptr;
 
 int64_t g_qswap_swap_amount_out = -1;
 int64_t g_qswap_swap_amount_out_min = -1;

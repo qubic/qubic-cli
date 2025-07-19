@@ -24,7 +24,7 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
                      const char* pHexIssuer,
                      uint32_t scheduledTickOffset);
 
-void qswapAddLiqudity(const char* nodeIp, int nodePort,
+void qswapAddLiquidity(const char* nodeIp, int nodePort,
                       const char* seed,
                       const char* pAssetName,
                       const char* pHexIssuer,
@@ -34,11 +34,11 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
                       int64_t assetAmountMin,
                       uint32_t scheduledTickOffset);
 
-void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
+void qswapRemoveLiquidity(const char* nodeIp, int nodePort,
                          const char* seed,
                          const char* pAssetName,
                          const char* pHexIssuer,
-                         int64_t burnLiqudity,
+                         int64_t burnLiquidity,
                          int64_t quAmountMin,
                          int64_t assetAmountMin,
                          uint32_t scheduledTickOffset);
@@ -80,7 +80,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
                             const char* pAssetName,
                             const char* pHexIssuer);
 
-void qswapGetLiqudityOf(const char* nodeIp, int nodePort,
+void qswapGetLiquidityOf(const char* nodeIp, int nodePort,
                         const char* pAssetName,
                         const char* pHexIssuer,
                         const char* pHexAccount);

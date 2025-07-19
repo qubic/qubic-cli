@@ -38,7 +38,7 @@ struct CreatePool_input {
     uint64_t assetName;
 };
 
-struct AddLiqudity_input{
+struct AddLiquidity_input{
     uint8_t issuer[32];
     uint64_t assetName;
     int64_t assetAmountDesired;
@@ -46,10 +46,10 @@ struct AddLiqudity_input{
     int64_t assetAmountMin;
 };
 
-struct RemoveLiqudity_input{
+struct RemoveLiquidity_input{
     uint8_t issuer[32];
     uint64_t assetName;
-    int64_t burnLiqudity;
+    int64_t burnLiquidity;
     int64_t quAmountMin;
     int64_t assetAmountMin;
 };
@@ -69,15 +69,15 @@ struct qswapQuote_output {
     }
 };
 
-struct qswapGetLiqudityOf_input{
+struct qswapGetLiquidityOf_input{
     uint8_t issuer[32];
     uint64_t assetName;
     uint8_t account[32];
 
 };
 
-struct qswapGetLiqudityOf_output{
-    uint64_t liqudity;
+struct qswapGetLiquidityOf_output{
+    uint64_t liquidity;
 
     static constexpr unsigned char type()
     {
@@ -94,7 +94,7 @@ struct qswapGetPoolBasicState_output{
     int64_t poolExists;
     int64_t reservedQuAmount;
     int64_t reservedAssetAmount;
-    int64_t totalLiqudity;
+    int64_t totalLiquidity;
 
     static constexpr unsigned char type()
     {

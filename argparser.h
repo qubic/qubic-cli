@@ -298,12 +298,12 @@ void print_help()
     printf("\t\tCreate an AMM pool via Qswap contract.\n");
     printf("\t-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>\n");
     printf("\t\tGet the basic information of a pool.\n");
-    printf("\t-qswapaddliqudity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
-    printf("\t\tAdd liqudity with restriction to an AMM pool via Qswap contract.\n");
-    printf("\t-qswapremoveliqudity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
-    printf("\t\tRemove liqudity with restriction from an AMM pool via Qswap contract.\n");
-    printf("\t-qswapliqudityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUDITY_STAKER(in qublic format)]\n");
-    printf("\t\tGet the staker's liqudity in a pool.\n");
+    printf("\t-qswapaddliquidity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
+    printf("\t\tAdd liquidity with restriction to an AMM pool via Qswap contract.\n");
+    printf("\t-qswapremoveliquidity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUIDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
+    printf("\t\tRemove liquidity with restriction from an AMM pool via Qswap contract.\n");
+    printf("\t-qswapgetliquidityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUIDITY_STAKER(in qublic format)]\n");
+    printf("\t\tGet the staker's liquidity in a pool.\n");
     printf("\t-qswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>\n");
     printf("\t\tSwap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.\n");
     printf("\t-qswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>\n");
@@ -366,7 +366,7 @@ static uint32_t getContractIndex(const char* str)
     else if (strcasecmp(str, "QVAULT") == 0)
         idx = 10;
     else if (strcasecmp(str, "QSWAP") == 0)
-        idx = 11;
+        idx = 12;
     else
     {
         constexpr uint32_t contractCount = 12;
@@ -998,40 +998,40 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qswapaddliqudity") == 0)
+        if (strcmp(argv[i], "-qswapaddliquidity") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
-            g_cmd = QSWAP_ADD_LIQUDITY;
+            g_cmd = QSWAP_ADD_LIQUIDITY;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_add_liqudity_qu_amount = charToNumber(argv[i+3]);
-            g_qswap_add_liqudity_asset_amount_desired = charToNumber(argv[i+4]);
-            g_qswap_liqudity_qu_amount_min = charToNumber(argv[i+5]);
-            g_qswap_liqudity_asset_amount_min = charToNumber(argv[i+6]);
+            g_qswap_add_liquidity_qu_amount = charToNumber(argv[i+3]);
+            g_qswap_add_liquidity_asset_amount_desired = charToNumber(argv[i+4]);
+            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+5]);
+            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+6]);
             i+=7;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qswapremoveliqudity") == 0)
+        if (strcmp(argv[i], "-qswapremoveliquidity") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
-            g_cmd = QSWAP_REMOVE_LIQUDITY;
+            g_cmd = QSWAP_REMOVE_LIQUIDITY;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_remove_liqudity_burn_liqudity = charToNumber(argv[i+3]);
-            g_qswap_liqudity_qu_amount_min = charToNumber(argv[i+4]);
-            g_qswap_liqudity_asset_amount_min = charToNumber(argv[i+5]);
+            g_qswap_remove_liquidity_burn_liquidity = charToNumber(argv[i+3]);
+            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+4]);
+            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+5]);
             i+=6;
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qswapgetliqudityof") == 0)
+        if (strcmp(argv[i], "-qswapgetliquidityof") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-            g_cmd = QSWAP_GET_LIQUDITY_OF;
+            g_cmd = QSWAP_GET_LIQUIDITY_OF;
             g_qswap_asset_name = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_get_liqudity_of_staker_issuer = argv[i+2];
+            g_qswap_get_liquidity_of_staker_issuer = argv[i+3];
             i+=4;
             CHECK_OVER_PARAMETERS
             break;

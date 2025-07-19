@@ -13,13 +13,13 @@
 #include "qswap.h"
 #include "qswapStruct.h"
 
-#define QSWAP_CONTRACT_INDEX 13
-#define QSWAP_ADDRESS "NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAML"
+#define QSWAP_CONTRACT_INDEX 12
+#define QSWAP_ADDRESS "MAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWLWD"
 
 // QSWAP FUNCTIONS
 #define QSWAP_GET_FEE 1
 #define QSWAP_GET_POOL_BASIC_STATE 2
-#define QSWAP_GET_LIQUDITY_OF 3
+#define QSWAP_GET_LIQUIDITY_OF 3
 #define QSWAP_QUOTE_EXACT_QU_INPUT 4
 #define QSWAP_QUOTE_EXACT_QU_OUTPUT 5
 #define QSWAP_QUOTE_EXACT_ASSET_INPUT 6
@@ -30,8 +30,8 @@
 #define QSWAP_TRANSFER_SHARE 2
 
 #define QSWAP_CREATE_POOL 3
-#define QSWAP_ADD_LIQUDITY 4
-#define QSWAP_REMOVE_LIQUDITY 5
+#define QSWAP_ADD_LIQUIDITY 4
+#define QSWAP_REMOVE_LIQUIDITY 5
 
 #define QSWAP_SWAP_EXACT_QU_FOR_ASSET 6
 #define QSWAP_SWAP_QU_FOR_EXACT_ASSET 7
@@ -72,6 +72,7 @@ void printQswapFee(const char* nodeIp, const int nodePort)
     LOG("Transfer fee: %u\n", result.transferFee);
     LOG("Swap rate: %u / 10000 \n", result.swapRate);
     LOG("Protocol rate: %u / 100 \n", result.protocolRate);
+    LOG("Team rate: %u / 100 \n", result.teamRate);
 }
 
 void qswapIssueAsset(const char* nodeIp, int nodePort,
@@ -307,7 +308,7 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
-void qswapAddLiqudity(const char* nodeIp, int nodePort,
+void qswapAddLiquidity(const char* nodeIp, int nodePort,
                       const char* seed,
                       const char* pAssetName,
                       const char* pIssuerInQubicFormat,
@@ -344,7 +345,7 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
     struct {
         RequestResponseHeader header;
         Transaction transaction;
-        AddLiqudity_input al;
+        AddLiquidity_input al;
         uint8_t sig[SIGNATURE_SIZE];
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -353,12 +354,12 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QSWAP_ADD_LIQUDITY;
-    packet.transaction.inputSize = sizeof(AddLiqudity_input);
+    packet.transaction.inputType = QSWAP_ADD_LIQUIDITY;
+    packet.transaction.inputSize = sizeof(AddLiquidity_input);
 
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
-    LOG("Sending QSWAP - AddLiqudity\n");
+    LOG("Sending QSWAP - AddLiquidity\n");
     LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
     LOG("quAmountDesired: %lld\n", quAmountDesired);
@@ -376,19 +377,19 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
 
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction) + sizeof(AddLiqudity_input),
+                   sizeof(Transaction) + sizeof(AddLiquidity_input),
                    digest,
                    32);
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(AddLiqudity_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(AddLiquidity_input)+ SIGNATURE_SIZE);
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction)+sizeof(AddLiqudity_input)+ SIGNATURE_SIZE,
+                   sizeof(Transaction)+sizeof(AddLiquidity_input)+ SIGNATURE_SIZE,
                    digest,
                    32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
@@ -398,11 +399,11 @@ void qswapAddLiqudity(const char* nodeIp, int nodePort,
     LOG("to check your tx confirmation status\n");
 }
 
-void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
+void qswapRemoveLiquidity(const char* nodeIp, int nodePort,
                       const char* seed,
                       const char* pAssetName,
                       const char* pIssuerInQubicFormat,
-                      int64_t burnLiqudity,
+                      int64_t burnLiquidity,
                       int64_t quAmountMin,
                       int64_t assetAmountMin,
                       uint32_t scheduledTickOffset)
@@ -434,7 +435,7 @@ void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
     struct {
         RequestResponseHeader header;
         Transaction transaction;
-        RemoveLiqudity_input rl;
+        RemoveLiquidity_input rl;
         uint8_t sig[SIGNATURE_SIZE];
     } packet;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
@@ -443,15 +444,15 @@ void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
     uint32_t currentTick = getTickNumberFromNode(qc);
     uint32_t scheduledTick = currentTick + scheduledTickOffset;
     packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QSWAP_REMOVE_LIQUDITY;
-    packet.transaction.inputSize = sizeof(RemoveLiqudity_input);
+    packet.transaction.inputType = QSWAP_REMOVE_LIQUIDITY;
+    packet.transaction.inputSize = sizeof(RemoveLiquidity_input);
 
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
-    LOG("Sending QSWAP - RemoveLiqudity\n");
+    LOG("Sending QSWAP - RemoveLiquidity\n");
     LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
-    LOG("burnLiqudity: %lld\n", burnLiqudity);
+    LOG("burnLiquidity: %lld\n", burnLiquidity);
     LOG("quAmountMin: %lld\n", quAmountMin);
     LOG("assetAmountMin: %lld\n", assetAmountMin);
     LOG("\n-------------------------------------\n\n");
@@ -459,25 +460,25 @@ void qswapRemoveLiqudity(const char* nodeIp, int nodePort,
     // fill the input
     memcpy(&packet.rl.assetName, assetNameS1, 8);
     memcpy(packet.rl.issuer, issuer, 32);
-    packet.rl.burnLiqudity = burnLiqudity;
+    packet.rl.burnLiquidity = burnLiquidity;
     packet.rl.quAmountMin = quAmountMin;
     packet.rl.assetAmountMin = assetAmountMin;
 
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction) + sizeof(RemoveLiqudity_input),
+                   sizeof(Transaction) + sizeof(RemoveLiquidity_input),
                    digest,
                    32);
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(RemoveLiqudity_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(RemoveLiquidity_input)+ SIGNATURE_SIZE);
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction)+sizeof(RemoveLiqudity_input)+ SIGNATURE_SIZE,
+                   sizeof(Transaction)+sizeof(RemoveLiquidity_input)+ SIGNATURE_SIZE,
                    digest,
                    32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
@@ -536,14 +537,17 @@ void qswapSwapQuForAssetAction(const char* nodeIp, int nodePort,
 
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
-    if (procedureNumber == QSWAP_SWAP_EXACT_QU_FOR_ASSET){
+    if (procedureNumber == QSWAP_SWAP_EXACT_QU_FOR_ASSET)
+    {
         LOG("Sending QSWAP swapExactQuForAsset action - procedureNumber: %d\n", procedureNumber);
         LOG("Issuer: %s\n", pIssuerInQubicFormat);
         LOG("assetName: %s\n", assetNameU1);
         LOG("qu amount in: %d\n", quAmountIn);
         LOG("asset amount out min: %lld\n", assetAmountOut);
         LOG("Sending QSWAP swapExactQuForAsset action - procedureNumber: %d\n", procedureNumber);
-    } else if (procedureNumber == QSWAP_SWAP_QU_FOR_EXACT_ASSET ){
+    }
+    else if (procedureNumber == QSWAP_SWAP_QU_FOR_EXACT_ASSET )
+    {
         LOG("Sending QSWAP swapQuForExactAsset action - procedureNumber: %d\n", procedureNumber);
         LOG("Issuer: %s\n", pIssuerInQubicFormat);
         LOG("assetName: %s\n", assetNameU1);
@@ -671,13 +675,16 @@ void qswapSwapAssetForQuAction(const char* nodeIp, int nodePort,
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
     // LOG("Sending Qswap action - functionNumber: %d\n", functionNumber);
-    if (procedureNumber == QSWAP_SWAP_EXACT_ASSET_FOR_QU){
+    if (procedureNumber == QSWAP_SWAP_EXACT_ASSET_FOR_QU)
+    {
         LOG("Sending qswap swapExactAssetForQu action - procedureNumber: %d\n", procedureNumber);
         LOG("Issuer: %s\n", pIssuerInQubicFormat);
         LOG("assetName: %s\n", assetNameU1);
         LOG("assetAmountIn: %lld\n", assetAmountIn);
         LOG("quAmountOutMin : %lld\n", quAmountOut);
-    } else if (procedureNumber == QSWAP_SWAP_ASSET_FOR_EXACT_QU) {
+    }
+    else if (procedureNumber == QSWAP_SWAP_ASSET_FOR_EXACT_QU)
+    {
         LOG("Sending qswap swapAssetForExactQu action - procedureNumber: %d\n", procedureNumber);
         LOG("Issuer: %s\n", pIssuerInQubicFormat);
         LOG("assetName: %s\n", assetNameU1);
@@ -772,7 +779,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
     {
         qswapGetPoolBasicState_output output = qc->receivePacketWithHeaderAs<qswapGetPoolBasicState_output>();
         if (output.poolExists) {
-            LOG("GetPoolBasicState reserveQu: %u, reserveAsset: %u, liqudity: %u\n", output.reservedQuAmount, output.reservedAssetAmount, output.totalLiqudity);
+            LOG("GetPoolBasicState reserveQu: %u, reserveAsset: %u, liquidity: %u\n", output.reservedQuAmount, output.reservedAssetAmount, output.totalLiquidity);
         } else {
             LOG("GetPoolBasicState pool not exist\n");
         }
@@ -780,7 +787,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
     catch (std::logic_error& e) {}
 }
 
-void qswapGetLiqudityOf(const char* nodeIp, int nodePort,
+void qswapGetLiquidityOf(const char* nodeIp, int nodePort,
                         const char* pAssetName,
                         const char* pHexIssuer,
                         const char* pHexAccount)
@@ -801,13 +808,13 @@ void qswapGetLiqudityOf(const char* nodeIp, int nodePort,
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        qswapGetLiqudityOf_input glo;
+        qswapGetLiquidityOf_input glo;
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(qswapGetLiqudityOf_input);
-    packet.rcf.inputType = QSWAP_GET_LIQUDITY_OF;
+    packet.rcf.inputSize = sizeof(qswapGetLiquidityOf_input);
+    packet.rcf.inputType = QSWAP_GET_LIQUIDITY_OF;
     packet.rcf.contractIndex = QSWAP_CONTRACT_INDEX;
     memcpy(packet.glo.issuer, issuer, 32);
     memcpy(&packet.glo.assetName, assetNameU1, 8);
@@ -817,8 +824,8 @@ void qswapGetLiqudityOf(const char* nodeIp, int nodePort,
 
     try
     {
-        qswapGetLiqudityOf_output output = qc->receivePacketWithHeaderAs<qswapGetLiqudityOf_output>();
-        LOG("GetLiqudityOf result amount: %u\n", output.liqudity);
+        qswapGetLiquidityOf_output output = qc->receivePacketWithHeaderAs<qswapGetLiquidityOf_output>();
+        LOG("GetLiquidityOf result amount: %u\n", output.liquidity);
     }
     catch (std::logic_error& e) {}
 }
