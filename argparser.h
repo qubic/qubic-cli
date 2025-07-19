@@ -366,10 +366,10 @@ static uint32_t getContractIndex(const char* str)
     else if (strcasecmp(str, "QVAULT") == 0)
         idx = 10;
     else if (strcasecmp(str, "QSWAP") == 0)
-        idx = 12;
+        idx = 13;
     else
     {
-        constexpr uint32_t contractCount = 12;
+        constexpr uint32_t contractCount = 11;
         if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx >= contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
