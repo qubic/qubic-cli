@@ -1360,7 +1360,7 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
     {
         if (i < 127 && result.indexListForProjects[i + 1] == NOSTROMO_MAX_NUMBER_PROJECT)
         {
-            printf("%u\n", result.indexListForProjects[i + 1]);
+            printf("%u\n", result.indexListForProjects[i]);
             break;
         }
         printf("%u, ", result.indexListForProjects[i]);
