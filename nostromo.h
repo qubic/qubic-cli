@@ -75,7 +75,7 @@ struct NOSTROMOGetUserVoteStatus_input
 struct NOSTROMOGetUserVoteStatus_output
 {
     uint32_t numberOfVotedProjects;
-    uint32_t projectIndexList[64];
+    uint32_t projectIndexList[128];
     
     static constexpr unsigned char type()
     {
@@ -150,7 +150,7 @@ struct NOSTROMOGetProjectIndexListByCreator_input
 
 struct NOSTROMOGetProjectIndexListByCreator_output
 {
-    uint32_t indexListForProjects[64];
+    uint32_t indexListForProjects[128];
     
     static constexpr unsigned char type()
     {

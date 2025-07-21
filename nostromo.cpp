@@ -47,6 +47,32 @@ constexpr uint64_t NOSTROMO_TIER_XENOMORPH_STAKE_AMOUNT = 800000000ULL;
 constexpr uint64_t NOSTROMO_TIER_WARRIOR_STAKE_AMOUNT = 3200000000ULL;
 constexpr uint64_t NOSTROMO_QX_TOKEN_ISSUANCE_FEE = 1000000000ULL;
 constexpr uint32_t NOSTROMO_SHARE_MANAGEMENT_TRANSFER_FEE = 100;
+constexpr uint32_t NOSTROMO_MAX_NUMBER_PROJECT = 262144;
+
+inline static uint32_t GetYear(uint32_t data)
+{
+    return ((data >> 26) + 24);
+}
+inline static uint32_t GetMonth(uint32_t data)
+{
+    return ((data >> 22) & 0b1111);
+}
+inline static uint32_t GetDay(uint32_t data)
+{
+    return ((data >> 17) & 0b11111);
+}
+inline static uint32_t GetHour(uint32_t data)
+{
+    return ((data >> 12) & 0b11111);
+}
+inline static uint32_t GetMinute(uint32_t data)
+{
+    return ((data >> 6) & 0b111111);
+}
+inline static uint32_t GetSecond(uint32_t data)
+{
+    return (data & 0b111111);
+}
 
 struct registerInTier_input
 {
@@ -211,6 +237,12 @@ void registerInTier(const char* nodeIp, int nodePort,
                     uint32_t scheduledTickOffset, 
                     uint32_t tierLevel)
 {
+    if (tierLevel < 1 || tierLevel > 5)
+    {
+        printf("TierLevel should be the number between 1 ~ 5!\n");
+        return ;
+    }
+    
     auto qc = make_qc(nodeIp, nodePort);
 
     uint8_t privateKey[32] = {0};
@@ -398,11 +430,11 @@ void createProject(const char* nodeIp, int nodePort,
 
     memcpy(&packet.input.tokenName, assetNameS1, 8);
     packet.input.supply = supply;
-    packet.input.startYear = startYear;
+    packet.input.startYear = startYear - 2000;
     packet.input.startMonth = startMonth;
     packet.input.startDay = startDay;
     packet.input.startHour = startHour;
-    packet.input.endYear = endYear;
+    packet.input.endYear = endYear - 2000;
     packet.input.endMonth = endMonth;
     packet.input.endDay = endDay;
     packet.input.endHour = endHour;
@@ -588,43 +620,43 @@ void createFundraising(const char* nodeIp, int nodePort,
     packet.input.requiredFunds = requiredFunds;
 
     packet.input.indexOfProject = indexOfProject;
-    packet.input.firstPhaseStartYear = firstPhaseStartYear;
+    packet.input.firstPhaseStartYear = firstPhaseStartYear - 2000;
     packet.input.firstPhaseStartMonth = firstPhaseStartMonth;
     packet.input.firstPhaseStartDay = firstPhaseStartDay;
     packet.input.firstPhaseStartHour = firstPhaseStartHour;
-    packet.input.firstPhaseEndYear = firstPhaseEndYear;
+    packet.input.firstPhaseEndYear = firstPhaseEndYear - 2000;
     packet.input.firstPhaseEndMonth = firstPhaseEndMonth;
     packet.input.firstPhaseEndDay = firstPhaseEndDay;
     packet.input.firstPhaseEndHour = firstPhaseEndHour;
 
-    packet.input.secondPhaseStartYear = secondPhaseStartYear;
+    packet.input.secondPhaseStartYear = secondPhaseStartYear - 2000;
     packet.input.secondPhaseStartMonth = secondPhaseStartMonth;
     packet.input.secondPhaseStartDay = secondPhaseStartDay;
     packet.input.secondPhaseStartHour = secondPhaseStartHour;
-    packet.input.secondPhaseEndYear = secondPhaseEndYear;
+    packet.input.secondPhaseEndYear = secondPhaseEndYear - 2000;
     packet.input.secondPhaseEndMonth = secondPhaseEndMonth;
     packet.input.secondPhaseEndDay = secondPhaseEndDay;
     packet.input.secondPhaseEndHour = secondPhaseEndHour;
 
-    packet.input.thirdPhaseStartYear = thirdPhaseStartYear;
+    packet.input.thirdPhaseStartYear = thirdPhaseStartYear - 2000;
     packet.input.thirdPhaseStartMonth = thirdPhaseStartMonth;
     packet.input.thirdPhaseStartDay = thirdPhaseStartDay;
     packet.input.thirdPhaseStartHour = thirdPhaseStartHour;
-    packet.input.thirdPhaseEndYear = thirdPhaseEndYear;
+    packet.input.thirdPhaseEndYear = thirdPhaseEndYear - 2000;
     packet.input.thirdPhaseEndMonth = thirdPhaseEndMonth;
     packet.input.thirdPhaseEndDay = thirdPhaseEndDay;
     packet.input.thirdPhaseEndHour = thirdPhaseEndHour;
-    packet.input.listingStartYear = listingStartYear;
+    packet.input.listingStartYear = listingStartYear - 2000;
     packet.input.listingStartMonth = listingStartMonth;
     packet.input.listingStartDay = listingStartDay;
     packet.input.listingStartHour = listingStartHour;
 
-    packet.input.cliffEndYear = cliffEndYear;
+    packet.input.cliffEndYear = cliffEndYear - 2000;
     packet.input.cliffEndMonth = cliffEndMonth;
     packet.input.cliffEndDay = cliffEndDay;
     packet.input.cliffEndHour = cliffEndHour;
 
-    packet.input.vestingEndYear = vestingEndYear;
+    packet.input.vestingEndYear = vestingEndYear - 2000;
     packet.input.vestingEndMonth = vestingEndMonth;
     packet.input.vestingEndDay = vestingEndDay;
     packet.input.vestingEndHour = vestingEndHour;
@@ -800,7 +832,7 @@ void upgradeTierLevel(const char* nodeIp, int nodePort,
 
     if (tierLevel < 2 || tierLevel > 5)
     {
-        printf("Wrong Tierlevel for upgrading!");
+        printf("Wrong Tierlevel for upgrading!\n");
         return ;
     }
     
@@ -1118,11 +1150,11 @@ void checkTokenCreatability(const char* nodeIp, int nodePort,
     }
     if (result.result)
     {
-        printf("This token was already created by NOSTROMO. please choose another token name.");
+        printf("This token was already created by NOSTROMO. please choose another token name.\n");
     }
     else
     {
-        printf("You can issue this token");
+        printf("You can issue this token\n");
     }
 }
 
@@ -1203,20 +1235,23 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
     char creator[128] = {0};
     getIdentityFromPublicKey(result.project.creator, creator, false);
 
+    char tokenName[9] = {0};
+    std::memcpy(tokenName, &result.project.tokenName, 8);
+
     printf("The creator of project is %s\n", creator);
-    printf("The token name: %llu\n", result.project.tokenName);
+    printf("The token name: %s\n", tokenName);
     printf("The supply of token: %llu\n", result.project.supplyOfToken);
-    printf("The start date: %u\n", result.project.startDate);
-    printf("The end date: %u\n", result.project.endDate);
+    printf("The start date: %u.%u.%u %u\n", GetYear(result.project.startDate) + 2000, GetMonth(result.project.startDate), GetDay(result.project.startDate), GetHour(result.project.startDate));
+    printf("The end date: %u.%u.%u %u\n", GetYear(result.project.endDate) + 2000, GetMonth(result.project.endDate), GetDay(result.project.endDate), GetHour(result.project.endDate));
     printf("The number of yes: %u\n", result.project.numberOfYes);
     printf("The number of no: %u\n", result.project.numberOfNo);
     if (result.project.isCreatedFundarasing)
     {
-        printf("This project created the fundraising.");
+        printf("This project created the fundraising.\n");
     }
     else
     {
-        printf("This project does not create the fundraising");
+        printf("This project does not create the fundraising\n");
     }
 }
 
@@ -1257,25 +1292,25 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
     printf("The required funds: %llu\n", result.fundarasing.requiredFunds);
     printf("The raised funds: %llu\n", result.fundarasing.raisedFunds);
     printf("The index of project: %u\n", result.fundarasing.indexOfProject);
-    printf("The first phase start date: %u\n", result.fundarasing.firstPhaseStartDate);
-    printf("The first phase end date: %u\n", result.fundarasing.firstPhaseEndDate);
-    printf("The second phase start date: %u\n", result.fundarasing.secondPhaseStartDate);
-    printf("The second phase end date: %u\n", result.fundarasing.secondPhaseEndDate);
-    printf("The third phase start date: %u\n", result.fundarasing.thirdPhaseStartDate);
-    printf("The third phase end date: %u\n", result.fundarasing.thirdPhaseEndDate);
-    printf("The listing start date: %u\n", result.fundarasing.listingStartDate);
-    printf("The cliff end date: %u\n", result.fundarasing.cliffEndDate);
-    printf("The vesting end date: %u\n", result.fundarasing.vestingEndDate);
+    printf("The first phase start date: %u.%u.%u %u\n", GetYear(result.fundarasing.firstPhaseStartDate) + 2000, GetMonth(result.fundarasing.firstPhaseStartDate), GetDay(result.fundarasing.firstPhaseStartDate), GetHour(result.fundarasing.firstPhaseStartDate));
+    printf("The first phase end date: %u.%u.%u %u\n", GetYear(result.fundarasing.firstPhaseEndDate) + 2000, GetMonth(result.fundarasing.firstPhaseEndDate), GetDay(result.fundarasing.firstPhaseEndDate), GetHour(result.fundarasing.firstPhaseEndDate));
+    printf("The second phase start date: %u.%u.%u %u\n", GetYear(result.fundarasing.secondPhaseStartDate) + 2000, GetMonth(result.fundarasing.secondPhaseStartDate), GetDay(result.fundarasing.secondPhaseStartDate), GetHour(result.fundarasing.secondPhaseStartDate));
+    printf("The second phase end date: %u.%u.%u %u\n", GetYear(result.fundarasing.secondPhaseEndDate) + 2000, GetMonth(result.fundarasing.secondPhaseEndDate), GetDay(result.fundarasing.secondPhaseEndDate), GetHour(result.fundarasing.secondPhaseEndDate));
+    printf("The third phase start date: %u.%u.%u %u\n", GetYear(result.fundarasing.thirdPhaseStartDate) + 2000, GetMonth(result.fundarasing.thirdPhaseStartDate), GetDay(result.fundarasing.thirdPhaseStartDate), GetHour(result.fundarasing.thirdPhaseStartDate));
+    printf("The third phase end date: %u.%u.%u %u\n", GetYear(result.fundarasing.thirdPhaseEndDate) + 2000, GetMonth(result.fundarasing.thirdPhaseEndDate), GetDay(result.fundarasing.thirdPhaseEndDate), GetHour(result.fundarasing.thirdPhaseEndDate));
+    printf("The listing start date: %u.%u.%u %u\n", GetYear(result.fundarasing.listingStartDate) + 2000, GetMonth(result.fundarasing.listingStartDate), GetDay(result.fundarasing.listingStartDate), GetHour(result.fundarasing.listingStartDate));
+    printf("The cliff end date: %u.%u.%u %u\n", GetYear(result.fundarasing.cliffEndDate) + 2000, GetMonth(result.fundarasing.cliffEndDate), GetDay(result.fundarasing.cliffEndDate), GetHour(result.fundarasing.cliffEndDate));
+    printf("The vesting end date: %u.%u.%u %u\n", GetYear(result.fundarasing.vestingEndDate) + 2000, GetMonth(result.fundarasing.vestingEndDate), GetDay(result.fundarasing.vestingEndDate), GetHour(result.fundarasing.vestingEndDate));
     printf("The thresholds: %u\n", result.fundarasing.threshold);
     printf("The TGE: %u\n", result.fundarasing.TGE);
     printf("The step of vesting: %u\n", result.fundarasing.stepOfVesting);
     if (result.fundarasing.isCreatedToken)
     {
-        printf("This fundarasing was already rasied the enough funds to pass.");
+        printf("This fundarasing was already rasied the enough funds to pass.\n");
     }
     else
     {
-        printf("Thif fundarasing is not yet raised the enough funds to pass.");
+        printf("Thif fundarasing is not yet raised the enough funds to pass.\n");
     }
 }
 
@@ -1315,15 +1350,19 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
         LOG("Failed to receive data\n");
         return;
     }
-    bool flag = 0;
 
-    for (uint32_t i = 0; i < 63; i++)
+    if (result.indexListForProjects[0] == NOSTROMO_MAX_NUMBER_PROJECT)
     {
-        if (flag && result.indexListForProjects[i] == 0)
+        printf("There are no projects created by %s\n", creator);
+    }
+    
+    for (uint32_t i = 0; i < 128; i++)
+    {
+        if (i < 127 && result.indexListForProjects[i + 1] == NOSTROMO_MAX_NUMBER_PROJECT)
         {
+            printf("%u\n", result.indexListForProjects[i + 1]);
             break;
         }
-        flag = 1;
         printf("%u, ", result.indexListForProjects[i]);
     }
 }
