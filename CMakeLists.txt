@@ -44,6 +44,7 @@ SET(HEADER_FILES
 	qvault.h
 	msvault.h
 	qswap.h
+	qswap_struct.h
 )
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
