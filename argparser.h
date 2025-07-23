@@ -304,13 +304,13 @@ void print_help()
     printf("\t\tRemove liquidity with restriction from an AMM pool via Qswap contract.\n");
     printf("\t-qswapgetliquidityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUIDITY_STAKER(in qublic format)]\n");
     printf("\t\tGet the staker's liquidity in a pool.\n");
-    printf("\t-qswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>\n");
+    printf("\t-qswapswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>\n");
     printf("\t\tSwap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.\n");
-    printf("\t-qswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>\n");
+    printf("\t-qswapswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>\n");
     printf("\t\tSwap qu for asset via Qswap contract, only execute if qu_amount_in <= QU_AMOUNT_IN_MAX.\n");
-    printf("\t-qswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN> <QU_AMOUNT_OUT_MIN>\n");
+    printf("\t-qswapswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN> <QU_AMOUNT_OUT_MIN>\n");
     printf("\t\tSwap asset for qu via Qswap contract, only execute if qu_amount_out >= QU_AMOUNT_OUT_MIN.\n");
-    printf("\t-qswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>\n");
+    printf("\t-qswapswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>\n");
     printf("\t\tSwap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.\n");
     printf("\t-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>\n");
     printf("\t\tQuote amount_out/amount_in with the given amount_in/amount_out via Qswap contract.\n");
@@ -988,7 +988,7 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qswapgetpoolbasic") == 0)
+        if (strcmp(argv[i], "-qswapgetpoolbasicstate") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_GET_POOL_BASIC;
