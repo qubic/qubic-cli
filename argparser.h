@@ -806,8 +806,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_RAW_PACKET;
-            g_rawPacketSize = int(charToNumber(argv[i+1]));
-            hexToByte(argv[i+2], g_rawPacket, g_rawPacketSize);
+            g_rawPacketSize = int(charToNumber(argv[i+2]));
+            hexToByte(argv[i+1], g_rawPacket, g_rawPacketSize);
             i+=3;
             CHECK_OVER_PARAMETERS
             break;

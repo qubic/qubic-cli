@@ -74,7 +74,6 @@ int run(int argc, char* argv[])
         case SEND_CUSTOM_TX:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            sanityCheckTxType(g_TxType);
             sanityCheckIdentity(g_targetIdentity);
             sanityCheckTxAmount(g_TxAmount);
             sanityCheckExtraDataSize(g_txExtraDataSize);
