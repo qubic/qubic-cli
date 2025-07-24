@@ -250,6 +250,35 @@ Command:
 	-msvaultgetvaultowners <VAULT_ID>
 			Get MsVault owners given vault ID.
 
+[QSWAP COMMANDS]
+	-qswapgetfee
+		Show current Qswap fees.
+	-qswapissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>
+		Create an asset via Qswap contract.
+	-qswaptransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
+		Transfer an asset via Qswap contract.
+	-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>
+		Create an AMM pool via Qswap contract.
+	-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>
+		Get the basic info of a pool, totol liquidity, qu reserved, asset reserved.
+
+    -qswapaddliquidity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Add liquidity with restriction to an AMM pool via Qswap contract.
+    -qswapremoveliquidity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUIDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>
+    	Remove liquidity with restriction from an AMM pool via Qswap contract.
+	-qswapswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>
+		Swap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.
+	-qswapswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>
+		Swap qu for asset via Qswap contract, only execute if qu_amount_in <= QU_AMOUNT_IN_MAX.
+	-qswapswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN> <QU_AMOUNT_OUT_MIN>
+		Swap asset for qu via Qswap contract, only execute if qu_amount_out >= QU_AMOUNT_OUT_MIN.
+	-qswapswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>
+		Swap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.
+	-qswapgetliquidityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUIDITY_STAKER(in qublic format)]
+		Get the staker's liquidity in a pool.
+	-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>
+    	Quote amount_out/amount_in with given amount_in/amount_out.
+
 [TESTING COMMANDS]
 	-testqpifunctionsoutput
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
