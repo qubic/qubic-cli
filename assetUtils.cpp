@@ -12,6 +12,35 @@
 #include "utils.h"
 #include "sanityCheck.h"
 
+uint64_t assetNameFromString(const char* assetName)
+{
+    if (!assetName)
+    {
+        LOG("Error: assetNameFromString received a null pointer.\n");
+        return 0;
+    }
+    size_t len = strlen(assetName);
+    if (len > 7)
+    {
+        LOG("Warning: Asset name '%s' is longer than 7 characters. It will be truncated.\n", assetName);
+        len = 7;
+    }
+    uint64_t integer = 0;
+    memcpy(&integer, assetName, len);
+    return integer;
+}
+
+void assetNameToString(uint64_t assetNameInt, char* outAssetName)
+{
+    if (!outAssetName)
+    {
+        LOG("Error: assetNameToString received a null output buffer.\n");
+        return;
+    }
+    memcpy(outAssetName, &assetNameInt, sizeof(uint64_t));
+    outAssetName[7] = '\0';
+}
+
 std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
     std::vector<RespondOwnedAssets> result;

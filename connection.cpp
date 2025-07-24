@@ -345,6 +345,8 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+template MsVaultGetVaultAssetBalances_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultAssetBalances_output>();
+template MsVaultGetAssetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetAssetReleaseStatus_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();

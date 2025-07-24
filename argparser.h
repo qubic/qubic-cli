@@ -286,6 +286,16 @@ void print_help()
     printf("\t\tGet MsVault fees.\n");
     printf("\t-msvaultgetvaultowners <VAULT_ID>\n");
     printf("\t\tGet MsVault owners given vault ID.\n");
+    printf("\t-msvaultdepositasset <VAULT_ID> <ASSET_NAME> <ISSUER_ID> <AMOUNT>\n");
+    printf("\t\tDeposit a custom asset into a vault. Note: You must first grant management rights of the shares to the MsVault contract.\n");
+    printf("\t-msvaultreleaseassetto <VAULT_ID> <ASSET_NAME> <ISSUER_ID> <AMOUNT> <DESTINATION_ID>\n");
+    printf("\t\tRequest to release a custom asset from a vault to a destination. Fee applies.\n");
+    printf("\t-msvaultresetassetrelease <VAULT_ID>\n");
+    printf("\t\tReset your pending custom asset release request for a vault. Fee applies.\n");
+    printf("\t-msvaultgetassetbalances <VAULT_ID>\n");
+    printf("\t\tGet the custom asset balances for a vault.\n");
+    printf("\t-msvaultgetassetreleasestatus <VAULT_ID>\n");
+    printf("\t\tGet the pending custom asset release statuses for a vault.\n");
 
     printf("\n[QSWAP COMMANDS]\n");
     printf("\t-qswapgetfee\n");
@@ -1814,6 +1824,58 @@ void parseArgument(int argc, char** argv)
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
+        }
+        if (strcmp(argv[i], "-msvaultdepositasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+                g_cmd = MSVAULT_DEPOSIT_ASSET_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msVaultAssetName = argv[i + 2];
+            g_msVaultIssuer = argv[i + 3];
+            g_TxAmount = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultreleaseassetto") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(5)
+                g_cmd = MSVAULT_RELEASE_ASSET_TO_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msVaultAssetName = argv[i + 2];
+            g_msVaultIssuer = argv[i + 3];
+            g_TxAmount = charToNumber(argv[i + 4]);
+            g_msVaultDestination = argv[i + 5];
+            i += 6;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultresetassetrelease") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_RESET_ASSET_RELEASE_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetassetbalances") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_GET_ASSET_BALANCES_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetassetreleasestatus") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
+            g_msVaultID = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
         }
 
         /**************************
