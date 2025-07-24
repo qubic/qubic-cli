@@ -249,7 +249,12 @@ void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, co
     std::vector<uint8_t> fragmentData;
     fragmentData.resize(fileSize);
     FILE* f = fopen(filePathStr.c_str(), "rb");
-    fread(fragmentData.data(), 1, fileSize, f);
+    if (fread(fragmentData.data(), 1, fileSize, f) != fileSize)
+    {
+        LOG("Failed to read file\n");
+        fclose(f);
+        return;
+    }
     fclose(f);
 
     TxHash32Struct fileHeaderTxDigest;
