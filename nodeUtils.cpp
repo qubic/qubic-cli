@@ -834,7 +834,12 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     uint8_t digest[32] = {0};
 
     FILE* f = fopen(fileName, "rb");
-    fread(&td, 1, sizeof(TickData), f);
+    if (fread(&td, 1, sizeof(TickData), f) != sizeof(TickData))
+    {
+        LOG("Failed to read TickData\n");
+        fclose(f);
+        return;
+    }
     int numTx = 0;
     uint8_t all_zero[32] = {0};
     LOG("List of transactions on tickData (correct order):\n");
@@ -853,21 +858,36 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     for (int i = 0; i < numTx; i++)
     {
         Transaction tx;
-        fread(&tx, 1, sizeof(Transaction), f);
+        if (fread(&tx, 1, sizeof(Transaction), f) != sizeof(Transaction))
+        {
+            LOG("Failed to read Transaction\n");
+            fclose(f);
+            return;
+        }
         int extraDataSize = tx.inputSize;
         if (extraData != nullptr)
         {
             extraDataStruct eds;
             if (extraDataSize != 0)
             {
-                fread(extraDataBuffer, 1, extraDataSize, f);
+                if (fread(extraDataBuffer, 1, extraDataSize, f) != extraDataSize)
+                {
+                    LOG("Failed to read Transaction payload\n");
+                    fclose(f);
+                    return;
+                }
                 eds.vecU8.resize(extraDataSize);
                 memcpy(eds.vecU8.data(), extraDataBuffer, extraDataSize);
             }
             extraData->push_back(eds);
         }
 
-        fread(signatureBuffer, 1, SIGNATURE_SIZE, f);
+        if (fread(signatureBuffer, 1, SIGNATURE_SIZE, f) != SIGNATURE_SIZE)
+        {
+            LOG("Failed to read signature\n");
+            fclose(f);
+            return;
+        }
         if (signatures != nullptr)
         {
             SignatureStruct sig;
@@ -1508,7 +1528,12 @@ BroadcastComputors readComputorListFromFile(const char* fileName)
 {
     BroadcastComputors result;
     FILE* f = fopen(fileName, "rb");
-    fread(&result, 1, sizeof(BroadcastComputors), f);
+    if (fread(&result, 1, sizeof(BroadcastComputors), f) != sizeof(BroadcastComputors))
+    {
+        LOG("Failed to read comp list\n");
+        fclose(f);
+        return result;
+    }
     fclose(f);
     uint8_t digest[32] = {0};
     uint8_t arbPubkey[32] = {0};
@@ -1672,7 +1697,12 @@ void dumpSpectrumToCSV(const char* input, const char* output){
     const size_t SPECTRUM_CAPACITY = 0x1000000ULL; // may be changed in the future
     Entity* spectrum = (Entity*)malloc(SPECTRUM_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
-    fread(spectrum, 1, SPECTRUM_CAPACITY*sizeof(Entity), f);
+    if (fread(spectrum, 1, SPECTRUM_CAPACITY*sizeof(Entity), f) != SPECTRUM_CAPACITY*sizeof(Entity))
+    {
+        LOG("Failed to read spectrum\n");
+        fclose(f);
+        return;
+    }
     fclose(f);
     f = fopen(output, "w");
     {
@@ -1704,7 +1734,12 @@ void dumpUniverseToCSV(const char* input, const char* output){
     const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
     AssetRecord* asset = (AssetRecord*)malloc(ASSETS_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
-    fread(asset, 1, ASSETS_CAPACITY*sizeof(AssetRecord), f);
+    if (fread(asset, 1, ASSETS_CAPACITY*sizeof(AssetRecord), f) != ASSETS_CAPACITY * sizeof(AssetRecord))
+    {
+        LOG("Failed to read assets\n");
+        fclose(f);
+        return;
+    }
     fclose(f);
     f = fopen(output, "w");
     {
