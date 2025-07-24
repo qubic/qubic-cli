@@ -3,6 +3,9 @@
 Qubic Core client
 
 An intermediate tool to communicate to qubic core node.
+
+> [![MultiPlatformBuild](https://github.com/qubic/qubic-cli/actions/workflows/cmake-multi-platform.yml/badge.svg?branch=main)](https://github.com/qubic/qubic-cli/actions/workflows/cmake-multi-platform.yml)
+
 ```
 ./qubic-cli [basic config] [command] [command extra parameters]
 -help print this message
