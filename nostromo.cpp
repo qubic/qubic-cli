@@ -1405,11 +1405,15 @@ void getInfoUserInvested(const char* nodeIp, int nodePort,
     }
     for (uint32_t i = 0; i < 128; i++)
     {
-        if (result.listUserInvested->investedAmount == 0 && result.listUserInvested->claimedAmount == 0)
+        if (result.listUserInvested[i].investedAmount == 0 && result.listUserInvested[i].claimedAmount == 0)
         {
+            if (i == 0)
+            {
+                printf("There are no projects invested by %s\n", invsetorId);
+            }
             break;
         }
-        printf("IndexOfFundraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested->indexOfFundraising, result.listUserInvested->investedAmount, result.listUserInvested->claimedAmount);
+        printf("IndexOfFundraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested[i].indexOfFundraising, result.listUserInvested[i].investedAmount, result.listUserInvested[i].claimedAmount);
     }
 }
 

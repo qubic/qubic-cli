@@ -299,7 +299,7 @@ Command:
 			Get the infos of fundraising.
 	-nostromogetprojectindexlistbycreator <USER_ID>
 			Get the list of project that <USER_ID> created.
-	-nostromogetInfoUserInvested <INVESTOR_ADDRESS>
+	-nostromogetinfouserinvested <INVESTOR_ADDRESS>
 			Get the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).
 	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>
 			Get the max claim amount at the moment.

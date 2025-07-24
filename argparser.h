@@ -335,7 +335,7 @@ void print_help()
 	printf("\t\tGet the infos of fundraising.\n");
 	printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
 	printf("\t\tGet the list of project that <USER_ID> created.\n");
-	printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
+	printf("\t-nostromogetinfouserinvested <INVESTOR_ADDRESS>\n");
 	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
 	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
 	printf("\t\tGet the max claim amount at the moment.\n");
@@ -1905,7 +1905,7 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             return;
         }
-        if (strcmp(argv[i], "-nostromogetInfoUserInvested") == 0)
+        if (strcmp(argv[i], "-nostromogetinfouserinvested") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = NOSTROMO_GET_INFO_USER_INVESTED;
