@@ -954,7 +954,7 @@ void parseArgument(int argc, char** argv)
             g_qswap_issue_asset_name = argv[i+1];
             g_qswap_issue_asset_number_of_unit = charToNumber(argv[i+2]);
             g_qswap_issue_unit_of_measurement = argv[i+3];
-            g_qswap_issue_asset_num_decimal = charToNumber(argv[i+4]);
+            g_qswap_issue_asset_num_decimal = static_cast<char>(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;

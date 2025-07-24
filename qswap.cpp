@@ -57,7 +57,7 @@ void getQswapFees(const char* nodeIp, const int nodePort, QswapFees_output& resu
     {
         result = qc->receivePacketWithHeaderAs<QswapFees_output>();
     }
-    catch (std::logic_error& e)
+    catch (std::logic_error)
     {
         memset(&result, 0, sizeof(result));
     }
@@ -784,7 +784,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
             LOG("GetPoolBasicState pool not exist\n");
         }
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error) {}
 }
 
 void qswapGetLiquidityOf(const char* nodeIp, int nodePort,
@@ -827,7 +827,7 @@ void qswapGetLiquidityOf(const char* nodeIp, int nodePort,
         qswapGetLiquidityOf_output output = qc->receivePacketWithHeaderAs<qswapGetLiquidityOf_output>();
         LOG("GetLiquidityOf result amount: %u\n", output.liquidity);
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error) {}
 }
 
 template <int functionNumber>
@@ -868,7 +868,7 @@ void qswapQuoteAction(const char* nodeIp, int nodePort,
         qswapQuote_output output = qc->receivePacketWithHeaderAs<qswapQuote_output>();
         LOG("Quote result amount: %u\n", output.amount);
     }
-    catch (std::logic_error& e) {}
+    catch (std::logic_error) {}
 }
 
 void qswapQuoteExactQuInput(const char* nodeIp, int nodePort,
