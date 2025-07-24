@@ -16,6 +16,7 @@
 #include "qearn.h"
 #include "qvault.h"
 #include "msvault.h"
+#include "qswap.h"
 #include "nostromo.h"
 #include "testUtils.h"
 
@@ -75,7 +76,6 @@ int run(int argc, char* argv[])
         case SEND_CUSTOM_TX:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            sanityCheckTxType(g_TxType);
             sanityCheckIdentity(g_targetIdentity);
             sanityCheckTxAmount(g_TxAmount);
             sanityCheckExtraDataSize(g_txExtraDataSize);
@@ -654,6 +654,191 @@ int run(int argc, char* argv[])
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
             break;
         }
+        case PRINT_QSWAP_FEE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printQswapFee(g_nodeIp, g_nodePort);
+            break;
+        case QSWAP_ISSUE_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckNumberOfUnit(g_qswap_issue_asset_number_of_unit);
+            sanityCheckValidAssetName(g_qswap_issue_asset_name);
+            sanityCheckValidString(g_qswap_issue_unit_of_measurement);
+            sanityCheckNumberOfDecimal(g_qswap_issue_asset_num_decimal);
+            qswapIssueAsset(g_nodeIp, g_nodePort, g_seed,
+                         g_qswap_issue_asset_name,
+                         g_qswap_issue_unit_of_measurement,
+                         g_qswap_issue_asset_number_of_unit,
+                         g_qswap_issue_asset_num_decimal,
+                         g_offsetScheduledTick);
+            break;
+        case QSWAP_TRANSFER_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckNumberOfUnit(g_qswap_asset_transfer_amount);
+            sanityCheckValidAssetName(g_qswap_asset_transfer_asset_name);
+            sanityCheckValidString(g_qswap_asset_transfer_issuer);
+            sanityCheckIdentity(g_qswap_asset_transfer_new_owner_identity);
+            qswapTransferAsset(g_nodeIp, g_nodePort, g_seed,
+                            g_qswap_asset_transfer_asset_name,
+                            g_qswap_asset_transfer_issuer,
+                            g_qswap_asset_transfer_new_owner_identity,
+                            g_qswap_asset_transfer_amount,
+                            g_offsetScheduledTick);
+            break;
+        case QSWAP_CREATE_POOL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            qswapCreatePool(g_nodeIp, g_nodePort, g_seed,
+                            g_qswap_asset_name,
+                            g_qswap_issuer,
+                            g_offsetScheduledTick);
+            break;
+        case QSWAP_ADD_LIQUIDITY:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckNumberOfUnit(g_qswap_add_liquidity_qu_amount);
+            sanityCheckNumberOfUnit(g_qswap_add_liquidity_asset_amount_desired);
+            sanityCheckTxAmount(g_qswap_liquidity_asset_amount_min);
+            sanityCheckTxAmount(g_qswap_liquidity_qu_amount_min);
+            qswapAddLiquidity(g_nodeIp, g_nodePort, g_seed,
+                            g_qswap_asset_name,
+                            g_qswap_issuer,
+                            g_qswap_add_liquidity_qu_amount,
+                            g_qswap_add_liquidity_asset_amount_desired,
+                            g_qswap_liquidity_qu_amount_min,
+                            g_qswap_liquidity_asset_amount_min,
+                            g_offsetScheduledTick);
+            break;
+        case QSWAP_REMOVE_LIQUIDITY:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckNumberOfUnit(g_qswap_remove_liquidity_burn_liquidity);
+            sanityCheckTxAmount(g_qswap_liquidity_asset_amount_min);
+            sanityCheckTxAmount(g_qswap_liquidity_qu_amount_min);
+            qswapRemoveLiquidity(g_nodeIp, g_nodePort, g_seed,
+                            g_qswap_asset_name,
+                            g_qswap_issuer,
+                            g_qswap_remove_liquidity_burn_liquidity,
+                            g_qswap_liquidity_qu_amount_min,
+                            g_qswap_liquidity_asset_amount_min,
+                            g_offsetScheduledTick);
+            break;
+        case QSWAP_SWAP_EXACT_QU_FOR_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckTxAmount(g_qswap_swap_amount_in);
+            sanityCheckTxAmount(g_qswap_swap_amount_out_min);
+            qswapSwapExactQuForAsset(g_nodeIp, g_nodePort, g_seed,
+                                     g_qswap_asset_name,
+                                     g_qswap_issuer,
+                                     g_qswap_swap_amount_in,
+                                     g_qswap_swap_amount_out_min,
+                                     g_offsetScheduledTick);
+            break;
+        case QSWAP_SWAP_QU_FOR_EXACT_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckTxAmount(g_qswap_swap_amount_out);
+            sanityCheckTxAmount(g_qswap_swap_amount_in_max);
+            qswapSwapQuForExactAsset(g_nodeIp, g_nodePort, g_seed,
+                                     g_qswap_asset_name,
+                                     g_qswap_issuer,
+                                     g_qswap_swap_amount_in_max,
+                                     g_qswap_swap_amount_out,
+                                     g_offsetScheduledTick);
+            break;
+        case QSWAP_SWAP_EXACT_ASSET_FOR_QU:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckTxAmount(g_qswap_swap_amount_in);
+            sanityCheckTxAmount(g_qswap_swap_amount_out_min);
+            qswapSwapExactAssetForQu(g_nodeIp, g_nodePort, g_seed,
+                                     g_qswap_asset_name,
+                                     g_qswap_issuer,
+                                     g_qswap_swap_amount_in,
+                                     g_qswap_swap_amount_out_min,
+                                     g_offsetScheduledTick);
+            break;
+        case QSWAP_SWAP_ASSET_FOR_EXACT_QU:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckTxAmount(g_qswap_swap_amount_out);
+            sanityCheckTxAmount(g_qswap_swap_amount_in_max);
+            qswapSwapAssetForExactQu(g_nodeIp, g_nodePort, g_seed,
+                                     g_qswap_asset_name,
+                                     g_qswap_issuer,
+                                     g_qswap_swap_amount_in_max,
+                                     g_qswap_swap_amount_out,
+                                     g_offsetScheduledTick);
+            break;
+        case QSWAP_GET_POOL_BASIC:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            qswapGetPoolBasicState(g_nodeIp, g_nodePort,
+                                   g_qswap_asset_name,
+                                   g_qswap_issuer);
+            break;
+        case QSWAP_GET_LIQUIDITY_OF:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckValidString(g_qswap_get_liquidity_of_staker_issuer);
+            qswapGetLiquidityOf(g_nodeIp, g_nodePort,
+                               g_qswap_asset_name,
+                               g_qswap_issuer,
+                               g_qswap_get_liquidity_of_staker_issuer);
+            break;
+        case QSWAP_QUOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_qswap_asset_name);
+            sanityCheckValidString(g_qswap_issuer);
+            sanityCheckNumberOfUnit(g_qswap_quote_amount);
+            sanityCheckValidString(g_qswap_command_1);
+            if (strcmp(g_qswap_command_1, "exact_qu_input")==0)
+            {
+                qswapQuoteExactQuInput(g_nodeIp, g_nodePort,
+                                    g_qswap_asset_name,
+                                    g_qswap_issuer,
+                                    g_qswap_quote_amount);
+            }
+            else if (strcmp(g_qswap_command_1, "exact_qu_output")==0)
+            {
+                qswapQuoteExactQuOutput(g_nodeIp, g_nodePort,
+                                    g_qswap_asset_name,
+                                    g_qswap_issuer,
+                                    g_qswap_quote_amount);
+            }
+            else if (strcmp(g_qswap_command_1, "exact_asset_input")==0)
+            {
+                qswapQuoteExactAssetInput(g_nodeIp, g_nodePort,
+                                    g_qswap_asset_name,
+                                    g_qswap_issuer,
+                                    g_qswap_quote_amount);
+            }
+            else if (strcmp(g_qswap_command_1, "exact_asset_output")==0)
+            {
+                qswapQuoteExactAssetOutput(g_nodeIp, g_nodePort,
+                                    g_qswap_asset_name,
+                                    g_qswap_issuer,
+                                    g_qswap_quote_amount);
+            }
+            break;
         case NOSTROMO_REGISTER_IN_TIER:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);

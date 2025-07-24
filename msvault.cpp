@@ -1,6 +1,8 @@
 #include <cstring>
 #include <string>
 #include <sstream>
+#include <cinttypes>
+#include <set>
 
 #include "msvault.h"
 #include "walletUtils.h"
@@ -11,7 +13,6 @@
 #include "connection.h"
 #include "structs.h"
 #include "sanityCheck.h"
-#include <set>
 
 
 #define MSVAULT_CONTRACT_INDEX 11
@@ -155,7 +156,7 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     }
     if (requiredApprovals > (uint64_t)count)
     {
-        LOG("Required approvals (%llu) cannot exceed the number of unique owners (%d).\n",
+        LOG("Required approvals (%" PRIu64 ") cannot exceed the number of unique owners (%d).\n",
             requiredApprovals, count);
         return;
     }
@@ -167,7 +168,7 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
         uint64_t vaultCount = getVaultCountForOwner(nodeIp, nodePort, own);
         if (vaultCount >= MSVAULT_MAX_COOWNER)
         {
-            LOG("Owner %s already has %llu vaults (max allowed is %d). Cannot register new vault.\n",
+            LOG("Owner %s already has %" PRIu64 " vaults (max allowed is %d). Cannot register new vault.\n",
                 own.c_str(), vaultCount, MSVAULT_MAX_COOWNER);
             return;
         }
@@ -454,7 +455,7 @@ void msvaultGetVaults(const char* nodeIp, int nodePort, const char* identity)
         char vaultNameStr[33];
         memcpy(vaultNameStr, output.vaultNames[i], 32);
         vaultNameStr[32] = '\0';
-        LOG("Vault #%d: ID %llu, Name: %s\n", i, (unsigned long long)output.vaultIDs[i], vaultNameStr);
+        LOG("Vault #%d: ID %" PRIu64 ", Name: %s\n", i, output.vaultIDs[i], vaultNameStr);
     }
 }
 
@@ -508,7 +509,7 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
             char destId[128];
             memset(destId, 0, 128);
             getIdentityFromPublicKey(output.destinations[i], destId, false);
-            LOG("Owner #%d wants to release %llu to %s\n", i, (unsigned long long)output.amounts[i], destId);
+            LOG("Owner #%d wants to release %" PRIu64 " to %s\n", i, output.amounts[i], destId);
         }
     }
 }
@@ -556,7 +557,7 @@ void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    LOG("VaultID %llu balance: %lld\n", (unsigned long long)vaultID, (long long)output.balance);
+    LOG("VaultID %" PRIu64 " balance: %" PRId64 "\n", vaultID, output.balance);
 }
 
 void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
@@ -640,9 +641,9 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
         return;
     }
 
-    LOG("Number of Active Vaults: %llu\n", output.numberOfActiveVaults);
-    LOG("Total Revenue: %llu\n", (unsigned long long)output.totalRevenue);
-    LOG("Total Distributed To Shareholders: %llu\n", (unsigned long long)output.totalDistributedToShareholders);
+    LOG("Number of Active Vaults: %" PRIu64 "\n", output.numberOfActiveVaults);
+    LOG("Total Revenue: %" PRIu64 "\n", output.totalRevenue);
+    LOG("Total Distributed To Shareholders: %" PRIu64 "\n", output.totalDistributedToShareholders);
 }
 
 void msvaultGetFees(const char* nodeIp, int nodePort)
@@ -686,11 +687,11 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
     }
 
     LOG("MsVault Fees:\n");
-    LOG("Registering Fee: %llu\n", (unsigned long long)output.registeringFee);
-    LOG("Release Fee: %llu\n", (unsigned long long)output.releaseFee);
-    LOG("Release Reset Fee: %llu\n", (unsigned long long)output.releaseResetFee);
-    LOG("Holding Fee: %llu\n", (unsigned long long)output.holdingFee);
-    LOG("Deposit Fee: %llu\n", (unsigned long long)output.depositFee); // always 0
+    LOG("Registering Fee: %" PRIu64 "\n", output.registeringFee);
+    LOG("Release Fee: %" PRIu64 "\n", output.releaseFee);
+    LOG("Release Reset Fee: %" PRIu64 "\n", output.releaseResetFee);
+    LOG("Holding Fee: %" PRIu64 "\n", output.holdingFee);
+    LOG("Deposit Fee: %" PRIu64 "\n", output.depositFee); // always 0
 }
 
 void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
@@ -738,10 +739,10 @@ void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    LOG("Vault %llu has %llu owners, requiredApprovals=%llu\n",
-        (unsigned long long)vaultID,
-        (unsigned long long)output.numberOfOwners,
-        (unsigned long long)output.requiredApprovals
+    LOG("Vault %" PRIu64 " has %" PRIu64 " owners, requiredApprovals=%" PRIu64 "\n",
+        vaultID,
+        output.numberOfOwners,
+        output.requiredApprovals
     );
 
     for (uint64_t i = 0; i < output.numberOfOwners && i < MSVAULT_MAX_OWNERS; i++) {

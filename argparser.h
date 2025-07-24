@@ -286,59 +286,85 @@ void print_help()
     printf("\t\tGet MsVault fees.\n");
     printf("\t-msvaultgetvaultowners <VAULT_ID>\n");
     printf("\t\tGet MsVault owners given vault ID.\n");
-
+    printf("\n[QSWAP COMMANDS]\n");
+    printf("\t-qswapgetfee\n");
+    printf("\t\tShow current Qswap fee.\n");
+    printf("\t-qswapissueasset <ASSET_NAME> <NUMBER_OF_UNIT> <UNIT_OF_MEASUREMENT> <NUM_DECIMAL>\n");
+    printf("\t\tCreate an asset via Qswap contract.\n");
+    printf("\t-qswaptransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
+    printf("\t\tTransfer an asset via Qswap contract.\n");
+    printf("\t-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>\n");
+    printf("\t\tCreate an AMM pool via Qswap contract.\n");
+    printf("\t-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>\n");
+    printf("\t\tGet the basic information of a pool.\n");
+    printf("\t-qswapaddliquidity <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_DESIRED> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
+    printf("\t\tAdd liquidity with restriction to an AMM pool via Qswap contract.\n");
+    printf("\t-qswapremoveliquidity <ASSET_NAME> <ISSUER_IN_HEX> <BURN_LIQUIDITY> <QU_AMOUNT_MIN> <ASSET_AMOUNT_MIN>\n");
+    printf("\t\tRemove liquidity with restriction from an AMM pool via Qswap contract.\n");
+    printf("\t-qswapgetliquidityof <ASSET_NAME> <ISSUER_IN_HEX> [LIQUIDITY_STAKER(in qublic format)]\n");
+    printf("\t\tGet the staker's liquidity in a pool.\n");
+    printf("\t-qswapswapexactquforasset <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_IN> <ASSET_AMOUNT_OUT_MIN>\n");
+    printf("\t\tSwap qu for asset via Qswap contract, only execute if asset_amount_out >= ASSET_AMOUNT_OUT_MIN.\n");
+    printf("\t-qswapswapquforexactasset <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_OUT> <QU_AMOUNT_IN_MAX>\n");
+    printf("\t\tSwap qu for asset via Qswap contract, only execute if qu_amount_in <= QU_AMOUNT_IN_MAX.\n");
+    printf("\t-qswapswapexactassetforqu <ASSET_NAME> <ISSUER_IN_HEX> <ASSET_AMOUNT_IN> <QU_AMOUNT_OUT_MIN>\n");
+    printf("\t\tSwap asset for qu via Qswap contract, only execute if qu_amount_out >= QU_AMOUNT_OUT_MIN.\n");
+    printf("\t-qswapswapassetforexactqu <ASSET_NAME> <ISSUER_IN_HEX> <QU_AMOUNT_OUT> <ASSET_AMOUNT_IN_MAX>\n");
+    printf("\t\tSwap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.\n");
+    printf("\t-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>\n");
+    printf("\t\tQuote amount_out/amount_in with the given amount_in/amount_out via Qswap contract.\n");
     printf("\n[NOSTROMO COMMANDS]\n");
     printf("\t-nostromoregisterintier <TIER_LEVEL>\n");
-	printf("\t\tRegister in tier.\n");
-	printf("\t-nostromologoutfromtier \n");
-	printf("\t\tLogout from tier.\n");
-	printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>\n");
-	printf("\t\tCreate a project with the specified token info and start and end date for voting.\n");
-	printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION>\n");
-	printf("\t\tVote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
-	printf("\t-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> \n");
-	printf("\t\t<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>\n");
-	printf("\t\t<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>\n");
-	printf("\t\t<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>\n");
-	printf("\t\t<SECOND_PHASE_END_YEAR> <SECOND_PHASE_END_MONTH> <SECOND_PHASE_END_DAY> <SECOND_PHASE_END_HOUR>\n");
-	printf("\t\t<THIRD_PHASE_START_YEAR> <THIRD_PHASE_START_MONTH> <THIRD_PHASE_START_DAY> <THIRD_PHASE_START_HOUR>\n");
-	printf("\t\t<THIRD_PHASE_END_YEAR> <THIRD_PHASE_END_MONTH> <THIRD_PHASE_END_DAY> <THIRD_PHASE_END_HOUR>\n");
-	printf("\t\t<LISTING_START_YEAR> <LISTING_START_MONTH> <LISTING_START_DAY> <LISTING_START_HOUR>\n");
-	printf("\t\t<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>\n");
-	printf("\t\t<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>\n");
-	printf("\t\t<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>\n");
-	printf("\t\tCreate a fundraising with the specified token and project infos.\n");
-	printf("\t-nostromoinvestinproject <FUNDRAISING_INDEX> <INVESTMENT_AMOUNT>\n");
-	printf("\t\tInvest in the fundraising.\n");
-	printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDRAISING_INDEX>\n");
-	printf("\t\tClaim your token from SC.\n");
-	printf("\t\tIf you invest in the fundraising and also it is the time for claiming, you can receive the token from SC.\n");
-	printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
-	printf("\t\tUpgrade your tierlevel to <NEW_TIER_LEVEL>\n");
-	printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
-	printf("\t\tTransfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
-	printf("\t-nostromogetstats\n");
-	printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...)\n");
-	printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
-	printf("\t\tGet the tier_level for <USER_ID>.\n");
-	printf("\t-nostromogetuservotestatus <USER_ID>\n");
-	printf("\t\tGet the list of project index voted by <USER_ID>.\n");
-	printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
-	printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC.\n");
+    printf("\t\tRegister in tier.\n");
+    printf("\t-nostromologoutfromtier \n");
+    printf("\t\tLogout from tier.\n");
+    printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>\n");
+    printf("\t\tCreate a project with the specified token info and start and end date for voting.\n");
+    printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION>\n");
+    printf("\t\tVote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
+    printf("\t-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> \n");
+    printf("\t\t<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>\n");
+    printf("\t\t<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>\n");
+    printf("\t\t<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>\n");
+    printf("\t\t<SECOND_PHASE_END_YEAR> <SECOND_PHASE_END_MONTH> <SECOND_PHASE_END_DAY> <SECOND_PHASE_END_HOUR>\n");
+    printf("\t\t<THIRD_PHASE_START_YEAR> <THIRD_PHASE_START_MONTH> <THIRD_PHASE_START_DAY> <THIRD_PHASE_START_HOUR>\n");
+    printf("\t\t<THIRD_PHASE_END_YEAR> <THIRD_PHASE_END_MONTH> <THIRD_PHASE_END_DAY> <THIRD_PHASE_END_HOUR>\n");
+    printf("\t\t<LISTING_START_YEAR> <LISTING_START_MONTH> <LISTING_START_DAY> <LISTING_START_HOUR>\n");
+    printf("\t\t<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>\n");
+    printf("\t\t<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>\n");
+    printf("\t\t<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>\n");
+    printf("\t\tCreate a fundraising with the specified token and project infos.\n");
+    printf("\t-nostromoinvestinproject <FUNDRAISING_INDEX> <INVESTMENT_AMOUNT>\n");
+    printf("\t\tInvest in the fundraising.\n");
+    printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDRAISING_INDEX>\n");
+    printf("\t\tClaim your token from SC.\n");
+    printf("\t\tIf you invest in the fundraising and also it is the time for claiming, you can receive the token from SC.\n");
+    printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
+    printf("\t\tUpgrade your tierlevel to <NEW_TIER_LEVEL>\n");
+    printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
+    printf("\t\tTransfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
+    printf("\t-nostromogetstats\n");
+    printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...)\n");
+    printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
+    printf("\t\tGet the tier_level for <USER_ID>.\n");
+    printf("\t-nostromogetuservotestatus <USER_ID>\n");
+    printf("\t\tGet the list of project index voted by <USER_ID>.\n");
+    printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
+    printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC.\n");
     printf("\t\tIf <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
-	printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
-	printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest.\n");
-	printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
-	printf("\t-nostromogetprojectbyindex <PROJECT_INDEX>\n");
-	printf("\t\tGet the infos of project.\n");
-	printf("\t-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>\n");
-	printf("\t\tGet the infos of fundraising.\n");
-	printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
-	printf("\t\tGet the list of project that <USER_ID> created.\n");
-	printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
-	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
-	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
-	printf("\t\tGet the max claim amount at the moment.\n");
+    printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
+    printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest.\n");
+    printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
+    printf("\t-nostromogetprojectbyindex <PROJECT_INDEX>\n");
+    printf("\t\tGet the infos of project.\n");
+    printf("\t-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>\n");
+    printf("\t\tGet the infos of fundraising.\n");
+    printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
+    printf("\t\tGet the list of project that <USER_ID> created.\n");
+    printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
+    printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
+    printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
+    printf("\t\tGet the max claim amount at the moment.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -390,6 +416,8 @@ static uint32_t getContractIndex(const char* str)
         idx = 9;
     else if (strcasecmp(str, "QVAULT") == 0)
         idx = 10;
+    else if (strcasecmp(str, "QSWAP") == 0)
+        idx = 13;
     else
     {
         constexpr uint32_t contractCount = 11;
@@ -859,8 +887,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_RAW_PACKET;
-            g_rawPacketSize = int(charToNumber(argv[i+1]));
-            hexToByte(argv[i+2], g_rawPacket, g_rawPacketSize);
+            g_rawPacketSize = int(charToNumber(argv[i+2]));
+            hexToByte(argv[i+1], g_rawPacket, g_rawPacketSize);
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -966,6 +994,159 @@ void parseArgument(int argc, char** argv)
             break;
         }
 
+        /***********************
+         ***** QSWAP COMMANDS *****
+         ***********************/
+
+        if (strcmp(argv[i], "-qswapissueasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_ISSUE_ASSET;
+            g_qswap_issue_asset_name = argv[i+1];
+            g_qswap_issue_asset_number_of_unit = charToNumber(argv[i+2]);
+            g_qswap_issue_unit_of_measurement = argv[i+3];
+            g_qswap_issue_asset_num_decimal = static_cast<char>(charToNumber(argv[i+4]));
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswaptransferasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_TRANSFER_ASSET;
+            g_qswap_asset_transfer_asset_name = argv[i+1];
+            g_qswap_asset_transfer_issuer = argv[i+2];
+            g_qswap_asset_transfer_new_owner_identity = argv[i+3];
+            g_qswap_asset_transfer_amount = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapgetfee") == 0)
+        {
+            g_cmd = PRINT_QSWAP_FEE;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapcreatepool") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QSWAP_CREATE_POOL;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapgetpoolbasicstate") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QSWAP_GET_POOL_BASIC;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            i+=3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapaddliquidity") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(6)
+            g_cmd = QSWAP_ADD_LIQUIDITY;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_add_liquidity_qu_amount = charToNumber(argv[i+3]);
+            g_qswap_add_liquidity_asset_amount_desired = charToNumber(argv[i+4]);
+            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+5]);
+            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+6]);
+            i+=7;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapremoveliquidity") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(5)
+            g_cmd = QSWAP_REMOVE_LIQUIDITY;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_remove_liquidity_burn_liquidity = charToNumber(argv[i+3]);
+            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+4]);
+            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+5]);
+            i+=6;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapgetliquidityof") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QSWAP_GET_LIQUIDITY_OF;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_get_liquidity_of_staker_issuer = argv[i+3];
+            i+=4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapswapexactquforasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapswapquforexactasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_SWAP_QU_FOR_EXACT_ASSET;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapswapexactassetforqu") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_SWAP_EXACT_ASSET_FOR_QU;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapswapassetforexactqu") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_SWAP_ASSET_FOR_EXACT_QU;
+            g_qswap_asset_name = argv[i+1];
+            g_qswap_issuer = argv[i+2];
+            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
+            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswapquote") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_QUOTE;
+            g_qswap_command_1 = argv[i+1];
+            g_qswap_asset_name = argv[i+2];
+            g_qswap_issuer = argv[i+3];
+            g_qswap_quote_amount = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         /*************************
          ***** QTRY COMMANDS *****

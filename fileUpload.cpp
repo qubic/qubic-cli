@@ -7,6 +7,7 @@
 #include <memory>
 #include <thread>
 #include <stdexcept>
+#include <cinttypes>
 
 #include "structs.h"
 #include "connection.h"
@@ -249,7 +250,12 @@ void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, co
     std::vector<uint8_t> fragmentData;
     fragmentData.resize(fileSize);
     FILE* f = fopen(filePathStr.c_str(), "rb");
-    fread(fragmentData.data(), 1, fileSize, f);
+    if (fread(fragmentData.data(), 1, fileSize, f) != fileSize)
+    {
+        LOG("Failed to read file\n");
+        fclose(f);
+        return;
+    }
     fclose(f);
 
     TxHash32Struct fileHeaderTxDigest;
@@ -334,7 +340,7 @@ void downloadFile(const char* nodeIp, const int nodePort, const char* trailer, c
 
     uint64_t nFragment = ((uint64_t*)buffer)[0] + 1;
     LOG("Number of fragment: %d\n", nFragment);
-    LOG("Downloaded fragment #%lld\n", nFragment - 1);
+    LOG("Downloaded fragment #%" PRIu64 "\n", nFragment - 1);
     char nextTxHash[64] = {0};
     getIdentityFromPublicKey(buffer + 8, nextTxHash, true);
 
@@ -353,7 +359,7 @@ void downloadFile(const char* nodeIp, const int nodePort, const char* trailer, c
                 LOG("Malformed data size, please check this tx hash %s\n", nextTxHash);
             }
             uint64_t fragmentId = ((uint64_t*)(buffer))[0];
-            LOG("Downloaded fragment #%lld\n", fragmentId);
+            LOG("Downloaded fragment #%" PRIu64 "\n", fragmentId);
             getIdentityFromPublicKey(buffer + 8, nextTxHash, true);
             std::vector<uint8_t> tmp;
             contentSize = dataSize - 40;

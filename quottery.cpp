@@ -1,3 +1,4 @@
+#include <cinttypes>
 #include <cstring>
 #include <cstdio>
 #include <ctime>
@@ -62,22 +63,22 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort)
     memset(&result, 1, sizeof(qtryBasicInfo_output));
     auto qc = make_qc(nodeIp, nodePort);
     quotteryGetBasicInfo(qc, result);
-    LOG("Fee per slot per hour: %llu qu\n", result.feePerSlotPerHour);
-    LOG("Minimum amount of qus per bet slot: %llu qu\n", result.minBetSlotAmount);
+    LOG("Fee per slot per hour: %" PRIu64 " qu\n", result.feePerSlotPerHour);
+    LOG("Minimum amount of qus per bet slot: %" PRIu64 " qu\n", result.minBetSlotAmount);
     LOG("Game operator Fee: %.2f%%\n", result.gameOperatorFee/100.0);
     LOG("Shareholders fee: %.2f%%\n", result.shareholderFee/100.0);
     LOG("Burn fee: %.2f%%\n", result.burnFee/100.0);
     LOG("================\n");
-    LOG("Number of issued bet: %lld\n", result.nIssuedBet);
-    LOG("moneyFlow: %lld\n", result.moneyFlow);
-    LOG("moneyFlow through issueBet: %lld\n", result.moneyFlowThroughIssueBet);
-    LOG("moneyFlow through joinBet: %lld\n", result.moneyFlowThroughJoinBet);
-    LOG("moneyFlow through finalizeBet: %lld\n", result.moneyFlowThroughFinalizeBet);
+    LOG("Number of issued bet: %" PRIu64 "\n", result.nIssuedBet);
+    LOG("moneyFlow: %" PRIu64 "\n", result.moneyFlow);
+    LOG("moneyFlow through issueBet: %" PRIu64 "\n", result.moneyFlowThroughIssueBet);
+    LOG("moneyFlow through joinBet: %" PRIu64 "\n", result.moneyFlowThroughJoinBet);
+    LOG("moneyFlow through finalizeBet: %" PRIu64 "\n", result.moneyFlowThroughFinalizeBet);
     LOG("================\n");
-    LOG("earned amount for shareholders: %lld\n", result.earnedAmountForShareHolder);
-    LOG("earned amount for winners: %lld\n", result.earnedAmountForBetWinner);
-    LOG("distributed amount: %lld\n", result.distributedAmount);
-    LOG("burned amount: %lld\n", result.burnedAmount);
+    LOG("earned amount for shareholders: %" PRIu64 "\n", result.earnedAmountForShareHolder);
+    LOG("earned amount for winners: %" PRIu64 "\n", result.earnedAmountForBetWinner);
+    LOG("distributed amount: %" PRIu64 "\n", result.distributedAmount);
+    LOG("burned amount: %" PRIu64 "\n", result.burnedAmount);
     char buf[64] = {0};
     getIdentityFromPublicKey(result.gameOperator, buf, false);
     LOG("Game operator ID: %s\n", buf);
@@ -265,7 +266,7 @@ void quotteryIssueBet(const char* nodeIp, int nodePort, const char* seed, uint32
         qtryBasicInfo_output quotteryBasicInfo;
         LOG("Getting QTRY info...\n");
         quotteryGetBasicInfo(qc, quotteryBasicInfo);
-        LOG("feePerSlotPerHour: %lld\n", quotteryBasicInfo.feePerSlotPerHour);
+        LOG("feePerSlotPerHour: %" PRIu64 "\n", quotteryBasicInfo.feePerSlotPerHour);
         std::time_t now = time(0);
         std::tm *gmtm = gmtime(&now);
         uint8_t year = gmtm->tm_year % 100;
@@ -439,8 +440,8 @@ void quotteryPrintBetInfo(const char* nodeIp, const int nodePort, int betId)
         LOG("\n");
     }
     {
-        LOG("Minimum bet amount: %llu\n", result.minBetAmount);
-        LOG("Maximum slot per option: %llu\n", result.maxBetSlotPerOption);
+        LOG("Minimum bet amount: %" PRIu64 "\n", result.minBetAmount);
+        LOG("Maximum slot per option: %" PRIu32 "\n", result.maxBetSlotPerOption);
         uint8_t year, month, day, hour, minute, second;
         unpackQuotteryDate(year, month, day, hour, minute, second, result.openDate);
         LOG("OpenDate: %02u-%02u-%02u %02u:%02u:%02u\n", year, month, day, hour, minute, second);

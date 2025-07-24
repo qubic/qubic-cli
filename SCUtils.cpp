@@ -37,7 +37,12 @@ void dumpQxContractToCSV(const char* input, const char* output)
     std::shared_ptr<QX> qxState = std::make_shared<QX>();
 
     f = fopen(input, "rb");
-    fread(qxState.get(), 1, sizeof(QX), f);
+    if (fread(qxState.get(), 1, sizeof(QX), f) != sizeof(QX))
+    {
+        LOG("Failed to read QX state\n");
+        fclose(f);
+        return;
+    }
     fclose(f);
 
     f = fopen(output, "w");

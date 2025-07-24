@@ -1,6 +1,7 @@
 #include <iostream>
 #include <algorithm>
 #include <cctype>
+#include <cinttypes>
 
 #include "proposal.h"
 #include "walletUtils.h"
@@ -422,7 +423,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		{
 			std::string amountStr = strtok2string(NULL, ",");
 			sint64 amountInt;
-			if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
+			if (sscanf(amountStr.c_str(), "%" SCNi64, &amountInt) == 1)
 			{
 				p.data.transfer.amounts[i] = amountInt;
 			}
@@ -446,7 +447,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		getPublicKeyFromIdentity(dstIdentity.c_str(), p.data.transferInEpoch.destination);
 		std::string epochStr = strtok2string(NULL, ",");
 		sint64 epochInt;
-		if (sscanf(epochStr.c_str(), "%lli", &epochInt) == 1 && epochInt > 0 && epochInt < 0xffff)
+		if (sscanf(epochStr.c_str(), "%" SCNi64, &epochInt) == 1 && epochInt > 0 && epochInt < 0xffff)
 		{
 			p.data.transferInEpoch.targetEpoch = static_cast<uint16>(epochInt);
 		}
@@ -459,7 +460,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		}
 		std::string amountStr = strtok2string(NULL, ",");
 		sint64 amountInt;
-		if (sscanf(amountStr.c_str(), "%lli", &amountInt) == 1)
+		if (sscanf(amountStr.c_str(), "%" SCNi64, &amountInt) == 1)
 		{
 			p.data.transferInEpoch.amount = amountInt;
 		}
@@ -777,7 +778,7 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 
 	// First check of vote value
 	sint64 voteValue;
-	if (sscanf(voteValueString, "%lli", &voteValue) != 1)
+	if (sscanf(voteValueString, "%" SCNi64, &voteValue) != 1)
 	{
 		if (strcmp(voteValueString, "none") == 0)
 		{
