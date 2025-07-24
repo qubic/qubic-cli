@@ -19,12 +19,12 @@
 
 // includes for template instantiations
 #include "quottery.h"
-#include "qxStruct.h"
+#include "qx_struct.h"
 #include "qvault.h"
 #include "qearn.h"
 #include "msvault.h"
 #include "qswap_struct.h"
-#include "testUtils.h"
+#include "test_utils.h"
 #include "qutil.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000

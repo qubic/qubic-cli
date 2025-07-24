@@ -1,6 +1,6 @@
 #pragma once
 
-#include "commonFunctions.h"
+#include "common_functions.h"
 
 #include <chrono>
 #include <thread>

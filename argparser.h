@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>

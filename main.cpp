@@ -1,14 +1,15 @@
 #include <array>
+
 #include "stdio.h"
 #include "structs.h"
 #include "global.h"
 #include "argparser.h"
-#include "walletUtils.h"
-#include "nodeUtils.h"
-#include "assetUtil.h"
-#include "keyUtils.h"
-#include "sanityCheck.h"
-#include "SCUtils.h"
+#include "wallet_utils.h"
+#include "node_utils.h"
+#include "asset_utils.h"
+#include "key_utils.h"
+#include "sanity_check.h"
+#include "sc_utils.h"
 #include "quottery.h"
 #include "qutil.h"
 #include "qx.h"
@@ -17,7 +18,7 @@
 #include "qvault.h"
 #include "msvault.h"
 #include "qswap.h"
-#include "testUtils.h"
+#include "test_utils.h"
 
 int run(int argc, char* argv[])
 {

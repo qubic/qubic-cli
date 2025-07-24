@@ -2,13 +2,13 @@
 #include <array>
 #include <cinttypes>
 
-#include "testUtils.h"
-#include "nodeUtils.h"
+#include "test_utils.h"
+#include "node_utils.h"
 #include "connection.h"
 #include "logger.h"
-#include "keyUtils.h"
-#include "K12AndKeyUtil.h"
-#include "walletUtils.h"
+#include "key_utils.h"
+#include "k12_and_key_utils.h"
+#include "wallet_utils.h"
 
 
 // Change this index when new contracts are added
