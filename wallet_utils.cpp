@@ -5,12 +5,12 @@
 #include <stdexcept>
 
 #include "utils.h"
-#include "nodeUtils.h"
-#include "keyUtils.h"
+#include "node_utils.h"
+#include "key_utils.h"
 #include "logger.h"
 #include "structs.h"
 #include "connection.h"
-#include "K12AndKeyUtil.h"
+#include "k12_and_key_utils.h"
 
 void printWalletInfo(const char* seed)
 {

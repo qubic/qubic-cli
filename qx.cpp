@@ -3,15 +3,15 @@
 #include <stdexcept>
 
 #include "structs.h"
-#include "walletUtils.h"
-#include "keyUtils.h"
-#include "assetUtil.h"
+#include "wallet_utils.h"
+#include "key_utils.h"
+#include "asset_utils.h"
 #include "connection.h"
 #include "logger.h"
-#include "nodeUtils.h"
-#include "K12AndKeyUtil.h"
+#include "node_utils.h"
+#include "k12_and_key_utils.h"
 #include "qx.h"
-#include "qxStruct.h"
+#include "qx_struct.h"
 
 #define QX_CONTRACT_INDEX 1
 #define QX_ADDRESS "BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARMID"

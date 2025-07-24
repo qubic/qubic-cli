@@ -6,15 +6,15 @@
 #include <cinttypes>
 
 #include "qutil.h"
-#include "keyUtils.h"
+#include "key_utils.h"
 #include "structs.h"
 #include "defines.h"
 #include "logger.h"
-#include "nodeUtils.h"
-#include "K12AndKeyUtil.h"
+#include "node_utils.h"
+#include "k12_and_key_utils.h"
 #include "connection.h"
-#include "walletUtils.h"
-#include "sanityCheck.h"
+#include "wallet_utils.h"
+#include "sanity_check.h"
 
 constexpr int QUTIL_CONTRACT_ID = 4;
 

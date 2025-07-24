@@ -2,10 +2,10 @@
 #include <iostream>
 #include <string>
 
-#include "SCUtils.h"
-#include "keyUtils.h"
+#include "sc_utils.h"
+#include "key_utils.h"
 #include "structs.h"
-#include "qxStruct.h"
+#include "qx_struct.h"
 #include "connection.h"
 #include "logger.h"
 

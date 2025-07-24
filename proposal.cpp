@@ -4,10 +4,10 @@
 #include <cinttypes>
 
 #include "proposal.h"
-#include "walletUtils.h"
-#include "keyUtils.h"
-#include "sanityCheck.h"
-#include "commonFunctions.h"
+#include "wallet_utils.h"
+#include "key_utils.h"
+#include "sanity_check.h"
+#include "common_functions.h"
 #include "utils.h"
 
 #define GQMPROP_CONTRACT_INDEX 6

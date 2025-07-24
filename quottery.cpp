@@ -7,12 +7,12 @@
 #include "quottery.h"
 #include "prompt.h"
 #include "structs.h"
-#include "keyUtils.h"
-#include "nodeUtils.h"
-#include "K12AndKeyUtil.h"
+#include "key_utils.h"
+#include "node_utils.h"
+#include "k12_and_key_utils.h"
 #include "connection.h"
 #include "logger.h"
-#include "walletUtils.h"
+#include "wallet_utils.h"
 
 constexpr int QUOTTERY_CONTRACT_ID = 2;
 

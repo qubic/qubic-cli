@@ -11,11 +11,11 @@
 #include "defines.h"
 #include "structs.h"
 #include "connection.h"
-#include "nodeUtils.h"
+#include "node_utils.h"
 #include "logger.h"
-#include "K12AndKeyUtil.h"
-#include "keyUtils.h"
-#include "walletUtils.h"
+#include "k12_and_key_utils.h"
+#include "key_utils.h"
+#include "wallet_utils.h"
 
 static CurrentTickInfo getTickInfoFromNode(QCPtr qc)
 {

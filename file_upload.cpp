@@ -8,16 +8,17 @@
 #include <thread>
 #include <stdexcept>
 #include <cinttypes>
+#include <fstream>
+#include <fcntl.h>
 
 #include "structs.h"
 #include "connection.h"
-#include "nodeUtils.h"
+#include "node_utils.h"
 #include "logger.h"
-#include "K12AndKeyUtil.h"
-#include "keyUtils.h"
-#include "walletUtils.h"
-#include <fstream>
-#include <fcntl.h>
+#include "k12_and_key_utils.h"
+#include "key_utils.h"
+#include "wallet_utils.h"
+
 
 constexpr int fullFragmentSize = 1024 - FileFragmentTransactionPrefix::minInputSize();
 struct fullFragment{

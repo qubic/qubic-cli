@@ -11,143 +11,143 @@ char* g_requestedFileName = nullptr;
 char* g_requestedFileName2 = nullptr;
 char* g_requestedTxId  = nullptr;
 char* g_requestedIdentity  = nullptr;
-char* g_qx_share_transfer_possessed_identity = nullptr;
-char* g_qx_share_transfer_new_owner_identity = nullptr;
-int64_t g_qx_share_transfer_amount = 0;
+char* g_qx_shareTransferPossessedIdentity = nullptr;
+char* g_qx_shareTransferNewOwnerIdentity = nullptr;
+int64_t g_qx_shareTransferAmount = 0;
 const char* g_proposalString = "";
 const char* g_voteValueString = "";
 const char* g_paramString1 = "";
 const char* g_paramString2 = "";
 bool g_force = false;
 
-int64_t g_TxAmount = 0;
-uint16_t g_TxType = 0;
-uint32_t g_TxTick = 0;
+int64_t g_txAmount = 0;
+uint16_t g_txType = 0;
+uint32_t g_txTick = 0;
 int g_nodePort = DEFAULT_NODE_PORT;
 int g_txExtraDataSize = 0;
 int g_rawPacketSize = 0;
 int g_requestedSpecialCommand = -1;
-char* g_toggle_main_aux_0 = nullptr;
-char* g_toggle_main_aux_1 = nullptr;
-int g_set_solution_threshold_epoch = -1;
-int g_set_solution_threshold_value = -1;
-char* g_file_path = nullptr;
-char* g_compress_tool = nullptr;
-uint32_t g_contract_index = 0;
+char* g_toggleMainAux0 = nullptr;
+char* g_toggleMainAux1 = nullptr;
+int g_setSolutionThresholdEpoch = -1;
+int g_setSolutionThresholdValue = -1;
+char* g_filePath = nullptr;
+char* g_compressTool = nullptr;
+uint32_t g_contractIndex = 0;
 char g_loggingMode = 0;
 char* g_compChatString = nullptr;
 
+char* g_dumpBinaryFileInput = nullptr;
+char* g_dumpBinaryFileOutput = nullptr;
+uint32_t g_dumpBinaryContractId = 0;
 
+// IPO bid
+uint32_t g_IPOContractIndex = 0;
+uint16_t g_makeIPOBidNumberOfShare = 0;
+uint64_t g_makeIPOBidPricePerShare = 0;
+
+// qx
 uint32_t g_requestedTickNumber = 0;
 uint32_t g_offsetScheduledTick = DEFAULT_SCHEDULED_TICK_OFFSET;
 int g_waitUntilFinish = 0;
 uint8_t g_txExtraData[1024] = {0};
 uint8_t g_rawPacket[1024] = {0};
 
-char* g_qx_issue_asset_name = nullptr;
-char* g_qx_issue_unit_of_measurement = nullptr;
-int64_t g_qx_issue_asset_number_of_unit = -1;
-char g_qx_issue_asset_num_decimal = 0;
+char* g_qx_issueAssetName = nullptr;
+char* g_qx_issueUnitOfMeasurement = nullptr;
+int64_t g_qx_issueAssetNumberOfUnit = -1;
+char g_qx_issueAssetNumDecimal = 0;
 
-char* g_qx_command_1 = nullptr;
-char* g_qx_command_2 = nullptr;
+char* g_qx_command1 = nullptr;
+char* g_qx_command2 = nullptr;
 char* g_qx_issuer = nullptr;
-char* g_qx_asset_name = nullptr;
+char* g_qx_assetName = nullptr;
 long long g_qx_offset = -1;
 long long g_qx_price = -1;
-long long g_qx_number_of_share = -1;
+long long g_qx_numberOfShare = -1;
 
-char* g_qx_asset_transfer_possessed_identity = nullptr;
-char* g_qx_asset_transfer_new_owner_identity = nullptr;
-int64_t g_qx_asset_transfer_amount = -1;
-char* g_qx_asset_transfer_asset_name = nullptr;
-char* g_qx_asset_transfer_issuer_in_hex = nullptr;
+char* g_qx_assetTransferPossessedIdentity = nullptr;
+char* g_qx_assetTransferNewOwnerIdentity = nullptr;
+int64_t g_qx_assetTransferAmount = -1;
+char* g_qx_assetTransferAssetName = nullptr;
+char* g_qx_assetTransferIssuerInHex = nullptr;
 
-// qswap
-char* g_qswap_issue_asset_name = nullptr;
-char* g_qswap_issue_unit_of_measurement = nullptr;
-int64_t g_qswap_issue_asset_number_of_unit = -1;
-char g_qswap_issue_asset_num_decimal = 0;
-
-char* g_qswap_command_1 = nullptr;
-char* g_qswap_asset_name = nullptr;
-char* g_qswap_issuer = nullptr;
-
-char* g_qswap_asset_transfer_possessed_identity = nullptr;
-char* g_qswap_asset_transfer_new_owner_identity = nullptr;
-int64_t g_qswap_asset_transfer_amount = -1;
-char* g_qswap_asset_transfer_asset_name = nullptr;
-char* g_qswap_asset_transfer_issuer = nullptr;
-
-int64_t g_qswap_add_liquidity_qu_amount = -1;
-int64_t g_qswap_add_liquidity_asset_amount_desired = -1;
-int64_t g_qswap_remove_liquidity_burn_liquidity = -1;
-
-int64_t g_qswap_liquidity_qu_amount_min = -1;
-int64_t g_qswap_liquidity_asset_amount_min = -1;
-
-char* g_qswap_get_liquidity_of_staker_issuer = nullptr;
-
-int64_t g_qswap_swap_amount_out = -1;
-int64_t g_qswap_swap_amount_out_min = -1;
-int64_t g_qswap_swap_amount_in = -1;
-int64_t g_qswap_swap_amount_in_max = -1;
-
-int64_t g_qswap_quote_amount = -1;
-
-char* g_dump_binary_file_input = nullptr;
-char* g_dump_binary_file_output = nullptr;
-uint32_t g_dump_binary_contract_id = 0;
-
-// IPO bid
-uint32_t g_ipo_contract_index = 0;
-uint16_t g_make_ipo_bid_number_of_share = 0;
-uint64_t g_make_ipo_bid_price_per_share = 0;
 // quottery
-uint32_t g_quottery_bet_id = 0;
-uint32_t g_quottery_option_id = 0;
-char* g_quottery_creator_id = nullptr;
-uint64_t g_quottery_number_bet_slot = 0;
-uint64_t g_quottery_amount_per_bet_slot = 0;
-uint32_t g_quottery_picked_option = 0;
+uint32_t g_quottery_betId = 0;
+uint32_t g_quottery_optionId = 0;
+char* g_quottery_creatorId = nullptr;
+uint64_t g_quottery_numberBetSlot = 0;
+uint64_t g_quottery_amountPerBetSlot = 0;
+uint32_t g_quottery_pickedOption = 0;
 
 // qutil
-char* g_qutil_sendtomanyv1_payout_list_file = nullptr;
-int64_t g_qutil_sendtomanybenchmark_destination_count = 0;
-int64_t g_qutil_sendtomanybenchmark_num_transfers_each = 0;
+char* g_qutil_sendToManyV1PayoutListFile = nullptr;
+int64_t g_qutil_sendToManyBenchmarkDestinationCount = 0;
+int64_t g_qutil_sendToManyBenchmarkNumTransfersEach = 0;
+
+char* g_qutil_pollNameStr = nullptr;
+uint64_t g_qutil_pollType = 0; // 1 for Qubic, 2 for Asset
+uint64_t g_qutil_minAmount = 0;
+char* g_qutil_githubLinkStr = nullptr;
+char* g_qutil_semicolonSeparatedAssets = nullptr;
+uint64_t g_qutil_votePollId = 0;
+uint64_t g_qutil_voteAmount = 0;
+uint64_t g_qutil_voteChosenOption = 64;
+uint64_t g_qutil_getResultPollId = 0;
+char* g_qutil_getPollsCreatorAddress = nullptr;
+uint64_t g_qutil_getPollInfoPollId = 0;
+uint64_t g_qutil_cancelPollId = 0;
 
 // qearn
-uint64_t g_qearn_lock_amount = 0;
-uint64_t g_qearn_unlock_amount = 0;
-uint32_t g_qearn_locked_epoch = 0;
-uint32_t g_qearn_getinfo_epoch = 0;
-uint32_t g_qearn_getstats_epoch = 0;
+uint64_t g_qearn_lockAmount = 0;
+uint64_t g_qearn_unlockAmount = 0;
+uint32_t g_qearn_lockedEpoch = 0;
+uint32_t g_qearn_getInfoEpoch = 0;
+uint32_t g_qearn_getStatsEpoch = 0;
 
 // qvault
-char* g_qvaultIdentity = nullptr;
+char* g_qvault_identity = nullptr;
 uint32_t g_qvault_numberOfChangedAddress = 0;
-uint32_t g_qvault_newQCAPHolder_fee = 0;
-uint32_t g_qvault_newreinvesting_fee = 0;
-uint32_t g_qvault_newdev_fee = 0;
+uint32_t g_qvault_newQCAPHolderFee = 0;
+uint32_t g_qvault_newReinvestingFee = 0;
+uint32_t g_qvault_newDevFee = 0;
 
 // msvault
-uint64_t g_msVaultID = 0;
-uint64_t g_msVaultRequiredApprovals = 0;
-uint8_t g_msVaultVaultName[32] = { 0 };
-char* g_msVaultDestination = nullptr;
-char* g_msVaultPublicId = nullptr;
-char* g_msVaultOwnersCommaSeparated = nullptr;
+uint64_t g_msvault_id = 0;
+uint64_t g_msvault_requiredApprovals = 0;
+uint8_t g_msvault_vaultName[32] = { 0 };
+char* g_msvault_destination = nullptr;
+char* g_msvault_publicId = nullptr;
+char* g_msvault_ownersCommaSeparated = nullptr;
 
-// Qutil poll-related variables
-char* g_qutil_poll_name_str = nullptr;
-uint64_t g_qutil_poll_type = 0; // 1 for Qubic, 2 for Asset
-uint64_t g_qutil_min_amount = 0;
-char* g_qutil_github_link_str = nullptr;
-char* g_qutil_semicolon_separated_assets = nullptr;
-uint64_t g_qutil_vote_poll_id = 0;
-uint64_t g_qutil_vote_amount = 0;
-uint64_t g_qutil_vote_chosen_option = 64;
-uint64_t g_qutil_get_result_poll_id = 0;
-char* g_qutil_get_polls_creator_address = nullptr;
-uint64_t g_qutil_get_poll_info_poll_id = 0;
-uint64_t g_qutil_cancel_poll_id = 0;
+// qswap
+char* g_qswap_issueAssetName = nullptr;
+char* g_qswap_issueUnitOfMeasurement = nullptr;
+int64_t g_qswap_issueAssetNumberOfUnit = -1;
+char g_qswap_issueAssetNumDecimal = 0;
+
+char* g_qswap_command1 = nullptr;
+char* g_qswap_assetName = nullptr;
+char* g_qswap_issuer = nullptr;
+
+char* g_qswap_assetTransferPossessedIdentity = nullptr;
+char* g_qswap_assetTransferNewOwnerIdentity = nullptr;
+int64_t g_qswap_assetTransferAmount = -1;
+char* g_qswap_assetTransferAssetName = nullptr;
+char* g_qswap_assetTransferIssuer = nullptr;
+
+int64_t g_qswap_addLiquidityQuAmount = -1;
+int64_t g_qswap_addLiquidityAssetAmountDesired = -1;
+int64_t g_qswap_removeLiquidityBurnLiquidity = -1;
+
+int64_t g_qswap_liquidityQuAmountMin = -1;
+int64_t g_qswap_liquidityAssetAmountMin = -1;
+
+char* g_qswap_getLiquidityOfStakerIssuer = nullptr;
+
+int64_t g_qswap_swapAmountOut = -1;
+int64_t g_qswap_swapAmountOutMin = -1;
+int64_t g_qswap_swapAmountIn = -1;
+int64_t g_qswap_swapAmountInMax = -1;
+
+int64_t g_qswap_quoteAmount = -1;

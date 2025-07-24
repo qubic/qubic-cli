@@ -2,6 +2,18 @@
 
 #include "structs.h"
 
+struct QxFees_output
+{
+    uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t transferFee; // Amount of qus
+    uint32_t tradeFee; // Number of billionths
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
 struct IssueAsset_input
 {
     uint64_t name;

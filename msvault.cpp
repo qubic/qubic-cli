@@ -5,14 +5,14 @@
 #include <set>
 
 #include "msvault.h"
-#include "walletUtils.h"
-#include "nodeUtils.h"
-#include "keyUtils.h"
-#include "K12AndKeyUtil.h"
+#include "wallet_utils.h"
+#include "node_utils.h"
+#include "key_utils.h"
+#include "k12_and_key_utils.h"
 #include "logger.h"
 #include "connection.h"
 #include "structs.h"
-#include "sanityCheck.h"
+#include "sanity_check.h"
 
 
 #define MSVAULT_CONTRACT_INDEX 11
