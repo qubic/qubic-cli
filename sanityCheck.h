@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cinttypes>
 #include <fstream>
 
 #include "logger.h"
@@ -116,7 +117,7 @@ static void sanityCheckTxAmount(int64_t amount)
 {
 	if (amount < 0)
     {
-		LOG("invalid amount %lld\n", amount);
+		LOG("invalid amount %" PRId64 "\n", amount);
 		exit(1);
 	}
 }

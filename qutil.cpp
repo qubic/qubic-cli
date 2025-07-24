@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+#include <cinttypes>
 
 #include "qutil.h"
 #include "keyUtils.h"
@@ -325,7 +326,7 @@ void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const ch
         return;
     }
 
-    LOG("%llu\n", output);
+    LOG("%" PRIu64 "\n", output);
 }
 
 
@@ -371,7 +372,7 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
         std::vector<std::string> asset_entries = split(assets_str, ';');
         if (asset_entries.empty() || asset_entries.size() > QUTIL_MAX_ASSETS_PER_POLL)
         {
-            LOG("Invalid number of assets. Must be between 1 and %llu.\n", QUTIL_MAX_ASSETS_PER_POLL);
+            LOG("Invalid number of assets. Must be between 1 and %" PRIu64 ".\n", QUTIL_MAX_ASSETS_PER_POLL);
             return;
         }
         input.num_assets = asset_entries.size();
@@ -402,7 +403,7 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     }
     else
     {
-        LOG("Invalid poll type: %llu. Must be 1 (Qubic) or 2 (Asset).\n", poll_type);
+        LOG("Invalid poll type: %" PRIu64 ". Must be 1 (Qubic) or 2 (Asset).\n", poll_type);
         return;
     }
 
@@ -561,11 +562,11 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
 
     if (output.is_active != 0)
     {
-        LOG("Poll %llu status is ACTIVE.\n", poll_id);
+        LOG("Poll %" PRIu64 " status is ACTIVE.\n", poll_id);
     }
     else
     {
-        LOG("Poll %llu status is INACTIVE.\n", poll_id);
+        LOG("Poll %" PRIu64 " status is INACTIVE.\n", poll_id);
     }
 
     // Log the votes for each option with votes > 0
@@ -573,7 +574,7 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
     {
         if (output.votes[i] > 0)
         {
-            LOG("Option %d: %llu votes\n", i, output.votes[i]);
+            LOG("Option %d: %" PRIu64 " votes\n", i, output.votes[i]);
         }
     }
 }
@@ -627,7 +628,7 @@ void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creato
     LOG("Polls created by %s:\n", creator_address);
     for (uint64_t i = 0; i < output.num_polls; i++)
     {
-        LOG("Poll ID: %llu\n", output.poll_ids[i]);
+        LOG("Poll ID: %" PRIu64 "\n", output.poll_ids[i]);
     }
 }
 
@@ -659,10 +660,10 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort) {
         return;
     }
 
-    LOG("Current Poll ID: %llu\n", output.current_poll_id);
-    LOG("Active Polls: %llu\n", output.active_count);
+    LOG("Current Poll ID: %" PRIu64 "\n", output.current_poll_id);
+    LOG("Active Polls: %" PRIu64 "\n", output.active_count);
     for (uint64_t i = 0; i < output.active_count; i++) {
-        LOG("Poll ID: %llu\n", output.active_poll_ids[i]);
+        LOG("Poll ID: %" PRIu64 "\n", output.active_poll_ids[i]);
     }
 }
 
@@ -708,14 +709,14 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
             memcpy(poll_name, output.poll_info.poll_name, 32);
             poll_name[32] = '\0';
             LOG("Poll Name: %s\n", poll_name);
-            LOG("Poll Type: %llu (%s)\n", output.poll_info.poll_type,
+            LOG("Poll Type: %" PRIu64 " (%s)\n", output.poll_info.poll_type,
                 output.poll_info.poll_type == QUTIL_POLL_TYPE_QUBIC ? "Qubic" : "Asset");
-            LOG("Min Amount: %llu\n", output.poll_info.min_amount);
-            LOG("Is Active: %llu\n", output.poll_info.is_active);
+            LOG("Min Amount: %" PRIu64 "\n", output.poll_info.min_amount);
+            LOG("Is Active: %" PRIu64 "\n", output.poll_info.is_active);
             memset(buf, 0, 128);
             getIdentityFromPublicKey(output.poll_info.creator, buf, false);
             LOG("Creator: %s\n", buf);
-            LOG("Num Assets: %llu\n", output.poll_info.num_assets);
+            LOG("Num Assets: %" PRIu64 "\n", output.poll_info.num_assets);
             if (output.poll_info.num_assets > 0)
             {
                 LOG("Allowed Assets:\n");
@@ -724,7 +725,7 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
                     memset(buf, 0, 128);
                     getIdentityFromPublicKey(output.poll_info.allowed_assets[i].issuer, buf, false);
                     std::string assetNameStr = assetNameFromInt64(output.poll_info.allowed_assets[i].assetName);
-                    LOG("Asset %llu: Issuer %s, Name %s\n", i, buf, assetNameStr.c_str());
+                    LOG("Asset %" PRIu64 ": Issuer %s, Name %s\n", i, buf, assetNameStr.c_str());
                 }
             }
             LOG("GitHub Link: %s\n", output.poll_link);

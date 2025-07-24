@@ -1,3 +1,7 @@
+#include <vector>
+#include <array>
+#include <cinttypes>
+
 #include "testUtils.h"
 #include "nodeUtils.h"
 #include "connection.h"
@@ -6,8 +10,6 @@
 #include "K12AndKeyUtil.h"
 #include "walletUtils.h"
 
-#include <vector>
-#include <array>
 
 // Change this index when new contracts are added
 #define TESTEXA_CONTRACT_INDEX 13
@@ -422,12 +424,12 @@ void testGetIncomingTransferAmounts(
         exit(1);
     }
 
-    LOG("incoming standardTransactionAmount:  %lld\n", output.standardTransactionAmount);
-    LOG("incoming procedureTransactionAmount: %lld\n", output.procedureTransactionAmount);
-    LOG("incoming qpiTransferAmount: %lld\n", output.qpiTransferAmount);
-    LOG("incoming qpiDistributeDividendsAmount: %lld\n", output.qpiDistributeDividendsAmount);
-    LOG("incoming revenueDonationAmount: %lld\n", output.revenueDonationAmount);
-    LOG("incoming ipoBidRefundAmount: %lld\n", output.ipoBidRefundAmount);
+    LOG("incoming standardTransactionAmount:  %" PRId64 "\n", output.standardTransactionAmount);
+    LOG("incoming procedureTransactionAmount: %" PRId64 "\n", output.procedureTransactionAmount);
+    LOG("incoming qpiTransferAmount: %" PRId64 "\n", output.qpiTransferAmount);
+    LOG("incoming qpiDistributeDividendsAmount: %" PRId64 "\n", output.qpiDistributeDividendsAmount);
+    LOG("incoming revenueDonationAmount: %" PRId64 "\n", output.revenueDonationAmount);
+    LOG("incoming ipoBidRefundAmount: %" PRId64 "\n", output.ipoBidRefundAmount);
 }
 
 void testBidInIpoThroughContract(
