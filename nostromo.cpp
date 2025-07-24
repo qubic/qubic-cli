@@ -1,6 +1,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <cinttypes>
 
 #include "structs.h"
 #include "walletUtils.h"
@@ -1019,7 +1020,7 @@ void getStats(const char* nodeIp, int nodePort)
         return;
     }
 
-    printf("The Epoch Revenue: %llu\nThe Total Pool Weight: %llu\nThe number of Register: %u\nThe number of created project: %u\nThe number of fundraising: %u\n", result.epochRevenue, result.totalPoolWeight, result.numberOfRegister, result.numberOfCreatedProject, result.numberOfFundraising);
+    printf("The Epoch Revenue: %" PRIu64 "\nThe Total Pool Weight: %" PRIu64 "\nThe number of Register: %u\nThe number of created project: %u\nThe number of fundraising: %u\n", result.epochRevenue, result.totalPoolWeight, result.numberOfRegister, result.numberOfCreatedProject, result.numberOfFundraising);
 }
 
 void getTierLevelByUser(const char* nodeIp, int nodePort,
@@ -1240,7 +1241,7 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
 
     printf("The creator of project is %s\n", creator);
     printf("The token name: %s\n", tokenName);
-    printf("The supply of token: %llu\n", result.project.supplyOfToken);
+    printf("The supply of token: %" PRIu64 "\n", result.project.supplyOfToken);
     printf("The start date: %u.%u.%u %u\n", GetYear(result.project.startDate) + 2000, GetMonth(result.project.startDate), GetDay(result.project.startDate), GetHour(result.project.startDate));
     printf("The end date: %u.%u.%u %u\n", GetYear(result.project.endDate) + 2000, GetMonth(result.project.endDate), GetDay(result.project.endDate), GetHour(result.project.endDate));
     printf("The number of yes: %u\n", result.project.numberOfYes);
@@ -1287,10 +1288,10 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
         LOG("Failed to receive data\n");
         return;
     }
-    printf("The token price: %llu\n", result.fundarasing.tokenPrice);
-    printf("The sold amount: %llu\n", result.fundarasing.soldAmount);
-    printf("The required funds: %llu\n", result.fundarasing.requiredFunds);
-    printf("The raised funds: %llu\n", result.fundarasing.raisedFunds);
+    printf("The token price: %" PRIu64 "\n", result.fundarasing.tokenPrice);
+    printf("The sold amount: %" PRIu64 "\n", result.fundarasing.soldAmount);
+    printf("The required funds: %" PRIu64 "\n", result.fundarasing.requiredFunds);
+    printf("The raised funds: %" PRIu64 "\n", result.fundarasing.raisedFunds);
     printf("The index of project: %u\n", result.fundarasing.indexOfProject);
     printf("The first phase start date: %u.%u.%u %u\n", GetYear(result.fundarasing.firstPhaseStartDate) + 2000, GetMonth(result.fundarasing.firstPhaseStartDate), GetDay(result.fundarasing.firstPhaseStartDate), GetHour(result.fundarasing.firstPhaseStartDate));
     printf("The first phase end date: %u.%u.%u %u\n", GetYear(result.fundarasing.firstPhaseEndDate) + 2000, GetMonth(result.fundarasing.firstPhaseEndDate), GetDay(result.fundarasing.firstPhaseEndDate), GetHour(result.fundarasing.firstPhaseEndDate));
@@ -1413,7 +1414,7 @@ void getInfoUserInvested(const char* nodeIp, int nodePort,
             }
             break;
         }
-        printf("IndexOfFundraising: %u\nInvestedAmount: %llu\nClaimedAmount: %llu\n\n", result.listUserInvested[i].indexOfFundraising, result.listUserInvested[i].investedAmount, result.listUserInvested[i].claimedAmount);
+        printf("IndexOfFundraising: %u\nInvestedAmount: %" PRIu64 "\nClaimedAmount: %" PRIu64 "\n\n", result.listUserInvested[i].indexOfFundraising, result.listUserInvested[i].investedAmount, result.listUserInvested[i].claimedAmount);
     }
 }
 
@@ -1454,5 +1455,5 @@ void getMaxClaimAmount(const char* nodeIp, int nodePort,
         LOG("Failed to receive data\n");
         return;
     }
-    printf("Max Claim Amount: %llu\n", result.amount);
+    printf("Max Claim Amount: %" PRIu64 "\n", result.amount);
 }
