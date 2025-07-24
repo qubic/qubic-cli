@@ -555,7 +555,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_COIN;
             g_targetIdentity = argv[i+1];
-            g_TxAmount = charToNumber(argv[i+2]);
+            g_txAmount = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -565,8 +565,8 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = SEND_COIN_IN_TICK;
             g_targetIdentity = argv[i+1];
-            g_TxAmount = uint32_t(charToNumber(argv[i+2]));
-            g_TxTick = uint32_t(charToNumber(argv[i+3]));
+            g_txAmount = uint32_t(charToNumber(argv[i+2]));
+            g_txTick = uint32_t(charToNumber(argv[i+3]));
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -625,11 +625,11 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = UPLOAD_FILE;
-            g_file_path = argv[i+1];
+            g_filePath = argv[i+1];
             i+=2;
             if (i < argc)
             {
-                g_compress_tool = argv[i];
+                g_compressTool = argv[i];
                 i++;
             }
             CHECK_OVER_PARAMETERS
@@ -640,11 +640,11 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DOWNLOAD_FILE;
             g_requestedTxId = argv[i+1];
-            g_file_path = argv[i+2];
+            g_filePath = argv[i+2];
             i+=3;
             if (i < argc)
             {
-                g_compress_tool = argv[i];
+                g_compressTool = argv[i];
                 i++;
             }
             CHECK_OVER_PARAMETERS
@@ -695,8 +695,8 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = SEND_CUSTOM_TX;
             g_targetIdentity = argv[i+1];
-            g_TxType = uint16_t(charToNumber(argv[i+2]));
-            g_TxAmount = charToNumber(argv[i+3]);
+            g_txType = uint16_t(charToNumber(argv[i+2]));
+            g_txAmount = charToNumber(argv[i+3]);
             g_txExtraDataSize = int(charToNumber(argv[i+4]));
             hexToByte(argv[i+5], g_txExtraData, g_txExtraDataSize);
             i+=6;
@@ -707,8 +707,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_SPECTRUM_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryFileOutput = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -717,8 +717,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_UNIVERSE_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryFileOutput = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -727,9 +727,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = DUMP_CONTRACT_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_contract_id = uint32_t(charToNumber(argv[i+2]));
-            g_dump_binary_file_output = argv[i+3];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryContractId = uint32_t(charToNumber(argv[i+2]));
+            g_dumpBinaryFileOutput = argv[i+3];
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -738,9 +738,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MAKE_IPO_BID;
-            g_ipo_contract_index = uint32_t(charToNumber(argv[i + 1]));
-            g_make_ipo_bid_number_of_share = uint16_t(charToNumber(argv[i+2]));
-            g_make_ipo_bid_price_per_share = charToNumber(argv[i+3]);
+            g_IPOContractIndex = uint32_t(charToNumber(argv[i + 1]));
+            g_makeIPOBidNumberOfShare = uint16_t(charToNumber(argv[i+2]));
+            g_makeIPOBidPricePerShare = charToNumber(argv[i+3]);
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -749,7 +749,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_IPO_STATUS;
-            g_ipo_contract_index = uint32_t(charToNumber(argv[i + 1]));
+            g_IPOContractIndex = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -786,8 +786,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
-            g_toggle_main_aux_0 = argv[i+1];
-            g_toggle_main_aux_1 = argv[i+2];
+            g_toggleMainAux0 = argv[i+1];
+            g_toggleMainAux1 = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -796,8 +796,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SET_SOLUTION_THRESHOLD;
-            g_set_solution_threshold_epoch = int(charToNumber(argv[i+1]));
-            g_set_solution_threshold_value = int(charToNumber(argv[i+2]));
+            g_setSolutionThresholdEpoch = int(charToNumber(argv[i+1]));
+            g_setSolutionThresholdValue = int(charToNumber(argv[i+2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -878,10 +878,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_ISSUE_ASSET;
-            g_qx_issue_asset_name = argv[i+1];
-            g_qx_issue_asset_number_of_unit = charToNumber(argv[i+2]);
-            g_qx_issue_unit_of_measurement = argv[i+3];
-            g_qx_issue_asset_num_decimal = char(charToNumber(argv[i+4]));
+            g_qx_issueAssetName = argv[i+1];
+            g_qx_issueAssetNumberOfUnit = charToNumber(argv[i+2]);
+            g_qx_issueUnitOfMeasurement = argv[i+3];
+            g_qx_issueAssetNumDecimal = char(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -890,10 +890,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_ASSET;
-            g_qx_asset_transfer_asset_name = argv[i+1];
-            g_qx_asset_transfer_issuer_in_hex = argv[i+2];
-            g_qx_asset_transfer_new_owner_identity = argv[i+3];
-            g_qx_asset_transfer_amount = charToNumber(argv[i+4]);
+            g_qx_assetTransferAssetName = argv[i+1];
+            g_qx_assetTransferIssuerInHex = argv[i+2];
+            g_qx_assetTransferNewOwnerIdentity = argv[i+3];
+            g_qx_assetTransferAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -909,12 +909,12 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QX_ORDER;
-            g_qx_command_1 = argv[i+1];
-            g_qx_command_2 = argv[i+2];
+            g_qx_command1 = argv[i+1];
+            g_qx_command2 = argv[i+2];
             g_qx_issuer = argv[i+3];
-            g_qx_asset_name = argv[i+4];
+            g_qx_assetName = argv[i+4];
             g_qx_price = charToNumber(argv[i+5]);
-            g_qx_number_of_share = charToNumber(argv[i+6]);
+            g_qx_numberOfShare = charToNumber(argv[i+6]);
             i+=7;
             CHECK_OVER_PARAMETERS
             break;
@@ -923,10 +923,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QX_GET_ORDER;
-            g_qx_command_1 = argv[i+1];
-            g_qx_command_2 = argv[i+2];
+            g_qx_command1 = argv[i+1];
+            g_qx_command2 = argv[i+2];
             g_qx_issuer = argv[i+3];
-            g_qx_asset_name = argv[i+4];
+            g_qx_assetName = argv[i+4];
             g_qx_offset = charToNumber(argv[i+5]);
             i+=6;
             CHECK_OVER_PARAMETERS
@@ -936,10 +936,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_MANAGEMENT_RIGHTS;
-            g_qx_asset_name = argv[i + 1];
+            g_qx_assetName = argv[i + 1];
             g_qx_issuer = argv[i + 2];
-            g_contract_index = getContractIndex(argv[i + 3]);
-            g_qx_number_of_share = charToNumber(argv[i + 4]);
+            g_contractIndex = getContractIndex(argv[i + 3]);
+            g_qx_numberOfShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
             break;
@@ -953,10 +953,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_ISSUE_ASSET;
-            g_qswap_issue_asset_name = argv[i+1];
-            g_qswap_issue_asset_number_of_unit = charToNumber(argv[i+2]);
-            g_qswap_issue_unit_of_measurement = argv[i+3];
-            g_qswap_issue_asset_num_decimal = static_cast<char>(charToNumber(argv[i+4]));
+            g_qswap_issueAssetName = argv[i+1];
+            g_qswap_issueAssetNumberOfUnit = charToNumber(argv[i+2]);
+            g_qswap_issueUnitOfMeasurement = argv[i+3];
+            g_qswap_issueAssetNumDecimal = static_cast<char>(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -965,10 +965,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_TRANSFER_ASSET;
-            g_qswap_asset_transfer_asset_name = argv[i+1];
-            g_qswap_asset_transfer_issuer = argv[i+2];
-            g_qswap_asset_transfer_new_owner_identity = argv[i+3];
-            g_qswap_asset_transfer_amount = charToNumber(argv[i+4]);
+            g_qswap_assetTransferAssetName = argv[i+1];
+            g_qswap_assetTransferIssuer = argv[i+2];
+            g_qswap_assetTransferNewOwnerIdentity = argv[i+3];
+            g_qswap_assetTransferAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -984,7 +984,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_CREATE_POOL;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
@@ -994,7 +994,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_GET_POOL_BASIC;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
@@ -1004,12 +1004,12 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QSWAP_ADD_LIQUIDITY;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_add_liquidity_qu_amount = charToNumber(argv[i+3]);
-            g_qswap_add_liquidity_asset_amount_desired = charToNumber(argv[i+4]);
-            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+5]);
-            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+6]);
+            g_qswap_addLiquidityQuAmount = charToNumber(argv[i+3]);
+            g_qswap_addLiquidityAssetAmountDesired = charToNumber(argv[i+4]);
+            g_qswap_liquidityQuAmountMin = charToNumber(argv[i+5]);
+            g_qswap_liquidityAssetAmountMin = charToNumber(argv[i+6]);
             i+=7;
             CHECK_OVER_PARAMETERS
             break;
@@ -1018,11 +1018,11 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QSWAP_REMOVE_LIQUIDITY;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_remove_liquidity_burn_liquidity = charToNumber(argv[i+3]);
-            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+4]);
-            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+5]);
+            g_qswap_removeLiquidityBurnLiquidity = charToNumber(argv[i+3]);
+            g_qswap_liquidityQuAmountMin = charToNumber(argv[i+4]);
+            g_qswap_liquidityAssetAmountMin = charToNumber(argv[i+5]);
             i+=6;
             CHECK_OVER_PARAMETERS
             break;
@@ -1031,9 +1031,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QSWAP_GET_LIQUIDITY_OF;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_get_liquidity_of_staker_issuer = argv[i+3];
+            g_qswap_getLiquidityOfStakerIssuer = argv[i+3];
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -1042,10 +1042,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            g_qswap_swapAmountIn = charToNumber(argv[i+3]);
+            g_qswap_swapAmountOutMin = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1054,10 +1054,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_QU_FOR_EXACT_ASSET;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            g_qswap_swapAmountOut = charToNumber(argv[i+3]);
+            g_qswap_swapAmountInMax = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1066,10 +1066,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_EXACT_ASSET_FOR_QU;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            g_qswap_swapAmountIn = charToNumber(argv[i+3]);
+            g_qswap_swapAmountOutMin = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1078,10 +1078,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_ASSET_FOR_EXACT_QU;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            g_qswap_swapAmountOut = charToNumber(argv[i+3]);
+            g_qswap_swapAmountInMax = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1090,10 +1090,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_QUOTE;
-            g_qswap_command_1 = argv[i+1];
-            g_qswap_asset_name = argv[i+2];
+            g_qswap_command1 = argv[i+1];
+            g_qswap_assetName = argv[i+2];
             g_qswap_issuer = argv[i+3];
-            g_qswap_quote_amount = charToNumber(argv[i+4]);
+            g_qswap_quoteAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1114,10 +1114,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QUOTTERY_JOIN_BET;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_number_bet_slot = charToNumber(argv[i+2]);
-            g_quottery_amount_per_bet_slot = charToNumber(argv[i+3]);
-            g_quottery_picked_option = uint32_t(charToNumber(argv[i+4]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_numberBetSlot = charToNumber(argv[i+2]);
+            g_quottery_amountPerBetSlot = charToNumber(argv[i+3]);
+            g_quottery_pickedOption = uint32_t(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1126,7 +1126,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_BET_INFO;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1135,8 +1135,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_GET_BET_DETAIL;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_option_id = uint32_t(charToNumber(argv[i + 2]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1152,7 +1152,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
-            g_quottery_creator_id = argv[i+1];
+            g_quottery_creatorId = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1168,8 +1168,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_PUBLISH_RESULT;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_option_id = uint32_t(charToNumber(argv[i + 2]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1178,7 +1178,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_CANCEL_BET;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1191,7 +1191,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_SEND_TO_MANY_V1;
-            g_qutil_sendtomanyv1_payout_list_file = argv[i + 1];
+            g_qutil_sendToManyV1PayoutListFile = argv[i + 1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1200,7 +1200,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_BURN_QUBIC;
-            g_TxAmount = charToNumber(argv[i + 1]);
+            g_txAmount = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1209,8 +1209,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUTIL_SEND_TO_MANY_BENCHMARK;
-            g_qutil_sendtomanybenchmark_destination_count = charToNumber(argv[i + 1]);
-            g_qutil_sendtomanybenchmark_num_transfers_each = charToNumber(argv[i + 2]);
+            g_qutil_sendToManyBenchmarkDestinationCount = charToNumber(argv[i + 1]);
+            g_qutil_sendToManyBenchmarkNumTransfersEach = charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1225,13 +1225,13 @@ void parseArgument(int argc, char** argv)
                 LOG("Not enough parameters provided for command, expected at least 4.\nRun qubic-cli -h to display help.\n");
                 exit(1);
             }
-            g_qutil_poll_name_str = argv[i + 1];
-            g_qutil_poll_type = charToUnsignedNumber(argv[i + 2]);
-            g_qutil_min_amount = charToUnsignedNumber(argv[i + 3]);
-            g_qutil_github_link_str = argv[i + 4];
+            g_qutil_pollNameStr = argv[i + 1];
+            g_qutil_pollType = charToUnsignedNumber(argv[i + 2]);
+            g_qutil_minAmount = charToUnsignedNumber(argv[i + 3]);
+            g_qutil_githubLinkStr = argv[i + 4];
 
             int params_consumed = base_params;
-            if (g_qutil_poll_type == 2) // Asset poll
+            if (g_qutil_pollType == 2) // Asset poll
             {
                 params_consumed = 5;
                 if (i + params_consumed >= argc)
@@ -1239,11 +1239,11 @@ void parseArgument(int argc, char** argv)
                     LOG("Not enough parameters for Asset poll, expected 5 parameters.\n");
                     exit(1);
                 }
-                g_qutil_semicolon_separated_assets = argv[i + 5];
+                g_qutil_semicolonSeparatedAssets = argv[i + 5];
             }
-            else if (g_qutil_poll_type == 1) // Qubic poll
+            else if (g_qutil_pollType == 1) // Qubic poll
             {
-                g_qutil_semicolon_separated_assets = nullptr;
+                g_qutil_semicolonSeparatedAssets = nullptr;
             }
             else
             {
@@ -1258,9 +1258,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QUTIL_VOTE;
-            g_qutil_vote_poll_id = charToUnsignedNumber(argv[i + 1]);
-            g_qutil_vote_amount = charToUnsignedNumber(argv[i + 2]);
-            g_qutil_vote_chosen_option = charToUnsignedNumber(argv[i + 3]);
+            g_qutil_votePollId = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_voteAmount = charToUnsignedNumber(argv[i + 2]);
+            g_qutil_voteChosenOption = charToUnsignedNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
             break;
@@ -1269,7 +1269,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_CURRENT_RESULT;
-            g_qutil_get_result_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_getResultPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1278,7 +1278,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_POLLS_BY_CREATOR;
-            g_qutil_get_polls_creator_address = argv[i + 1];
+            g_qutil_getPollsCreatorAddress = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1293,7 +1293,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_POLL_INFO;
-            g_qutil_get_poll_info_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_getPollInfoPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1301,7 +1301,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qutilcancelpoll") == 0) {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_CANCEL_POLL;
-            g_qutil_cancel_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_cancelPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1495,7 +1495,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_LOCK;
-            g_qearn_lock_amount = charToNumber(argv[i + 1]);
+            g_qearn_lockAmount = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1504,8 +1504,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_UNLOCK;
-            g_qearn_unlock_amount = charToNumber(argv[i + 1]);
-            g_qearn_locked_epoch = uint32_t(charToNumber(argv[i + 2]));
+            g_qearn_unlockAmount = charToNumber(argv[i + 1]);
+            g_qearn_lockedEpoch = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1514,7 +1514,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_INFO_PER_EPOCH;
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1524,7 +1524,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_GET_USER_LOCKED_INFO;
             g_requestedIdentity = argv[i+1];
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 2]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1533,7 +1533,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATE_OF_ROUND;
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1560,7 +1560,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATS_PER_EPOCH;
-            g_qearn_getstats_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getStatsEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1577,7 +1577,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
-            g_qearn_getstats_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getStatsEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1586,7 +1586,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_AUTH_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1604,9 +1604,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_SUBMIT_FEES;
-            g_qvault_newQCAPHolder_fee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newreinvesting_fee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newdev_fee = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
+            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1615,9 +1615,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_CHANGE_FEES;
-            g_qvault_newQCAPHolder_fee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newreinvesting_fee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newdev_fee = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
+            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1626,7 +1626,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_REINVESTING_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1635,7 +1635,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_REINVESTING_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1644,7 +1644,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_ADMIN_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1653,7 +1653,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_ADMIN_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1669,7 +1669,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_BANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1678,7 +1678,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_BANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1687,7 +1687,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_UNBANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1696,7 +1696,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_UNBANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1710,7 +1710,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MSVAULT_REGISTER_VAULT_CMD;
-            g_msVaultRequiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
+            g_msvault_requiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
 
             {
                 const char* inputVaultName = argv[i + 2];
@@ -1719,11 +1719,11 @@ void parseArgument(int argc, char** argv)
                     LOG("Vault name must be at most 32 chars. Truncating...\n");
                     len = 32;
                 }
-                memset(g_msVaultVaultName, 0, 32);
-                memcpy(g_msVaultVaultName, inputVaultName, len);
+                memset(g_msvault_vaultName, 0, 32);
+                memcpy(g_msvault_vaultName, inputVaultName, len);
             }
 
-            g_msVaultOwnersCommaSeparated = argv[i + 3];
+            g_msvault_ownersCommaSeparated = argv[i + 3];
             i += 4;
             CHECK_OVER_PARAMETERS
             return;
@@ -1732,8 +1732,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = MSVAULT_DEPOSIT_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
-            g_TxAmount = charToNumber(argv[i+2]);
+            g_msvault_id = charToNumber(argv[i+1]);
+            g_txAmount = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
             return;
@@ -1742,9 +1742,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MSVAULT_RELEASE_TO_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
-            g_TxAmount = charToNumber(argv[i+2]);
-            g_msVaultDestination = argv[i + 3];
+            g_msvault_id = charToNumber(argv[i+1]);
+            g_txAmount = charToNumber(argv[i+2]);
+            g_msvault_destination = argv[i + 3];
             i+=4;
             CHECK_OVER_PARAMETERS
             return;
@@ -1753,7 +1753,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_RESET_RELEASE_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1762,7 +1762,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_VAULTS_CMD;
-            g_msVaultPublicId = argv[i + 1];
+            g_msvault_publicId = argv[i + 1];
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1771,7 +1771,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_RELEASE_STATUS_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1780,7 +1780,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_BALANCE_OF_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1789,7 +1789,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_VAULT_NAME_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1812,7 +1812,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_OWNERS_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1848,9 +1848,9 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = TEST_BID_IN_IPO_THROUGH_CONTRACT;
             g_paramString1 = argv[i + 1];
-            g_ipo_contract_index = (uint32_t)charToNumber(argv[i + 2]);
-            g_make_ipo_bid_number_of_share = (uint32_t)charToNumber(argv[i + 3]);
-            g_make_ipo_bid_price_per_share = charToNumber(argv[i + 4]);
+            g_IPOContractIndex = (uint32_t)charToNumber(argv[i + 2]);
+            g_makeIPOBidNumberOfShare = (uint32_t)charToNumber(argv[i + 3]);
+            g_makeIPOBidPricePerShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
             return;
