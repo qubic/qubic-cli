@@ -367,12 +367,18 @@ static uint32_t getContractIndex(const char* str)
         idx = 9;
     else if (strcasecmp(str, "QVAULT") == 0)
         idx = 10;
+    else if (strcasecmp(str, "MSVAULT") == 0)
+        idx = 11;
+    else if (strcasecmp(str, "QBAY") == 0)
+        idx = 12;
     else if (strcasecmp(str, "QSWAP") == 0)
         idx = 13;
+    else if (strcasecmp(str, "NOST") == 0)
+        idx = 14;
     else
     {
-        constexpr uint32_t contractCount = 11;
-        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx >= contractCount)
+        constexpr uint32_t contractCount = 14;
+        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
             exit(1);
