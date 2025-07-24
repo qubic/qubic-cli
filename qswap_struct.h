@@ -2,6 +2,21 @@
 
 #include "structs.h"
 
+struct QswapFees_output
+{
+    uint32_t assetIssuanceFee; // Amount of qus
+    uint32_t poolCreationFee; // Amount of qus
+    uint32_t transferFee; // Amount of qus
+    uint32_t swapRate; // Number of 10000ths
+    uint32_t protocolRate; // Number of 100ths
+    uint32_t teamRate; // Number of 100ths
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }    
+};
+
 struct QswapIssueAsset_input
 {
     uint64_t name;

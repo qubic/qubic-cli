@@ -23,7 +23,7 @@
 #include "qvault.h"
 #include "qearn.h"
 #include "msvault.h"
-#include "qswapStruct.h"
+#include "qswap_struct.h"
 #include "testUtils.h"
 #include "qutil.h"
 

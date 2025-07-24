@@ -11,7 +11,7 @@
 #include "nodeUtils.h"
 #include "K12AndKeyUtil.h"
 #include "qswap.h"
-#include "qswapStruct.h"
+#include "qswap_struct.h"
 
 #define QSWAP_CONTRACT_INDEX 13
 #define QSWAP_ADDRESS "NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAML"
