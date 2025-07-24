@@ -32,6 +32,11 @@ constexpr uint64_t RELEASE_RESET_FEE = 1000000ULL;
 #define MSVAULT_GET_REVENUE_INFO 9
 #define MSVAULT_GET_FEES 10
 #define MSVAULT_GET_VAULT_OWNERS 11
+#define MSVAULT_DEPOSIT_ASSET 19
+#define MSVAULT_RELEASE_ASSET_TO 20
+#define MSVAULT_RESET_ASSET_RELEASE 21
+#define MSVAULT_GET_VAULT_ASSET_BALANCES 22
+#define MSVAULT_GET_ASSET_RELEASE_STATUS 23
 
 static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKey[32],
     MsVaultGetVaults_output& output) 
@@ -751,5 +756,340 @@ void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
         getIdentityFromPublicKey(output.owners[i], ownerIdentity, false);
 
         LOG("Owner #%d => %s\n", (int)i, ownerIdentity);
+    }
+}
+
+void msvaultDepositAsset(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, const char* assetName, const char* issuer, uint64_t amount,
+    uint32_t scheduledTickOffset)
+{
+
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    MsVaultDepositAsset_input input;
+    memset(&input, 0, sizeof(input));
+    input.vaultID = vaultID;
+    input.amount = amount;
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    getPublicKeyFromIdentity(issuer, input.asset.issuer);
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    input.asset.assetName = assetNameFromString(assetName);
+
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t digest[32];
+    uint8_t signature[64];
+    char txHash[128] = { 0 };
+
+    memset(destPublicKey, 0, 32);
+    ((uint64_t*)destPublicKey)[0] = MSVAULT_CONTRACT_INDEX;
+
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        MsVaultDepositAsset_input inputData;
+        uint8_t sig[64];
+    } packet;
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = 0; // Deposit asset does not require a fee
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = MSVAULT_DEPOSIT_ASSET;
+    packet.transaction.inputSize = sizeof(input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(input),
+                    digest,
+                    32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.sig, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+                    digest,
+                    32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("MsVault depositAsset transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void msvaultReleaseAssetTo(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, const char* assetName, const char* issuer, uint64_t amount, const char* destination,
+    uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    MsVaultReleaseAssetTo_input input;
+    memset(&input, 0, sizeof(input));
+    input.vaultID = vaultID;
+    input.amount = amount;
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    getPublicKeyFromIdentity(issuer, input.asset.issuer);
+    input.asset.assetName = assetNameFromString(assetName);
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    getPublicKeyFromIdentity(destination, input.destination);
+
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t digest[32];
+    uint8_t signature[64];
+    char txHash[128] = { 0 };
+    memset(destPublicKey, 0, 32);
+    ((uint64_t*)destPublicKey)[0] = MSVAULT_CONTRACT_INDEX;
+
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        MsVaultReleaseAssetTo_input inputData;
+        uint8_t sig[64];
+    } packet;
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = RELEASE_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = MSVAULT_RELEASE_ASSET_TO;
+    packet.transaction.inputSize = sizeof(input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(input),
+                    digest,
+                    32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.sig, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction,
+                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+                    digest,
+                    32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("MsVault releaseAssetTo transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void msvaultResetAssetRelease(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+    MsVaultResetAssetRelease_input input;
+    input.vaultID = vaultID;
+
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t digest[32];
+    uint8_t signature[64];
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    memset(destPublicKey, 0, 32);
+    ((uint64_t*)destPublicKey)[0] = MSVAULT_CONTRACT_INDEX;
+
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        MsVaultResetAssetRelease_input inputData;
+        uint8_t sig[64];
+    } packet;
+
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = RELEASE_RESET_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = MSVAULT_RESET_ASSET_RELEASE;
+    packet.transaction.inputSize = sizeof(input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+    KangarooTwelve((uint8_t*)&packet.transaction, 
+                    sizeof(packet.transaction) + sizeof(input),
+                    digest,
+                    32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.sig, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+    KangarooTwelve((uint8_t*)&packet.transaction, sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, digest, 32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("MsVault resetAssetRelease transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void msvaultGetVaultAssetBalances(const char* nodeIp, int nodePort, uint64_t vaultID)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    MsVaultGetVaultAssetBalances_input input;
+    input.vaultID = vaultID;
+
+    struct
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetVaultAssetBalances_input in;
+    } req;
+
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+    req.rcf.inputType = MSVAULT_GET_VAULT_ASSET_BALANCES;
+    req.rcf.inputSize = sizeof(input);
+    memcpy(&req.in, &input, sizeof(input));
+
+    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    MsVaultGetVaultAssetBalances_output output;
+    memset(&output, 0, sizeof(output));
+    try
+    {
+        output = qc->receivePacketWithHeaderAs<MsVaultGetVaultAssetBalances_output>();
+    }
+    catch (std::logic_error& e)
+    {
+        LOG("Failed to get asset balances: %s\n", e.what());
+        return;
+    }
+
+    if (!output.status)
+    {
+        LOG("Failed to get asset balances (vault invalid or inactive).\n");
+        return;
+    }
+
+    LOG("Vault %llu has %llu asset type(s):\n", (unsigned long long)vaultID, (unsigned long long)output.numberOfAssetTypes);
+    for (uint64_t i = 0; i < output.numberOfAssetTypes; ++i)
+    {
+        char issuerStr[128] = { 0 };
+        char assetNameStr[8] = { 0 };
+        getIdentityFromPublicKey(output.assetBalances[i].asset.issuer, issuerStr, false);
+        assetNameToString(output.assetBalances[i].asset.assetName, assetNameStr);
+        LOG("  - %s by %s: %llu shares\n", assetNameStr, issuerStr, (unsigned long long)output.assetBalances[i].balance);
+    }
+}
+
+void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+    MsVaultGetAssetReleaseStatus_input input;
+    input.vaultID = vaultID;
+
+    struct
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetAssetReleaseStatus_input in;
+    } req;
+
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+    req.rcf.inputType = MSVAULT_GET_ASSET_RELEASE_STATUS;
+    req.rcf.inputSize = sizeof(input);
+    memcpy(&req.in, &input, sizeof(input));
+
+    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    MsVaultGetAssetReleaseStatus_output output;
+    memset(&output, 0, sizeof(output));
+    try
+    {
+        output = qc->receivePacketWithHeaderAs<MsVaultGetAssetReleaseStatus_output>();
+    }
+    catch (std::logic_error& e) {
+        LOG("Failed to get asset release status: %s\n", e.what());
+        return;
+    }
+
+    if (!output.status)
+    {
+        LOG("Failed to get asset release status (vault invalid or inactive).\n");
+        return;
+    }
+
+    LOG("Pending asset release requests for Vault %llu:\n", (unsigned long long)vaultID);
+    bool foundRequest = false;
+    for (int i = 0; i < MSVAULT_MAX_OWNERS; ++i)
+    {
+        if (output.amounts[i] > 0)
+        {
+            foundRequest = true;
+            char destId[128] = { 0 };
+            char issuerId[128] = { 0 };
+            char assetNameStr[8] = { 0 };
+
+            getIdentityFromPublicKey(output.destinations[i], destId, false);
+            getIdentityFromPublicKey(output.assets[i].issuer, issuerId, false);
+            assetNameToString(output.assets[i].assetName, assetNameStr);
+
+            LOG("  Owner slot #%d wants to release %llu shares of %s (by %s) to %s\n",
+                i,
+                (unsigned long long)output.amounts[i],
+                assetNameStr,
+                issuerId,
+                destId);
+        }
+    }
+    if (!foundRequest)
+    {
+        LOG("  No pending asset release requests found.\n");
     }
 }

@@ -3,9 +3,12 @@
 #include "structs.h"
 #include <cstdint>
 
+#include "assetUtil.h"
+
 #define MSVAULT_CONTRACT_INDEX 11
 #define MSVAULT_MAX_OWNERS 16
 #define MSVAULT_MAX_COOWNER 8
+#define MSVAULT_MAX_ASSET_TYPES 8
 
 struct MsVaultRegisterVault_input {
     uint8_t vaultName[32];
@@ -132,6 +135,85 @@ struct MsVaultGetVaultOwners_output {
     }
 };
 
+struct AssetBalance
+{
+    qpi::Asset asset;
+    uint64_t balance;
+};
+
+struct MsVaultDepositAsset_input
+{
+    uint64_t vaultID;
+    qpi::Asset asset;
+    uint64_t amount;
+};
+struct MsVaultDepositAsset_output
+{
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultReleaseAssetTo_input
+{
+    uint64_t vaultID;
+    qpi::Asset asset;
+    uint64_t amount;
+    uint8_t destination[32];
+};
+struct MsVaultReleaseAssetTo_output
+{
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultResetAssetRelease_input
+{
+    uint64_t vaultID;
+};
+struct MsVaultResetAssetRelease_output
+{
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetVaultAssetBalances_input
+{
+    uint64_t vaultID;
+};
+struct MsVaultGetVaultAssetBalances_output
+{
+    uint64_t status;
+    uint64_t numberOfAssetTypes;
+    AssetBalance assetBalances[MSVAULT_MAX_ASSET_TYPES];
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetAssetReleaseStatus_input
+{
+    uint64_t vaultID;
+};
+struct MsVaultGetAssetReleaseStatus_output
+{
+    uint64_t status;
+    qpi::Asset assets[MSVAULT_MAX_OWNERS];
+    uint64_t amounts[MSVAULT_MAX_OWNERS];
+    uint8_t destinations[MSVAULT_MAX_OWNERS][32];
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint64_t requiredApprovals, const uint8_t vaultName[32],
     const char* ownersCommaSeparated,
@@ -154,3 +236,19 @@ void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID);
 void msvaultGetRevenueInfo(const char* nodeIp, int nodePort);
 void msvaultGetFees(const char* nodeIp, int nodePort);
 void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID);
+
+void msvaultDepositAsset(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, const char* assetName, const char* issuer, uint64_t amount,
+    uint32_t scheduledTickOffset);
+
+void msvaultReleaseAssetTo(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, const char* assetName, const char* issuer, uint64_t amount, const char* destination,
+    uint32_t scheduledTickOffset);
+
+void msvaultResetAssetRelease(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t vaultID, uint32_t scheduledTickOffset);
+
+void msvaultGetVaultAssetBalances(const char* nodeIp, int nodePort, uint64_t vaultID);
+
+void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID);
+
