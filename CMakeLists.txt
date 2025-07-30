@@ -17,6 +17,7 @@ SET(FILES ${CMAKE_SOURCE_DIR}/connection.cpp
 		  ${CMAKE_SOURCE_DIR}/qvault.cpp
 		  ${CMAKE_SOURCE_DIR}/msvault.cpp 
 		  ${CMAKE_SOURCE_DIR}/qswap.cpp
+      ${CMAKE_SOURCE_DIR}/nostromo.cpp
 )
 SET(HEADER_FILES
 	K12AndKeyUtil.h
@@ -45,6 +46,7 @@ SET(HEADER_FILES
 	msvault.h
 	qswap.h
 	qswap_struct.h
+  nostromo.h
 )
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
