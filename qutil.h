@@ -125,6 +125,15 @@ enum qutilFunctionId
     GetPollInfo = 6,
 };
 
+struct GetSendToManyV1Fee_output
+{
+    long long fee; // Number of billionths
+    static constexpr unsigned char type()
+    {
+        return 43;
+    }
+};
+
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset);
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset);
