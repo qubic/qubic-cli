@@ -10,6 +10,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/main.cpp
 		${CMAKE_SOURCE_DIR}/msvault.cpp
 		${CMAKE_SOURCE_DIR}/node_utils.cpp
+		${CMAKE_SOURCE_DIR}/nostromo.cpp
 		${CMAKE_SOURCE_DIR}/proposal.cpp
 		${CMAKE_SOURCE_DIR}/qearn.cpp
 		${CMAKE_SOURCE_DIR}/qswap.cpp
@@ -34,6 +35,7 @@ SET(HEADER_FILES
 	logger.h
 	msvault.h
 	node_utils.h
+	nostromo.h
 	prompt.h
 	proposal.h
 	qearn.h

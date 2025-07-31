@@ -25,6 +25,7 @@
 #include "msvault.h"
 #include "qswap_struct.h"
 #include "test_utils.h"
+#include "nostromo.h"
 #include "qutil.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
@@ -345,6 +346,18 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+
+// NOSTROMO
+template NOSTROMOGetStats_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetStats_output>();
+template NOSTROMOGetTierLevelByUser_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetTierLevelByUser_output>();
+template NOSTROMOGetUserVoteStatus_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetUserVoteStatus_output>();
+template NOSTROMOCheckTokenCreatability_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOCheckTokenCreatability_output>();
+template NOSTROMOGetNumberOfInvestedProjects_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedProjects_output>();
+template NOSTROMOGetProjectByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectByIndex_output>();
+template NOSTROMOGetFundarasingByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetFundarasingByIndex_output>();
+template NOSTROMOGetProjectIndexListByCreator_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectIndexListByCreator_output>();
+template NOSTROMOGetInfoUserInvested_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetInfoUserInvested_output>();
+template NOSTROMOGetMaxClaimAmount_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetMaxClaimAmount_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();

@@ -151,3 +151,74 @@ int64_t g_qswap_swapAmountIn = -1;
 int64_t g_qswap_swapAmountInMax = -1;
 
 int64_t g_qswap_quoteAmount = -1;
+
+// nostromo
+char* g_nost_tokenName = nullptr;
+uint64_t g_nost_supply = 0;
+uint32_t g_nost_tierLevel = 0;
+uint32_t g_nost_startYear = 0;
+uint32_t g_nost_startMonth = 0;
+uint32_t g_nost_startDay = 0;
+uint32_t g_nost_startHour = 0;
+uint32_t g_nost_endYear = 0;
+uint32_t g_nost_endMonth = 0;
+uint32_t g_nost_endDay = 0;
+uint32_t g_nost_endHour = 0;
+uint32_t g_nost_indexOfProject = 0;
+bool g_nost_decision = 0;
+uint64_t g_nost_tokenPrice = 0;
+uint64_t g_nost_soldAmount = 0;
+uint64_t g_nost_requiredFunds = 0;
+
+uint32_t g_nost_firstPhaseStartYear = 0;
+uint32_t g_nost_firstPhaseStartMonth = 0;
+uint32_t g_nost_firstPhaseStartDay = 0;
+uint32_t g_nost_firstPhaseStartHour = 0;
+uint32_t g_nost_firstPhaseEndYear = 0;
+uint32_t g_nost_firstPhaseEndMonth = 0;
+uint32_t g_nost_firstPhaseEndDay = 0;
+uint32_t g_nost_firstPhaseEndHour = 0;
+
+uint32_t g_nost_secondPhaseStartYear = 0;
+uint32_t g_nost_secondPhaseStartMonth = 0;
+uint32_t g_nost_secondPhaseStartDay = 0;
+uint32_t g_nost_secondPhaseStartHour = 0;
+uint32_t g_nost_secondPhaseEndYear = 0;
+uint32_t g_nost_secondPhaseEndMonth = 0;
+uint32_t g_nost_secondPhaseEndDay = 0;
+uint32_t g_nost_secondPhaseEndHour = 0;
+
+uint32_t g_nost_thirdPhaseStartYear = 0;
+uint32_t g_nost_thirdPhaseStartMonth = 0;
+uint32_t g_nost_thirdPhaseStartDay = 0;
+uint32_t g_nost_thirdPhaseStartHour = 0;
+uint32_t g_nost_thirdPhaseEndYear = 0;
+uint32_t g_nost_thirdPhaseEndMonth = 0;
+uint32_t g_nost_thirdPhaseEndDay = 0;
+uint32_t g_nost_thirdPhaseEndHour = 0;
+
+uint32_t g_nost_listingStartYear = 0;
+uint32_t g_nost_listingStartMonth = 0;
+uint32_t g_nost_listingStartDay = 0;
+uint32_t g_nost_listingStartHour = 0;
+
+uint32_t g_nost_cliffEndYear = 0;
+uint32_t g_nost_cliffEndMonth = 0;
+uint32_t g_nost_cliffEndDay = 0;
+uint32_t g_nost_cliffEndHour = 0;
+
+uint32_t g_nost_vestingEndYear = 0;
+uint32_t g_nost_vestingEndMonth = 0;
+uint32_t g_nost_vestingEndDay = 0;
+uint32_t g_nost_vestingEndHour = 0;
+
+uint8_t g_nost_threshold = 0;
+uint8_t g_nost_TGE = 0;
+uint8_t g_nost_stepOfVesting = 0;
+
+uint64_t g_nost_amount = 0;
+uint32_t g_nost_indexOfFundraising = 0;
+uint32_t g_nost_newManagementContractIndex = 0;
+int64_t g_nost_numberOfShare = 0;
+
+char* g_nost_identity = nullptr;
