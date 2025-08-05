@@ -798,9 +798,9 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     }
     int numTx = 0;
     uint8_t all_zero[32] = {0};
-    for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
+    for (numTx = NUMBER_OF_TRANSACTIONS_PER_TICK; numTx > 0; numTx--)
     {
-        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0) numTx++;
+        if (memcmp(all_zero, td.transactionDigests[numTx-1], 32) != 0) break;
     }
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
@@ -848,11 +848,14 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     {
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0)
         {
-            numTx++;
             char digestHex[65];
             byteToHex(td.transactionDigests[i], digestHex, 32);
             LOG("%s\n", digestHex);
         }
+    }
+    for (numTx = NUMBER_OF_TRANSACTIONS_PER_TICK; numTx > 0; numTx--)
+    {
+        if (memcmp(all_zero, td.transactionDigests[numTx-1], 32) != 0) break;
     }
     std::vector<uint8_t> vDigests;
     vDigests.resize(32*numTx);
