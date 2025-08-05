@@ -865,8 +865,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         if (fread(&tx, 1, sizeof(Transaction), f) != sizeof(Transaction))
         {
             LOG("Failed to read Transaction\n");
-            fclose(f);
-            return;
+            break;
         }
         int extraDataSize = tx.inputSize;
         if (extraData != nullptr)
@@ -919,6 +918,30 @@ void readTickDataFromFile(const char* fileName, TickData& td,
             txHashes->push_back(tx_hash);
         }
         txs.push_back(tx);
+    }
+    for (int i = txs.size(); i < numTx; i++)
+    {
+        Transaction tx;
+        memset(&tx, 0, sizeof(Transaction));
+        txs.push_back(tx);
+        if (extraData != nullptr)
+        {
+            extraDataStruct eds;
+            eds.vecU8.resize(0);
+            extraData->push_back(eds);
+        }
+        if (signatures != nullptr)
+        {
+            SignatureStruct ss;
+            memset(ss.sig, 0, 64);
+            signatures->push_back(ss);
+        }
+        if (txHashes != nullptr)
+        {
+            TxhashStruct tx_hash;
+            memset(tx_hash.hash, 0, 60);
+            txHashes->push_back(tx_hash);
+        }
     }
 
     // put in correct order by tickdata
@@ -999,6 +1022,11 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
 
     for (int i = 0; i < txs.size(); i++)
     {
+        if (isArrayZero((uint8_t*)&txs[i], sizeof(Transaction)))
+        {
+            LOG("Detect a zero transaction - Ignoring\n");
+            continue;
+        }
         uint8_t* extraDataPtr = extraData[i].vecU8.empty() ? nullptr : extraData[i].vecU8.data();
         printReceipt(txs[i], txHashes[i].hash, extraDataPtr);
         if (verifyTx(txs[i], extraData[i].vecU8.data(), signatures[i].sig))
