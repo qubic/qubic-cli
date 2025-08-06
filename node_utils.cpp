@@ -515,7 +515,7 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
     LOG("expectedNextTickTransactionDigest: %s\n", digest);
 }
 
-bool compareVote(const Tick&A, const Tick&B)
+bool compareVote(const Tick&A, const Tick&B, bool compareExpectedNextTickDigest)
 {
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
            (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
@@ -524,9 +524,7 @@ bool compareVote(const Tick&A, const Tick&B)
            (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
            (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
            (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
-           (A.prevTransactionBodyDigest == B.prevTransactionBodyDigest) &&
-           (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
-           (memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0);
+           (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0);
 }
 
 bool verifyVoteWithSalt(const Tick&A,
@@ -603,6 +601,7 @@ std::string indexToAlphabet(int index){
 
 void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std::vector<std::vector<int>>& voteIndices, int N,
                     bool verifySalt = false,
+                    bool compareExpectedNextTickDigest = false,
                     BroadcastComputors* pBC = nullptr,
                     const unsigned int prevResourceDigest = 0,
                     const uint8_t* prevSpectrumDigest = nullptr,
@@ -648,7 +647,7 @@ void getUniqueVotes(std::vector<Tick>& votes, std::vector<Tick>& uniqueVote, std
         int vote_indice = -1;
         for (int j = 0; j < uniqueVote.size(); j++)
         {
-            if (compareVote(votes[i], uniqueVote[j]))
+            if (compareVote(votes[i], uniqueVote[j], compareExpectedNextTickDigest))
             {
                 vote_indice = j;
                 break;
@@ -726,16 +725,16 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     }
     std::vector<Tick> uniqueVote, uniqueVoteNext;
     std::vector<std::vector<int>> voteIndices, voteIndicesNext;
-    getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N);
+    getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N, false, false);
     if (votes_next.size() < 451)
     {
         printf("Failed to get votes for tick %d, this will not perform salt check\n", requestedTick+1);
-        getUniqueVotes(votes, uniqueVote, voteIndices, N);
+        getUniqueVotes(votes, uniqueVote, voteIndices, N, false, false);
     }
     else
     {
         int max_id = 0;
-        for (int i = 1; i < uniqueVote.size(); i++)
+        for (int i = 1; i < uniqueVoteNext.size(); i++)
         {
             if (voteIndicesNext[max_id].size() < voteIndicesNext[i].size())
             {
@@ -745,7 +744,7 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
         if (voteIndicesNext[max_id].size() >= 451)
         {
             auto vote_next = uniqueVoteNext[max_id];
-            getUniqueVotes(votes, uniqueVote, voteIndices, N, true, &bc,
+            getUniqueVotes(votes, uniqueVote, voteIndices, N, true, true, &bc,
                 vote_next.prevResourceTestingDigest,
                 vote_next.prevSpectrumDigest,
                 vote_next.prevUniverseDigest,
@@ -755,11 +754,13 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
         }
         else
         {
-            LOG("WARNING: No quorum on tick %u (maximum aligned vote: %d). Skip salt check...", requestedTick + 1, int(voteIndicesNext[max_id].size()));
+            LOG("WARNING: No quorum on tick %u (maximum aligned vote: %d). Skip salt check...\n", requestedTick + 1, int(voteIndicesNext[max_id].size()));
+            getUniqueVotes(votes, uniqueVote, voteIndices, N, false, false);
         }
     }
 
     LOG("Number of unique votes: %d\n", uniqueVote.size());
+    bool flag[676] = {false};
     for (int i = 0; i < uniqueVote.size(); i++)
     {
         LOG("Vote #%d (voted by %d computors ID) ", i, voteIndices[i].size());
@@ -770,6 +771,7 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
         for (int j = 0; j < voteIndices[i].size(); j++)
         {
             int index = voteIndices[i][j];
+            flag[index] = true;
             auto alphabet = indexToAlphabet(index);
             if (j < voteIndices[i].size() - 1)
             {
@@ -779,6 +781,18 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
             {
                 LOG("%d(%s)\n", index, alphabet.c_str());
             }
+        }
+    }
+
+    LOG("Missing comps: \n");
+    for (int i = 0; i < 676; i++)
+    {
+        if (!flag[i])
+        {
+            auto alphabet = indexToAlphabet(i);
+            char iden[64] = {0};
+            getIdentityFromPublicKey(bc.computors.publicKeys[i], iden, false);
+            LOG("%d\t%s\t%s\n", i, alphabet.c_str(), iden);
         }
     }
 }
@@ -841,6 +855,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         fclose(f);
         return;
     }
+
     int numTx = 0;
     uint8_t all_zero[32] = {0};
     LOG("List of transactions on tickData (correct order):\n");
@@ -848,8 +863,8 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     {
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0)
         {
-            char digestHex[65];
-            byteToHex(td.transactionDigests[i], digestHex, 32);
+            char digestHex[65] = {0};
+            getIdentityFromPublicKey(td.transactionDigests[i], digestHex, true);
             LOG("%s\n", digestHex);
         }
     }
