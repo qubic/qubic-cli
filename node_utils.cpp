@@ -1486,6 +1486,59 @@ void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, ch
     }
 }
 
+void setTxLimit(const char* nodeIp, const int nodePort, const char* seed, unsigned char txLimit)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandSetCustomLimitTx cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SET_CUSTOM_LIMIT_TX) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    packet.cmd.newCustomLimitTransaction = txLimit;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    SpecialCommandSetCustomLimitTx response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSetCustomLimitTx>();
+    }
+    catch (std::logic_error)
+    {
+        memset(&response, 0, sizeof(SpecialCommandSetCustomLimitTx));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        LOG("Successfully set tx limit\n");
+    }
+    else
+    {
+        LOG("Failed set tx limit\n");
+    }
+}
+
 void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg)
 {
     uint8_t privateKey[32] = { 0 };

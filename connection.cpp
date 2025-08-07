@@ -302,6 +302,7 @@ template TickData QubicConnection::receivePacketWithHeaderAs<TickData>();
 template RespondTxStatus QubicConnection::receivePacketWithHeaderAs<RespondTxStatus>();
 template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<BroadcastComputors>();
 template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>();
+template SpecialCommandSetCustomLimitTx QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetCustomLimitTx>();
 // QUOTTERY
 template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>();
 template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>();

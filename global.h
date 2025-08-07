@@ -222,3 +222,5 @@ uint32_t g_nost_newManagementContractIndex = 0;
 int64_t g_nost_numberOfShare = 0;
 
 char* g_nost_identity = nullptr;
+
+unsigned int g_set_custom_tx_limit = 1024;

@@ -157,6 +157,7 @@ enum COMMAND
     NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS = 146,
     NOSTROMO_GET_INFO_USER_INVESTED = 147,
     NOSTROMO_GET_MAX_CLAIM_AMOUNT = 148,
+    SET_CUSTOM_LIMIT_TX = 149,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -771,6 +772,17 @@ struct SpecialCommandSetConsoleLoggingModeRequestAndResponse
     unsigned char loggingMode; // 0 disabled, 1 low computational cost, 2 full logging
     unsigned char padding[7];
 
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+
+struct SpecialCommandSetCustomLimitTx
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned int newCustomLimitTransaction;
+    unsigned char padding[4];
     static constexpr unsigned char type()
     {
         return 255;

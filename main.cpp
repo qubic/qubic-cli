@@ -346,6 +346,11 @@ int run(int argc, char* argv[])
             sanityCheckLoggingMode(g_loggingMode);
             setLoggingMode(g_nodeIp, g_nodePort, g_seed, g_loggingMode);
             break;
+        case SET_CUSTOM_LIMIT_TX:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            setTxLimit(g_nodeIp, g_nodePort, g_seed, g_set_custom_tx_limit);
+            break;
         case COMP_CHAT:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

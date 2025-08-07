@@ -140,6 +140,8 @@ void print_help()
     printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
     printf("\t-setloggingmode <MODE>\n");
     printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.\t\n");
+    printf("\t-setcustomlimittx <NEW_LIMIT>\n");
+    printf("\t\tSet new tx limit. Valid private key and node ip/port are required.\t\n");
     printf("\t-compmessage \"<MESSAGE>\"\n");
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
 
@@ -917,6 +919,16 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-setcustomlimittx") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = SET_CUSTOM_LIMIT_TX;
+            g_set_custom_tx_limit = (unsigned int)(charToNumber(argv[i+1]));
+            i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
         if (strcmp(argv[i], "-compmessage") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
