@@ -37,6 +37,7 @@ constexpr uint64_t RELEASE_RESET_FEE = 1000000ULL;
 #define MSVAULT_RESET_ASSET_RELEASE 21
 #define MSVAULT_GET_VAULT_ASSET_BALANCES 22
 #define MSVAULT_GET_ASSET_RELEASE_STATUS 23
+#define MSVAULT_GET_MANAGED_ASSET_BALANCE 24
 
 static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKey[32],
     MsVaultGetVaults_output& output) 
@@ -1092,4 +1093,51 @@ void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vau
     {
         LOG("  No pending asset release requests found.\n");
     }
+}
+
+void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char* assetName, const char* issuer, const char* owner)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+    MsVaultGetManagedAssetBalance_input input;
+    memset(&input, 0, sizeof(input));
+    getPublicKeyFromIdentity(issuer, input.asset.issuer);
+    input.asset.assetName = assetNameFromString(assetName);
+    getPublicKeyFromIdentity(owner, input.owner);
+
+    struct
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetManagedAssetBalance_input in;
+    } req;
+
+    memset(&req, 0, sizeof(req));
+    req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
+    req.rcf.inputType = MSVAULT_GET_MANAGED_ASSET_BALANCE;
+    req.rcf.inputSize = sizeof(input);
+    memcpy(&req.in, &input, sizeof(input));
+
+    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.randomizeDejavu();
+    req.header.setType(RequestContractFunction::type());
+
+    qc->sendData((uint8_t*)&req, req.header.size());
+
+    MsVaultGetManagedAssetBalance_output output;
+    memset(&output, 0, sizeof(output));
+    try
+    {
+        output = qc->receivePacketWithHeaderAs<MsVaultGetManagedAssetBalance_output>();
+    }
+    catch (std::logic_error& e) {
+        LOG("Failed to get managed asset balance: %s\n", e.what());
+        return;
+    }
+
+    LOG("Managed balance for owner %s: %" PRId64 " shares of %s\n", owner, output.balance, assetName);
 }

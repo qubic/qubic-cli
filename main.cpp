@@ -653,6 +653,15 @@ int run(int argc, char* argv[])
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msVaultID);
             break;
         }
+        case MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckIdentity(g_msVaultOwner);
+            msvaultGetManagedAssetBalance(g_nodeIp, g_nodePort, g_msVaultAssetName, g_msVaultIssuer, g_msVaultOwner);
+            break;
+        }
         case PRINT_QSWAP_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printQswapFee(g_nodeIp, g_nodePort);

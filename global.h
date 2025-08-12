@@ -137,6 +137,9 @@ uint8_t g_msVaultVaultName[32] = { 0 };
 char* g_msVaultDestination = nullptr;
 char* g_msVaultPublicId = nullptr;
 char* g_msVaultOwnersCommaSeparated = nullptr;
+char* g_msVaultAssetName = nullptr;
+char* g_msVaultIssuer = nullptr;
+char* g_msVaultOwner = nullptr;
 
 // Qutil poll-related variables
 char* g_qutil_poll_name_str = nullptr;
@@ -151,5 +154,3 @@ uint64_t g_qutil_get_result_poll_id = 0;
 char* g_qutil_get_polls_creator_address = nullptr;
 uint64_t g_qutil_get_poll_info_poll_id = 0;
 uint64_t g_qutil_cancel_poll_id = 0;
-char* g_msVaultAssetName = nullptr;
-char* g_msVaultIssuer = nullptr;

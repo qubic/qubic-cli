@@ -213,6 +213,20 @@ struct MsVaultGetAssetReleaseStatus_output
     }
 };
 
+struct MsVaultGetManagedAssetBalance_input
+{
+    qpi::Asset asset;
+    uint8_t owner[32];
+};
+struct MsVaultGetManagedAssetBalance_output
+{
+    int64_t balance;
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
 
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint64_t requiredApprovals, const uint8_t vaultName[32],
@@ -252,3 +266,4 @@ void msvaultGetVaultAssetBalances(const char* nodeIp, int nodePort, uint64_t vau
 
 void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID);
 
+void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char* assetName, const char* issuer, const char* owner);

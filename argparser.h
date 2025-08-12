@@ -296,6 +296,8 @@ void print_help()
     printf("\t\tGet the custom asset balances for a vault.\n");
     printf("\t-msvaultgetassetreleasestatus <VAULT_ID>\n");
     printf("\t\tGet the pending custom asset release statuses for a vault.\n");
+    printf("\t-msvaultgetmanagedassetbalance <ASSET_NAME> <ISSUER_ID> <OWNER_ID>\n");
+    printf("\t\tGet the managed asset balance for a specific owner.\n");
 
     printf("\n[QSWAP COMMANDS]\n");
     printf("\t-qswapgetfee\n");
@@ -1874,6 +1876,17 @@ void parseArgument(int argc, char** argv)
                 g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
             g_msVaultID = charToNumber(argv[i + 1]);
             i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetmanagedassetbalance") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD;
+            g_msVaultAssetName = argv[i + 1];
+            g_msVaultIssuer = argv[i + 2];
+            g_msVaultOwner = argv[i + 3];
+            i += 4;
             CHECK_OVER_PARAMETERS
                 return;
         }
