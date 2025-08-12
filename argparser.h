@@ -377,6 +377,8 @@ static uint32_t getContractIndex(const char* str)
         idx = 9;
     else if (strcasecmp(str, "QVAULT") == 0)
         idx = 10;
+    else if (strcasecmp(str, "MSVAULT") == 0)
+        idx = 11;
     else if (strcasecmp(str, "QSWAP") == 0)
         idx = 13;
     else
