@@ -934,7 +934,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         }
         txs.push_back(tx);
     }
-    for (int i = txs.size(); i < numTx; i++)
+    for (int i = int(txs.size()); i < numTx; i++)
     {
         Transaction tx;
         memset(&tx, 0, sizeof(Transaction));
