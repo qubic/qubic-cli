@@ -409,6 +409,17 @@ Check tx on online:
 
 `./qubic-cli -nodeip 127.0.0.1 -checktxontick 10600000 TX_HASH`
 
+### Possible errors encountered during build on Linux
+When building the project, you may encounter the following exception under Linux: 
+
+`$ No CMAKE_CXX_COMPILER could be found.`
+
+This error can be resolved by installing the following package `build-essential`:
+
+`sudo apt-get install build-essential`
+
+---
+
 More information, please read the help. `./qubic-cli -help`
 
 #### NOTE: PROPER ACTIONS are needed if you use this tool as a replacement for qubic wallet. Please use it with caution.
