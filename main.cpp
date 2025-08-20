@@ -662,6 +662,16 @@ int run(int argc, char* argv[])
             msvaultGetManagedAssetBalance(g_nodeIp, g_nodePort, g_msVaultAssetName, g_msVaultIssuer, g_msVaultOwner);
             break;
         }
+        case MSVAULT_REVOKE_ASSET_RIGHTS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckTxAmount(g_TxAmount);
+            msvaultRevokeAssetManagementRights(g_nodeIp, g_nodePort, g_seed, g_msVaultAssetName, g_msVaultIssuer, g_TxAmount, g_offsetScheduledTick);
+            break;
+        }
         case PRINT_QSWAP_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printQswapFee(g_nodeIp, g_nodePort);

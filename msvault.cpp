@@ -20,6 +20,7 @@
 constexpr uint64_t REGISTERING_FEE = 5000000ULL;
 constexpr uint64_t RELEASE_FEE = 100000ULL;
 constexpr uint64_t RELEASE_RESET_FEE = 1000000ULL;
+constexpr uint64_t MSVAULT_REVOKE_FEE = 100ULL;
 
 #define MSVAULT_REGISTER_VAULT 1
 #define MSVAULT_DEPOSIT 2
@@ -38,6 +39,7 @@ constexpr uint64_t RELEASE_RESET_FEE = 1000000ULL;
 #define MSVAULT_GET_VAULT_ASSET_BALANCES 22
 #define MSVAULT_GET_ASSET_RELEASE_STATUS 23
 #define MSVAULT_GET_MANAGED_ASSET_BALANCE 24
+#define MSVAULT_REVOKE_ASSET_RIGHTS 25
 
 static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKey[32],
     MsVaultGetVaults_output& output) 
@@ -1140,4 +1142,78 @@ void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char*
     }
 
     LOG("Managed balance for owner %s: %" PRId64 " shares of %s\n", owner, output.balance, assetName);
+}
+
+void msvaultRevokeAssetManagementRights(const char* nodeIp, int nodePort, const char* seed,
+    const char* assetName, const char* issuer, int64_t numberOfShares,
+    uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    MsVaultRevokeAssetManagementRights_input input;
+    memset(&input, 0, sizeof(input));
+    input.numberOfShares = numberOfShares;
+    input.asset.assetName = assetNameFromString(assetName);
+    getPublicKeyFromIdentity(issuer, input.asset.issuer);
+
+    uint8_t subseed[32] = { 0 };
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+
+    uint8_t destPublicKey[32] = { 0 };
+    uint8_t digest[32];
+    uint8_t signature[64];
+    char txHash[128] = { 0 };
+    memset(destPublicKey, 0, 32);
+    ((uint64_t*)destPublicKey)[0] = MSVAULT_CONTRACT_INDEX;
+
+    struct
+    {
+        RequestResponseHeader header;
+        Transaction transaction;
+        MsVaultRevokeAssetManagementRights_input inputData;
+        uint8_t sig[64];
+    } packet;
+
+    memset(&packet, 0, sizeof(packet));
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    packet.transaction.amount = MSVAULT_REVOKE_FEE;
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = MSVAULT_REVOKE_ASSET_RIGHTS;
+    packet.transaction.inputSize = sizeof(input);
+    memcpy(&packet.inputData, &input, sizeof(input));
+
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.sig, signature, 64);
+
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    KangarooTwelve((uint8_t*)&packet.transaction,
+        sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
+        digest,
+        32);
+    getTxHashFromDigest(digest, txHash);
+
+    LOG("MsVault revokeAssetManagementRights transaction sent.\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
 }

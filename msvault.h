@@ -227,6 +227,12 @@ struct MsVaultGetManagedAssetBalance_output
     }
 };
 
+struct MsVaultRevokeAssetManagementRights_input
+{
+    qpi::Asset asset;
+    int64_t numberOfShares;
+};
+
 
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint64_t requiredApprovals, const uint8_t vaultName[32],
@@ -267,3 +273,7 @@ void msvaultGetVaultAssetBalances(const char* nodeIp, int nodePort, uint64_t vau
 void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID);
 
 void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char* assetName, const char* issuer, const char* owner);
+
+void msvaultRevokeAssetManagementRights(const char* nodeIp, int nodePort, const char* seed,
+    const char* assetName, const char* issuer, int64_t numberOfShares,
+    uint32_t scheduledTickOffset);

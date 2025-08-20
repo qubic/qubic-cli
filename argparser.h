@@ -298,6 +298,8 @@ void print_help()
     printf("\t\tGet the pending custom asset release statuses for a vault.\n");
     printf("\t-msvaultgetmanagedassetbalance <ASSET_NAME> <ISSUER_ID> <OWNER_ID>\n");
     printf("\t\tGet the managed asset balance for a specific owner.\n");
+    printf("\t-msvaultrevokeassetrights <ASSET_NAME> <ISSUER_ID> <NUMBER_OF_SHARES>\n");
+    printf("\t\tRevoke asset management rights from MsVault, transferring them back to QX. Fee applies.\n");
 
     printf("\n[QSWAP COMMANDS]\n");
     printf("\t-qswapgetfee\n");
@@ -1888,6 +1890,17 @@ void parseArgument(int argc, char** argv)
             g_msVaultAssetName = argv[i + 1];
             g_msVaultIssuer = argv[i + 2];
             g_msVaultOwner = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultrevokeassetrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+                g_cmd = MSVAULT_REVOKE_ASSET_RIGHTS_CMD;
+            g_msVaultAssetName = argv[i + 1];
+            g_msVaultIssuer = argv[i + 2];
+            g_TxAmount = charToNumber(argv[i + 3]); // Reusing g_TxAmount for numberOfShares
             i += 4;
             CHECK_OVER_PARAMETERS
                 return;
