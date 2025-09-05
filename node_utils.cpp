@@ -144,17 +144,19 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
         sigs->resize(0);
     }
 
-    struct {
+    struct RequestPacket 
+    {
         RequestResponseHeader header;
         RequestedTickTransactions txs;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_TICK_TRANSACTIONS);
-    packet.txs.tick = requestedTick;
-    for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
-    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    };
+    auto packet = std::make_unique<RequestPacket>();
+    packet->header.setSize(sizeof(RequestPacket));
+    packet->header.randomizeDejavu();
+    packet->header.setType(REQUEST_TICK_TRANSACTIONS);
+    packet->txs.tick = requestedTick;
+    for (int i = 0; i < (nTx+7)/8; i++) packet->txs.transactionFlags[i] = 0;
+    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet->txs.transactionFlags[i] = 0xff;
+    qc->sendData((uint8_t *) packet.get(), packet->header.size());
 
     constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
     uint8_t buffer[bufferSize];
@@ -211,6 +213,7 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
             break;
     }
 
+    LOG("Received %d tick transactions\n", recvTx);
 }
 
 static bool getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
@@ -816,22 +819,28 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     {
         if (memcmp(all_zero, td->transactionDigests[numTx-1], 32) != 0) break;
     }
-    std::vector<Transaction> txs;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatures;
-    getTickTransactions(qc, requestedTick, numTx, txs, nullptr, &extraData, &signatures);
+    LOG("Found %u transactions in tick %u\n", numTx, requestedTick);
+
+    auto txs = std::make_unique<std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique<std::vector<extraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto signatures = std::make_unique<std::vector<SignatureStruct>>();
+    signatures->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    getTickTransactions(qc, requestedTick, numTx, *txs, nullptr, extraData.get(), signatures.get());
 
     FILE* f = fopen(fileName, "wb");
     fwrite(td.get(), 1, sizeof(TickData), f);
-    for (int i = 0; i < txs.size(); i++)
+    for (int i = 0; i < txs->size(); i++)
     {
-        fwrite(&txs[i], 1, sizeof(Transaction), f);
-        int extraDataSize = txs[i].inputSize;
+        fwrite(&txs->at(i), 1, sizeof(Transaction), f);
+        int extraDataSize = txs->at(i).inputSize;
         if (extraDataSize != 0)
         {
-            fwrite(extraData[i].vecU8.data(), 1, extraDataSize, f);
+            fwrite(extraData->at(i).vecU8.data(), 1, extraDataSize, f);
         }
-        fwrite(signatures[i].sig, 1, SIGNATURE_SIZE, f);
+        fwrite(signatures->at(i).sig, 1, SIGNATURE_SIZE, f);
     }
     fclose(f);
     LOG("Tick data and tick transactions have been written to %s\n", fileName);
