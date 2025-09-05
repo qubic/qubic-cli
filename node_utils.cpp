@@ -162,8 +162,6 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
     uint8_t buffer[bufferSize];
     int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     int recvTx = 0;
-    unsigned int numNotMatched = 0;
-    std::vector<int> numDuplicates(nTx, 0);
     while (recvByte == sizeof(RequestResponseHeader))
     {
         auto header = (RequestResponseHeader*)buffer;
@@ -1112,7 +1110,10 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
             LOG("Transaction is NOT VERIFIED. Incorrect signature\n");
         }
     }
-    LOG("Total number of zero transactions %u\n", numZero);
+    if (numZero > 0)
+    {
+        LOG("Total number of zero transactions %u\n", numZero);
+    }
 }
 
 bool checkTxOnFile(const char* txHash, const char* fileName)
