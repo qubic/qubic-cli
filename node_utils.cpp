@@ -1011,18 +1011,9 @@ void readTickDataFromFile(const char* fileName, TickData& td,
             LOG("%s\n", digestHex);
 
             memset(&_txs->at(i), 0, sizeof(Transaction));
-            if (extraData != nullptr)
-            {
-                _extraData->at(i).vecU8.resize(0);
-            }
-            if (signatures != nullptr)
-            {
-                memset(_signatures->at(i).sig, 0, 64);
-            }
-            if (txHashes != nullptr)
-            {
-                memset(_txHashes->at(i).hash, 0, 60);
-            }
+            if (extraData != nullptr) _extraData->at(i).vecU8.resize(0);
+            if (signatures != nullptr) memset(_signatures->at(i).sig, 0, 64);
+            if (txHashes != nullptr) memset(_txHashes->at(i).hash, 0, 60);
         }
     }
     if (numNotMatched > 0)
