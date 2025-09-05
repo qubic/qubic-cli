@@ -408,6 +408,11 @@ typedef struct
 
 typedef struct
 {
+    uint8_t digest[32];
+} TxDigestStruct;
+
+typedef struct
+{
     uint8_t ptr[32];
 } TxHash32Struct;
 

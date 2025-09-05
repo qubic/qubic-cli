@@ -124,8 +124,9 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 }
 
 static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
-                                std::vector<Transaction>& txs, //out
-                                std::vector<TxhashStruct>* hashes, //out
+                                std::vector<Transaction>& txs, // out
+                                std::vector<TxhashStruct>* hashes, // out
+                                std::vector<TxDigestStruct>* digests, // out
                                 std::vector<extraDataStruct>* extraData, // out
                                 std::vector<SignatureStruct>* sigs // out
 )
@@ -134,6 +135,10 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
     if (hashes != nullptr)
     {
         hashes->resize(0);
+    }
+    if (digests != nullptr)
+    {
+        digests->resize(0);
     }
     if (extraData != nullptr)
     {
@@ -177,18 +182,25 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
             }
             ++recvTx;
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
-            if (hashes != nullptr)
+            if (hashes != nullptr || digests != nullptr)
             {
-                TxhashStruct hash;
-                uint8_t digest[32] = {0};
-                char txHash[128] = {0};
+                TxDigestStruct digest;
                 KangarooTwelve(reinterpret_cast<const uint8_t*>(tx),
                                sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
-                               digest,
+                               digest.digest,
                                32);
-                getTxHashFromDigest(digest, txHash);
-                memcpy(hash.hash, txHash, 60);
-                hashes->push_back(hash);
+                if (digests != nullptr)
+                {
+                    digests->push_back(digest);
+                }
+                if (hashes != nullptr)
+                {
+                    TxhashStruct hash;
+                    char txHash[128] = { 0 };
+                    getTxHashFromDigest(digest.digest, txHash);
+                    memcpy(hash.hash, txHash, 60);
+                    hashes->push_back(hash);
+                }
             }
             if (extraData != nullptr)
             {
@@ -331,7 +343,7 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool pr
     std::vector<TxhashStruct> txHashesFromTick;
     std::vector<extraDataStruct> extraData;
     std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc, requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
+    getTickTransactions(qc, requestedTick, numTx, txs, &txHashesFromTick, /*digests=*/nullptr, &extraData, &signatureStruct);
     for (int i = 0; i < txHashesFromTick.size(); i++)
     {
         if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
@@ -823,12 +835,39 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 
     auto txs = std::make_unique<std::vector<Transaction>>();
     txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto digests = std::make_unique<std::vector<TxDigestStruct>>();
+    digests->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
     auto extraData = std::make_unique<std::vector<extraDataStruct>>();
     extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
     auto signatures = std::make_unique<std::vector<SignatureStruct>>();
     signatures->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
 
-    getTickTransactions(qc, requestedTick, numTx, *txs, nullptr, extraData.get(), signatures.get());
+    getTickTransactions(qc, requestedTick, numTx, *txs, /*hashes=*/nullptr, digests.get(), extraData.get(), signatures.get());
+
+    unsigned int numNotMatched = 0;
+
+    for (int i = 0; i < numTx; i++)
+    {
+        bool foundMatch = false;
+        for (int j = 0; j < numTx; j++)
+        {
+            // guaranteed by the protocol, if any duplicated here it's a bug on core side
+            if (memcmp(digests->data() + j, td->transactionDigests[i], 32) == 0)
+            {
+                foundMatch = true;
+                break;
+            }
+        }
+        if (!foundMatch)
+        {
+            numNotMatched++;
+            LOG("Did not find a matching transaction for digest %d in TickData: ", i);
+            char digestHex[65] = { 0 };
+            getIdentityFromPublicKey(td->transactionDigests[i], digestHex, true);
+            LOG("%s\n", digestHex);
+        }
+    }
+    LOG("In total: did not find a matching transaction for %u digests\n", numNotMatched);
 
     FILE* f = fopen(fileName, "wb");
     fwrite(td.get(), 1, sizeof(TickData), f);
@@ -880,8 +919,8 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     }
     LOG("Total number of transaction digests: %d\n", numTx);
 
-    auto vDigests = std::make_unique<std::vector<uint8_t>>();
-    vDigests->resize(32ULL * numTx);
+    auto vDigests = std::make_unique<std::vector<TxDigestStruct>>();
+    vDigests->resize(numTx);
     for (int i = 0; i < numTx; i++)
     {
         Transaction tx;
@@ -931,7 +970,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
                            uint32_t(raw_data.size()),
                            digest,
                            32);
-            memcpy(vDigests->data() + i * 32, digest, 32);
+            memcpy(vDigests->at(i).digest, digest, 32);
         }
         if (txHashes != nullptr)
         {
@@ -981,14 +1020,13 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     if (txHashes != nullptr) _txHashes->resize(numTx);
 
     unsigned int numNotMatched = 0;
-
     for (int i = 0; i < numTx; i++)
     {
         bool foundMatch = false;
         for (int j = 0; j < numTx; j++)
         {
             // guaranteed by the protocol, if any duplicated here it's a bug on core side
-            if (memcmp(vDigests->data() + j * 32, td.transactionDigests[i], 32) == 0)
+            if (memcmp(vDigests->at(j).digest, td.transactionDigests[i], 32) == 0)
             {
                 foundMatch = true;
                 _txs->at(i) = txs[j];
@@ -2037,35 +2075,38 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
         fclose(f);
     }
     auto qc = make_qc(nodeIp, nodePort);
-    std::vector<Transaction> txs;
-    std::vector<TxhashStruct> txHashesFromTick;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
-    TickData td;
-    getTickData(qc, requestedTick, td);
+
+    auto txs = std::make_unique<std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique<std::vector<extraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    getTickTransactions(qc, requestedTick, 1024, *txs, /*hashes=*/nullptr, /*digests=*/nullptr, extraData.get(), /*sigs=*/nullptr);
+    
+    auto td = std::make_unique<TickData>();
+    getTickData(qc, requestedTick, *td);
 
     unsigned int votes[676];
-    int nTx = int(txs.size());
+    int nTx = int(txs->size());
     LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
-        if (extraData[i].vecU8.size() == 848 + 32)
+        if (extraData->at(i).vecU8.size() == 848 + 32)
         {
             int comp_idx = requestedTick % 676;
-            if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
+            if (memcmp(txs->at(i).sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
             {
-                uint8_t* data = extraData[i].vecU8.data();
+                uint8_t* data = extraData->at(i).vecU8.data();
                 uint32_t sum = 0;
-                if (txs[i].inputType == 1)
+                if (txs->at(i).inputType == 1)
                 {
                     LOG("---Type: vote counter---\n");
                 }
-                if (txs[i].inputType == 8)
+                if (txs->at(i).inputType == 8)
                 {
                     LOG("---Type: custom mining counter---\n");
                 }
-                if (memcmp(td.timelock, data + 848, 32) == 0)
+                if (memcmp(td->timelock, data + 848, 32) == 0)
                 {
                     LOG("Matched data lock\n");
                 }
@@ -2075,11 +2116,11 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                     char hex[128] = { 0 };
                     byteToHex(data + 848, hex, 32);
                     LOG("have: %s\n", hex);
-                    byteToHex(td.timelock, hex, 32);
+                    byteToHex(td->timelock, hex, 32);
                     LOG("want: %s\n", hex);
                     continue;
                 }
-                if (txs[i].inputType == 1)
+                if (txs->at(i).inputType == 1)
                 {
                     for (int j = 0; j < 676; j++)
                     {
@@ -2098,7 +2139,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                         LOG("Invalid comp votes\n");
                     }
                 }
-                if (txs[i].inputType == 8)
+                if (txs->at(i).inputType == 8)
                 {
                     for (int j = 0; j < 676; j++)
                     {
