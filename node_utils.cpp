@@ -234,7 +234,7 @@ bool getTickData(QCPtr qc, const uint32_t tick, TickData& result)
 
     try
     {
-        result = qc->receivePacketWithHeaderAs<TickData>();
+        qc->receivePacketWithHeaderAs<TickData>(result);
     }
     catch (const std::logic_error& e)
     {
@@ -800,12 +800,12 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
-    TickData td;
-    if (!getTickData(nodeIp, nodePort, requestedTick, td))
+    auto td = std::make_unique<TickData>();
+    if (!getTickData(nodeIp, nodePort, requestedTick, *td))
     {
         return;
     }
-    else if (td.epoch == 0)
+    else if (td->epoch == 0)
     {
         LOG("Tick %u not in current epoch or in the future\n", requestedTick);
         return;
@@ -814,7 +814,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     uint8_t all_zero[32] = {0};
     for (numTx = NUMBER_OF_TRANSACTIONS_PER_TICK; numTx > 0; numTx--)
     {
-        if (memcmp(all_zero, td.transactionDigests[numTx-1], 32) != 0) break;
+        if (memcmp(all_zero, td->transactionDigests[numTx-1], 32) != 0) break;
     }
     std::vector<Transaction> txs;
     std::vector<extraDataStruct> extraData;
@@ -822,7 +822,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     getTickTransactions(qc, requestedTick, numTx, txs, nullptr, &extraData, &signatures);
 
     FILE* f = fopen(fileName, "wb");
-    fwrite(&td, 1, sizeof(TickData), f);
+    fwrite(td.get(), 1, sizeof(TickData), f);
     for (int i = 0; i < txs.size(); i++)
     {
         fwrite(&txs[i], 1, sizeof(Transaction), f);
