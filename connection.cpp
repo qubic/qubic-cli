@@ -197,6 +197,15 @@ void QubicConnection::resolveConnection()
 template <typename T>
 T QubicConnection::receivePacketWithHeaderAs()
 {
+    T result;
+    receivePacketWithHeaderAs(result);
+    return result;
+}
+
+// Receive the next qubic packet with a RequestResponseHeader that matches T
+template <typename T>
+void QubicConnection::receivePacketWithHeaderAs(T& result)
+{
     // first receive the header
     RequestResponseHeader header;
     int recvByte = -1, packetSize = -1, remainingSize = -1;
@@ -224,7 +233,7 @@ T QubicConnection::receivePacketWithHeaderAs()
     
     packetSize = header.size();
     remainingSize = packetSize - sizeof(RequestResponseHeader);
-    T result;
+
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
@@ -232,7 +241,6 @@ T QubicConnection::receivePacketWithHeaderAs()
         receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer);
     }
-    return result;
 }
 
 // same as receivePacketWithHeaderAs but without the header
