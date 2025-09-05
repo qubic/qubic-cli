@@ -408,18 +408,18 @@ typedef struct
 
 typedef struct
 {
-    uint8_t digest[32];
-} TxDigestStruct;
-
-typedef struct
-{
     uint8_t ptr[32];
 } TxHash32Struct;
 
 typedef struct
 {
+    uint8_t digest[32];
+} TxDigestStruct;
+
+typedef struct
+{
     std::vector<uint8_t> vecU8;
-} extraDataStruct;
+} ExtraDataStruct;
 
 struct SpecialCommand
 {
