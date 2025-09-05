@@ -970,30 +970,47 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     }
 
     // put in correct order by tickdata
-    auto _txs = std::make_unique< std::vector<Transaction>>();
-    auto _extraData = std::make_unique< std::vector<extraDataStruct>>();
+    auto _txs = std::make_unique<std::vector<Transaction>>();
+    auto _extraData = std::make_unique<std::vector<extraDataStruct>>();
     auto _signatures = std::make_unique<std::vector<SignatureStruct>>();
-    auto _txHashes = std::make_unique< std::vector<TxhashStruct>>();
+    auto _txHashes = std::make_unique<std::vector<TxhashStruct>>();
 
     _txs->resize(numTx);
     if (extraData != nullptr) _extraData->resize(numTx);
     if (signatures != nullptr) _signatures->resize(numTx);
     if (txHashes != nullptr) _txHashes->resize(numTx);
 
+    unsigned int numNotMatched = 0;
+
     for (int i = 0; i < numTx; i++)
     {
+        bool foundMatch = false;
         for (int j = 0; j < numTx; j++)
         {
             // guaranteed by the protocol, if any duplicated here it's a bug on core side
             if (memcmp(vDigests->data() + j * 32, td.transactionDigests[i], 32) == 0)
             {
+                foundMatch = true;
                 _txs->at(i) = txs[j];
                 if (extraData != nullptr) _extraData->at(i) =  extraData->at(j);
                 if (signatures != nullptr) _signatures->at(i) = signatures->at(j);
                 if (txHashes != nullptr) _txHashes->at(i) = txHashes->at(j);
+                break;
             }
         }
+        if (!foundMatch)
+        {
+            numNotMatched++;
+            LOG("Did not find a matching transaction for digest %d in TickData: ", i);
+            char digestHex[65] = { 0 };
+            getIdentityFromPublicKey(td.transactionDigests[i], digestHex, true);
+            LOG("%s\n", digestHex);
+
+            // TODO: set not found to all zero explicitly
+        }
     }
+    LOG("In total: did not find a matching transaction for %u digests\n", numNotMatched);
+
     txs = *_txs;
     if (extraData != nullptr) (*extraData) = *_extraData;
     if (signatures != nullptr) (*signatures) = *_signatures;
@@ -1054,11 +1071,13 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     LOG("Computor index: %u\n", computorIndex);
     LOG("Datetime: %u-%u-%u %u:%u:%u.%u\n", td->day, td->month, td->year, td->hour, td->minute, td->second, td->millisecond);
 
+    unsigned int numZero = 0;
     for (int i = 0; i < txs->size(); i++)
     {
         if (isArrayZero((uint8_t*)&txs->at(i), sizeof(Transaction)))
         {
             LOG("Detect a zero transaction - Ignoring\n");
+            numZero++;
             continue;
         }
         uint8_t* extraDataPtr = extraData->at(i).vecU8.empty() ? nullptr : extraData->at(i).vecU8.data();
@@ -1072,6 +1091,7 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
             LOG("Transaction is NOT VERIFIED. Incorrect signature\n");
         }
     }
+    LOG("Total number of zero transactions %u\n", numZero);
 }
 
 bool checkTxOnFile(const char* txHash, const char* fileName)
