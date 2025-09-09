@@ -4,7 +4,7 @@ name: Multi-Platform Build
 
 on:
   push:
-    branches: [ "main" , "bugfix/2025-09-05-tickdata-many-txs"]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
