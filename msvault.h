@@ -9,6 +9,7 @@
 #define MSVAULT_MAX_OWNERS 16
 #define MSVAULT_MAX_COOWNER 8
 #define MSVAULT_MAX_ASSET_TYPES 8
+#define MSVAULT_MAX_FEE_VOTES 64
 
 struct MsVaultRegisterVault_input {
     uint8_t vaultName[32];
@@ -17,6 +18,7 @@ struct MsVaultRegisterVault_input {
     uint64_t requiredApprovals;
 };
 struct MsVaultRegisterVault_output {
+    uint64_t status;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -26,6 +28,7 @@ struct MsVaultDeposit_input {
     uint64_t vaultID;
 };
 struct MsVaultDeposit_output {
+    uint64_t status;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -37,6 +40,7 @@ struct MsVaultReleaseTo_input {
     uint8_t destination[32];
 };
 struct MsVaultReleaseTo_output {
+    uint64_t status;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -46,6 +50,7 @@ struct MsVaultResetRelease_input {
     uint64_t vaultID;
 };
 struct MsVaultResetRelease_output {
+    uint64_t status;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
     }
@@ -115,7 +120,7 @@ struct MsVaultGetFees_output {
     uint64_t releaseFee;
     uint64_t releaseResetFee;
     uint64_t holdingFee;
-    uint64_t depositFee; // always 0 for now
+    uint64_t depositFee;
     uint64_t burnFee;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
@@ -128,7 +133,7 @@ struct MsVaultGetVaultOwners_input {
 struct MsVaultGetVaultOwners_output {
     uint64_t status;
     uint64_t numberOfOwners;
-    uint8_t owners[MSVAULT_MAX_OWNERS][32];  // 16 owners, each 32 bytes
+    uint8_t owners[MSVAULT_MAX_OWNERS][32];
     uint64_t requiredApprovals;
     static constexpr unsigned char type() {
         return RespondContractFunction::type();
@@ -149,6 +154,7 @@ struct MsVaultDepositAsset_input
 };
 struct MsVaultDepositAsset_output
 {
+    uint64_t status;
     static constexpr unsigned char type()
     {
         return RespondContractFunction::type();
@@ -164,6 +170,7 @@ struct MsVaultReleaseAssetTo_input
 };
 struct MsVaultReleaseAssetTo_output
 {
+    uint64_t status;
     static constexpr unsigned char type()
     {
         return RespondContractFunction::type();
@@ -176,6 +183,7 @@ struct MsVaultResetAssetRelease_input
 };
 struct MsVaultResetAssetRelease_output
 {
+    uint64_t status;
     static constexpr unsigned char type()
     {
         return RespondContractFunction::type();
@@ -233,6 +241,103 @@ struct MsVaultRevokeAssetManagementRights_input
     int64_t numberOfShares;
 };
 
+struct MsVaultRevokeAssetManagementRights_output
+{
+    uint64_t status;
+    int64_t transferredNumberOfShares;
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+
+// Fee Voting structs
+
+struct MsVaultIsShareHolder_input {
+    uint8_t candidate[32];
+};
+struct MsVaultIsShareHolder_output {
+    uint64_t result; // 1 if shareholder, 0 otherwise
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultVoteFeeChange_input {
+    uint64_t newRegisteringFee;
+    uint64_t newReleaseFee;
+    uint64_t newReleaseResetFee;
+    uint64_t newHoldingFee;
+    uint64_t newDepositFee;
+    uint64_t burnFee;
+};
+
+struct MsVaultVoteFeeChange_output {
+    uint64_t status;
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultFeeVote {
+    uint64_t registeringFee;
+    uint64_t releaseFee;
+    uint64_t releaseResetFee;
+    uint64_t holdingFee;
+    uint64_t depositFee;
+    uint64_t burnFee;
+};
+
+struct MsVaultGetFeeVotes_input {};
+struct MsVaultGetFeeVotes_output {
+    uint64_t status;
+    uint64_t numberOfFeeVotes;
+    MsVaultFeeVote feeVotes[MSVAULT_MAX_FEE_VOTES];
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetFeeVotesOwner_input {};
+struct MsVaultGetFeeVotesOwner_output {
+    uint64_t status;
+    uint64_t numberOfFeeVotes;
+    uint8_t feeVotesOwner[MSVAULT_MAX_FEE_VOTES][32];
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetFeeVotesScore_input {};
+struct MsVaultGetFeeVotesScore_output {
+    uint64_t status;
+    uint64_t numberOfFeeVotes;
+    uint64_t feeVotesScore[MSVAULT_MAX_FEE_VOTES];
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetUniqueFeeVotes_input {};
+struct MsVaultGetUniqueFeeVotes_output {
+    uint64_t status;
+    uint64_t numberOfUniqueFeeVotes;
+    MsVaultFeeVote uniqueFeeVotes[MSVAULT_MAX_FEE_VOTES];
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
+
+struct MsVaultGetUniqueFeeVotesRanking_input {};
+struct MsVaultGetUniqueFeeVotesRanking_output {
+    uint64_t status;
+    uint64_t numberOfUniqueFeeVotes;
+    uint64_t uniqueFeeVotesRanking[MSVAULT_MAX_FEE_VOTES];
+    static constexpr unsigned char type() {
+        return RespondContractFunction::type();
+    }
+};
 
 void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     uint64_t requiredApprovals, const uint8_t vaultName[32],
@@ -277,3 +382,17 @@ void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char*
 void msvaultRevokeAssetManagementRights(const char* nodeIp, int nodePort, const char* seed,
     const char* assetName, const char* issuer, int64_t numberOfShares,
     uint32_t scheduledTickOffset);
+
+// Fee votings
+void msvaultIsShareHolder(const char* nodeIp, int nodePort, const char* identity);
+
+void msvaultVoteFeeChange(const char* nodeIp, int nodePort, const char* seed,
+    uint64_t newRegisteringFee, uint64_t newReleaseFee, uint64_t newReleaseResetFee,
+    uint64_t newHoldingFee, uint64_t newDepositFee, uint64_t burnFee,
+    uint32_t scheduledTickOffset);
+
+void msvaultGetFeeVotes(const char* nodeIp, int nodePort);
+void msvaultGetFeeVotesOwner(const char* nodeIp, int nodePort);
+void msvaultGetFeeVotesScore(const char* nodeIp, int nodePort);
+void msvaultGetUniqueFeeVotes(const char* nodeIp, int nodePort);
+void msvaultGetUniqueFeeVotesRanking(const char* nodeIp, int nodePort);

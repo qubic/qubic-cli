@@ -140,6 +140,12 @@ char* g_msVaultOwnersCommaSeparated = nullptr;
 char* g_msVaultAssetName = nullptr;
 char* g_msVaultIssuer = nullptr;
 char* g_msVaultOwner = nullptr;
+char* g_msVaultCandidateIdentity = nullptr;
+uint64_t g_msVaultNewRegisteringFee = 0;
+uint64_t g_msVaultNewReleaseFee = 0;
+uint64_t g_msVaultNewReleaseResetFee = 0;
+uint64_t g_msVaultNewHoldingFee = 0;
+uint64_t g_msVaultNewDepositFee = 0;
 
 // Qutil poll-related variables
 char* g_qutil_poll_name_str = nullptr;
