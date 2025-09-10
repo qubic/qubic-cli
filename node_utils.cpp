@@ -124,9 +124,9 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
 }
 
 static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
-                                std::vector<Transaction>& txs, //out
-                                std::vector<TxhashStruct>* hashes, //out
-                                std::vector<extraDataStruct>* extraData, // out
+                                std::vector<Transaction>& txs, // out
+                                std::vector<TxhashStruct>* hashes, // out
+                                std::vector<ExtraDataStruct>* extraData, // out
                                 std::vector<SignatureStruct>* sigs // out
 )
 {
@@ -144,17 +144,19 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
         sigs->resize(0);
     }
 
-    struct {
+    struct RequestPacket 
+    {
         RequestResponseHeader header;
         RequestedTickTransactions txs;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_TICK_TRANSACTIONS);
-    packet.txs.tick = requestedTick;
-    for (int i = 0; i < (nTx+7)/8; i++) packet.txs.transactionFlags[i] = 0;
-    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet.txs.transactionFlags[i] = 0xff;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    };
+    auto packet = std::make_unique<RequestPacket>();
+    packet->header.setSize(sizeof(RequestPacket));
+    packet->header.randomizeDejavu();
+    packet->header.setType(REQUEST_TICK_TRANSACTIONS);
+    packet->txs.tick = requestedTick;
+    for (int i = 0; i < (nTx+7)/8; i++) packet->txs.transactionFlags[i] = 0;
+    for (int i = (nTx+7)/8; i < NUMBER_OF_TRANSACTIONS_PER_TICK/8; i++) packet->txs.transactionFlags[i] = 0xff;
+    qc->sendData((uint8_t *) packet.get(), packet->header.size());
 
     constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
     uint8_t buffer[bufferSize];
@@ -177,20 +179,20 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader) + sizeof(Transaction), tx->inputSize + SIGNATURE_SIZE);
             if (hashes != nullptr)
             {
-                TxhashStruct hash;
-                uint8_t digest[32] = {0};
-                char txHash[128] = {0};
+                uint8_t digest[32] = { 0 };
                 KangarooTwelve(reinterpret_cast<const uint8_t*>(tx),
-                               sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
-                               digest,
-                               32);
+                    sizeof(Transaction) + tx->inputSize + SIGNATURE_SIZE,
+                    digest,
+                    32);
+                TxhashStruct hash;
+                char txHash[128] = { 0 };
                 getTxHashFromDigest(digest, txHash);
                 memcpy(hash.hash, txHash, 60);
                 hashes->push_back(hash);
             }
             if (extraData != nullptr)
             {
-                extraDataStruct ed;
+                ExtraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
                 if (tx->inputSize != 0)
                 {
@@ -211,6 +213,7 @@ static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
             break;
     }
 
+    LOG("Received %d tick transactions\n", recvTx);
 }
 
 static bool getTickData(const char* nodeIp, const int nodePort, const uint32_t tick, TickData& result)
@@ -234,7 +237,7 @@ bool getTickData(QCPtr qc, const uint32_t tick, TickData& result)
 
     try
     {
-        result = qc->receivePacketWithHeaderAs<TickData>();
+        qc->receivePacketWithHeaderAs<TickData>(result);
     }
     catch (const std::logic_error& e)
     {
@@ -308,12 +311,12 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool pr
         LOG("Please wait a bit more. Requested tick %u, current tick %u\n", requestedTick, currentTick);
         return false;
     }
-    TickData td;
-    if (!getTickData(qc, requestedTick, td))
+    auto td = std::make_unique<TickData>();
+    if (!getTickData(qc, requestedTick, *td))
     {
         return false;
     }
-    else if (td.epoch == 0)
+    else if (td->epoch == 0)
     {
         LOG("Tick %u is empty, not in current epoch or in the future\n", requestedTick);
         return false;
@@ -322,23 +325,28 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool pr
     uint8_t all_zero[32] = {0};
     for (int i = 0; i < NUMBER_OF_TRANSACTIONS_PER_TICK; i++)
     {
-        if (memcmp(all_zero, td.transactionDigests[i], 32) != 0) numTx++;
+        if (memcmp(all_zero, td->transactionDigests[i], 32) != 0) numTx++;
     }
-    std::vector<Transaction> txs;
-    std::vector<TxhashStruct> txHashesFromTick;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc, requestedTick, numTx, txs, &txHashesFromTick, &extraData, &signatureStruct);
-    for (int i = 0; i < txHashesFromTick.size(); i++)
+
+    auto txs = std::make_unique<std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto txHashesFromTick = std::make_unique<std::vector<TxhashStruct>>();
+    txHashesFromTick->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique<std::vector<ExtraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    getTickTransactions(qc, requestedTick, numTx, *txs, txHashesFromTick.get(), extraData.get(), /*sigs=*/nullptr);
+
+    for (int i = 0; i < txHashesFromTick->size(); i++)
     {
-        if (memcmp(txHashesFromTick[i].hash, txHash, 60) == 0)
+        if (memcmp(txHashesFromTick->at(i).hash, txHash, 60) == 0)
         {
             LOG("Found tx %s on tick %u\n", txHash, requestedTick);
             if (printTxReceipt)
             {
                 // check for moneyflew status
                 int moneyFlew = getMoneyFlewStatus(qc, txHash, requestedTick);
-                printReceipt(txs[i], txHash, extraData[i].vecU8.data(), moneyFlew);
+                printReceipt(txs->at(i), txHash, extraData->at(i).vecU8.data(), moneyFlew);
             }
             return true;
         }
@@ -397,7 +405,7 @@ int _GetInputDataFromTxHash(QCPtr& qc, const char* txHash, uint8_t* outData, int
             // Check the digest of respond transaction
             if (memcmp(txHash, respondTxHash, 60) == 0)
             {
-                extraDataStruct ed;
+                ExtraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
                 if (tx->inputSize != 0)
                 {
@@ -465,7 +473,7 @@ int _GetTxInfo(QCPtr& qc, const char* txHash)
             // Check the digest of respond transaction
             if (memcmp(txHash, respondTxHash, 60) == 0)
             {
-                extraDataStruct ed;
+                ExtraDataStruct ed;
                 ed.vecU8.resize(tx->inputSize);
                 if (tx->inputSize != 0)
                 {
@@ -800,12 +808,12 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName)
 {
     auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
-    TickData td;
-    if (!getTickData(nodeIp, nodePort, requestedTick, td))
+    auto td = std::make_unique<TickData>();
+    if (!getTickData(nodeIp, nodePort, requestedTick, *td))
     {
         return;
     }
-    else if (td.epoch == 0)
+    else if (td->epoch == 0)
     {
         LOG("Tick %u not in current epoch or in the future\n", requestedTick);
         return;
@@ -814,24 +822,30 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
     uint8_t all_zero[32] = {0};
     for (numTx = NUMBER_OF_TRANSACTIONS_PER_TICK; numTx > 0; numTx--)
     {
-        if (memcmp(all_zero, td.transactionDigests[numTx-1], 32) != 0) break;
+        if (memcmp(all_zero, td->transactionDigests[numTx-1], 32) != 0) break;
     }
-    std::vector<Transaction> txs;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatures;
-    getTickTransactions(qc, requestedTick, numTx, txs, nullptr, &extraData, &signatures);
+    LOG("Found %d transactions in tick %u\n", numTx, requestedTick);
+
+    auto txs = std::make_unique<std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique<std::vector<ExtraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto signatures = std::make_unique<std::vector<SignatureStruct>>();
+    signatures->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    getTickTransactions(qc, requestedTick, numTx, *txs, /*hashes=*/nullptr, extraData.get(), signatures.get());
 
     FILE* f = fopen(fileName, "wb");
-    fwrite(&td, 1, sizeof(TickData), f);
-    for (int i = 0; i < txs.size(); i++)
+    fwrite(td.get(), 1, sizeof(TickData), f);
+    for (int i = 0; i < txs->size(); i++)
     {
-        fwrite(&txs[i], 1, sizeof(Transaction), f);
-        int extraDataSize = txs[i].inputSize;
+        fwrite(&txs->at(i), 1, sizeof(Transaction), f);
+        int extraDataSize = txs->at(i).inputSize;
         if (extraDataSize != 0)
         {
-            fwrite(extraData[i].vecU8.data(), 1, extraDataSize, f);
+            fwrite(extraData->at(i).vecU8.data(), 1, extraDataSize, f);
         }
-        fwrite(signatures[i].sig, 1, SIGNATURE_SIZE, f);
+        fwrite(signatures->at(i).sig, 1, SIGNATURE_SIZE, f);
     }
     fclose(f);
     LOG("Tick data and tick transactions have been written to %s\n", fileName);
@@ -839,7 +853,7 @@ void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requeste
 
 void readTickDataFromFile(const char* fileName, TickData& td,
                           std::vector<Transaction>& txs,
-                          std::vector<extraDataStruct>* extraData,
+                          std::vector<ExtraDataStruct>* extraData,
                           std::vector<SignatureStruct>* signatures,
                           std::vector<TxhashStruct>* txHashes)
 {
@@ -863,34 +877,33 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     {
         if (memcmp(all_zero, td.transactionDigests[i], 32) != 0)
         {
+            numTx++;
             char digestHex[65] = {0};
             getIdentityFromPublicKey(td.transactionDigests[i], digestHex, true);
             LOG("%s\n", digestHex);
         }
     }
-    for (numTx = NUMBER_OF_TRANSACTIONS_PER_TICK; numTx > 0; numTx--)
-    {
-        if (memcmp(all_zero, td.transactionDigests[numTx-1], 32) != 0) break;
-    }
-    std::vector<uint8_t> vDigests;
-    vDigests.resize(32*numTx);
+    LOG("Total number of transaction digests: %d\n", numTx);
+
+    auto vDigests = std::make_unique<std::vector<TxDigestStruct>>();
+    vDigests->resize(numTx);
     for (int i = 0; i < numTx; i++)
     {
         Transaction tx;
         if (fread(&tx, 1, sizeof(Transaction), f) != sizeof(Transaction))
         {
-            LOG("Failed to read Transaction\n");
+            LOG("Failed to read Transaction %d\n", i);
             break;
         }
         int extraDataSize = tx.inputSize;
         if (extraData != nullptr)
         {
-            extraDataStruct eds;
+            ExtraDataStruct eds;
             if (extraDataSize != 0)
             {
                 if (fread(extraDataBuffer, 1, extraDataSize, f) != extraDataSize)
                 {
-                    LOG("Failed to read Transaction payload\n");
+                    LOG("Failed to read Transaction payload for tx %d\n", i);
                     fclose(f);
                     return;
                 }
@@ -902,7 +915,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
 
         if (fread(signatureBuffer, 1, SIGNATURE_SIZE, f) != SIGNATURE_SIZE)
         {
-            LOG("Failed to read signature\n");
+            LOG("Failed to read signature for tx %d\n", i);
             fclose(f);
             return;
         }
@@ -923,7 +936,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
                            uint32_t(raw_data.size()),
                            digest,
                            32);
-            memcpy(vDigests.data() + i * 32, digest, 32);
+            memcpy(vDigests->at(i).digest, digest, 32);
         }
         if (txHashes != nullptr)
         {
@@ -934,6 +947,8 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         }
         txs.push_back(tx);
     }
+
+    // if fread failed for a transaction, fill remaining txs with all zero
     for (int i = int(txs.size()); i < numTx; i++)
     {
         Transaction tx;
@@ -941,7 +956,7 @@ void readTickDataFromFile(const char* fileName, TickData& td,
         txs.push_back(tx);
         if (extraData != nullptr)
         {
-            extraDataStruct eds;
+            ExtraDataStruct eds;
             eds.vecU8.resize(0);
             extraData->push_back(eds);
         }
@@ -960,31 +975,56 @@ void readTickDataFromFile(const char* fileName, TickData& td,
     }
 
     // put in correct order by tickdata
-    std::vector<Transaction> _txs; _txs.resize(numTx);
-    std::vector<extraDataStruct> _extraData;
-    std::vector<SignatureStruct> _signatures;
-    std::vector<TxhashStruct> _txHashes;
-    if (extraData != nullptr) _extraData.resize(numTx);
-    if (signatures != nullptr) _signatures.resize(numTx);
-    if (txHashes != nullptr) _txHashes.resize(numTx);
+    auto _txs = std::make_unique<std::vector<Transaction>>();
+    auto _extraData = std::make_unique<std::vector<ExtraDataStruct>>();
+    auto _signatures = std::make_unique<std::vector<SignatureStruct>>();
+    auto _txHashes = std::make_unique<std::vector<TxhashStruct>>();
+
+    _txs->resize(numTx);
+    if (extraData != nullptr) _extraData->resize(numTx);
+    if (signatures != nullptr) _signatures->resize(numTx);
+    if (txHashes != nullptr) _txHashes->resize(numTx);
+
+    unsigned int numNotMatched = 0;
     for (int i = 0; i < numTx; i++)
     {
+        bool foundMatch = false;
         for (int j = 0; j < numTx; j++)
         {
             // guaranteed by the protocol, if any duplicated here it's a bug on core side
-            if (memcmp(vDigests.data() + j * 32, td.transactionDigests[i], 32) == 0)
+            if (memcmp(vDigests->at(j).digest, td.transactionDigests[i], 32) == 0)
             {
-                _txs[i] = txs[j];
-                if (extraData != nullptr) _extraData[i] =  (*extraData)[j];
-                if (signatures != nullptr) _signatures[i] = (*signatures)[j];
-                if (txHashes != nullptr) _txHashes[i] = (*txHashes)[j];
+                foundMatch = true;
+                _txs->at(i) = txs[j];
+                if (extraData != nullptr) _extraData->at(i) =  extraData->at(j);
+                if (signatures != nullptr) _signatures->at(i) = signatures->at(j);
+                if (txHashes != nullptr) _txHashes->at(i) = txHashes->at(j);
+                break;
             }
         }
+        if (!foundMatch)
+        {
+            numNotMatched++;
+            LOG("Did not find a matching transaction for digest %d in TickData: ", i);
+            char digestHex[65] = { 0 };
+            getIdentityFromPublicKey(td.transactionDigests[i], digestHex, true);
+            LOG("%s\n", digestHex);
+
+            memset(&_txs->at(i), 0, sizeof(Transaction));
+            if (extraData != nullptr) _extraData->at(i).vecU8.resize(0);
+            if (signatures != nullptr) memset(_signatures->at(i).sig, 0, 64);
+            if (txHashes != nullptr) memset(_txHashes->at(i).hash, 0, 60);
+        }
     }
-    txs = _txs;
-    if (extraData != nullptr) (*extraData) = _extraData;
-    if (signatures != nullptr) (*signatures) = _signatures;
-    if (txHashes != nullptr) (*txHashes) = _txHashes;
+    if (numNotMatched > 0)
+    {
+        LOG("In total: did not find a matching transaction for %u digests\n", numNotMatched);
+    }
+
+    txs = *_txs;
+    if (extraData != nullptr) (*extraData) = *_extraData;
+    if (signatures != nullptr) (*signatures) = *_signatures;
+    if (txHashes != nullptr) (*txHashes) = *_txHashes;
     fclose(f);
 }
 
@@ -992,34 +1032,40 @@ BroadcastComputors readComputorListFromFile(const char* fileName);
 
 void printTickDataFromFile(const char* fileName, const char* compFile)
 {
-    TickData td;
-    std::vector<Transaction> txs;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatures;
-    std::vector<TxhashStruct> txHashes;
+    auto td = std::make_unique<TickData>();
+    auto txs = std::make_unique< std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique< std::vector<ExtraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto signatures = std::make_unique<std::vector<SignatureStruct>>();
+    signatures->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto txHashes = std::make_unique< std::vector<TxhashStruct>>();
+    txHashes->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    readTickDataFromFile(fileName, *td, *txs, extraData.get(), signatures.get(), txHashes.get());
+    
+    // verify everything
     uint8_t digest[32];
-    readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
-    //verifying everything
     BroadcastComputors bc;
     bc = readComputorListFromFile(compFile);
-    if (bc.computors.epoch != td.epoch)
+    if (bc.computors.epoch != td->epoch)
     {
-        LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td.epoch);
+        LOG("Computor list epoch (%u) and tick data epoch (%u) are not matched\n", bc.computors.epoch, td->epoch);
     }
-    KangarooTwelve((uint8_t*)&td, sizeof(TickData), digest, 32);
+    KangarooTwelve((uint8_t*)td.get(), sizeof(TickData), digest, 32);
     {
         char tddigest[61]={0};
         getIdentityFromPublicKey(digest, tddigest, true);
         LOG("Tickdata: %s\n", tddigest);
     }
-    int computorIndex = td.computorIndex;
-    td.computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
-    KangarooTwelve(reinterpret_cast<const uint8_t *>(&td),
+    int computorIndex = td->computorIndex;
+    td->computorIndex ^= BROADCAST_FUTURE_TICK_DATA;
+    KangarooTwelve(reinterpret_cast<const uint8_t *>(td.get()),
                    sizeof(TickData) - SIGNATURE_SIZE,
                    digest,
                    32);
     uint8_t* computorOfThisTick = bc.computors.publicKeys[computorIndex];
-    if (verify(computorOfThisTick, digest, td.signature))
+    if (verify(computorOfThisTick, digest, td->signature))
     {
         char computorID[61] = {0};
         getIdentityFromPublicKey(computorOfThisTick, computorID, false);
@@ -1030,21 +1076,23 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
     {
         LOG("Tick is NOT verified (not signed by correct computor).\n");
     }
-    LOG("Epoch: %u\n", td.epoch);
-    LOG("Tick: %u\n", td.tick);
+    LOG("Epoch: %u\n", td->epoch);
+    LOG("Tick: %u\n", td->tick);
     LOG("Computor index: %u\n", computorIndex);
-    LOG("Datetime: %u-%u-%u %u:%u:%u.%u\n", td.day, td.month, td.year, td.hour, td.minute, td.second, td.millisecond);
+    LOG("Datetime: %u-%u-%u %u:%u:%u.%u\n", td->day, td->month, td->year, td->hour, td->minute, td->second, td->millisecond);
 
-    for (int i = 0; i < txs.size(); i++)
+    unsigned int numZero = 0;
+    for (int i = 0; i < txs->size(); i++)
     {
-        if (isArrayZero((uint8_t*)&txs[i], sizeof(Transaction)))
+        if (isArrayZero((uint8_t*)&txs->at(i), sizeof(Transaction)))
         {
             LOG("Detect a zero transaction - Ignoring\n");
+            numZero++;
             continue;
         }
-        uint8_t* extraDataPtr = extraData[i].vecU8.empty() ? nullptr : extraData[i].vecU8.data();
-        printReceipt(txs[i], txHashes[i].hash, extraDataPtr);
-        if (verifyTx(txs[i], extraData[i].vecU8.data(), signatures[i].sig))
+        uint8_t* extraDataPtr = extraData->at(i).vecU8.empty() ? nullptr : extraData->at(i).vecU8.data();
+        printReceipt(txs->at(i), txHashes->at(i).hash, extraDataPtr);
+        if (verifyTx(txs->at(i), extraData->at(i).vecU8.data(), signatures->at(i).sig))
         {
             LOG("Transaction is VERIFIED\n");
         }
@@ -1053,24 +1101,32 @@ void printTickDataFromFile(const char* fileName, const char* compFile)
             LOG("Transaction is NOT VERIFIED. Incorrect signature\n");
         }
     }
+    if (numZero > 0)
+    {
+        LOG("Total number of zero transactions %u\n", numZero);
+    }
 }
 
 bool checkTxOnFile(const char* txHash, const char* fileName)
 {
-    TickData td;
-    std::vector<Transaction> txs;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatures;
-    std::vector<TxhashStruct> txHashes;
+    auto td = std::make_unique<TickData>();
+    auto txs = std::make_unique< std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique< std::vector<ExtraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto signatures = std::make_unique<std::vector<SignatureStruct>>();
+    signatures->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto txHashes = std::make_unique< std::vector<TxhashStruct>>();
+    txHashes->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
 
-    readTickDataFromFile(fileName, td, txs, &extraData, &signatures, &txHashes);
+    readTickDataFromFile(fileName, *td, *txs, extraData.get(), signatures.get(), txHashes.get());
 
-    for (int i = 0; i < txs.size(); i++)
+    for (int i = 0; i < txs->size(); i++)
     {
-        if (memcmp(txHashes[i].hash, txHash, 60) == 0)
+        if (memcmp(txHashes->at(i).hash, txHash, 60) == 0)
         {
             LOG("Found tx %s on file %s\n", txHash, fileName);
-            printReceipt(txs[i], txHash, extraData[i].vecU8.data());
+            printReceipt(txs->at(i), txHash, extraData->at(i).vecU8.data());
             return true;
         }
     }
@@ -1994,35 +2050,38 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
         fclose(f);
     }
     auto qc = make_qc(nodeIp, nodePort);
-    std::vector<Transaction> txs;
-    std::vector<TxhashStruct> txHashesFromTick;
-    std::vector<extraDataStruct> extraData;
-    std::vector<SignatureStruct> signatureStruct;
-    getTickTransactions(qc, requestedTick, 1024, txs, &txHashesFromTick, &extraData, &signatureStruct);
-    TickData td;
-    getTickData(qc, requestedTick, td);
+
+    auto txs = std::make_unique<std::vector<Transaction>>();
+    txs->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+    auto extraData = std::make_unique<std::vector<ExtraDataStruct>>();
+    extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
+
+    getTickTransactions(qc, requestedTick, 1024, *txs, /*hashes=*/nullptr, extraData.get(), /*sigs=*/nullptr);
+    
+    auto td = std::make_unique<TickData>();
+    getTickData(qc, requestedTick, *td);
 
     unsigned int votes[676];
-    int nTx = int(txs.size());
+    int nTx = int(txs->size());
     LOG("Finding in %d transactions\n", nTx);
     for (int i = 0; i < nTx; i++)
     {
-        if (extraData[i].vecU8.size() == 848 + 32)
+        if (extraData->at(i).vecU8.size() == 848 + 32)
         {
             int comp_idx = requestedTick % 676;
-            if (memcmp(txs[i].sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
+            if (memcmp(txs->at(i).sourcePublicKey, bc.computors.publicKeys[comp_idx], 32) == 0)
             {
-                uint8_t* data = extraData[i].vecU8.data();
+                uint8_t* data = extraData->at(i).vecU8.data();
                 uint32_t sum = 0;
-                if (txs[i].inputType == 1)
+                if (txs->at(i).inputType == 1)
                 {
                     LOG("---Type: vote counter---\n");
                 }
-                if (txs[i].inputType == 8)
+                if (txs->at(i).inputType == 8)
                 {
                     LOG("---Type: custom mining counter---\n");
                 }
-                if (memcmp(td.timelock, data + 848, 32) == 0)
+                if (memcmp(td->timelock, data + 848, 32) == 0)
                 {
                     LOG("Matched data lock\n");
                 }
@@ -2032,11 +2091,11 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                     char hex[128] = { 0 };
                     byteToHex(data + 848, hex, 32);
                     LOG("have: %s\n", hex);
-                    byteToHex(td.timelock, hex, 32);
+                    byteToHex(td->timelock, hex, 32);
                     LOG("want: %s\n", hex);
                     continue;
                 }
-                if (txs[i].inputType == 1)
+                if (txs->at(i).inputType == 1)
                 {
                     for (int j = 0; j < 676; j++)
                     {
@@ -2055,7 +2114,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
                         LOG("Invalid comp votes\n");
                     }
                 }
-                if (txs[i].inputType == 8)
+                if (txs->at(i).inputType == 8)
                 {
                     for (int j = 0; j < 676; j++)
                     {
