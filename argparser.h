@@ -426,9 +426,11 @@ static uint32_t getContractIndex(const char* str)
         idx = 13;
     else if (strcasecmp(str, "NOST") == 0)
         idx = 14;
+    else if (strcasecmp(str, "QDRAW") == 0)
+        idx = 15;
     else
     {
-        constexpr uint32_t contractCount = 14;
+        constexpr uint32_t contractCount = 15;
         if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
