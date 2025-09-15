@@ -233,15 +233,21 @@ static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick,
     TickData tickData;
     for (uint32_t requestedTick = firstQueriedTick; requestedTick <= lastQueriedTick; ++requestedTick)
     {
+        LOG("Tick %u\n", requestedTick);
+
         qc->resolveConnection();
         // request output of qpi functions that were saved in the TESTEXA SC
         QpiFunctionsOutput beginTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_BEGIN_TICK);
         QpiFunctionsOutput endTickOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_END_TICK);
+        LOG("\tBEGIN_TICK tick %d, END_TICK tick %d", beginTickOutput.tick, endTickOutput.tick);
         QpiFunctionsOutput userProcOutput;
-        if (useUserProc) 
+        if (useUserProc)
+        {
             userProcOutput = getQpiFunctionsOutput(qc, requestedTick, TESTEXA_RETURN_QPI_FUNCTIONS_OUTPUT_USER_PROC);
+            LOG(", user proc tick %d", userProcOutput.tick);
+        }
+        LOG("\n");
 
-        LOG("Tick %u\n", requestedTick);
         if (beginTickOutput.tick == requestedTick)
         {
             LOG("\tComparing BEGIN_TICK and END_TICK qpi functions output\n");
