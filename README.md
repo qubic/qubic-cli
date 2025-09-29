@@ -43,6 +43,8 @@ Command:
 		Performs multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.
 	-qutilburnqubic <AMOUNT>
 		Performs burning qubic, valid private key and node ip/port are required.
+	-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>
+		Distribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.
 	-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>
 		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.
 

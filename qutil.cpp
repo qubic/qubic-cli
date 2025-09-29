@@ -329,6 +329,29 @@ void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const ch
     LOG("%" PRIu64 "\n", output);
 }
 
+void qutilDistributeQuToShareholders(const char* nodeIp, int nodePort, const char* seed,
+    const char* issuerIdentity, const char* assetName, long long amount,
+    uint32_t scheduledTickOffset)
+{
+    struct
+    {
+        uint8_t issuer[32];
+        uint64_t assetName;
+    } input;
+
+    sanityCheckIdentity(issuerIdentity);
+    getPublicKeyFromIdentity(issuerIdentity, input.issuer);
+
+    sanityCheckValidAssetName(assetName);
+    input.assetName = 0;
+    memcpy(&input.assetName, assetName, std::min(size_t(7), strlen(assetName)));
+
+    LOG("\nSending transaction to distribute QUs among shareholders ...\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUTIL_CONTRACT_ID, DistributeQuToShareholders, amount,
+        sizeof(input), &input, scheduledTickOffset);
+}
+
 
 // **********************
 // *** Voting related ***
