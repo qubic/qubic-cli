@@ -670,8 +670,8 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sanityCheckValidAssetName(g_msVaultAssetName);
             sanityCheckIdentity(g_msVaultIssuer);
-            sanityCheckTxAmount(g_TxAmount);
-            msvaultRevokeAssetManagementRights(g_nodeIp, g_nodePort, g_seed, g_msVaultAssetName, g_msVaultIssuer, g_TxAmount, g_offsetScheduledTick);
+            sanityCheckTxAmount(g_txAmount);
+            msvaultRevokeAssetManagementRights(g_nodeIp, g_nodePort, g_seed, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_IS_SHAREHOLDER_CMD:
@@ -1078,8 +1078,8 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sanityCheckValidAssetName(g_msVaultAssetName);
             sanityCheckIdentity(g_msVaultIssuer);
-            sanityCheckTxAmount(g_TxAmount);
-            msvaultDepositAsset(g_nodeIp, g_nodePort, g_seed, g_msVaultID, g_msVaultAssetName, g_msVaultIssuer, g_TxAmount, g_offsetScheduledTick);
+            sanityCheckTxAmount(g_txAmount);
+            msvaultDepositAsset(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_RELEASE_ASSET_TO_CMD:
@@ -1088,28 +1088,28 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sanityCheckValidAssetName(g_msVaultAssetName);
             sanityCheckIdentity(g_msVaultIssuer);
-            sanityCheckTxAmount(g_TxAmount);
-            sanityCheckIdentity(g_msVaultDestination);
-            msvaultReleaseAssetTo(g_nodeIp, g_nodePort, g_seed, g_msVaultID, g_msVaultAssetName, g_msVaultIssuer, g_TxAmount, g_msVaultDestination, g_offsetScheduledTick);
+            sanityCheckTxAmount(g_txAmount);
+            sanityCheckIdentity(g_msvault_destination);
+            msvaultReleaseAssetTo(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_msvault_destination, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_RESET_ASSET_RELEASE_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            msvaultResetAssetRelease(g_nodeIp, g_nodePort, g_seed, g_msVaultID, g_offsetScheduledTick);
+            msvaultResetAssetRelease(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_offsetScheduledTick);
             break;
         }
         case MSVAULT_GET_ASSET_BALANCES_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            msvaultGetVaultAssetBalances(g_nodeIp, g_nodePort, g_msVaultID);
+            msvaultGetVaultAssetBalances(g_nodeIp, g_nodePort, g_msvault_id);
             break;
         }
         case MSVAULT_GET_ASSET_RELEASE_STATUS_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
-            msvaultGetAssetReleaseStatus(g_nodeIp, g_nodePort, g_msVaultID);
+            msvaultGetAssetReleaseStatus(g_nodeIp, g_nodePort, g_msvault_id);
             break;
         }
         case TEST_QPI_FUNCTIONS_OUTPUT:

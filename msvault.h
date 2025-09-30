@@ -3,7 +3,7 @@
 #include "structs.h"
 #include <cstdint>
 
-#include "assetUtil.h"
+#include "asset_utils.h"
 
 #define MSVAULT_CONTRACT_INDEX 11
 #define MSVAULT_MAX_OWNERS 16

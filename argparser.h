@@ -1910,10 +1910,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
                 g_cmd = MSVAULT_DEPOSIT_ASSET_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             g_msVaultAssetName = argv[i + 2];
             g_msVaultIssuer = argv[i + 3];
-            g_TxAmount = charToNumber(argv[i + 4]);
+            g_txAmount = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
                 return;
@@ -1922,11 +1922,11 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
                 g_cmd = MSVAULT_RELEASE_ASSET_TO_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             g_msVaultAssetName = argv[i + 2];
             g_msVaultIssuer = argv[i + 3];
-            g_TxAmount = charToNumber(argv[i + 4]);
-            g_msVaultDestination = argv[i + 5];
+            g_txAmount = charToNumber(argv[i + 4]);
+            g_msvault_destination = argv[i + 5];
             i += 6;
             CHECK_OVER_PARAMETERS
                 return;
@@ -1935,7 +1935,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
                 g_cmd = MSVAULT_RESET_ASSET_RELEASE_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
                 return;
@@ -1944,7 +1944,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
                 g_cmd = MSVAULT_GET_ASSET_BALANCES_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
                 return;
@@ -1953,7 +1953,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
                 g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
                 return;
@@ -1975,7 +1975,7 @@ void parseArgument(int argc, char** argv)
                 g_cmd = MSVAULT_REVOKE_ASSET_RIGHTS_CMD;
             g_msVaultAssetName = argv[i + 1];
             g_msVaultIssuer = argv[i + 2];
-            g_TxAmount = charToNumber(argv[i + 3]); // Reusing g_TxAmount for numberOfShares
+            g_txAmount = charToNumber(argv[i + 3]); // Reusing g_TxAmount for numberOfShares
             i += 4;
             CHECK_OVER_PARAMETERS
                 return;

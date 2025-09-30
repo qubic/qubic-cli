@@ -3,7 +3,7 @@
 #include "structs.h"
 #include "stdint.h"
 
-#include "assetUtil.h"
+#include "asset_utils.h"
 
 // Constants for poll operations
 constexpr uint64_t QUTIL_POLL_TYPE_QUBIC = 1;
