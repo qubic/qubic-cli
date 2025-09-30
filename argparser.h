@@ -62,6 +62,8 @@ void print_help()
     printf("\t\tPerforms multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.\n");
     printf("\t-qutilburnqubic <AMOUNT>\n");
     printf("\t\tPerforms burning qubic, valid private key and node ip/port are required.\n");
+    printf("\t-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>\n");
+    printf("\t\tDistribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.\n");
     printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
     printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.\n");
     printf("\t-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <SEMICOLON_SEPARATED_ASSETS>\n");
@@ -636,6 +638,17 @@ void parseArgument(int argc, char** argv)
             g_paramString1 = argv[i + 1];
             g_paramString2 = argv[i + 2];
             i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutildistributequbictoshareholders") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QUTIL_DISTRIBUTE_QU_TO_SHAREHOLDERS;
+            g_paramString1 = argv[i + 1];
+            g_paramString2 = argv[i + 2];
+            g_txAmount = charToNumber(argv[i + 3]);
+            i += 4;
             CHECK_OVER_PARAMETERS
             break;
         }

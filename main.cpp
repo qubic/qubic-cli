@@ -60,6 +60,12 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qutilGetTotalNumberOfAssetShares(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case QUTIL_DISTRIBUTE_QU_TO_SHAREHOLDERS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckTxAmount(g_txAmount);
+            qutilDistributeQuToShareholders(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_paramString2, g_txAmount, g_offsetScheduledTick);
+            break;
         case SEND_COIN:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
