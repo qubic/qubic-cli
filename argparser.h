@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstring>
 #include <cstdlib>
 #include <cerrno>
@@ -343,6 +345,58 @@ void print_help()
     printf("\t\tSwap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.\n");
     printf("\t-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>\n");
     printf("\t\tQuote amount_out/amount_in with the given amount_in/amount_out via Qswap contract.\n");
+    printf("\n[NOSTROMO COMMANDS]\n");
+    printf("\t-nostromoregisterintier <TIER_LEVEL>\n");
+    printf("\t\tRegister in tier.\n");
+    printf("\t-nostromologoutfromtier \n");
+    printf("\t\tLogout from tier.\n");
+    printf("\t-nostromocreateproject <TOKEN_NAME> <SUPPLY_OF_TOKEN> <START_YEAR> <START_MONTH> <START_DAY> <START_HOUR> <END_YEAR> <END_MONTH> <END_DAY> <END_HOUR>\n");
+    printf("\t\tCreate a project with the specified token info and start and end date for voting.\n");
+    printf("\t-nostromovoteinproject <PROJECT_INDEX> <DECISION>\n");
+    printf("\t\tVote in the project with <DECISION> in the <PROJECT_INDEX> -> if you want to vote with yes, it should be 1. otherwise it is 0.\n");
+    printf("\t-nostromocreatefundraising <TOKEN_PRICE> <SALE_AMOUNT> <REQUIRED_FUND> <PROJECT_INDEX> \n");
+    printf("\t\t<FIRST_PHASE_START_YEAR> <FIRST_PHASE_START_MONTH> <FIRST_PHASE_START_DAY> <FIRST_PHASE_START_HOUR>\n");
+    printf("\t\t<FIRST_PHASE_END_YEAR> <FIRST_PHASE_END_MONTH> <FIRST_PHASE_END_DAY> <FIRST_PHASE_END_HOUR>\n");
+    printf("\t\t<SECOND_PHASE_START_YEAR> <SECOND_PHASE_START_MONTH> <SECOND_PHASE_START_DAY> <SECOND_PHASE_START_HOUR>\n");
+    printf("\t\t<SECOND_PHASE_END_YEAR> <SECOND_PHASE_END_MONTH> <SECOND_PHASE_END_DAY> <SECOND_PHASE_END_HOUR>\n");
+    printf("\t\t<THIRD_PHASE_START_YEAR> <THIRD_PHASE_START_MONTH> <THIRD_PHASE_START_DAY> <THIRD_PHASE_START_HOUR>\n");
+    printf("\t\t<THIRD_PHASE_END_YEAR> <THIRD_PHASE_END_MONTH> <THIRD_PHASE_END_DAY> <THIRD_PHASE_END_HOUR>\n");
+    printf("\t\t<LISTING_START_YEAR> <LISTING_START_MONTH> <LISTING_START_DAY> <LISTING_START_HOUR>\n");
+    printf("\t\t<CLIFF_END_YEAR> <CLIFF_END_MONTH> <CLIFF_END_DAY> <CLIFF_END_HOUR>\n");
+    printf("\t\t<VESTING_END_YEAR> <VESTING_END_MONTH> <VESTING_END_DAY> <VESTING_END_HOUR>\n");
+    printf("\t\t<THRESHOLDS> <TGE> <NUMBER_OF_STEP_FOR_VESTING>\n");
+    printf("\t\tCreate a fundraising with the specified token and project infos.\n");
+    printf("\t-nostromoinvestinproject <FUNDRAISING_INDEX> <INVESTMENT_AMOUNT>\n");
+    printf("\t\tInvest in the fundraising.\n");
+    printf("\t-nostromoclaimtoken <CLAIM_AMOUNT> <FUNDRAISING_INDEX>\n");
+    printf("\t\tClaim your token from SC.\n");
+    printf("\t\tIf you invest in the fundraising and also it is the time for claiming, you can receive the token from SC.\n");
+    printf("\t-nostromoupgradetierlevel <NEW_TIER_LEVEL>\n");
+    printf("\t\tUpgrade your tierlevel to <NEW_TIER_LEVEL>\n");
+    printf("\t-nostromotransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEW_MANAGEMENT_CONTRACT_INDEX> <AMOUNT_OF_TRANSFER>\n");
+    printf("\t\tTransfer the share management right to <NEW_MANAGEMENT_CONTRACT_INDEX>\n");
+    printf("\t-nostromogetstats\n");
+    printf("\t\tGet the infos of SC(like total pool weight, epoch revenue, number of registers, number of projects, ...)\n");
+    printf("\t-nostromogettierlevelbyuser <USER_ID>\n");
+    printf("\t\tGet the tier_level for <USER_ID>.\n");
+    printf("\t-nostromogetuservotestatus <USER_ID>\n");
+    printf("\t\tGet the list of project index voted by <USER_ID>.\n");
+    printf("\t-nostromochecktokencreatability <TOKEN_NAME>\n");
+    printf("\t\tCheck if the <TOKEN_NAME> can be issued by SC.\n");
+    printf("\t\tIf <TOKEN_NAME> is already created by SC, it can not be issued anymore.\n");
+	printf("\t-nostromogetnumberofinvestedprojects <USER_ID>\n");
+	printf("\t\tGet the number invested and project. you can check if the <USER_ID> can invest.\n");
+	printf("\t\tThe max number that can invest by one user at once in SC is 128 currently.\n");
+	printf("\t-nostromogetprojectbyindex <PROJECT_INDEX>\n");
+	printf("\t\tGet the infos of project.\n");
+	printf("\t-nostromogetfundraisingbyindex <FUNDRAISING_INDEX>\n");
+	printf("\t\tGet the infos of fundraising.\n");
+	printf("\t-nostromogetprojectindexlistbycreator <USER_ID>\n");
+	printf("\t\tGet the list of project that <USER_ID> created.\n");
+	printf("\t-nostromogetInfoUserInvested <INVESTOR_ADDRESS>\n");
+	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
+	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
+	printf("\t\tGet the max claim amount at the moment.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -396,12 +450,18 @@ static uint32_t getContractIndex(const char* str)
         idx = 10;
     else if (strcasecmp(str, "MSVAULT") == 0)
         idx = 11;
+    else if (strcasecmp(str, "QBAY") == 0)
+        idx = 12;
     else if (strcasecmp(str, "QSWAP") == 0)
         idx = 13;
+    else if (strcasecmp(str, "NOST") == 0)
+        idx = 14;
+    else if (strcasecmp(str, "QDRAW") == 0)
+        idx = 15;
     else
     {
-        constexpr uint32_t contractCount = 11;
-        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx >= contractCount)
+        constexpr uint32_t contractCount = 15;
+        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
             exit(1);
@@ -584,7 +644,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SEND_COIN;
             g_targetIdentity = argv[i+1];
-            g_TxAmount = charToNumber(argv[i+2]);
+            g_txAmount = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -594,8 +654,8 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = SEND_COIN_IN_TICK;
             g_targetIdentity = argv[i+1];
-            g_TxAmount = uint32_t(charToNumber(argv[i+2]));
-            g_TxTick = uint32_t(charToNumber(argv[i+3]));
+            g_txAmount = uint32_t(charToNumber(argv[i+2]));
+            g_txTick = uint32_t(charToNumber(argv[i+3]));
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -654,11 +714,11 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = UPLOAD_FILE;
-            g_file_path = argv[i+1];
+            g_filePath = argv[i+1];
             i+=2;
             if (i < argc)
             {
-                g_compress_tool = argv[i];
+                g_compressTool = argv[i];
                 i++;
             }
             CHECK_OVER_PARAMETERS
@@ -669,11 +729,11 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DOWNLOAD_FILE;
             g_requestedTxId = argv[i+1];
-            g_file_path = argv[i+2];
+            g_filePath = argv[i+2];
             i+=3;
             if (i < argc)
             {
-                g_compress_tool = argv[i];
+                g_compressTool = argv[i];
                 i++;
             }
             CHECK_OVER_PARAMETERS
@@ -724,8 +784,8 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = SEND_CUSTOM_TX;
             g_targetIdentity = argv[i+1];
-            g_TxType = uint16_t(charToNumber(argv[i+2]));
-            g_TxAmount = charToNumber(argv[i+3]);
+            g_txType = uint16_t(charToNumber(argv[i+2]));
+            g_txAmount = charToNumber(argv[i+3]);
             g_txExtraDataSize = int(charToNumber(argv[i+4]));
             hexToByte(argv[i+5], g_txExtraData, g_txExtraDataSize);
             i+=6;
@@ -736,8 +796,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_SPECTRUM_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryFileOutput = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -746,8 +806,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = DUMP_UNIVERSE_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_file_output = argv[i+2];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryFileOutput = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -756,9 +816,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = DUMP_CONTRACT_FILE;
-            g_dump_binary_file_input = argv[i+1];
-            g_dump_binary_contract_id = uint32_t(charToNumber(argv[i+2]));
-            g_dump_binary_file_output = argv[i+3];
+            g_dumpBinaryFileInput = argv[i+1];
+            g_dumpBinaryContractId = uint32_t(charToNumber(argv[i+2]));
+            g_dumpBinaryFileOutput = argv[i+3];
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -767,9 +827,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MAKE_IPO_BID;
-            g_ipo_contract_index = uint32_t(charToNumber(argv[i + 1]));
-            g_make_ipo_bid_number_of_share = uint16_t(charToNumber(argv[i+2]));
-            g_make_ipo_bid_price_per_share = charToNumber(argv[i+3]);
+            g_IPOContractIndex = uint32_t(charToNumber(argv[i + 1]));
+            g_makeIPOBidNumberOfShare = uint16_t(charToNumber(argv[i+2]));
+            g_makeIPOBidPricePerShare = charToNumber(argv[i+3]);
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -778,7 +838,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = GET_IPO_STATUS;
-            g_ipo_contract_index = uint32_t(charToNumber(argv[i + 1]));
+            g_IPOContractIndex = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -815,8 +875,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = TOOGLE_MAIN_AUX;
-            g_toggle_main_aux_0 = argv[i+1];
-            g_toggle_main_aux_1 = argv[i+2];
+            g_toggleMainAux0 = argv[i+1];
+            g_toggleMainAux1 = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -825,8 +885,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SET_SOLUTION_THRESHOLD;
-            g_set_solution_threshold_epoch = int(charToNumber(argv[i+1]));
-            g_set_solution_threshold_value = int(charToNumber(argv[i+2]));
+            g_setSolutionThresholdEpoch = int(charToNumber(argv[i+1]));
+            g_setSolutionThresholdValue = int(charToNumber(argv[i+2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -907,10 +967,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_ISSUE_ASSET;
-            g_qx_issue_asset_name = argv[i+1];
-            g_qx_issue_asset_number_of_unit = charToNumber(argv[i+2]);
-            g_qx_issue_unit_of_measurement = argv[i+3];
-            g_qx_issue_asset_num_decimal = char(charToNumber(argv[i+4]));
+            g_qx_issueAssetName = argv[i+1];
+            g_qx_issueAssetNumberOfUnit = charToNumber(argv[i+2]);
+            g_qx_issueUnitOfMeasurement = argv[i+3];
+            g_qx_issueAssetNumDecimal = char(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -919,10 +979,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_ASSET;
-            g_qx_asset_transfer_asset_name = argv[i+1];
-            g_qx_asset_transfer_issuer_in_hex = argv[i+2];
-            g_qx_asset_transfer_new_owner_identity = argv[i+3];
-            g_qx_asset_transfer_amount = charToNumber(argv[i+4]);
+            g_qx_assetTransferAssetName = argv[i+1];
+            g_qx_assetTransferIssuerInHex = argv[i+2];
+            g_qx_assetTransferNewOwnerIdentity = argv[i+3];
+            g_qx_assetTransferAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -938,12 +998,12 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QX_ORDER;
-            g_qx_command_1 = argv[i+1];
-            g_qx_command_2 = argv[i+2];
+            g_qx_command1 = argv[i+1];
+            g_qx_command2 = argv[i+2];
             g_qx_issuer = argv[i+3];
-            g_qx_asset_name = argv[i+4];
+            g_qx_assetName = argv[i+4];
             g_qx_price = charToNumber(argv[i+5]);
-            g_qx_number_of_share = charToNumber(argv[i+6]);
+            g_qx_numberOfShare = charToNumber(argv[i+6]);
             i+=7;
             CHECK_OVER_PARAMETERS
             break;
@@ -952,10 +1012,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QX_GET_ORDER;
-            g_qx_command_1 = argv[i+1];
-            g_qx_command_2 = argv[i+2];
+            g_qx_command1 = argv[i+1];
+            g_qx_command2 = argv[i+2];
             g_qx_issuer = argv[i+3];
-            g_qx_asset_name = argv[i+4];
+            g_qx_assetName = argv[i+4];
             g_qx_offset = charToNumber(argv[i+5]);
             i+=6;
             CHECK_OVER_PARAMETERS
@@ -965,10 +1025,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QX_TRANSFER_MANAGEMENT_RIGHTS;
-            g_qx_asset_name = argv[i + 1];
+            g_qx_assetName = argv[i + 1];
             g_qx_issuer = argv[i + 2];
-            g_contract_index = getContractIndex(argv[i + 3]);
-            g_qx_number_of_share = charToNumber(argv[i + 4]);
+            g_contractIndex = getContractIndex(argv[i + 3]);
+            g_qx_numberOfShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
             break;
@@ -982,10 +1042,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_ISSUE_ASSET;
-            g_qswap_issue_asset_name = argv[i+1];
-            g_qswap_issue_asset_number_of_unit = charToNumber(argv[i+2]);
-            g_qswap_issue_unit_of_measurement = argv[i+3];
-            g_qswap_issue_asset_num_decimal = static_cast<char>(charToNumber(argv[i+4]));
+            g_qswap_issueAssetName = argv[i+1];
+            g_qswap_issueAssetNumberOfUnit = charToNumber(argv[i+2]);
+            g_qswap_issueUnitOfMeasurement = argv[i+3];
+            g_qswap_issueAssetNumDecimal = static_cast<char>(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -994,10 +1054,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_TRANSFER_ASSET;
-            g_qswap_asset_transfer_asset_name = argv[i+1];
-            g_qswap_asset_transfer_issuer = argv[i+2];
-            g_qswap_asset_transfer_new_owner_identity = argv[i+3];
-            g_qswap_asset_transfer_amount = charToNumber(argv[i+4]);
+            g_qswap_assetTransferAssetName = argv[i+1];
+            g_qswap_assetTransferIssuer = argv[i+2];
+            g_qswap_assetTransferNewOwnerIdentity = argv[i+3];
+            g_qswap_assetTransferAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1013,7 +1073,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_CREATE_POOL;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
@@ -1023,7 +1083,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_GET_POOL_BASIC;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
             i+=3;
             CHECK_OVER_PARAMETERS
@@ -1033,12 +1093,12 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(6)
             g_cmd = QSWAP_ADD_LIQUIDITY;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_add_liquidity_qu_amount = charToNumber(argv[i+3]);
-            g_qswap_add_liquidity_asset_amount_desired = charToNumber(argv[i+4]);
-            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+5]);
-            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+6]);
+            g_qswap_addLiquidityQuAmount = charToNumber(argv[i+3]);
+            g_qswap_addLiquidityAssetAmountDesired = charToNumber(argv[i+4]);
+            g_qswap_liquidityQuAmountMin = charToNumber(argv[i+5]);
+            g_qswap_liquidityAssetAmountMin = charToNumber(argv[i+6]);
             i+=7;
             CHECK_OVER_PARAMETERS
             break;
@@ -1047,11 +1107,11 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
             g_cmd = QSWAP_REMOVE_LIQUIDITY;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_remove_liquidity_burn_liquidity = charToNumber(argv[i+3]);
-            g_qswap_liquidity_qu_amount_min = charToNumber(argv[i+4]);
-            g_qswap_liquidity_asset_amount_min = charToNumber(argv[i+5]);
+            g_qswap_removeLiquidityBurnLiquidity = charToNumber(argv[i+3]);
+            g_qswap_liquidityQuAmountMin = charToNumber(argv[i+4]);
+            g_qswap_liquidityAssetAmountMin = charToNumber(argv[i+5]);
             i+=6;
             CHECK_OVER_PARAMETERS
             break;
@@ -1060,9 +1120,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QSWAP_GET_LIQUIDITY_OF;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_get_liquidity_of_staker_issuer = argv[i+3];
+            g_qswap_getLiquidityOfStakerIssuer = argv[i+3];
             i+=4;
             CHECK_OVER_PARAMETERS
             break;
@@ -1071,10 +1131,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_EXACT_QU_FOR_ASSET;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            g_qswap_swapAmountIn = charToNumber(argv[i+3]);
+            g_qswap_swapAmountOutMin = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1083,10 +1143,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_QU_FOR_EXACT_ASSET;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            g_qswap_swapAmountOut = charToNumber(argv[i+3]);
+            g_qswap_swapAmountInMax = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1095,10 +1155,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_EXACT_ASSET_FOR_QU;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_in = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_out_min = charToNumber(argv[i+4]);
+            g_qswap_swapAmountIn = charToNumber(argv[i+3]);
+            g_qswap_swapAmountOutMin = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1107,10 +1167,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_SWAP_ASSET_FOR_EXACT_QU;
-            g_qswap_asset_name = argv[i+1];
+            g_qswap_assetName = argv[i+1];
             g_qswap_issuer = argv[i+2];
-            g_qswap_swap_amount_out = charToNumber(argv[i+3]);
-            g_qswap_swap_amount_in_max = charToNumber(argv[i+4]);
+            g_qswap_swapAmountOut = charToNumber(argv[i+3]);
+            g_qswap_swapAmountInMax = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1119,10 +1179,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QSWAP_QUOTE;
-            g_qswap_command_1 = argv[i+1];
-            g_qswap_asset_name = argv[i+2];
+            g_qswap_command1 = argv[i+1];
+            g_qswap_assetName = argv[i+2];
             g_qswap_issuer = argv[i+3];
-            g_qswap_quote_amount = charToNumber(argv[i+4]);
+            g_qswap_quoteAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1143,10 +1203,10 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QUOTTERY_JOIN_BET;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_number_bet_slot = charToNumber(argv[i+2]);
-            g_quottery_amount_per_bet_slot = charToNumber(argv[i+3]);
-            g_quottery_picked_option = uint32_t(charToNumber(argv[i+4]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_numberBetSlot = charToNumber(argv[i+2]);
+            g_quottery_amountPerBetSlot = charToNumber(argv[i+3]);
+            g_quottery_pickedOption = uint32_t(charToNumber(argv[i+4]));
             i+=5;
             CHECK_OVER_PARAMETERS
             break;
@@ -1155,7 +1215,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_BET_INFO;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1164,8 +1224,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_GET_BET_DETAIL;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_option_id = uint32_t(charToNumber(argv[i + 2]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1181,7 +1241,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
-            g_quottery_creator_id = argv[i+1];
+            g_quottery_creatorId = argv[i+1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1197,8 +1257,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUOTTERY_PUBLISH_RESULT;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_option_id = uint32_t(charToNumber(argv[i + 2]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1207,7 +1267,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUOTTERY_CANCEL_BET;
-            g_quottery_bet_id = uint32_t(charToNumber(argv[i + 1]));
+            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1220,7 +1280,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_SEND_TO_MANY_V1;
-            g_qutil_sendtomanyv1_payout_list_file = argv[i + 1];
+            g_qutil_sendToManyV1PayoutListFile = argv[i + 1];
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1229,7 +1289,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_BURN_QUBIC;
-            g_TxAmount = charToNumber(argv[i + 1]);
+            g_txAmount = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1238,8 +1298,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUTIL_SEND_TO_MANY_BENCHMARK;
-            g_qutil_sendtomanybenchmark_destination_count = charToNumber(argv[i + 1]);
-            g_qutil_sendtomanybenchmark_num_transfers_each = charToNumber(argv[i + 2]);
+            g_qutil_sendToManyBenchmarkDestinationCount = charToNumber(argv[i + 1]);
+            g_qutil_sendToManyBenchmarkNumTransfersEach = charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1254,13 +1314,13 @@ void parseArgument(int argc, char** argv)
                 LOG("Not enough parameters provided for command, expected at least 4.\nRun qubic-cli -h to display help.\n");
                 exit(1);
             }
-            g_qutil_poll_name_str = argv[i + 1];
-            g_qutil_poll_type = charToUnsignedNumber(argv[i + 2]);
-            g_qutil_min_amount = charToUnsignedNumber(argv[i + 3]);
-            g_qutil_github_link_str = argv[i + 4];
+            g_qutil_pollNameStr = argv[i + 1];
+            g_qutil_pollType = charToUnsignedNumber(argv[i + 2]);
+            g_qutil_minAmount = charToUnsignedNumber(argv[i + 3]);
+            g_qutil_githubLinkStr = argv[i + 4];
 
             int params_consumed = base_params;
-            if (g_qutil_poll_type == 2) // Asset poll
+            if (g_qutil_pollType == 2) // Asset poll
             {
                 params_consumed = 5;
                 if (i + params_consumed >= argc)
@@ -1268,11 +1328,11 @@ void parseArgument(int argc, char** argv)
                     LOG("Not enough parameters for Asset poll, expected 5 parameters.\n");
                     exit(1);
                 }
-                g_qutil_semicolon_separated_assets = argv[i + 5];
+                g_qutil_semicolonSeparatedAssets = argv[i + 5];
             }
-            else if (g_qutil_poll_type == 1) // Qubic poll
+            else if (g_qutil_pollType == 1) // Qubic poll
             {
-                g_qutil_semicolon_separated_assets = nullptr;
+                g_qutil_semicolonSeparatedAssets = nullptr;
             }
             else
             {
@@ -1287,9 +1347,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QUTIL_VOTE;
-            g_qutil_vote_poll_id = charToUnsignedNumber(argv[i + 1]);
-            g_qutil_vote_amount = charToUnsignedNumber(argv[i + 2]);
-            g_qutil_vote_chosen_option = charToUnsignedNumber(argv[i + 3]);
+            g_qutil_votePollId = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_voteAmount = charToUnsignedNumber(argv[i + 2]);
+            g_qutil_voteChosenOption = charToUnsignedNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
             break;
@@ -1298,7 +1358,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_CURRENT_RESULT;
-            g_qutil_get_result_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_getResultPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1307,7 +1367,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_POLLS_BY_CREATOR;
-            g_qutil_get_polls_creator_address = argv[i + 1];
+            g_qutil_getPollsCreatorAddress = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1322,7 +1382,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_GET_POLL_INFO;
-            g_qutil_get_poll_info_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_getPollInfoPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1330,7 +1390,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-qutilcancelpoll") == 0) {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_CANCEL_POLL;
-            g_qutil_cancel_poll_id = charToUnsignedNumber(argv[i + 1]);
+            g_qutil_cancelPollId = charToUnsignedNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1524,7 +1584,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_LOCK;
-            g_qearn_lock_amount = charToNumber(argv[i + 1]);
+            g_qearn_lockAmount = charToNumber(argv[i + 1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1533,8 +1593,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_UNLOCK;
-            g_qearn_unlock_amount = charToNumber(argv[i + 1]);
-            g_qearn_locked_epoch = uint32_t(charToNumber(argv[i + 2]));
+            g_qearn_unlockAmount = charToNumber(argv[i + 1]);
+            g_qearn_lockedEpoch = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1543,7 +1603,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_INFO_PER_EPOCH;
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1553,7 +1613,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QEARN_GET_USER_LOCKED_INFO;
             g_requestedIdentity = argv[i+1];
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 2]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 2]));
             i+=3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1562,7 +1622,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATE_OF_ROUND;
-            g_qearn_getinfo_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getInfoEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1589,7 +1649,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_STATS_PER_EPOCH;
-            g_qearn_getstats_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getStatsEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1606,7 +1666,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QEARN_GET_BURNED_AND_BOOSTED_STATS_PER_EPOCH;
-            g_qearn_getstats_epoch = uint32_t(charToNumber(argv[i + 1]));
+            g_qearn_getStatsEpoch = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1615,7 +1675,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_AUTH_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1633,9 +1693,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_SUBMIT_FEES;
-            g_qvault_newQCAPHolder_fee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newreinvesting_fee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newdev_fee = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
+            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1644,9 +1704,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = QVAULT_CHANGE_FEES;
-            g_qvault_newQCAPHolder_fee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newreinvesting_fee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newdev_fee = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
+            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1655,7 +1715,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_REINVESTING_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1664,7 +1724,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_REINVESTING_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1673,7 +1733,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_ADMIN_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1682,7 +1742,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_CHANGE_ADMIN_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1698,7 +1758,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_BANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1707,7 +1767,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_BANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1716,7 +1776,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SUBMIT_UNBANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1725,7 +1785,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QVAULT_SAVE_UNBANNED_ADDRESS;
-            g_qvaultIdentity = argv[i + 1];
+            g_qvault_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -1739,7 +1799,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MSVAULT_REGISTER_VAULT_CMD;
-            g_msVaultRequiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
+            g_msvault_requiredApprovals = (uint64_t)charToNumber(argv[i + 1]);
 
             {
                 const char* inputVaultName = argv[i + 2];
@@ -1748,11 +1808,11 @@ void parseArgument(int argc, char** argv)
                     LOG("Vault name must be at most 32 chars. Truncating...\n");
                     len = 32;
                 }
-                memset(g_msVaultVaultName, 0, 32);
-                memcpy(g_msVaultVaultName, inputVaultName, len);
+                memset(g_msvault_vaultName, 0, 32);
+                memcpy(g_msvault_vaultName, inputVaultName, len);
             }
 
-            g_msVaultOwnersCommaSeparated = argv[i + 3];
+            g_msvault_ownersCommaSeparated = argv[i + 3];
             i += 4;
             CHECK_OVER_PARAMETERS
             return;
@@ -1761,8 +1821,8 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = MSVAULT_DEPOSIT_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
-            g_TxAmount = charToNumber(argv[i+2]);
+            g_msvault_id = charToNumber(argv[i+1]);
+            g_txAmount = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
             return;
@@ -1771,9 +1831,9 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = MSVAULT_RELEASE_TO_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
-            g_TxAmount = charToNumber(argv[i+2]);
-            g_msVaultDestination = argv[i + 3];
+            g_msvault_id = charToNumber(argv[i+1]);
+            g_txAmount = charToNumber(argv[i+2]);
+            g_msvault_destination = argv[i + 3];
             i+=4;
             CHECK_OVER_PARAMETERS
             return;
@@ -1782,7 +1842,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_RESET_RELEASE_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1791,7 +1851,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_VAULTS_CMD;
-            g_msVaultPublicId = argv[i + 1];
+            g_msvault_publicId = argv[i + 1];
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1800,7 +1860,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_RELEASE_STATUS_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1809,7 +1869,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_BALANCE_OF_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1818,7 +1878,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_VAULT_NAME_CMD;
-            g_msVaultID = charToNumber(argv[i+1]);
+            g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1841,7 +1901,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = MSVAULT_GET_OWNERS_CMD;
-            g_msVaultID = charToNumber(argv[i + 1]);
+            g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             return;
@@ -1979,6 +2039,245 @@ void parseArgument(int argc, char** argv)
         }
 
         /**************************
+         **** NOSTROMO COMMANDS ****
+         **************************/
+
+        if (strcmp(argv[i], "-nostromoregisterintier") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_REGISTER_IN_TIER;
+            g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromologoutfromtier") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = NOSTROMO_LOGOUT_FROM_TIER;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromocreateproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(10)
+            g_cmd = NOSTROMO_CREATE_PROJECT;
+            g_nost_tokenName = argv[i + 1];
+            g_nost_supply = charToNumber(argv[i + 2]);
+            g_nost_startYear = (uint32_t)charToNumber(argv[i + 3]);
+            g_nost_startMonth = (uint32_t)charToNumber(argv[i + 4]);
+            g_nost_startDay = (uint32_t)charToNumber(argv[i + 5]);
+            g_nost_startHour = (uint32_t)charToNumber(argv[i + 6]);
+            g_nost_endYear = (uint32_t)charToNumber(argv[i + 7]);
+            g_nost_endMonth = (uint32_t)charToNumber(argv[i + 8]);
+            g_nost_endDay = (uint32_t)charToNumber(argv[i + 9]);
+            g_nost_endHour = (uint32_t)charToNumber(argv[i + 10]);
+            i += 11;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromovoteinproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_VOTE_IN_PROJECT;
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_decision = (bool)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromocreatefundraising") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(43)
+            g_cmd = NOSTROMO_CREATE_FUNDRAISING;
+            g_nost_tokenPrice = charToNumber(argv[i + 1]);
+            g_nost_soldAmount = charToNumber(argv[i + 2]);
+            g_nost_requiredFunds = charToNumber(argv[i + 3]);
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 4]);
+
+            g_nost_firstPhaseStartYear = (uint32_t)charToNumber(argv[i + 5]);
+            g_nost_firstPhaseStartMonth = (uint32_t)charToNumber(argv[i + 6]);
+            g_nost_firstPhaseStartDay = (uint32_t)charToNumber(argv[i + 7]);
+            g_nost_firstPhaseStartHour = (uint32_t)charToNumber(argv[i + 8]);
+            g_nost_firstPhaseEndYear = (uint32_t)charToNumber(argv[i + 9]);
+            g_nost_firstPhaseEndMonth = (uint32_t)charToNumber(argv[i + 10]);
+            g_nost_firstPhaseEndDay = (uint32_t)charToNumber(argv[i + 11]);
+            g_nost_firstPhaseEndHour = (uint32_t)charToNumber(argv[i + 12]);
+
+            g_nost_secondPhaseStartYear = (uint32_t)charToNumber(argv[i + 13]);
+            g_nost_secondPhaseStartMonth = (uint32_t)charToNumber(argv[i + 14]);
+            g_nost_secondPhaseStartDay = (uint32_t)charToNumber(argv[i + 15]);
+            g_nost_secondPhaseStartHour = (uint32_t)charToNumber(argv[i + 16]);
+            g_nost_secondPhaseEndYear = (uint32_t)charToNumber(argv[i + 17]);
+            g_nost_secondPhaseEndMonth = (uint32_t)charToNumber(argv[i + 18]);
+            g_nost_secondPhaseEndDay = (uint32_t)charToNumber(argv[i + 19]);
+            g_nost_secondPhaseEndHour = (uint32_t)charToNumber(argv[i + 20]);
+
+            g_nost_thirdPhaseStartYear = (uint32_t)charToNumber(argv[i + 21]);
+            g_nost_thirdPhaseStartMonth = (uint32_t)charToNumber(argv[i + 22]);
+            g_nost_thirdPhaseStartDay = (uint32_t)charToNumber(argv[i + 23]);
+            g_nost_thirdPhaseStartHour = (uint32_t)charToNumber(argv[i + 24]);
+            g_nost_thirdPhaseEndYear = (uint32_t)charToNumber(argv[i + 25]);
+            g_nost_thirdPhaseEndMonth = (uint32_t)charToNumber(argv[i + 26]);
+            g_nost_thirdPhaseEndDay = (uint32_t)charToNumber(argv[i + 27]);
+            g_nost_thirdPhaseEndHour = (uint32_t)charToNumber(argv[i + 28]);
+
+            g_nost_listingStartYear = (uint32_t)charToNumber(argv[i + 29]);
+            g_nost_listingStartMonth = (uint32_t)charToNumber(argv[i + 30]);
+            g_nost_listingStartDay = (uint32_t)charToNumber(argv[i + 31]);
+            g_nost_listingStartHour = (uint32_t)charToNumber(argv[i + 32]);
+
+            g_nost_cliffEndYear = (uint32_t)charToNumber(argv[i + 33]);
+            g_nost_cliffEndMonth = (uint32_t)charToNumber(argv[i + 34]);
+            g_nost_cliffEndDay = (uint32_t)charToNumber(argv[i + 35]);
+            g_nost_cliffEndHour = (uint32_t)charToNumber(argv[i + 36]);
+
+            g_nost_vestingEndYear = (uint32_t)charToNumber(argv[i + 37]);
+            g_nost_vestingEndMonth = (uint32_t)charToNumber(argv[i + 38]);
+            g_nost_vestingEndDay = (uint32_t)charToNumber(argv[i + 39]);
+            g_nost_vestingEndHour = (uint32_t)charToNumber(argv[i + 40]);
+
+            g_nost_threshold = (uint8_t)charToNumber(argv[i + 41]);
+            g_nost_TGE = (uint8_t)charToNumber(argv[i + 42]);
+            g_nost_stepOfVesting = (uint8_t)charToNumber(argv[i + 43]);
+            i += 44;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoinvestinproject") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_INVEST_IN_FUNDRAISING;
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 1]);
+            g_nost_amount = charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoclaimtoken") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_CLAIM_TOKEN;
+            g_nost_amount = charToNumber(argv[i + 1]);
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromoupgradetierlevel") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_UPGRADE_TIER_LEVEL;
+            g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromotransfersharemanagementrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
+            g_nost_tokenName = argv[i + 1];
+            g_nost_identity = argv[i + 2];
+            g_nost_newManagementContractIndex = uint32_t(charToNumber(argv[i + 3]));
+            g_nost_numberOfShare = int64_t(charToNumber(argv[i + 4]));
+            i += 5;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-nostromogetstats") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = NOSTROMO_GET_STATS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogettierlevelbyuser") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_TIER_LEVEL_BY_USER;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetuservotestatus") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_USER_VOTE_STATUS;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromochecktokencreatability") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_CHECK_TOKEN_CREATABILITY;
+            g_nost_tokenName = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetnumberofinvestedprojects") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_NUMBER_OF_INVESTED_PROJECTS;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetprojectbyindex") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_PROJECT_BY_INDEX;
+            g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetfundraisingbyindex") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_FUNDRAISING_BY_INDEX;
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetprojectindexlistbycreator") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetinfouserinvested") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = NOSTROMO_GET_INFO_USER_INVESTED;
+            g_nost_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-nostromogetmaxclaimamount") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = NOSTROMO_GET_MAX_CLAIM_AMOUNT;
+            g_nost_identity = argv[i + 1];
+            g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+
+        /**************************
          **** TESTING COMMANDS ****
          **************************/
         
@@ -2008,9 +2307,9 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = TEST_BID_IN_IPO_THROUGH_CONTRACT;
             g_paramString1 = argv[i + 1];
-            g_ipo_contract_index = (uint32_t)charToNumber(argv[i + 2]);
-            g_make_ipo_bid_number_of_share = (uint32_t)charToNumber(argv[i + 3]);
-            g_make_ipo_bid_price_per_share = charToNumber(argv[i + 4]);
+            g_IPOContractIndex = (uint32_t)charToNumber(argv[i + 2]);
+            g_makeIPOBidNumberOfShare = (uint32_t)charToNumber(argv[i + 3]);
+            g_makeIPOBidPricePerShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
             return;

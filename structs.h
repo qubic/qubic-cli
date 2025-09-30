@@ -138,20 +138,39 @@ enum COMMAND
     QSWAP_SWAP_EXACT_ASSET_FOR_QU = 127,
     QSWAP_SWAP_ASSET_FOR_EXACT_QU = 128,
     QSWAP_QUOTE = 129,
-    MSVAULT_DEPOSIT_ASSET_CMD = 130,
-    MSVAULT_RELEASE_ASSET_TO_CMD = 131,
-    MSVAULT_RESET_ASSET_RELEASE_CMD = 132,
-    MSVAULT_GET_ASSET_BALANCES_CMD = 133,
-    MSVAULT_GET_ASSET_RELEASE_STATUS_CMD = 134,
-    MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD = 135,
-    MSVAULT_REVOKE_ASSET_RIGHTS_CMD = 136,
-    MSVAULT_IS_SHAREHOLDER_CMD = 137,
-    MSVAULT_VOTE_FEE_CHANGE_CMD = 138,
-    MSVAULT_GET_FEE_VOTES_CMD = 139,
-    MSVAULT_GET_FEE_VOTES_OWNER_CMD = 140,
-    MSVAULT_GET_FEE_VOTES_SCORE_CMD = 141,
-    MSVAULT_GET_UNIQUE_FEE_VOTES_CMD = 142,
-    MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING_CMD = 143,
+    NOSTROMO_REGISTER_IN_TIER = 130,
+    NOSTROMO_LOGOUT_FROM_TIER = 131,
+    NOSTROMO_CREATE_PROJECT = 132,
+    NOSTROMO_VOTE_IN_PROJECT = 133,
+    NOSTROMO_CREATE_FUNDRAISING = 134,
+    NOSTROMO_INVEST_IN_FUNDRAISING = 135,
+    NOSTROMO_CLAIM_TOKEN = 136,
+    NOSTROMO_GET_STATS = 137,
+    NOSTROMO_GET_TIER_LEVEL_BY_USER = 138,
+    NOSTROMO_GET_USER_VOTE_STATUS = 139,
+    NOSTROMO_CHECK_TOKEN_CREATABILITY = 140,
+    NOSTROMO_GET_NUMBER_OF_INVESTED_PROJECTS = 141,
+    NOSTROMO_GET_PROJECT_BY_INDEX = 142,
+    NOSTROMO_GET_FUNDRAISING_BY_INDEX = 143,
+    NOSTROMO_GET_PROJECT_INDEX_LIST_BY_CREATOR = 144,
+    NOSTROMO_UPGRADE_TIER_LEVEL = 145,
+    NOSTROMO_TRANSFER_SHARE_MANAGEMENT_RIGHTS = 146,
+    NOSTROMO_GET_INFO_USER_INVESTED = 147,
+    NOSTROMO_GET_MAX_CLAIM_AMOUNT = 148,
+    MSVAULT_DEPOSIT_ASSET_CMD = 149,
+    MSVAULT_RELEASE_ASSET_TO_CMD = 150,
+    MSVAULT_RESET_ASSET_RELEASE_CMD = 151,
+    MSVAULT_GET_ASSET_BALANCES_CMD = 152,
+    MSVAULT_GET_ASSET_RELEASE_STATUS_CMD = 153,
+    MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD = 154,
+    MSVAULT_REVOKE_ASSET_RIGHTS_CMD = 155,
+    MSVAULT_IS_SHAREHOLDER_CMD = 156,
+    MSVAULT_VOTE_FEE_CHANGE_CMD = 157,
+    MSVAULT_GET_FEE_VOTES_CMD = 158,
+    MSVAULT_GET_FEE_VOTES_OWNER_CMD = 159,
+    MSVAULT_GET_FEE_VOTES_SCORE_CMD = 160,
+    MSVAULT_GET_UNIQUE_FEE_VOTES_CMD = 161,
+    MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING_CMD = 162,
     TOTAL_COMMAND, // DO NOT CHANGE THIS
 };
 
@@ -408,8 +427,13 @@ typedef struct
 
 typedef struct
 {
+    uint8_t digest[32];
+} TxDigestStruct;
+
+typedef struct
+{
     std::vector<uint8_t> vecU8;
-} extraDataStruct;
+} ExtraDataStruct;
 
 struct SpecialCommand
 {
@@ -667,26 +691,6 @@ struct RespondContractFunction // Returns result of contract function invocation
 {
     // Variable-size output; the size must be 0 if the invocation has failed for whatever reason (e.g. no a function registered for [inputType], or the function has timed out)
 
-    static constexpr unsigned char type()
-    {
-        return 43;
-    }
-};
-
-struct QxFees_output
-{
-    uint32_t assetIssuanceFee; // Amount of qus
-    uint32_t transferFee; // Amount of qus
-    uint32_t tradeFee; // Number of billionths
-
-    static constexpr unsigned char type()
-    {
-        return RespondContractFunction::type();
-    }    
-};
-struct GetSendToManyV1Fee_output
-{
-    long long fee; // Number of billionths
     static constexpr unsigned char type()
     {
         return 43;

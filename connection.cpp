@@ -19,12 +19,13 @@
 
 // includes for template instantiations
 #include "quottery.h"
-#include "qxStruct.h"
+#include "qx_struct.h"
 #include "qvault.h"
 #include "qearn.h"
 #include "msvault.h"
 #include "qswap_struct.h"
-#include "testUtils.h"
+#include "test_utils.h"
+#include "nostromo.h"
 #include "qutil.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
@@ -196,6 +197,15 @@ void QubicConnection::resolveConnection()
 template <typename T>
 T QubicConnection::receivePacketWithHeaderAs()
 {
+    T result;
+    receivePacketWithHeaderAs(result);
+    return result;
+}
+
+// Receive the next qubic packet with a RequestResponseHeader that matches T
+template <typename T>
+void QubicConnection::receivePacketWithHeaderAs(T& result)
+{
     // first receive the header
     RequestResponseHeader header;
     int recvByte = -1, packetSize = -1, remainingSize = -1;
@@ -223,7 +233,7 @@ T QubicConnection::receivePacketWithHeaderAs()
     
     packetSize = header.size();
     remainingSize = packetSize - sizeof(RequestResponseHeader);
-    T result;
+
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
@@ -231,7 +241,6 @@ T QubicConnection::receivePacketWithHeaderAs()
         receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer);
     }
-    return result;
 }
 
 // same as receivePacketWithHeaderAs but without the header
@@ -354,6 +363,18 @@ template MsVaultGetFeeVotesOwner_output QubicConnection::receivePacketWithHeader
 template MsVaultGetFeeVotesScore_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotesScore_output>();
 template MsVaultGetUniqueFeeVotes_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotes_output>();
 template MsVaultGetUniqueFeeVotesRanking_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotesRanking_output>();
+
+// NOSTROMO
+template NOSTROMOGetStats_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetStats_output>();
+template NOSTROMOGetTierLevelByUser_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetTierLevelByUser_output>();
+template NOSTROMOGetUserVoteStatus_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetUserVoteStatus_output>();
+template NOSTROMOCheckTokenCreatability_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOCheckTokenCreatability_output>();
+template NOSTROMOGetNumberOfInvestedProjects_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedProjects_output>();
+template NOSTROMOGetProjectByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectByIndex_output>();
+template NOSTROMOGetFundarasingByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetFundarasingByIndex_output>();
+template NOSTROMOGetProjectIndexListByCreator_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectIndexListByCreator_output>();
+template NOSTROMOGetInfoUserInvested_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetInfoUserInvested_output>();
+template NOSTROMOGetMaxClaimAmount_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetMaxClaimAmount_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();
