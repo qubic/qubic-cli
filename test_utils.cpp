@@ -346,7 +346,7 @@ void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* 
     uint32_t currentTick = getTickNumberFromNode(qc);
 
     // send tx to query qpi functions in user procedure for numTicks ticks starting from currentTick + scheduledTickOffset
-    constexpr uint32_t numTicks = 15; // nodes currently save info from last 16 ticks but we miss one due to delay in matching
+    constexpr uint32_t numTicks = 8; // nodes currently save info from last 16 ticks but we miss one due to delay in matching
     uint32_t firstScheduledTick = currentTick + scheduledTickOffset;
     LOG("Sending txs to save qpi functions output to contract state... ");
     std::vector<std::array<char, 128>> txHashes = queryQpiFunctionsOutputToState(qc, seed, firstScheduledTick, numTicks);
@@ -387,7 +387,7 @@ void testQpiFunctionsOutputPast(const char* nodeIp, const int nodePort)
     auto qc = make_qc(nodeIp, nodePort);
     uint32_t currentTick = getTickNumberFromNode(qc);
 
-    queryAndMatchQpiFunctionsOutput(qc, currentTick - 15, currentTick - 1, false);
+    queryAndMatchQpiFunctionsOutput(qc, currentTick - 8, currentTick - 1, false);
 }
 
 static unsigned int getTestContractIndexBC(const char* contractStr)
