@@ -64,18 +64,6 @@ static std::string assetNameFromInt64(unsigned long long assetName)
     return std::string(buffer);
 }
 
-static unsigned long long assetNameFromString(const char* assetName)
-{
-    size_t n = strlen(assetName);
-    if (n > 7) {
-        LOG("Asset name too long, max 7 characters: %s\n", assetName);
-        n = 7;
-    }
-    unsigned long long integer = 0;
-    memcpy(&integer, assetName, n);
-    return integer;
-}
-
 long long getSendToManyV1Fee(QCPtr qc)
 {
     struct {

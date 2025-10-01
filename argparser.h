@@ -290,6 +290,36 @@ void print_help()
     printf("\t\tGet MsVault fees.\n");
     printf("\t-msvaultgetvaultowners <VAULT_ID>\n");
     printf("\t\tGet MsVault owners given vault ID.\n");
+    printf("\t-msvaultdepositasset <VAULT_ID> <ASSET_NAME> <ISSUER_ID> <AMOUNT>\n");
+    printf("\t\tDeposit a custom asset into a vault. Note: You must first grant management rights of the shares to the MsVault contract.\n");
+    printf("\t-msvaultreleaseassetto <VAULT_ID> <ASSET_NAME> <ISSUER_ID> <AMOUNT> <DESTINATION_ID>\n");
+    printf("\t\tRequest to release a custom asset from a vault to a destination. Fee applies.\n");
+    printf("\t-msvaultresetassetrelease <VAULT_ID>\n");
+    printf("\t\tReset your pending custom asset release request for a vault. Fee applies.\n");
+    printf("\t-msvaultgetassetbalances <VAULT_ID>\n");
+    printf("\t\tGet the custom asset balances for a vault.\n");
+    printf("\t-msvaultgetassetreleasestatus <VAULT_ID>\n");
+    printf("\t\tGet the pending custom asset release statuses for a vault.\n");
+    printf("\t-msvaultgetmanagedassetbalance <ASSET_NAME> <ISSUER_ID> <OWNER_ID>\n");
+    printf("\t\tGet the managed asset balance for a specific owner.\n");
+    printf("\t-msvaultrevokeassetrights <ASSET_NAME> <ISSUER_ID> <NUMBER_OF_SHARES>\n");
+    printf("\t\tRevoke asset management rights from MsVault, transferring them back to QX. Fee applies.\n");
+    printf("\t-msvaultisshareholder <IDENTITY>\n");
+    printf("\t\tCheck if the provided identity is a shareholder of the MsVault contract.\n");
+    printf("\t-msvaultvotechange <REGISTER_FEE> <RELEASE_FEE> <RESET_RELEASE_FEE> <HOLD_FEE> <DEPOSIT_FEE>\n");
+    printf("\t\tAs a shareholder, vote to change the contract fees. A deposit is required, which is refunded if the vote passes.\n");
+    printf("\t-msvaultgetfeevotes\n");
+    printf("\t\tGet the list of all active fee change votes.\n");
+    printf("\t-msvaultgetfeevotesowner\n");
+    printf("\t\tGet the list of shareholders who have cast a fee change vote.\n");
+    printf("\t-msvaultgetfeevotesscore\n");
+    printf("\t\tGet the corresponding scores (voting power) for each active fee change vote.\n");
+    printf("\t-msvaultgetuniquefeevotes\n");
+    printf("\t\tGet the list of unique fee proposals that have been voted on.\n");
+    printf("\t-msvaultgetuniquefeevotesranking\n");
+    printf("\t\tGet the aggregated scores (total voting power) for each unique fee proposal.\n");
+
+
     printf("\n[QSWAP COMMANDS]\n");
     printf("\t-qswapgetfee\n");
     printf("\t\tShow current Qswap fee.\n");
@@ -1886,6 +1916,137 @@ void parseArgument(int argc, char** argv)
             g_cmd = MSVAULT_GET_OWNERS_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultdepositasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+                g_cmd = MSVAULT_DEPOSIT_ASSET_CMD;
+            g_msvault_id = charToNumber(argv[i + 1]);
+            g_msVaultAssetName = argv[i + 2];
+            g_msVaultIssuer = argv[i + 3];
+            g_txAmount = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultreleaseassetto") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(5)
+                g_cmd = MSVAULT_RELEASE_ASSET_TO_CMD;
+            g_msvault_id = charToNumber(argv[i + 1]);
+            g_msVaultAssetName = argv[i + 2];
+            g_msVaultIssuer = argv[i + 3];
+            g_txAmount = charToNumber(argv[i + 4]);
+            g_msvault_destination = argv[i + 5];
+            i += 6;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultresetassetrelease") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_RESET_ASSET_RELEASE_CMD;
+            g_msvault_id = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetassetbalances") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_GET_ASSET_BALANCES_CMD;
+            g_msvault_id = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetassetreleasestatus") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+                g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
+            g_msvault_id = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultgetmanagedassetbalance") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD;
+            g_msVaultAssetName = argv[i + 1];
+            g_msVaultIssuer = argv[i + 2];
+            g_msVaultOwner = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultrevokeassetrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+                g_cmd = MSVAULT_REVOKE_ASSET_RIGHTS_CMD;
+            g_msVaultAssetName = argv[i + 1];
+            g_msVaultIssuer = argv[i + 2];
+            g_txAmount = charToNumber(argv[i + 3]); // Reusing g_TxAmount for numberOfShares
+            i += 4;
+            CHECK_OVER_PARAMETERS
+                return;
+        }
+        if (strcmp(argv[i], "-msvaultisshareholder") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = MSVAULT_IS_SHAREHOLDER_CMD;
+            g_msVaultCandidateIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultvotechange") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(5) // Excluding burn fee for now as it's not currently used
+            g_cmd = MSVAULT_VOTE_FEE_CHANGE_CMD;
+            g_msVaultNewRegisteringFee = charToUnsignedNumber(argv[i + 1]);
+            g_msVaultNewReleaseFee = charToUnsignedNumber(argv[i + 2]);
+            g_msVaultNewReleaseResetFee = charToUnsignedNumber(argv[i + 3]);
+            g_msVaultNewHoldingFee = charToUnsignedNumber(argv[i + 4]);
+            g_msVaultNewDepositFee = charToUnsignedNumber(argv[i + 5]);
+            i += 6;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetfeevotes") == 0)
+        {
+            g_cmd = MSVAULT_GET_FEE_VOTES_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetfeevotesowner") == 0)
+        {
+            g_cmd = MSVAULT_GET_FEE_VOTES_OWNER_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetfeevotesscore") == 0)
+        {
+            g_cmd = MSVAULT_GET_FEE_VOTES_SCORE_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetuniquefeevotes") == 0)
+        {
+            g_cmd = MSVAULT_GET_UNIQUE_FEE_VOTES_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-msvaultgetuniquefeevotesranking") == 0)
+        {
+            g_cmd = MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING_CMD;
+            i++;
             CHECK_OVER_PARAMETERS
             return;
         }

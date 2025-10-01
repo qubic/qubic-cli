@@ -661,6 +661,73 @@ int run(int argc, char* argv[])
             msvaultGetVaultOwners(g_nodeIp, g_nodePort, g_msvault_id);
             break;
         }
+        case MSVAULT_GET_MANAGED_ASSET_BALANCE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckIdentity(g_msVaultOwner);
+            msvaultGetManagedAssetBalance(g_nodeIp, g_nodePort, g_msVaultAssetName, g_msVaultIssuer, g_msVaultOwner);
+            break;
+        }
+        case MSVAULT_REVOKE_ASSET_RIGHTS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckTxAmount(g_txAmount);
+            msvaultRevokeAssetManagementRights(g_nodeIp, g_nodePort, g_seed, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_IS_SHAREHOLDER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckIdentity(g_msVaultCandidateIdentity);
+            msvaultIsShareHolder(g_nodeIp, g_nodePort, g_msVaultCandidateIdentity);
+            break;
+        }
+        case MSVAULT_VOTE_FEE_CHANGE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            msvaultVoteFeeChange(g_nodeIp, g_nodePort, g_seed,
+                g_msVaultNewRegisteringFee, g_msVaultNewReleaseFee,
+                g_msVaultNewReleaseResetFee, g_msVaultNewHoldingFee,
+                g_msVaultNewDepositFee, 0, // burn fee is 0 for now
+                g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_GET_FEE_VOTES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetFeeVotes(g_nodeIp, g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_FEE_VOTES_OWNER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetFeeVotesOwner(g_nodeIp, g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_FEE_VOTES_SCORE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetFeeVotesScore(g_nodeIp, g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_UNIQUE_FEE_VOTES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetUniqueFeeVotes(g_nodeIp, g_nodePort);
+            break;
+        }
+        case MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetUniqueFeeVotesRanking(g_nodeIp, g_nodePort);
+            break;
+        }
         case PRINT_QSWAP_FEE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printQswapFee(g_nodeIp, g_nodePort);
@@ -1009,6 +1076,46 @@ int run(int argc, char* argv[])
             getMaxClaimAmount(g_nodeIp,g_nodePort,
                         g_nost_identity,
                         g_nost_indexOfFundraising);
+            break;
+        }
+        case MSVAULT_DEPOSIT_ASSET_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckTxAmount(g_txAmount);
+            msvaultDepositAsset(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RELEASE_ASSET_TO_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_msVaultAssetName);
+            sanityCheckIdentity(g_msVaultIssuer);
+            sanityCheckTxAmount(g_txAmount);
+            sanityCheckIdentity(g_msvault_destination);
+            msvaultReleaseAssetTo(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_msVaultAssetName, g_msVaultIssuer, g_txAmount, g_msvault_destination, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_RESET_ASSET_RELEASE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            msvaultResetAssetRelease(g_nodeIp, g_nodePort, g_seed, g_msvault_id, g_offsetScheduledTick);
+            break;
+        }
+        case MSVAULT_GET_ASSET_BALANCES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetVaultAssetBalances(g_nodeIp, g_nodePort, g_msvault_id);
+            break;
+        }
+        case MSVAULT_GET_ASSET_RELEASE_STATUS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            msvaultGetAssetReleaseStatus(g_nodeIp, g_nodePort, g_msvault_id);
             break;
         }
         case TEST_QPI_FUNCTIONS_OUTPUT:

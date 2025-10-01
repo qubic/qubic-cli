@@ -206,6 +206,15 @@ uint32_t g_nost_cliffEndYear = 0;
 uint32_t g_nost_cliffEndMonth = 0;
 uint32_t g_nost_cliffEndDay = 0;
 uint32_t g_nost_cliffEndHour = 0;
+char* g_msVaultAssetName = nullptr;
+char* g_msVaultIssuer = nullptr;
+char* g_msVaultOwner = nullptr;
+char* g_msVaultCandidateIdentity = nullptr;
+uint64_t g_msVaultNewRegisteringFee = 0;
+uint64_t g_msVaultNewReleaseFee = 0;
+uint64_t g_msVaultNewReleaseResetFee = 0;
+uint64_t g_msVaultNewHoldingFee = 0;
+uint64_t g_msVaultNewDepositFee = 0;
 
 uint32_t g_nost_vestingEndYear = 0;
 uint32_t g_nost_vestingEndMonth = 0;

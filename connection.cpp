@@ -354,6 +354,15 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+template MsVaultGetVaultAssetBalances_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultAssetBalances_output>();
+template MsVaultGetAssetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetAssetReleaseStatus_output>();
+template MsVaultGetManagedAssetBalance_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetManagedAssetBalance_output>();
+template MsVaultIsShareHolder_output QubicConnection::receivePacketWithHeaderAs<MsVaultIsShareHolder_output>();
+template MsVaultGetFeeVotes_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotes_output>();
+template MsVaultGetFeeVotesOwner_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotesOwner_output>();
+template MsVaultGetFeeVotesScore_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotesScore_output>();
+template MsVaultGetUniqueFeeVotes_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotes_output>();
+template MsVaultGetUniqueFeeVotesRanking_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotesRanking_output>();
 
 // NOSTROMO
 template NOSTROMOGetStats_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetStats_output>();
