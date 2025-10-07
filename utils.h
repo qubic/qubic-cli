@@ -70,6 +70,19 @@ static inline std::vector<std::string> splitString(const std::string& str, const
     return splitString(str.c_str(), delimiter);
 }
 
+
+static void trimStr( std::string& str) {
+    while (!str.empty() && isspace(str.front())) {
+        str.erase(str.begin());
+    }
+    while (!str.empty() && isspace(str.back())) {
+        str.pop_back();
+    }
+}
+
+static bool isIncudedInStr(const std::string& str, const std::string& pattern) {
+    return str.find(pattern) != std::string::npos;
+}
 #ifdef _MSC_VER
 static inline int strcasecmp(const char* s1, const char* s2)
 {

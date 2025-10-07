@@ -18,11 +18,15 @@ const char* g_proposalString = "";
 const char* g_voteValueString = "";
 const char* g_paramString1 = "";
 const char* g_paramString2 = "";
+const char* g_invokeContractProcedureInputFormat = "";
+const char* g_callContractFunctionInputFormat = "";
+const char* g_callContractFunctionOutputFormat = "";
 bool g_force = false;
 
 int64_t g_txAmount = 0;
 uint16_t g_txType = 0;
 uint32_t g_txTick = 0;
+uint16_t g_contractFunctionNumber = 0;
 int g_nodePort = DEFAULT_NODE_PORT;
 int g_txExtraDataSize = 0;
 int g_rawPacketSize = 0;

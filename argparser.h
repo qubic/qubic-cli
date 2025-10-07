@@ -5,7 +5,9 @@
 #include <cerrno>
 #include <sstream>
 
+#include "global.h"
 #include "logger.h"
+#include "structs.h"
 
 #define CHECK_OVER_PARAMETERS                                                           \
     if (i < argc)                                                                       \
@@ -840,6 +842,28 @@ void parseArgument(int argc, char** argv)
             g_txExtraDataSize = int(charToNumber(argv[i+4]));
             hexToByte(argv[i+5], g_txExtraData, g_txExtraDataSize);
             i+=6;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-invokecontractprocedure") == 0) {
+            CHECK_NUMBER_OF_PARAMETERS(4);
+            g_cmd = INVOKE_CONTRACT_PROCEDURE;
+            g_contractIndex = uint32_t(charToNumber(argv[i+1]));
+            g_txType = uint16_t(charToNumber(argv[i+2]));
+            g_txAmount = charToNumber(argv[i+3]);
+            g_invokeContractProcedureInputFormat = argv[i+4];
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-callcontractfunction") == 0) {
+            CHECK_NUMBER_OF_PARAMETERS(4);
+            g_cmd = CALL_CONTRACT_FUNCTION;
+            g_contractIndex = uint32_t(charToNumber(argv[i+1]));
+            g_contractFunctionNumber = uint16_t(charToNumber(argv[i+2]));
+            g_callContractFunctionInputFormat = argv[i+3];
+            g_callContractFunctionOutputFormat = argv[i+4];
+            i+=5;
             CHECK_OVER_PARAMETERS
             break;
         }
