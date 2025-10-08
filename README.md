@@ -337,6 +337,40 @@ Command:
 	-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>
 			Get the max claim amount at the moment.
 
+[QBOND COMMANDS]
+	-qbondstake <MILLIONS_AMOUNT>
+			Stake QU and get MBNDxxx token for every million of QU.
+	-qbondtransfer <IDENTITY> <EPOCH> <AMOUNT>
+			Transfer <AMOUNT> of MBonds of specific <EPOCH> to new owner <IDENTITY>
+	-qbondaddask <EPOCH> <PRICE> <AMOUNT>
+			Add ask order of <AMOUNT> MBonds of <EPOCH> at <PRICE>
+	-qbondremoveask <EPOCH> <PRICE> <AMOUNT>
+			Remove <AMOUNT> MBonds of <EPOCH> from ask order at <PRICE>
+	-qbondaddbid <EPOCH> <PRICE> <AMOUNT>
+			Add bid order of <AMOUNT> MBonds of <EPOCH> at <PRICE>
+	-qbondremovebid <EPOCH> <PRICE> <AMOUNT>
+			Remove <AMOUNT> MBonds of <EPOCH> from bid order at <PRICE>
+	-qbondburnqu <AMOUNT>
+			Burn <AMOUNT> of qu by QBOND sc.
+	-qbondupdatecfa <IDENTITY> <OPERATION>
+			Only for admin! Update commission free addresses. <OPERATION> must be 0 to remove <IDENTITY> or 1 to add.
+	-qbondgetfees
+			Get fees of QBond sc.
+	-qbondgetearnedfees
+			Get earned fees by QBond sc.
+	-qbondgetinfoperepoch <EPOCH>
+			Get overall information about <EPOCH> (stakers amount, total staked, APY)
+	-qbondgetorders <EPOCH> <ASKS_OFFSET> <BIDS_OFFSET>
+			Get orders of <EPOCH> MBonds.
+	-qbondgetuserorders <OWNER> <ASKS_OFFSET> <BIDS_OFFSET>
+			Get MBonds orders owner by <OWNER>.
+	-qbondtable
+			Get info about APY of each MBond.
+	-qbondgetusermbonds <OWNER>
+			Get MBonds owned by the <OWNER>.
+	-qbondgetcfa
+			Get list of commission free addresses.
+
 [TESTING COMMANDS]
 	-testqpifunctionsoutput
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.

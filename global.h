@@ -231,3 +231,15 @@ uint32_t g_nost_newManagementContractIndex = 0;
 int64_t g_nost_numberOfShare = 0;
 
 char* g_nost_identity = nullptr;
+
+// qbond
+int64_t g_qbond_millionsOfQu = 0;
+int64_t g_qbond_epoch = 0;
+int64_t g_qbond_asksOffset = 0;
+int64_t g_qbond_bidsOffset = 0;
+char* g_qbond_targetIdentity = nullptr;
+int64_t g_qbond_mbondsAmount = 0;
+int64_t g_qbond_mbondPrice = 0;
+int64_t g_qbond_burnAmount = 0;
+char* g_qbond_owner = nullptr;
+bool g_qbond_updateCFAOperation = false;
