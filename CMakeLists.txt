@@ -12,6 +12,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/node_utils.cpp
 		${CMAKE_SOURCE_DIR}/nostromo.cpp
 		${CMAKE_SOURCE_DIR}/proposal.cpp
+		${CMAKE_SOURCE_DIR}/qbond.cpp
 		${CMAKE_SOURCE_DIR}/qearn.cpp
 		${CMAKE_SOURCE_DIR}/qswap.cpp
 		${CMAKE_SOURCE_DIR}/quottery.cpp
@@ -38,6 +39,7 @@ SET(HEADER_FILES
 	nostromo.h
 	prompt.h
 	proposal.h
+	qbond.h
 	qearn.h
 	qswap.h
 	qswap_struct.h

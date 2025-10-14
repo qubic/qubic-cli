@@ -27,6 +27,7 @@
 #include "test_utils.h"
 #include "nostromo.h"
 #include "qutil.h"
+#include "qbond.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
@@ -375,6 +376,16 @@ template NOSTROMOGetFundarasingByIndex_output QubicConnection::receivePacketWith
 template NOSTROMOGetProjectIndexListByCreator_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectIndexListByCreator_output>();
 template NOSTROMOGetInfoUserInvested_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetInfoUserInvested_output>();
 template NOSTROMOGetMaxClaimAmount_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetMaxClaimAmount_output>();
+
+// QBOND
+template GetInfoPerEpoch_output QubicConnection::receivePacketWithHeaderAs<GetInfoPerEpoch_output>();
+template GetOrders_output QubicConnection::receivePacketWithHeaderAs<GetOrders_output>();
+template GetUserOrders_output QubicConnection::receivePacketWithHeaderAs<GetUserOrders_output>();
+template MBondsTable_output QubicConnection::receivePacketWithHeaderAs<MBondsTable_output>();
+template GetUserMBonds_output QubicConnection::receivePacketWithHeaderAs<GetUserMBonds_output>();
+template GetFees_output QubicConnection::receivePacketWithHeaderAs<GetFees_output>();
+template GetEarnedFees_output QubicConnection::receivePacketWithHeaderAs<GetEarnedFees_output>();
+template GetCFA_output QubicConnection::receivePacketWithHeaderAs<GetCFA_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();

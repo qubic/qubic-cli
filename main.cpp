@@ -20,6 +20,7 @@
 #include "qswap.h"
 #include "test_utils.h"
 #include "nostromo.h"
+#include "qbond.h"
 
 int run(int argc, char* argv[])
 {
@@ -1116,6 +1117,110 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             msvaultGetAssetReleaseStatus(g_nodeIp, g_nodePort, g_msvault_id);
+            break;
+        }
+        case QBOND_STAKE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondStake(g_nodeIp, g_nodePort, g_seed, g_qbond_millionsOfQu);
+            break;
+        }
+        case QBOND_TRANSFER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondTransfer(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_epoch, g_qbond_mbondsAmount);
+            break;
+        }
+        case QBOND_ADD_ASK_ORDER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondAddAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            break;
+        }
+        case QBOND_REMOVE_ASK_ORDER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondRemoveAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            break;
+        }
+        case QBOND_ADD_BID_ORDER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondAddBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            break;
+        }
+        case QBOND_REMOVE_BID_ORDER_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondRemoveBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            break;
+        }
+        case QBOND_BURN_QU_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondBurn(g_nodeIp, g_nodePort, g_seed, g_qbond_burnAmount);
+            break;
+        }
+        case QBOND_UPDATE_CFA_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qbondUpdateCFA(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_updateCFAOperation);
+            break;
+        }
+        case QBOND_GET_FEES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetFees(g_nodeIp, g_nodePort);
+            break;
+        }
+        case QBOND_GET_EARNED_FEES_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetEarnedFees(g_nodeIp, g_nodePort);
+            break;
+        }
+        case QBOND_GET_EPOCH_INFO_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetInfoPerEpoch(g_nodeIp, g_nodePort, g_qbond_epoch);
+            break;
+        }
+        case QBOND_GET_ORDERS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetOrders(g_nodeIp, g_nodePort, g_qbond_epoch, g_qbond_asksOffset, g_qbond_bidsOffset);
+            break;
+        }
+        case QBOND_GET_USER_ORDERS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetUserOrders(g_nodeIp, g_nodePort, g_qbond_owner, g_qbond_asksOffset, g_qbond_bidsOffset);
+            break;
+        }
+        case QBOND_GET_TABLE_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetTable(g_nodeIp, g_nodePort);
+            break;
+        }
+        case QBOND_GET_USER_MBONDS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetUserMBonds(g_nodeIp, g_nodePort, g_qbond_owner);
+            break;
+        }
+        case QBOND_GET_CFA_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qbondGetCFA(g_nodeIp, g_nodePort);
             break;
         }
         case TEST_QPI_FUNCTIONS_OUTPUT:

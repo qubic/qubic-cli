@@ -319,7 +319,6 @@ void print_help()
     printf("\t-msvaultgetuniquefeevotesranking\n");
     printf("\t\tGet the aggregated scores (total voting power) for each unique fee proposal.\n");
 
-
     printf("\n[QSWAP COMMANDS]\n");
     printf("\t-qswapgetfee\n");
     printf("\t\tShow current Qswap fee.\n");
@@ -347,6 +346,7 @@ void print_help()
     printf("\t\tSwap asset for qu via Qswap contract, only execute if asset_amount_in <= ASSET_AMOUNT_IN_MAX.\n");
     printf("\t-qswapquote exact_qu_input/exact_qu_output/exact_asset_input/exact_asset_output <ASSET_NAME> <ISSUER_IN_HEX> <AMOUNT>\n");
     printf("\t\tQuote amount_out/amount_in with the given amount_in/amount_out via Qswap contract.\n");
+
     printf("\n[NOSTROMO COMMANDS]\n");
     printf("\t-nostromoregisterintier <TIER_LEVEL>\n");
     printf("\t\tRegister in tier.\n");
@@ -399,6 +399,40 @@ void print_help()
 	printf("\t\tGet the invseted infos(indexOfFundraising, InvestedAmount, ClaimedAmount).\n");
 	printf("\t-nostromogetmaxclaimamount <INVESTOR_ADDRESS> <INDEX_OF_FUNDRAISING>\n");
 	printf("\t\tGet the max claim amount at the moment.\n");
+
+    printf("\n[QBOND COMMANDS]\n");
+    printf("\t-qbondstake <MILLIONS_AMOUNT>\n");
+    printf("\t\tStake QU and get MBNDxxx token for every million of QU.\n");
+    printf("\t-qbondtransfer <IDENTITY> <EPOCH> <AMOUNT>\n");
+    printf("\t\tTransfer <AMOUNT> of MBonds of specific <EPOCH> to new owner <IDENTITY>\n");
+    printf("\t-qbondaddask <EPOCH> <PRICE> <AMOUNT>\n");
+    printf("\t\tAdd ask order of <AMOUNT> MBonds of <EPOCH> at <PRICE>\n");
+    printf("\t-qbondremoveask <EPOCH> <PRICE> <AMOUNT>\n");
+    printf("\t\tRemove <AMOUNT> MBonds of <EPOCH> from ask order at <PRICE>\n");
+    printf("\t-qbondaddbid <EPOCH> <PRICE> <AMOUNT>\n");
+    printf("\t\tAdd bid order of <AMOUNT> MBonds of <EPOCH> at <PRICE>\n");
+    printf("\t-qbondremovebid <EPOCH> <PRICE> <AMOUNT>\n");
+    printf("\t\tRemove <AMOUNT> MBonds of <EPOCH> from bid order at <PRICE>\n");
+    printf("\t-qbondburnqu <AMOUNT>\n");
+    printf("\t\tBurn <AMOUNT> of qu by QBOND sc.\n");
+    printf("\t-qbondupdatecfa <IDENTITY> <OPERATION>\n");
+    printf("\t\tOnly for admin! Update commission free addresses. <OPERATION> must be 0 to remove <IDENTITY> or 1 to add.\n");
+    printf("\t-qbondgetfees\n");
+    printf("\t\tGet fees of QBond sc.\n");
+    printf("\t-qbondgetearnedfees\n");
+    printf("\t\tGet earned fees by QBond sc.\n");
+    printf("\t-qbondgetinfoperepoch <EPOCH>\n");
+    printf("\t\tGet overall information about <EPOCH> (stakers amount, total staked, APY)\n");
+    printf("\t-qbondgetorders <EPOCH> <ASKS_OFFSET> <BIDS_OFFSET>\n");
+    printf("\t\tGet orders of <EPOCH> MBonds.\n");
+    printf("\t-qbondgetuserorders <OWNER> <ASKS_OFFSET> <BIDS_OFFSET>\n");
+    printf("\t\tGet MBonds orders owner by <OWNER>.\n");
+    printf("\t-qbondtable\n");
+    printf("\t\tGet info about APY of each MBond.\n");
+    printf("\t-qbondgetusermbonds <OWNER>\n");
+    printf("\t\tGet MBonds owned by the <OWNER>.\n");
+    printf("\t-qbondgetcfa\n");
+    printf("\t\tGet list of commission free addresses.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -2290,6 +2324,162 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+
+        /************************
+         **** QBOND COMMANDS ****
+         ************************/
+
+        if (strcmp(argv[i], "-qbondstake") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QBOND_STAKE_CMD;
+            g_qbond_millionsOfQu = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondtransfer") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_TRANSFER_CMD;
+            g_qbond_targetIdentity = argv[i + 1];
+            g_qbond_epoch = charToNumber(argv[i + 2]);
+            g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondaddask") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_ADD_ASK_ORDER_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            g_qbond_mbondPrice = charToNumber(argv[i + 2]);
+            g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondremoveask") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_REMOVE_ASK_ORDER_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            g_qbond_mbondPrice = charToNumber(argv[i + 2]);
+            g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondaddbid") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_ADD_BID_ORDER_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            g_qbond_mbondPrice = charToNumber(argv[i + 2]);
+            g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondremovebid") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_REMOVE_BID_ORDER_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            g_qbond_mbondPrice = charToNumber(argv[i + 2]);
+            g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondburnqu") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QBOND_BURN_QU_CMD;
+            g_qbond_burnAmount = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondupdatecfa") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QBOND_UPDATE_CFA_CMD;
+            g_qbond_targetIdentity = argv[i + 1];
+            g_qbond_updateCFAOperation = (bool)charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetfees") == 0)
+        {
+            g_cmd = QBOND_GET_FEES_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetearnedfees") == 0)
+        {
+            g_cmd = QBOND_GET_EARNED_FEES_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetinfoperepoch") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QBOND_GET_EPOCH_INFO_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetorders") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_GET_ORDERS_CMD;
+            g_qbond_epoch = charToNumber(argv[i + 1]);
+            g_qbond_asksOffset = charToNumber(argv[i + 2]);
+            g_qbond_bidsOffset = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetuserorders") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QBOND_GET_USER_ORDERS_CMD;
+            g_qbond_owner = argv[i + 1];
+            g_qbond_asksOffset = charToNumber(argv[i + 2]);
+            g_qbond_bidsOffset = charToNumber(argv[i + 3]);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondtable") == 0)
+        {
+            g_cmd = QBOND_GET_TABLE_CMD;
+            i++;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetusermbonds") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QBOND_GET_USER_MBONDS_CMD;
+            g_qbond_owner = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-qbondgetcfa") == 0)
+        {
+            g_cmd = QBOND_GET_CFA_CMD;
+            i++;
             CHECK_OVER_PARAMETERS
             return;
         }
