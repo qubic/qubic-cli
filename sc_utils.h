@@ -35,11 +35,11 @@ struct ContractObject {
     unsigned long long getSize();
     unsigned long long getAlignment();
     void dumpIntoBuffer(void *buffer);
-    static ContractObject fromBuffer(void *buffer, const char* format);
-    void print(int indent = 0);
+    static ContractObject fromBuffer(void *buffer, const char* format, bool isRoot = false);
+    void print(int indent = 1, bool hasNext = false);
     std::string toString();
     bool isEmpty();
 };
 
 void dumpContractToCSV(const char* input, uint32_t contractId, const char* output);
-ContractObject buildContractObject(const char *format);
+ContractObject buildContractObject(const char *format, bool isRoot);

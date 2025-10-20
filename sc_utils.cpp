@@ -415,8 +415,8 @@ void ContractObject::dumpIntoBuffer(void *buffer) {
     memcpy(buffer, internalBuffer, currentBufferPos);
 }
 
-ContractObject ContractObject::fromBuffer(void *buffer, const char *format) {
-    ContractObject contractObject = buildContractObject(format);
+ContractObject ContractObject::fromBuffer(void *buffer, const char *format, bool isRoot) {
+    ContractObject contractObject = buildContractObject(format, isRoot);
     unsigned long long currentBufferPos = 0;
     for (int i = 0; i < contractObject.numberOfFields; i++) {
         unsigned long long alignment = 1;
@@ -477,12 +477,20 @@ ContractObject ContractObject::fromBuffer(void *buffer, const char *format) {
     return contractObject;
 }
 
-void ContractObject::print(int indent) {
+void ContractObject::print(int indent, bool hasNext) {
     if (this->isEmpty()) {
-        LOG("%s(empty)\n", getIndentString(indent).c_str());
+        LOG("%s(empty)%s\n", getIndentString(indent - 1).c_str(), hasNext ? "," : "");
         return;
     }
-    for (int i = 0; i < this->numberOfFields + std::max(0, this->arrayMaxSize - this->numberOfFields); i++) {
+
+    if (this->isArray) {
+        LOG("%s[\n", getIndentString(indent - 1).c_str());
+    } else {
+        LOG("%s{\n", getIndentString(indent - 1).c_str());
+    }
+
+    int totalFields = this->numberOfFields + std::max(0, this->arrayMaxSize - this->numberOfFields);
+    for (int i = 0; i < totalFields; i++) {
         if (this->primitive.find(i) != this->primitive.end()) {
             this->primitive[i].print(indent);
             if (i+1 < numberOfFields) {
@@ -491,17 +499,20 @@ void ContractObject::print(int indent) {
                 LOG("\n");
             }
         } else if (this->object.find(i) != this->object.end()) {
+            bool isHasNext = (i + 1 < totalFields);
             bool isArray = this->object[i].isArray;
             if (isArray) {
-                LOG("%s[\n", getIndentString(indent).c_str());
-                this->object[i].print(indent+1);
-                LOG("%s]\n", getIndentString(indent).c_str());
+                this->object[i].print(indent + 1, isHasNext);
             } else {
-                LOG("%s{\n", getIndentString(indent).c_str());
-                this->object[i].print(indent+1);
-                LOG("%s}\n", getIndentString(indent).c_str());
+                this->object[i].print(indent + 1, isHasNext);
             }
         }
+    }
+
+    if (this->isArray) {
+        LOG("%s]%s\n", getIndentString(indent - 1).c_str(), hasNext ? "," : "");
+    } else {
+        LOG("%s}%s\n", getIndentString(indent - 1).c_str(), hasNext ? "," : "");
     }
 }
 
@@ -521,10 +532,19 @@ bool ContractObject::isEmpty() {
     return true;
 }
 
-ContractObject buildContractObject(const char *format) {
+ContractObject buildContractObject(const char *format, bool isRoot = false) {
+    // Handle empty format
     if (!format) return {};
     if (std::string(format).empty()) return {};
-    std::vector<std::string> formatSplitted = splitString(format, ",");
+    // Preprocessing step
+    // 1. If the format starts with { and ends with } and this a root object remove them
+    std::string formatStr = format;
+    if (isRoot) {
+        trimStr(formatStr);
+        formatStr = unwrapString(formatStr, '{', '}');
+    }
+    // Main processing step
+    std::vector<std::string> formatSplitted = splitString(formatStr, ",");
     ContractObject contractObject = {};
     int openBracketCount = 0;
     int closeBracketCount = 0;
@@ -560,7 +580,7 @@ ContractObject buildContractObject(const char *format) {
                 openBracketCount = 0;
                 closeBracketCount = 0;
                 // Process the nested object
-                currentNestedObject = currentNestedObject.substr(1, currentNestedObject.size() - 2); // remove {}
+                currentNestedObject = unwrapString(currentNestedObject, '{', '}');
                 ContractObject nestedObject = buildContractObject(currentNestedObject.c_str());
                 contractObject.object[currentFieldIndex] = nestedObject;
                 currentFieldIndex++;
@@ -606,7 +626,7 @@ ContractObject buildContractObject(const char *format) {
                 openSquareBracketCount = 0;
                 closeSquareBracketCount = 0;
                 // Process the array of object
-                currentArrayObject = currentArrayObject.substr(1, currentArrayObject.size() - 2); // remove []
+                currentArrayObject = unwrapString(currentArrayObject, '[', ']');
                 ContractObject arrayObject = buildContractObject(currentArrayObject.c_str());
                 arrayObject.isArray = true;
                 arrayObject.arrayMaxSize = arrayMaxSize;
@@ -627,13 +647,19 @@ ContractObject buildContractObject(const char *format) {
         // If there is no current nested object or array of object, process primitive
         if (currentNestedObject.empty() && currentArrayObject.empty()) {
             standardizeScFormat(fmt);
+            bool isFound = false;
             for (auto &dataType: supportedDataTypes) {
                 if (isIncudedInStr(fmt, dataType.first)) {
                     std::string plainData = fmt.substr(0, fmt.size() - dataType.first.size());
                     contractObject.primitive[currentFieldIndex] = {dataType.first, plainData};
                     currentFieldIndex++;
+                    isFound = true;
                     break;
                 }
+            }
+
+            if (!isFound) {
+                throw std::runtime_error("Unsupported contract data type in format: " + fmt);
             }
         }
     }

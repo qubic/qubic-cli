@@ -89,3 +89,10 @@ static inline int strcasecmp(const char* s1, const char* s2)
     return _stricmp(s1, s2);
 }
 #endif
+
+static std::string unwrapString(const std::string& str, char wrapperCharFront, char wrapperCharBack) {
+    if (str.size() >= 2 && str.front() == wrapperCharFront && str.back() == wrapperCharBack) {
+        return str.substr(1, str.size() - 2);
+    }
+    return str;
+}
