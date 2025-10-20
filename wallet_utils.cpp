@@ -427,12 +427,10 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     unsigned short funcNumber,
     const char* formatInput,
     const char* formatOutput) {
-    LOG("calling contract %u function %u | input : %s | output %s\n", contractIndex, funcNumber, formatInput, formatOutput);
+    LOG("Calling contract %u function %u | input : %s | output %s\n", contractIndex, funcNumber, formatInput, formatOutput);
     QCPtr qc = make_qc(nodeIp, nodePort);
-    int inputSize = getContractInputFormatInfo((const char*)formatInput).size;
-    if (inputSize > MAX_INPUT_SIZE) {
-        throw std::runtime_error("Input data size exceeds maximum allowed size");
-    }
+    ContractObject contractObject = buildContractObject(formatInput, true);
+    int inputSize = contractObject.getSize();
     void* inputData = nullptr;
     if (inputSize) {
         inputData = malloc(inputSize);
@@ -440,7 +438,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
             throw std::runtime_error("Failed to allocate memory for inputData");
         }
     }
-    packContractInputData((const char*)formatInput, inputData);
+    contractObject.dumpIntoBuffer(inputData);
     std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(RequestContractFunction) + inputSize);
     RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
     RequestContractFunction& packetRcf = (RequestContractFunction&)packet[sizeof(RequestResponseHeader)];
@@ -456,11 +454,8 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         memcpy(packetInputData, inputData, inputSize);
     qc->sendData(&packet[0], packetHeader.size());
 
-    int outputSize = getContractInputFormatInfo((const char*)formatOutput).size;
-    if (outputSize > MAX_INPUT_SIZE) {
-        free(inputData);
-        throw std::runtime_error("Output data size exceeds maximum allowed size");
-    }
+    ContractObject outputContractObject = buildContractObject(formatOutput, true);
+    int outputSize = outputContractObject.getSize();
     void* outputData = nullptr;
     if (outputSize) {
         outputData = malloc(outputSize);
@@ -477,7 +472,9 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         recvByte - sizeof(RequestResponseHeader) == outputSize)
     {
         memcpy(outputData, (buffer.data() + sizeof(RequestResponseHeader)), outputSize);
-        printContractFormatData((const char*)formatOutput, outputData);
+        outputContractObject = ContractObject::fromBuffer(outputData, formatOutput, true);
+        LOG("------------------ Contract Function Output ------------------\n");
+        outputContractObject.print();
         return true;
     }
 
@@ -507,7 +504,8 @@ void invokeContractProcedure(const char* nodeIp, int nodePort,
     getPrivateKeyFromSubSeed(subseed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
 
-    int extraDataSize = getContractInputFormatInfo(formatInput).size;
+    ContractObject contractObject = buildContractObject(formatInput, true);
+    int extraDataSize = contractObject.getSize();
     if (extraDataSize > MAX_INPUT_SIZE) {
         throw std::runtime_error("Input data size exceeds maximum allowed size");
     }
@@ -515,7 +513,7 @@ void invokeContractProcedure(const char* nodeIp, int nodePort,
     if (!extraData) {
         throw std::runtime_error("Failed to allocate memory for extraData");
     }
-    packContractInputData(formatInput, extraData);
+    contractObject.dumpIntoBuffer(extraData);
 
     std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(Transaction) + extraDataSize + SIGNATURE_SIZE);
     RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
