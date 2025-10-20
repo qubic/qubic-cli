@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <map>
-
+#include <string>
 
 struct ContractDataInfo {
     int size;
@@ -10,9 +10,36 @@ struct ContractDataInfo {
     std::map<int, unsigned long long> fieldOffsets; // key: field index, value: offset in bytes
 };
 
+struct ContractPrimitive {
+    std::string type;
+    std::string value;
+
+    unsigned long long getSize();
+    unsigned long long getAlignment();
+    void dumpIntoBuffer(void *buffer);
+    static ContractPrimitive fromBuffer(const uint8_t *buffer, std::string type);
+    void print(int indent = 0);
+    std::string toString();
+    bool isEmpty();
+};
+
+// A struct respersent data type in a contract, it can be primitive, object or array of object
+// NOTE: A primitive is still an object here
+struct ContractObject {
+    std::map<int, ContractPrimitive> primitive;
+    std::map<int, ContractObject> object;
+    bool isArray;
+    int arrayMaxSize;
+    int numberOfFields;
+
+    unsigned long long getSize();
+    unsigned long long getAlignment();
+    void dumpIntoBuffer(void *buffer);
+    static ContractObject fromBuffer(void *buffer, const char* format);
+    void print(int indent = 0);
+    std::string toString();
+    bool isEmpty();
+};
+
 void dumpContractToCSV(const char* input, uint32_t contractId, const char* output);
-// Get size of the struct represented by format string (include padding for alignment)
-ContractDataInfo getContractInputFormatInfo(const char* format);
-// Create struct buffer from format string and output it to output pointer, return the size of the struct (including padding for alignment)
-int packContractInputData(const char* format, void* output);
-void printContractFormatData(const char* format, const void* input);
+ContractObject buildContractObject(const char *format);

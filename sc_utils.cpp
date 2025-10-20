@@ -24,6 +24,39 @@ std::map<std::string, std::pair<unsigned long long, unsigned long long> > suppor
     {"id", {32, 8}},
 };
 
+enum ValueType {
+    SINT8,
+    UINT8,
+    SINT16,
+    UINT16,
+    SINT32,
+    UINT32,
+    SINT64,
+    UINT64,
+    UNKNOWN
+};
+
+static ValueType parseType(const std::string& type) {
+    if (type == "sint8")  return SINT8;
+    if (type == "uint8")  return UINT8;
+    if (type == "sint16") return SINT16;
+    if (type == "uint16") return UINT16;
+    if (type == "sint32") return SINT32;
+    if (type == "uint32") return UINT32;
+    if (type == "sint64") return SINT64;
+    if (type == "uint64") return UINT64;
+    return UNKNOWN;
+}
+
+std::string getIndentString(int indent = 0) {
+    std::string indentStr = "";
+    for (int i = 0; i < indent; i++) {
+        indentStr += "    ";
+    }
+
+    return indentStr;
+}
+
 void dumpQxContractToCSV(const char *input, const char *output) {
     std::cout << "Dumping QX contract file " << input << std::endl;
 
@@ -148,48 +181,392 @@ void standardizeScFormat(std::string &input, bool removeStruct = false) {
     }), input.end());
 }
 
-ContractDataInfo getContractInputFormatInfo(const char *format) {
-    if (!format) return {0, 0, {}};
-    if (std::string(format).empty()) return {0, 0, {}};
+unsigned long long ContractPrimitive::getSize() {
+    return supportedDataTypes[this->type].first;
+}
+
+unsigned long long ContractPrimitive::getAlignment() {
+    return supportedDataTypes[this->type].second;
+}
+
+void ContractPrimitive::dumpIntoBuffer(void *buffer) {
+    if (this->type == "id") {
+        uint8_t pubkey[32] = {};
+        getPublicKeyFromIdentity(this->value.c_str(), pubkey);
+        memcpy(buffer, pubkey, 32);
+    } else {
+        u_int64_t value = std::stoull(this->value.c_str());
+        memcpy(buffer, &value, this->getSize());
+    }
+}
+
+ContractPrimitive ContractPrimitive::fromBuffer(const uint8_t *buffer, std::string type) {
+    if (type == "id") {
+        uint8_t id[61] = {};
+        getIdentityFromPublicKey(buffer, (char*)id, false);
+        return {type, std::string(reinterpret_cast<char*>(id))};
+    } else {
+        switch (parseType(type)) {
+            case SINT8: {
+                int8_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case UINT8: {
+                uint8_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case SINT16: {
+                int16_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case UINT16: {
+                uint16_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case SINT32: {
+                int32_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case UINT32: {
+                uint32_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case SINT64: {
+                int64_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            case UINT64: {
+                uint64_t v; memcpy(&v, buffer, sizeof(v));
+                return {type, std::to_string(v)};
+            }
+            default:
+                throw std::runtime_error("Unsupported contract type");
+        }
+    }
+}
+
+void ContractPrimitive::print(int ident) {
+    std::string indent = "";
+    for (int i = 0; i < ident; i++) {
+        indent += "    ";
+    }
+    LOG("%s%s", indent.c_str(), this->value.c_str());
+}
+
+bool ContractPrimitive::isEmpty() {
+    return this->value == "0" || this->value == "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB";
+}
+
+std::string ContractPrimitive::toString() {
+    return this->value + this->type;
+}
+
+std::string ContractObject::toString() {
+    std::string output;
+    for (int i = 0; i < this->numberOfFields; i++) {
+        if (this->primitive.find(i) != this->primitive.end()) {
+            output += this->primitive[i].toString();
+        } else if (this->object.find(i) != this->object.end()) {
+            std::string objectStr = this->object[i].toString();
+            if (this->object[i].isArray) {
+                output += "[" + objectStr + "]";
+            } else {
+                output += "{" + objectStr + "}";
+            }
+        }
+
+        if (i + 1 < this->numberOfFields) {
+            output += ",";
+        }
+    }
+
+    int additionalFields = std::max(0, this->arrayMaxSize - this->numberOfFields);
+    if (additionalFields > 0 && this->numberOfFields > 0) {
+        output += ",";
+    }
+    for (int i = 0; i < additionalFields; i++) {
+        if (this->primitive.find(0) != this->primitive.end()) {
+            output += this->primitive[0].toString();
+        } else if (this->object.find(0) != this->object.end()) {
+            std::string objectStr = this->object[0].toString();
+            if (this->object[0].isArray) {
+                output += "[" + objectStr + "]";
+            } else {
+                output += "{" + objectStr + "}";
+            }
+        }
+        if (i + 1 < additionalFields) {
+            output += ",";
+        }
+    }
+
+    return output;
+}
+
+unsigned long long ContractObject::getSize() {
+    unsigned long long totalSize = 0;
+    int additionalFields = std::max(0, this->arrayMaxSize - this->numberOfFields);
+
+    for (int i = 0; i < this->numberOfFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (this->primitive.find(i) != this->primitive.end()) {
+            alignment = this->primitive[i].getAlignment();
+            size = this->primitive[i].getSize();
+        } else if (this->object.find(i) != this->object.end()) {
+            alignment = this->object[i].getAlignment();
+            size = this->object[i].getSize();
+        }
+        // Align the current size
+        if (totalSize % alignment != 0) {
+            totalSize += (alignment - (totalSize % alignment));
+        }
+        totalSize += size;
+    }
+
+    // Add padding for array
+    for (int i = 0; i < additionalFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (this->primitive.find(0) != this->primitive.end()) {
+            alignment = this->primitive[0].getAlignment();
+            size = this->primitive[0].getSize();
+        } else if (this->object.find(0) != this->object.end()) {
+            alignment = this->object[0].getAlignment();
+            size = this->object[0].getSize();
+        }
+        // Align the current size
+        if (totalSize % alignment != 0) {
+            totalSize += (alignment - (totalSize % alignment));
+        }
+        totalSize += size;
+    }
+
+    return totalSize;
+}
+
+unsigned long long ContractObject::getAlignment() {
+    unsigned long long largestAlignment = 1;
+    for (int i = 0; i < this->numberOfFields; i++) {
+        unsigned long long alignment = 1;
+        if (this->primitive.find(i) != this->primitive.end()) {
+            alignment = this->primitive[i].getAlignment();
+        } else if (this->object.find(i) != this->object.end()) {
+            alignment = this->object[i].getAlignment();
+        }
+        if (alignment > largestAlignment) {
+            largestAlignment = alignment;
+        }
+    }
+    return largestAlignment;
+}
+
+void ContractObject::dumpIntoBuffer(void *buffer) {
+    uint8_t *internalBuffer = new uint8_t[MAX_INPUT_SIZE];
+    unsigned long long currentBufferPos = 0;
+    for (int i = 0; i < this->numberOfFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (this->primitive.find(i) != this->primitive.end()) {
+            alignment = this->primitive[i].getAlignment();
+            size = this->primitive[i].getSize();
+        } else if (this->object.find(i) != this->object.end()) {
+            alignment = this->object[i].getAlignment();
+            size = this->object[i].getSize();
+        }
+        // Align the current buffer pointer
+        if (currentBufferPos % alignment != 0) {
+            currentBufferPos += (alignment - (currentBufferPos % alignment));
+        }
+        if (this->primitive.find(i) != this->primitive.end()) {
+            this->primitive[i].dumpIntoBuffer(internalBuffer + currentBufferPos);
+        } else if (this->object.find(i) != this->object.end()) {
+            this->object[i].dumpIntoBuffer(internalBuffer + currentBufferPos);
+        }
+
+        currentBufferPos += size;
+    }
+
+    // Add padding for array
+    int additionalFields = std::max(0, this->arrayMaxSize - this->numberOfFields);
+    for (int i = 0; i < additionalFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (this->primitive.find(0) != this->primitive.end()) {
+            alignment = this->primitive[0].getAlignment();
+            size = this->primitive[0].getSize();
+        } else if (this->object.find(0) != this->object.end()) {
+            alignment = this->object[0].getAlignment();
+            size = this->object[0].getSize();
+        }
+        // Align the current buffer pointer
+        if (currentBufferPos % alignment != 0) {
+            currentBufferPos += (alignment - (currentBufferPos % alignment));
+        }
+        // Add zero padding
+        memset(internalBuffer + currentBufferPos, 0, size);
+        currentBufferPos += size;
+    }
+
+    if (currentBufferPos != this->getSize()) {
+        LOG("FATAL: Something went wrong when dump contract object into buffer copied size: %d expected size: %d \n", currentBufferPos, this->getSize());
+    }
+
+    memcpy(buffer, internalBuffer, currentBufferPos);
+}
+
+ContractObject ContractObject::fromBuffer(void *buffer, const char *format) {
+    ContractObject contractObject = buildContractObject(format);
+    unsigned long long currentBufferPos = 0;
+    for (int i = 0; i < contractObject.numberOfFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (contractObject.primitive.find(i) != contractObject.primitive.end()) {
+            alignment = contractObject.primitive[i].getAlignment();
+            size = contractObject.primitive[i].getSize();
+        } else if (contractObject.object.find(i) != contractObject.object.end()) {
+            alignment = contractObject.object[i].getAlignment();
+            size = contractObject.object[i].getSize();
+        }
+        // Align the current buffer pointer
+        if (currentBufferPos % alignment != 0) {
+            currentBufferPos += (alignment - (currentBufferPos % alignment));
+        }
+        if (contractObject.primitive.find(i) != contractObject.primitive.end()) {
+            contractObject.primitive[i] = ContractPrimitive::fromBuffer((uint8_t*)buffer + currentBufferPos, contractObject.primitive[i].type);
+        } else if (contractObject.object.find(i) != contractObject.object.end()) {
+            bool isArray = contractObject.object[i].isArray;
+            int arrayMaxSize = contractObject.object[i].arrayMaxSize;
+            contractObject.object[i] = ContractObject::fromBuffer((uint8_t*)buffer + currentBufferPos, contractObject.object[i].toString().c_str());
+            contractObject.object[i].isArray = isArray;
+            contractObject.object[i].arrayMaxSize = arrayMaxSize;
+        }
+
+        currentBufferPos += size;
+    }
+
+    // Handle max array size case
+    int additionalFields = std::max(0, contractObject.arrayMaxSize - contractObject.numberOfFields);
+    for (int i = 0; i < additionalFields; i++) {
+        unsigned long long alignment = 1;
+        unsigned long long size = 0;
+        if (contractObject.primitive.find(0) != contractObject.primitive.end()) {
+            alignment = contractObject.primitive[0].getAlignment();
+            size = contractObject.primitive[0].getSize();
+        } else if (contractObject.object.find(0) != contractObject.object.end()) {
+            alignment = contractObject.object[0].getAlignment();
+            size = contractObject.object[0].getSize();
+        }
+        // Align the current buffer pointer
+        if (currentBufferPos % alignment != 0) {
+            currentBufferPos += (alignment - (currentBufferPos % alignment));
+        }
+        if (contractObject.primitive.find(0) != contractObject.primitive.end()) {
+            contractObject.primitive[i + contractObject.numberOfFields] = ContractPrimitive::fromBuffer((uint8_t*)buffer + currentBufferPos, contractObject.primitive[0].type);
+        } else if (contractObject.object.find(0) != contractObject.object.end()) {
+            bool isArray = contractObject.object[0].isArray;
+            int arrayMaxSize = contractObject.object[0].arrayMaxSize;
+            contractObject.object[i + contractObject.numberOfFields] = ContractObject::fromBuffer((uint8_t*)buffer + currentBufferPos, contractObject.object[0].toString().c_str());
+            contractObject.object[i + contractObject.numberOfFields].isArray = isArray;
+            contractObject.object[i + contractObject.numberOfFields].arrayMaxSize = arrayMaxSize;
+        }
+
+        currentBufferPos += size;
+    }
+
+    return contractObject;
+}
+
+void ContractObject::print(int indent) {
+    if (this->isEmpty()) {
+        LOG("%s(empty)\n", getIndentString(indent).c_str());
+        return;
+    }
+    for (int i = 0; i < this->numberOfFields + std::max(0, this->arrayMaxSize - this->numberOfFields); i++) {
+        if (this->primitive.find(i) != this->primitive.end()) {
+            this->primitive[i].print(indent);
+            if (i+1 < numberOfFields) {
+                LOG(",\n");
+            } else {
+                LOG("\n");
+            }
+        } else if (this->object.find(i) != this->object.end()) {
+            bool isArray = this->object[i].isArray;
+            if (isArray) {
+                LOG("%s[\n", getIndentString(indent).c_str());
+                this->object[i].print(indent+1);
+                LOG("%s]\n", getIndentString(indent).c_str());
+            } else {
+                LOG("%s{\n", getIndentString(indent).c_str());
+                this->object[i].print(indent+1);
+                LOG("%s}\n", getIndentString(indent).c_str());
+            }
+        }
+    }
+}
+
+bool ContractObject::isEmpty() {
+    for (int i = 0; i < this->numberOfFields; i++) {
+        if (this->primitive.find(i) != this->primitive.end()) {
+            if (!this->primitive[i].isEmpty()) {
+                return false;
+            }
+        } else if (this->object.find(i) != this->object.end()) {
+            if (!this->object[i].isEmpty()) {
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+ContractObject buildContractObject(const char *format) {
+    if (!format) return {};
+    if (std::string(format).empty()) return {};
     std::vector<std::string> formatSplitted = splitString(format, ",");
-    std::map<int, unsigned long long> fieldOffsets; // key: field index, value: offset in bytes
-    int totalSize = 0;
-    int largestAlignment = 1;
+    ContractObject contractObject = {};
     int openBracketCount = 0;
     int closeBracketCount = 0;
-    int fieldIndex = 0;
+    int openSquareBracketCount = 0;
+    int closeSquareBracketCount = 0;
+    int currentFieldIndex = 0;
+    bool isInObject = false;
+    bool isInArray = false;
     std::string currentNestedObject;
+    std::string currentArrayObject;
     for (auto &fmt: formatSplitted) {
-        int alignment = 1;
         if (fmt.empty()) continue;
-        standardizeScFormat(fmt);
+        trimStr(fmt);
 
-        if (isIncudedInStr(fmt, "{") || isIncudedInStr(fmt, "}")) {
+        if (fmt.front() == '{' && !isInArray && !isInObject) {
+            isInObject = true;
+        } else if (fmt.front() == '[' && !isInArray && !isInObject) {
+            isInArray = true;
+        }
+
+        // Process nested object
+        if (!isInArray && (isIncudedInStr(fmt, "{") || isIncudedInStr(fmt, "}"))) {
+            if (!isInArray && !isInObject) {
+                isInObject = true;
+            }
             int newOpenBracketCount = std::count(fmt.begin(), fmt.end(), '{');
             int newCloseBracketCount = std::count(fmt.begin(), fmt.end(), '}');
             openBracketCount += newOpenBracketCount;
             closeBracketCount += newCloseBracketCount;
 
-            if (openBracketCount == closeBracketCount && openBracketCount > 0) {
+            if (openBracketCount == closeBracketCount) {
                 currentNestedObject += fmt;
                 openBracketCount = 0;
                 closeBracketCount = 0;
                 // Process the nested object
                 currentNestedObject = currentNestedObject.substr(1, currentNestedObject.size() - 2); // remove {}
-                ContractDataInfo contractData = getContractInputFormatInfo(currentNestedObject.c_str());
-                // Align the nested object
-                if (totalSize % contractData.alignment != 0) {
-                    totalSize += (contractData.alignment - (totalSize % contractData.alignment));
-                }
-                // Adjust field offsets for the nested object
-                for (auto &offset: contractData.fieldOffsets) {
-                    fieldOffsets[fieldIndex + offset.first] = totalSize + offset.second;
-                }
-                totalSize += contractData.size;
-                alignment = contractData.alignment;
-                fieldIndex += (int) contractData.fieldOffsets.size();
+                ContractObject nestedObject = buildContractObject(currentNestedObject.c_str());
+                contractObject.object[currentFieldIndex] = nestedObject;
+                currentFieldIndex++;
                 currentNestedObject = "";
-                goto check_alignment;
+                isInObject = false;
+                continue;
             } else {
                 currentNestedObject += fmt + ",";
                 continue;
@@ -199,137 +576,68 @@ ContractDataInfo getContractInputFormatInfo(const char *format) {
             continue;
         }
 
-        for (auto &dataType: supportedDataTypes) {
-            if (isIncudedInStr(fmt, dataType.first)) {
-                if (totalSize % dataType.second.second != 0) {
-                    totalSize += (dataType.second.second - (totalSize % dataType.second.second));
+        // If there is no current nested object, process array of object
+        if (!isInObject && (isIncudedInStr(fmt, "[") || isIncudedInStr(fmt, "]"))) {
+            if (!isInArray && !isInObject) {
+                isInArray = true;
+            }
+            int newOpenSquareBracketCount = std::count(fmt.begin(), fmt.end(), '[');
+            int newCloseSquareBracketCount = std::count(fmt.begin(), fmt.end(), ']');
+            openSquareBracketCount += newOpenSquareBracketCount;
+            closeSquareBracketCount += newCloseSquareBracketCount;
+
+            if (openSquareBracketCount == closeSquareBracketCount) {
+                currentArrayObject += fmt;
+                // We now should get something like [x;...] (x is optional)
+                // Extract the x which is the max size of the array
+                int arrayMaxSize = 0;
+                if (isIncudedInStr(currentArrayObject, ";") && currentArrayObject.find_first_of(';') < currentArrayObject.find_first_of(',')) {
+                    // There is x
+                    std::string xStr = currentArrayObject.substr(1, currentArrayObject.find_first_of(';') - 1);
+                    trimStr(xStr);
+                    arrayMaxSize = std::stoi(xStr);
+
+                    // Remove the x;
+                    while (currentArrayObject[1] != ';') {
+                        currentArrayObject.erase(1, 1);
+                    }
+                    currentArrayObject.erase(1, 1); // remove the ';'
                 }
-
-                fieldOffsets[fieldIndex] = totalSize;
-                fieldIndex++;
-                totalSize += dataType.second.first; // size
-                alignment = dataType.second.second;
-                break;
+                openSquareBracketCount = 0;
+                closeSquareBracketCount = 0;
+                // Process the array of object
+                currentArrayObject = currentArrayObject.substr(1, currentArrayObject.size() - 2); // remove []
+                ContractObject arrayObject = buildContractObject(currentArrayObject.c_str());
+                arrayObject.isArray = true;
+                arrayObject.arrayMaxSize = arrayMaxSize;
+                contractObject.object[currentFieldIndex] = arrayObject;
+                currentFieldIndex++;
+                currentArrayObject = "";
+                isInArray = false;
+                continue;
+            } else {
+                currentArrayObject += fmt + ",";
+                continue;
             }
+        } else if (!currentArrayObject.empty()) {
+            currentArrayObject += fmt + ",";
+            continue;
         }
 
-        check_alignment:
-        if (alignment > largestAlignment) largestAlignment = alignment;
-    }
-
-    if (totalSize % largestAlignment != 0) {
-        totalSize += (largestAlignment - (totalSize % largestAlignment));
-    }
-
-    return {totalSize, largestAlignment, fieldOffsets};
-}
-
-int packContractInputData(const char *format, void *output) {
-    if (!output || !format) return 0;
-    if (std::string(format).empty()) return 0;
-
-    ContractDataInfo info = getContractInputFormatInfo(format);
-    uint8_t *buffer = new uint8_t[MAX_INPUT_SIZE];
-    memset(buffer, 0, MAX_INPUT_SIZE);
-
-    int currentIndex = 0;
-    std::string currentNestedObject;
-    std::vector<std::string> formatSplitted = splitString(format, ",");
-    for (auto &fmt: formatSplitted) {
-        if (fmt.empty()) continue;
-        standardizeScFormat(fmt, true);
-
-        for (auto &dataType: supportedDataTypes) {
-            if (isIncudedInStr(fmt, dataType.first)) {
-                std::string plainData = fmt.substr(0, fmt.size() - dataType.first.size());
-
-                unsigned long long offsetInBuffer = info.fieldOffsets[currentIndex];
-                unsigned long long dataTypeSize = dataType.second.first;
-
-                if (dataType.first == "id") {
-                    uint8_t pubkey[32];
-                    memset(pubkey, 0, 32);
-                    getPublicKeyFromIdentity(plainData.c_str(), pubkey);
-                    memcpy(buffer + offsetInBuffer, pubkey, 32);
-                } else {
-                    uint64_t value = std::stoull(plainData);
-                    memcpy(buffer + offsetInBuffer, &value, dataTypeSize);
+        // If there is no current nested object or array of object, process primitive
+        if (currentNestedObject.empty() && currentArrayObject.empty()) {
+            standardizeScFormat(fmt);
+            for (auto &dataType: supportedDataTypes) {
+                if (isIncudedInStr(fmt, dataType.first)) {
+                    std::string plainData = fmt.substr(0, fmt.size() - dataType.first.size());
+                    contractObject.primitive[currentFieldIndex] = {dataType.first, plainData};
+                    currentFieldIndex++;
+                    break;
                 }
-                break;
-            }
-        }
-
-        currentIndex++;
-    }
-
-    memcpy(output, buffer, info.size);
-    delete[] buffer;
-    return info.size;
-}
-
-void printContractFormatData(const char *format, const void *input) {
-    static std::map<std::string, std::string> formatMap = {
-        {"sint8", "d"},
-        {"uint8", "u"},
-        {"sint16", "d"},
-        {"uint16", "u"},
-        {"sint32", "d"},
-        {"uint32", "u"},
-        {"sint64", "lld"},
-        {"uint64", "llu"},
-        {"id", "s"},
-    };
-
-    if (!input || !format) return;
-    if (std::string(format).empty()) return;
-
-    ContractDataInfo info = getContractInputFormatInfo(format);
-    std::string formatInputString = format;
-    std::string formatStringTemplate = format;
-    auto *buffer = new uint8_t[MAX_INPUT_SIZE];
-    memset(buffer, 0, MAX_INPUT_SIZE);
-
-    for (auto dataType: supportedDataTypes) {
-        if (isIncudedInStr(formatStringTemplate, dataType.first)) {
-            size_t pos = 0;
-            while ((pos = formatStringTemplate.find(dataType.first, pos)) != std::string::npos) {
-                formatStringTemplate.replace(pos, dataType.first.length(), "%" + formatMap[dataType.first]);
-                pos += 1; // Move past the replaced character
             }
         }
     }
 
-    size_t currentDilimiterPos = 0;
-    size_t previousDilimiterPos = 0;
-    int currentIndex = 0;
-    for (auto &fmt: splitString(formatInputString, ",")) {
-        if (fmt.empty()) continue;
-        standardizeScFormat(fmt, true);
-
-        // Check if the data type is supported
-        if (supportedDataTypes.find(fmt) == supportedDataTypes.end()) {
-            LOG("FATAL: Unsupported data type %s\n", fmt.c_str());
-            delete[] buffer;
-        }
-
-        previousDilimiterPos = currentDilimiterPos;
-        currentDilimiterPos = formatStringTemplate.find(',', previousDilimiterPos + 1);
-        std::string formatStrForThisPart = formatStringTemplate.substr(previousDilimiterPos,
-                                                                    currentDilimiterPos != std::string::npos ?
-                                                                       currentDilimiterPos - previousDilimiterPos :
-                                                                       formatStringTemplate.size() - previousDilimiterPos);
-        unsigned long long offsetInBuffer = info.fieldOffsets[currentIndex];
-        if (fmt == "id") {
-            uint8_t identity[61];
-            memset(identity, 0, 61);
-            getIdentityFromPublicKey((uint8_t *)input + offsetInBuffer, (char *) identity, false);
-            printf(formatStrForThisPart.c_str(), identity);
-        } else {
-            uint64_t data = 0;
-            memcpy(&data, (uint8_t *)input + offsetInBuffer, supportedDataTypes[fmt].first);
-            printf(formatStrForThisPart.c_str(), data);
-        }
-
-        currentIndex++;
-    }
+    contractObject.numberOfFields = currentFieldIndex;
+    return contractObject;
 }
