@@ -147,6 +147,12 @@ void print_help()
     printf("\t-compmessage \"<MESSAGE>\"\n");
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
 
+    printf("\n[SMART CONTRACT COMMANDS]\n");
+    printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
+    printf("\t\tCall a contract function of contract index and print the output. Valid node ip/port are required.\t\n");
+    printf("\t-invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>\n");
+    printf("\t\tInvoke a procedure of contract index. Valid private key and node ip/port are required.\t\n");
+
     printf("\n[QX COMMANDS]\n");
     printf("\t-qxgetfee\n");
     printf("\t\tShow current Qx fee.\n");
