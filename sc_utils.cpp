@@ -24,18 +24,6 @@ std::map<std::string, std::pair<unsigned long long, unsigned long long> > suppor
     {"id", {32, 8}},
 };
 
-enum ValueType {
-    SINT8,
-    UINT8,
-    SINT16,
-    UINT16,
-    SINT32,
-    UINT32,
-    SINT64,
-    UINT64,
-    UNKNOWN
-};
-
 static ValueType parseType(const std::string& type) {
     if (type == "sint8")  return SINT8;
     if (type == "uint8")  return UINT8;
@@ -55,6 +43,14 @@ std::string getIndentString(int indent = 0) {
     }
 
     return indentStr;
+}
+
+void standardizeScFormat(std::string &input, bool removeStruct = false) {
+    trimStr(input);
+    // Remove all [] characters and {} if removeStruct is true
+    input.erase(std::remove_if(input.begin(), input.end(), [removeStruct](char c) {
+        return (c == '[' || c == ']') || (removeStruct && (c == '{' || c == '}'));
+    }), input.end());
 }
 
 void dumpQxContractToCSV(const char *input, const char *output) {
@@ -171,14 +167,6 @@ void dumpContractToCSV(const char* input, uint32_t contractId, const char* outpu
         std::cout << "Unsupported contract id: " << contractId << std::endl;
         break;
     }
-}
-
-void standardizeScFormat(std::string &input, bool removeStruct = false) {
-    trimStr(input);
-    // Remove all [] characters and {} if removeStruct is true
-    input.erase(std::remove_if(input.begin(), input.end(), [removeStruct](char c) {
-        return (c == '[' || c == ']') || (removeStruct && (c == '{' || c == '}'));
-    }), input.end());
 }
 
 unsigned long long ContractPrimitive::getSize() {

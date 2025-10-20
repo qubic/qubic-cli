@@ -4,10 +4,16 @@
 #include <map>
 #include <string>
 
-struct ContractDataInfo {
-    int size;
-    int alignment;
-    std::map<int, unsigned long long> fieldOffsets; // key: field index, value: offset in bytes
+enum ValueType {
+    SINT8,
+    UINT8,
+    SINT16,
+    UINT16,
+    SINT32,
+    UINT32,
+    SINT64,
+    UINT64,
+    UNKNOWN
 };
 
 struct ContractPrimitive {
@@ -24,7 +30,6 @@ struct ContractPrimitive {
 };
 
 // A struct respersent data type in a contract, it can be primitive, object or array of object
-// NOTE: A primitive is still an object here
 struct ContractObject {
     std::map<int, ContractPrimitive> primitive;
     std::map<int, ContractObject> object;
