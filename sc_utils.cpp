@@ -183,7 +183,7 @@ void ContractPrimitive::dumpIntoBuffer(void *buffer) {
         getPublicKeyFromIdentity(this->value.c_str(), pubkey);
         memcpy(buffer, pubkey, 32);
     } else {
-        u_int64_t value = std::stoull(this->value.c_str());
+        uint64_t value = std::stoull(this->value.c_str());
         memcpy(buffer, &value, this->getSize());
     }
 }
@@ -534,10 +534,10 @@ ContractObject buildContractObject(const char *format, bool isRoot = false) {
     // Main processing step
     std::vector<std::string> formatSplitted = splitString(formatStr, ",");
     ContractObject contractObject = {};
-    int openBracketCount = 0;
-    int closeBracketCount = 0;
-    int openSquareBracketCount = 0;
-    int closeSquareBracketCount = 0;
+    long long openBracketCount = 0;
+    long long closeBracketCount = 0;
+    long long openSquareBracketCount = 0;
+    long long closeSquareBracketCount = 0;
     int currentFieldIndex = 0;
     bool isInObject = false;
     bool isInArray = false;
@@ -558,8 +558,8 @@ ContractObject buildContractObject(const char *format, bool isRoot = false) {
             if (!isInArray && !isInObject) {
                 isInObject = true;
             }
-            int newOpenBracketCount = std::count(fmt.begin(), fmt.end(), '{');
-            int newCloseBracketCount = std::count(fmt.begin(), fmt.end(), '}');
+            auto newOpenBracketCount = std::count(fmt.begin(), fmt.end(), '{');
+            auto newCloseBracketCount = std::count(fmt.begin(), fmt.end(), '}');
             openBracketCount += newOpenBracketCount;
             closeBracketCount += newCloseBracketCount;
 
@@ -589,8 +589,8 @@ ContractObject buildContractObject(const char *format, bool isRoot = false) {
             if (!isInArray && !isInObject) {
                 isInArray = true;
             }
-            int newOpenSquareBracketCount = std::count(fmt.begin(), fmt.end(), '[');
-            int newCloseSquareBracketCount = std::count(fmt.begin(), fmt.end(), ']');
+            auto newOpenSquareBracketCount = std::count(fmt.begin(), fmt.end(), '[');
+            auto newCloseSquareBracketCount = std::count(fmt.begin(), fmt.end(), ']');
             openSquareBracketCount += newOpenSquareBracketCount;
             closeSquareBracketCount += newCloseSquareBracketCount;
 

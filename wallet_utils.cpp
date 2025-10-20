@@ -430,7 +430,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     LOG("Calling contract %u function %u | input : %s | output %s\n", contractIndex, funcNumber, formatInput, formatOutput);
     QCPtr qc = make_qc(nodeIp, nodePort);
     ContractObject contractObject = buildContractObject(formatInput, true);
-    int inputSize = contractObject.getSize();
+    auto inputSize = contractObject.getSize();
     void* inputData = nullptr;
     if (inputSize) {
         inputData = malloc(inputSize);
@@ -455,7 +455,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     qc->sendData(&packet[0], packetHeader.size());
 
     ContractObject outputContractObject = buildContractObject(formatOutput, true);
-    int outputSize = outputContractObject.getSize();
+    auto outputSize = outputContractObject.getSize();
     void* outputData = nullptr;
     if (outputSize) {
         outputData = malloc(outputSize);
@@ -505,7 +505,7 @@ void invokeContractProcedure(const char* nodeIp, int nodePort,
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
 
     ContractObject contractObject = buildContractObject(formatInput, true);
-    int extraDataSize = contractObject.getSize();
+    auto extraDataSize = (unsigned short)contractObject.getSize();
     if (extraDataSize > MAX_INPUT_SIZE) {
         throw std::runtime_error("Input data size exceeds maximum allowed size");
     }
