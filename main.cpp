@@ -92,6 +92,18 @@ int run(int argc, char* argv[])
                                   g_txExtraData, g_offsetScheduledTick);
 
             break;
+        case INVOKE_CONTRACT_PROCEDURE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckTxAmount(g_txAmount);
+            invokeContractProcedure(g_nodeIp, g_nodePort, g_seed, g_contractIndex, g_txType, g_txAmount,
+                                    g_invokeContractProcedureInputFormat, g_offsetScheduledTick);
+            break;
+        case CALL_CONTRACT_FUNCTION:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            runContractFunction(g_nodeIp, g_nodePort, g_contractIndex, g_contractFunctionNumber, g_callContractFunctionInputFormat, g_callContractFunctionOutputFormat);
+            break;
         case GET_TX_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckTxHash(g_requestedTxId);

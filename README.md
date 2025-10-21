@@ -107,6 +107,12 @@ Command:
 	-setloggingmode <MODE>
 		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.
 
+[SMART CONTRACT COMMANDS]
+    -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>
+        Call a contract function of contract index and print the output. Valid node ip/port are required.
+    -invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>
+        Invoke a procedure of contract index. Valid private key and node ip/port are required.
+
 [QX COMMANDS]
 	-qxgetfee
 		Show current Qx fee.
@@ -398,6 +404,9 @@ On Windows, use the CMake GUI to create a Visual Studio project and then build t
 
 
 ### USAGE
+
+#### Basic usage
+
 To get current tick of a node:
 
 `./qubic-cli -nodeip 127.0.0.1 -getcurrenttick`
@@ -444,6 +453,77 @@ Check tx on tick data file:
 Check tx on online:
 
 `./qubic-cli -nodeip 127.0.0.1 -checktxontick 10600000 TX_HASH`
+
+#### Smart Contract
+
+**How to write format string**
+
+Use a **format string** to describe a struct’s field order, layout, and data types for serialization.
+
+**Example 1**
+
+```c++
+struct registerVault_input
+{
+    id vaultName;
+    Array<id, 16> owners;
+    uint64 requiredApprovals;
+};
+```
+
+Equivalent format string:
+
+```
+"{ BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXKid, [16; BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXKid, JWDZFYIQSOYMFDYFDJLDDLVXKVSCBBSRMNOKANJYEGXGCLHIQCQYEFIAYUSFid], 2uint64 }
+```
+
+**Example 2**
+
+```c++
+struct WinnerInfo
+{
+    id winnerAddress = id::zero();
+    uint64 revenue = 0;
+    uint16 epoch = 0;
+    uint32 tick = 0;
+};
+
+struct GetWinners_output
+{
+    Array<WinnerInfo, 1024> winners;
+    uint64 numberOfWinners = 0;
+    uint8 returnCode = 0;
+};
+
+```
+
+To represent the `GetWinners_output` struct, we use the following format string (omit actual field values for output structs):
+
+```
+{ [1024; { id, uint64, uint16, uint32 }], uint64, uint8 }
+```
+
+***Supported data types:*** `sint8`, `uint8`, `sint16`, `uint16`, `sint32`, `uint32`, `sint64`, `uint64`, `id`, `Array`, `Struct`
+
+
+**Invoke a contract procedure:**
+
+Example — creating a multisig vault with 2 owners and threshold = 2:
+
+```
+./qubic-cli -nodeip 46.17.96.249 -nodeport 21841 -seed aaa...aaa
+-invokecontractprocedure 11 1 5000000
+"IAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABXSHid,[16;BZBQFLLBNCXEMGLOBHUVFTLUPLVCPQUASSILFABOFFBCADQSSUPNWLZBQEXKid,JWDZFYIQSOYMFDYFDJLDDLVXKVSCBBSRMNOKANJYEGXGCLHIQCQYEFIAYUSFid],2uint64"
+```
+
+**Call a contract function:**
+
+Example — how to get current players of the `RandomLottery` contract
+
+```
+./qubic-cli -nodeip 46.17.96.249 -nodeport 21841 
+-callcontractfunction 16 2 "" "{ [1024;id], uint16, uint8 }"
+```
 
 More information, please read the help. `./qubic-cli -help`
 
