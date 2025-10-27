@@ -37,6 +37,33 @@ void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalI
 void ccfGetLatestTransfers(const char* nodeIp, int nodePort);
 
 
+void shareholderSetProposal(const char* nodeIp, int nodePort, const char* seed,
+	unsigned int contractIndex,
+	const char* proposalString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidProposal);
+void shareholderClearProposal(const char* nodeIp, int nodePort, const char* seed,
+	unsigned int contractIndex,
+	uint32_t scheduledTickOffset);
+void shareholderGetProposals(const char* nodeIp, int nodePort,
+	unsigned int contractIndex,
+	const char* proposalIndexString);
+void shareholderGetVotingResults(const char* nodeIp, int nodePort,
+	unsigned int contractIndex,
+	const char* proposalIndexString);
+void shareholderGetVote(const char* nodeIp, int nodePort,
+	unsigned int contractIndex,
+	const char* proposalIndexString,
+	const char* voterIdentity,
+	const char* voterSeed);
+void shareholderVote(const char* nodeIp, int nodePort, const char* seed,
+	unsigned int contractIndex,
+	const char* proposalIndexString,
+	const char* voteValueString,
+	uint32_t scheduledTickOffset,
+	bool forceSendingInvalidVote);
+
+
 typedef uint8_t uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
@@ -68,6 +95,35 @@ struct ProposalSingleVoteDataV1
 };
 static_assert(sizeof(ProposalSingleVoteDataV1) == 16, "Unexpected struct size.");
 
+// For casting multiple votes for all types of proposals defined in August 2024.
+// This makes sense for shareholder voting, where a single shareholder may own multiple shares, allowing to cast
+// multiple votes. With this structs, the votes may be individually distributed to multiple options/values.
+// Input data for contract procedure call, compatible with ProposalSingleVoteDataV1. That is, to cast all votes
+// of a shareholder with the same value, just set element 0 of voteValues and leave/set the rest to zero (including
+// the voteCounts).
+struct ProposalMultiVoteDataV1
+{
+	// Index of proposal the vote is about (can be requested with proposal voting API)
+	uint16 proposalIndex;
+
+	// Type of proposal, see ProposalTypes
+	uint16 proposalType;
+
+	// Tick when proposal has been set (to make sure that proposal version known by the voter matches the current version).
+	uint32 proposalTick;
+
+	// Value of vote. NO_VOTE_VALUE means no vote for every type.
+	// For proposals types with multiple options, 0 is no, 1 to N are the other options in order of definition in proposal.
+	// For scalar proposal types the value is passed directly.
+	sint64 voteValues[8];
+
+	// Count of votes to cast for the corresponding voteValues.
+	// For compatibility with ProposalSingleVoteDataV1, voteCounts.get(0) == 0 means all votes of the voter. In
+	// the other elements, 0 means no votes for the given value.
+	uint32 voteCounts[8];
+};
+static_assert(sizeof(ProposalMultiVoteDataV1) == 104, "Unexpected struct size.");
+
 // Voting result summary for all types of proposals defined in August 2024.
 // Output data for contract function call for getting voting results.
 struct ProposalSummarizedVotingDataV1
@@ -81,11 +137,11 @@ struct ProposalSummarizedVotingDataV1
 	// Tick when proposal has been set (useful for checking if cached ProposalData is still up to date).
 	uint32 proposalTick;
 
-	// Number of voter who have the right to vote
-	uint32 authorizedVoters;
+	// Maximal number of votes (number of voters who have the right to vote if there aren't multiple votes per voter)
+	uint32 totalVotesAuthorized;
 
 	// Number of total votes casted
-	uint32 totalVotes;
+	uint32 totalVotesCasted;
 
 	// Voting results
 	union

@@ -328,9 +328,10 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint64_t amount,
     int extraDataSize,
     const void* extraData,
-    uint32_t scheduledTickOffset)
+    uint32_t scheduledTickOffset,
+    QCPtr* qcPtr = nullptr)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };

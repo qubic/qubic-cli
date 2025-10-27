@@ -112,6 +112,24 @@ Command:
         Call a contract function of contract index and print the output. Valid node ip/port are required.
     -invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>
         Invoke a procedure of contract index. Valid private key and node ip/port are required.
+	-setshareholderproposal <CONTRACT_INDEX> <PROPOSAL_STRING>
+		Set shareholder proposal in a contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee. You need to be shareholder of the contract.
+		<PROPOSAL_STRING> is explained if there is a parsing error. Most contracts only support "Variable|2" (yes/no proposals to change state variable).
+	-clearshareholderproposal <CONTRACT_INDEX>
+		Clear own shareholder proposal in a contract. Costs a fee.
+	-getshareholderproposals <CONTRACT_INDEX> <PROPOSAL_INDEX_OR_GROUP>
+		Get shareholder proposal info from a contract.
+		Either pass "active" to get proposals that are open for voting in the current epoch, or "finished" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.
+	-shareholdervote <CONTRACT_INDEX> <PROPOSAL_INDEX> <VOTE_VALUE>
+		Cast vote(s) for a shareholder proposal in the contract. You need to be shareholder of the contract.
+		<VOTE_VALUE> may be a single value to set all your votes (one per share) to the same value.
+		In this case, <VOTE_VALUE> is the option in range 0 ... N-1 or "none" (in usual case of option voting), or an arbitrary integer or "none" (if proposal is for scalar voting).
+		<VOTE_VALUE> also may be a comma-separated list of pairs of count and value (for example: "3,0,10,1" meaning 3 votes for option 0 and 10 votes for option 1).
+		If the total count is less than the number of shares you own, the remaining votes will be set to "none".
+	-getshareholdervotes <CONTRACT_INDEX> <PROPOSAL_INDEX> [VOTER_IDENTITY]
+		Get shareholder proposal votes of the contract. If VOTER_IDENTITY is skipped, identity of seed is used.
+	-getshareholderresults <CONTRACT_INDEX> <PROPOSAL_INDEX>
+		Get the current result of a shareholder proposal.
 
 [QX COMMANDS]
 	-qxgetfee

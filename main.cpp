@@ -1235,6 +1235,37 @@ int run(int argc, char* argv[])
             qbondGetCFA(g_nodeIp, g_nodePort);
             break;
         }
+        case SHAREHOLDER_SET_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            shareholderSetProposal(g_nodeIp, g_nodePort, g_seed, g_contractIndex, g_proposalString, g_offsetScheduledTick, g_force);
+            break;
+        case SHAREHOLDER_CLEAR_PROPOSAL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            shareholderClearProposal(g_nodeIp, g_nodePort, g_seed, g_contractIndex, g_offsetScheduledTick);
+            break;
+        case SHAREHOLDER_GET_PROPOSALS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            shareholderGetProposals(g_nodeIp, g_nodePort, g_contractIndex, g_proposalString);
+            break;
+        case SHAREHOLDER_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            shareholderVote(g_nodeIp, g_nodePort, g_seed, g_contractIndex, g_proposalString, g_voteValueString, g_offsetScheduledTick, g_force);
+            break;
+        case SHAREHOLDER_GET_VOTE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            if (g_requestedIdentity)
+                sanityCheckIdentity(g_requestedIdentity);
+            else
+                sanityCheckSeed(g_seed);
+            shareholderGetVote(g_nodeIp, g_nodePort, g_contractIndex, g_proposalString, g_requestedIdentity, g_seed);
+            break;
+        case SHAREHOLDER_GET_VOTING_RESULTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            shareholderGetVotingResults(g_nodeIp, g_nodePort, g_contractIndex, g_proposalString);
+            break;
         case TEST_QPI_FUNCTIONS_OUTPUT:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
