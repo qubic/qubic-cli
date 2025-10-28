@@ -7,7 +7,7 @@
 #include "key_utils.h"
 #include "k12_and_key_utils.h"
 
-#define QBOND_CONTRACT_INDEX 11
+#define QBOND_CONTRACT_INDEX 17
 
 #define QBOND_STAKE 1
 #define QBOND_TRANSFER 2
