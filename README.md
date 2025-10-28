@@ -47,6 +47,8 @@ Command:
 		Distribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.
 	-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>
 		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.
+	-qutilgetfee
+		Show current QUTIL fees.
 
 [BLOCKCHAIN/PROTOCOL COMMANDS]
 	-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>
