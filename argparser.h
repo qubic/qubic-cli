@@ -153,7 +153,6 @@ void print_help()
     printf("\t-invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>\n");
     printf("\t\tInvoke a procedure of contract index. Valid private key and node ip/port are required.\t\n");
 
-    // TODO: fix text below
     printf("\t-setshareholderproposal <CONTRACT_INDEX> <PROPOSAL_STRING>\n");
     printf("\t\tSet shareholder proposal in a contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee. You need to be shareholder of the contract.\n");
     printf("\t\t<PROPOSAL_STRING> is explained if there is a parsing error. Most contracts only support \"Variable|2\" (yes/no proposals to change state variable).\n");

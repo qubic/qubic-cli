@@ -1448,7 +1448,7 @@ bool getShareholderProposalFees(QCPtr qc, unsigned int contractIndex, GetShareho
 		LOG("ERROR: Didn't receive valid response from GetShareholderProposalFees!\n");
 		return false;
 	}
-	LOG("Current fees: create/change/cancel shareholder proposal %" PRIi64 ", create/change/remove shareholder votes %" PRIi64 "\n",
+	LOG("Current fees: create/change/clear shareholder proposal %" PRIi64 ", create/change/remove shareholder votes %" PRIi64 "\n",
 		fees.setProposalFee, fees.setVoteFee);
 	return true;
 }
@@ -1521,7 +1521,7 @@ void shareholderClearProposal(const char* nodeIp, int nodePort, const char* seed
 	if (!getShareholderProposalFees(qc, contractIndex, fees))
 		return;
 
-	std::cout << "Sending transaction to clear your CCF proposal ..." << std::endl;
+	std::cout << "Sending transaction to clear your shareholder proposal ..." << std::endl;
 	ProposalDataYesNo p;
 	memset(&p, 0, sizeof(p));
 	p.epoch = 0;	// epoch 0 clears proposal
