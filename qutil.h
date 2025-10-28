@@ -96,12 +96,6 @@ struct CancelPoll_input {
     uint64_t poll_id;
 };
 
-struct GetPollFees_output
-{
-    int64_t pollCreationFee;
-    int64_t pollVoteFee;
-};
-
 enum qutilProcedureId
 {
     SendToManyV1 = 1,
@@ -121,7 +115,7 @@ enum qutilFunctionId
     GetPollsByCreator = 4,
     GetCurrentPollId = 5,
     GetPollInfo = 6,
-    GetPollFees = 7,
+    GetFees = 7,
 };
 
 struct GetSendToManyV1Fee_output
@@ -160,3 +154,5 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort);
 void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id);
 
 void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_t poll_id, uint32_t scheduledTickOffset);
+
+void qutilPrintFees(const char* nodeIp, int nodePort);

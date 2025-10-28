@@ -92,15 +92,52 @@ long long getSendToManyV1Fee(QCPtr qc)
     }
 }
 
-bool getPollFees(QCPtr qc, GetPollFees_output& fees)
+struct GetFees_output
 {
-    if (!runContractFunction(nullptr, 0, QUTIL_CONTRACT_ID, qutilFunctionId::GetPollFees, nullptr, 0, &fees, sizeof(fees), &qc))
+    int64_t smt1InvocationFee;
+    int64_t pollCreationFee;
+    int64_t pollVoteFee;
+    int64_t distributeQuToShareholderFeePerShareholder;
+    int64_t shareholderProposalFee;
+
+    // Placeholder for future fees, preventing incompatibilities for some extensions
+    int64_t _futureFeePlaceholder0;
+    int64_t _futureFeePlaceholder1;
+    int64_t _futureFeePlaceholder2;
+    int64_t _futureFeePlaceholder3;
+    int64_t _futureFeePlaceholder4;
+    int64_t _futureFeePlaceholder5;
+};
+
+
+bool getFees(QCPtr qc, GetFees_output& fees)
+{
+    if (!runContractFunction(nullptr, 0, QUTIL_CONTRACT_ID, qutilFunctionId::GetFees, nullptr, 0, &fees, sizeof(fees), &qc))
     {
-        LOG("ERROR: Didn't receive valid response from GetPollFees!\n");
+        LOG("ERROR: Didn't receive valid response from GetFees!\n");
         return false;
     }
-    LOG("Current poll fees: create poll %" PRIi64 ", vote in poll %" PRIi64 "\n", fees.pollCreationFee, fees.pollVoteFee);
     return true;
+}
+
+void qutilPrintFees(const char* nodeIp, int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    GetFees_output fees;
+    if (!getFees(qc, fees))
+        return;
+
+    LOG("SendToManyV1 fee (var 0):               %" PRIi64 "\n", fees.smt1InvocationFee);
+    LOG("Poll creation fee (var 1):              %" PRIi64 "\n", fees.pollCreationFee);
+    LOG("Poll vote fee (var 2):                  %" PRIi64 "\n", fees.pollVoteFee);
+    LOG("DistributeQuToShareholders fee (var 3): %" PRIi64 " per shareholder\n", fees.distributeQuToShareholderFeePerShareholder);
+    LOG("Shareholder proposal fee (var 4):       %" PRIi64 "\n", fees.shareholderProposalFee);
 }
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
@@ -429,8 +466,8 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
-    GetPollFees_output fees;
-    if (!getPollFees(qc, fees))
+    GetFees_output fees;
+    if (!getFees(qc, fees))
         return;
 
     uint8_t subseed[32] = { 0 };
@@ -493,8 +530,8 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
-    GetPollFees_output fees;
-    if (!getPollFees(qc, fees))
+    GetFees_output fees;
+    if (!getFees(qc, fees))
         return;
 
     Vote_input input;
@@ -776,8 +813,8 @@ void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_
         return;
     }
 
-    GetPollFees_output fees;
-    if (!getPollFees(qc, fees))
+    GetFees_output fees;
+    if (!getFees(qc, fees))
         return;
 
     CancelPoll_input input;

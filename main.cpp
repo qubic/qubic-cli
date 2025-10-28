@@ -430,6 +430,10 @@ int run(int argc, char* argv[])
             qutilCancelPoll(g_nodeIp, g_nodePort, g_seed, g_qutil_cancelPollId, g_offsetScheduledTick);
             break;
         }
+        case QUTIL_PRINT_FEE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilPrintFees(g_nodeIp, g_nodePort);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

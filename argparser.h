@@ -81,6 +81,8 @@ void print_help()
     printf("\t\tGet information about a specific poll by its ID.\n");
     printf("\t-qutilcancelpoll <POLL_ID>\n");
     printf("\t\tCancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.\n");
+    printf("\t-qutilgetfee\n");
+    printf("\t\tShow current QUTIL fees.\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -1495,6 +1497,13 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-qutilgetfee") == 0)
+        {
+            g_cmd = QUTIL_PRINT_FEE;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }        
 
         /****************************
          ***** GQMPROP COMMANDS *****
