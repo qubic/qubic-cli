@@ -166,14 +166,14 @@ struct GetCFA_output
     }
 };
 
-void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_t millionsOfQu);
-void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const char* targetIdentity, const int64_t epoch, const int64_t mbondsAmount);
-void qbondAddAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount);
-void qbondRemoveAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount);
-void qbondAddBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount);
-void qbondRemoveBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount);
-void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t burnAmount);
-void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const char* user, const bool operation);
+void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_t millionsOfQu, const uint32_t scheduledTickOffset);
+void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const char* targetIdentity, const int64_t epoch, const int64_t mbondsAmount, const uint32_t scheduledTickOffset);
+void qbondAddAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset);
+void qbondRemoveAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset);
+void qbondAddBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset);
+void qbondRemoveBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset);
+void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t burnAmount, const uint32_t scheduledTickOffset);
+void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const char* user, const bool operation, const uint32_t scheduledTickOffset);
 void qbondGetFees(const char* nodeIp, int nodePort);
 void qbondGetEarnedFees(const char* nodeIp, int nodePort);
 void qbondGetInfoPerEpoch(const char* nodeIp, int nodePort, const int64_t epoch);
@@ -183,5 +183,5 @@ void qbondGetTable(const char* nodeIp, int nodePort);
 void qbondGetUserMBonds(const char* nodeIp, int nodePort, const char* owner);
 void qbondGetCFA(const char* nodeIp, int nodePort);
 
-void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const int64_t fee, const uint16_t inputType);
+void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const int64_t fee, const uint16_t inputType, const uint32_t scheduledTickOffset);
 void printOrders(const char* ordersType, const Order orders[]);

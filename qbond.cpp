@@ -7,7 +7,7 @@
 #include "key_utils.h"
 #include "k12_and_key_utils.h"
 
-#define QBOND_CONTRACT_INDEX 17
+#define QBOND_CONTRACT_INDEX 11
 
 #define QBOND_STAKE 1
 #define QBOND_TRANSFER 2
@@ -59,7 +59,7 @@ void convertToString(int64_t num, char num_S[])
     }
 }
 
-void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_t millionsOfQu)
+void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_t millionsOfQu, const uint32_t scheduledTickOffset)
 {
     Stake_input input;
     input.millions = millionsOfQu;
@@ -99,7 +99,7 @@ void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = millionsOfQu * QBOND_BASE_STAKE_AMOUNT + millionsOfQu * QBOND_BASE_STAKE_AMOUNT / 10000ULL * QBOND_STAKE_FEE;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + 2;
+    packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = QBOND_STAKE;
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
@@ -120,11 +120,11 @@ void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_
     getTxHashFromDigest(digest, txHash);
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("\n%u\n", currentTick);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + 2, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
-void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const char* targetIdentity, const int64_t epoch, const int64_t mbondsAmount)
+void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const char* targetIdentity, const int64_t epoch, const int64_t mbondsAmount, const uint32_t scheduledTickOffset)
 {
     TransferMBond_input input;
     input.epoch = epoch;
@@ -167,7 +167,7 @@ void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const cha
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 100;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + 2;
+    packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = QBOND_TRANSFER;
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
@@ -188,31 +188,31 @@ void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const cha
     getTxHashFromDigest(digest, txHash);
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("\n%u\n", currentTick);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + 2, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
-void qbondAddAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount)
+void qbondAddAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset)
 {
-    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_ADD_ASK_ORDER);
+    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_ADD_ASK_ORDER, scheduledTickOffset);
 }
 
-void qbondRemoveAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount)
+void qbondRemoveAskOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset)
 {
-    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_REMOVE_ASK_ORDER);
+    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_REMOVE_ASK_ORDER, scheduledTickOffset);
 }
 
-void qbondAddBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount)
+void qbondAddBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset)
 {
-    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, mbondPrice * mbondsAmount, QBOND_ADD_BID_ORDER);
+    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, mbondPrice * mbondsAmount, QBOND_ADD_BID_ORDER, scheduledTickOffset);
 }
 
-void qbondRemoveBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount)
+void qbondRemoveBidOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const uint32_t scheduledTickOffset)
 {
-    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_REMOVE_BID_ORDER);
+    qbondOperateOrder(nodeIp, nodePort, seed, epoch, mbondPrice, mbondsAmount, 1, QBOND_REMOVE_BID_ORDER, scheduledTickOffset);
 }
 
-void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const int64_t fee, const uint16_t inputType)
+void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const int64_t epoch, const int64_t mbondPrice, const int64_t mbondsAmount, const int64_t fee, const uint16_t inputType, const uint32_t scheduledTickOffset)
 {
     OrderOperation_input input;
     input.epoch = epoch;
@@ -254,7 +254,7 @@ void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = fee;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + 2;
+    packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = inputType;
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
@@ -275,11 +275,11 @@ void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const
     getTxHashFromDigest(digest, txHash);
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("\n%u\n", currentTick);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + 2, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
-void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t burnAmount)
+void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t burnAmount, const uint32_t scheduledTickOffset)
 {
     Burn_input input;
     input.amount = burnAmount;
@@ -319,7 +319,7 @@ void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = burnAmount;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + 2;
+    packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = QBOND_BURN;
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
@@ -340,11 +340,11 @@ void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t
     getTxHashFromDigest(digest, txHash);
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("\n%u\n", currentTick);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + 2, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
-void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const char* user, const bool operation)
+void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const char* user, const bool operation, const uint32_t scheduledTickOffset)
 {
     UpdateCFA_input input;
     memset(input.user, 0, 32);
@@ -386,7 +386,7 @@ void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const ch
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 1;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + 2;
+    packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = QBOND_UPDATE_CFA;
     packet.transaction.inputSize = sizeof(input);
     memcpy(&packet.inputData, &input, sizeof(input));
@@ -407,7 +407,7 @@ void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const ch
     getTxHashFromDigest(digest, txHash);
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("\n%u\n", currentTick);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + 2, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
