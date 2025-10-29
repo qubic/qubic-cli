@@ -396,3 +396,4 @@ template GetCurrentResult_output QubicConnection::receivePacketWithHeaderAs<GetC
 template GetPollsByCreator_output QubicConnection::receivePacketWithHeaderAs<GetPollsByCreator_output>();
 template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetCurrentPollId_output>();
 template GetPollInfo_output QubicConnection::receivePacketWithHeaderAs<GetPollInfo_output>();
+template QueryFeeReserve_output QubicConnection::receivePacketWithHeaderAs<QueryFeeReserve_output>();

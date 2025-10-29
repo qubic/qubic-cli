@@ -386,6 +386,15 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             qutilBurnQubic(g_nodeIp, g_nodePort, g_seed, g_txAmount, g_offsetScheduledTick);
             break;
+        case QUTIL_BURN_QUBIC_FOR_CONTRACT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qutilBurnQubicForContract(g_nodeIp, g_nodePort, g_seed, g_txAmount, g_contractIndex, g_offsetScheduledTick);
+            break;
+        case QUTIL_QUERY_FEE_RESERVE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qutilQueryFeeReserve(g_nodeIp, g_nodePort, g_contractIndex);
+            break;
         case QUTIL_SEND_TO_MANY_BENCHMARK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
