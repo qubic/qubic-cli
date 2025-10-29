@@ -67,7 +67,7 @@ void print_help()
     printf("\t-qutilburnqubicforcontract <AMOUNT> <CONTRACT_INDEX>\n");
     printf("\t\tBurns qubic for the specified contract index, valid private key and node ip/port are required.\n");
     printf("\t-qutilqueryfeereserve <CONTRACT_INDEX>\n");
-    printf("\t\tQueries the amount of qubic in the fee reserve of the specified contract, valid private key and node ip/port are required.\n");
+    printf("\t\tQueries the amount of qubic in the fee reserve of the specified contract, valid node ip/port are required.\n");
     printf("\t-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>\n");
     printf("\t\tDistribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.\n");
     printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
