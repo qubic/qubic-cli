@@ -39,14 +39,34 @@ Command:
 		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.
 	-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>
 		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid private key and node ip/port are required.
+
+[QUTIL COMMANDS]
 	-qutilsendtomanyv1 <FILE>
 		Performs multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.
 	-qutilburnqubic <AMOUNT>
 		Performs burning qubic, valid private key and node ip/port are required.
+	-qutilburnqubicforcontract <AMOUNT> <CONTRACT_INDEX>
+		Burns qubic for the specified contract index, valid private key and node ip/port are required.
+	-qutilqueryfeereserve <CONTRACT_INDEX>
+		Queries the amount of qubic in the fee reserve of the specified contract, valid node ip/port are required.
 	-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>
 		Distribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.
 	-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>
 		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.
+	-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <SEMICOLON_SEPARATED_ASSETS>
+		Create a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid private key and node ip/port are required.
+	-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>
+		Vote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid private key and node ip/port are required.
+	-qutilgetcurrentresult <POLL_ID>
+		Get the current results of a poll. <POLL_ID> is the poll's ID. Valid node ip/port are required.
+	-qutilgetpollsbycreator <CREATOR_ADDRESS>
+		Get polls created by a specific user. <CREATOR_ADDRESS> is the creator's identity. Valid node ip/port are required.
+	-qutilgetcurrentpollid
+		Get the current poll ID and list of active polls.
+	-qutilgetpollinfo <POLL_ID>
+		Get information about a specific poll by its ID.
+	-qutilcancelpoll <POLL_ID>
+		Cancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.
 	-qutilgetfee
 		Show current QUTIL fees.
 
