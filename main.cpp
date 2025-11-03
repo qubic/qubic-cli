@@ -359,6 +359,11 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             syncTime(g_nodeIp, g_nodePort, g_seed);
             break;
+        case SAVE_SNAPSHOT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            saveSnapshot(g_nodeIp, g_nodePort, g_seed);
+            break;
         case SET_LOGGING_MODE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

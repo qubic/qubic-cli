@@ -2129,3 +2129,78 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
         }
     }
 }
+
+void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandSaveSnapshotRequestAndResponse cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SAVE_SNAPSHOT) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    SpecialCommandSaveSnapshotRequestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSaveSnapshotRequestAndResponse>();
+    }
+    catch (std::logic_error) 
+    {
+        memset(&response, 0, sizeof(SpecialCommandSaveSnapshotRequestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        if (response.currentTick > 0 && response.status == SpecialCommandSaveSnapshotRequestAndResponse::SAVING_TRIGGERED)
+        {
+            LOG("Successfully triggered saving snapshot at tick %u. It will be saved at the next tick.\n", response.currentTick);
+            LOG("Please wait until the node connection is re-enabled.\n");
+        } 
+        else 
+        {
+            LOG("The packet was successfully sent, but no save was triggered.\n");
+            LOG("- Tick: %u\n", response.currentTick);
+            LOG("- Status: ");
+            switch (response.status)
+            {
+            case SpecialCommandSaveSnapshotRequestAndResponse::REMOTE_SAVE_MODE_DISABLE :
+                LOG("REMOTE_SAVE_MODE_DISABLE.\n");
+                break;
+            case SpecialCommandSaveSnapshotRequestAndResponse::SAVING_IN_PROGRESS :
+                LOG("SAVING_IN_PROGRESS.\n");
+                break;
+            case SpecialCommandSaveSnapshotRequestAndResponse::UNKNOWN_FAILURE :
+            default:
+                LOG("UNKNOWN_FAILURE.\n");
+                break;
+            }
+        }
+    } 
+    else
+    {
+        LOG("Failed to trigger saving snapshot\n");
+    }
+}

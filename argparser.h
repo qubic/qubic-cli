@@ -1004,6 +1004,14 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-savesnapshot") == 0)
+        {
+            g_cmd = SAVE_SNAPSHOT;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_SAVE_SNAPSHOT;
+            i+=1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if (strcmp(argv[i], "-sendrawpacket") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
