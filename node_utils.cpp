@@ -2186,8 +2186,8 @@ void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed)
             LOG("- Status: ");
             switch (response.status)
             {
-            case SpecialCommandSaveSnapshotRequestAndResponse::REMOTE_SAVE_MODE_DISABLE :
-                LOG("REMOTE_SAVE_MODE_DISABLE.\n");
+            case SpecialCommandSaveSnapshotRequestAndResponse::REMOTE_SAVE_MODE_DISABLED :
+                LOG("REMOTE_SAVE_MODE_DISABLED.\n");
                 break;
             case SpecialCommandSaveSnapshotRequestAndResponse::SAVING_IN_PROGRESS :
                 LOG("SAVING_IN_PROGRESS.\n");
