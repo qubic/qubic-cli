@@ -358,7 +358,7 @@ void qutilQueryFeeReserve(const char* nodeIp, int nodePort, uint32_t contractInd
     try
     {
         output = qc->receivePacketWithHeaderAs<QueryFeeReserve_output>();
-        LOG("Fee reserve for contract %u: %PRIi64 Qu\n", contractIndex, output.reserveAmount);
+        LOG("Fee reserve for contract %u: %" PRIi64 "Qu\n", contractIndex, output.reserveAmount);
     }
     catch (std::logic_error& e)
     {
