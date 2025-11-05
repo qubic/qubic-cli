@@ -366,7 +366,15 @@ void printVotingResults(ProposalSummarizedVotingDataV1& results, bool quorumRule
 	else
 	{
 		// scalar voting
-		// TODO
+		std::cout << "\tscalar voting result value = " << results.scalarVotingResult;
+		if (quorumRule)
+		{
+			if (results.totalVotesCasted <= results.totalVotesAuthorized * 2 / 3)
+				std::cout << " (total votes not sufficient for acceptance of proposal)";
+			else
+				std::cout << " (sufficient votes to accept proposal value)";
+		}
+		std::cout << std::endl;
 	}
 }
 
@@ -559,16 +567,34 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 		if (numberOptions == 0)
 		{
 			// scalar voting
-
-			// TODO
+			sint64* valuePtrs[] = {&p.data.variableScalar.proposedValue, &p.data.variableScalar.minValue, &p.data.variableScalar.maxValue };
+			const char* valueNames[] = { "proposed", "minimum valid", "maximum valid" };
+			for (int i = 0; i < 3; ++i)
+			{
+				std::string valueStr = strtok2string(NULL, ",");
+				sint64 valueInt;
+				if (sscanf(valueStr.c_str(), "%" SCNi64, &valueInt) == 1)
+				{
+					*(valuePtrs[i]) = valueInt;
+				}
+				else
+				{
+					std::cout << "ERROR: the " << valueNames[i] << " variable value should be integer number." << std::endl;
+					std::cout << "Got \"" << valueStr << "\"." << std::endl;
+					printSetProposalHelp();
+					return false;
+				}
+			}
 		}
 		else if (numberOptions == 1 || numberOptions > 5)
 		{
+			// invalid number of options
 			std::cout << "ERROR: Number of options must be 2 to 5 (voting on options) or 0 (scalar voting)." << std::endl;
 			std::cout << "Got \"" << numberOptions << "\"." << std::endl;
 		}
 		else
 		{
+			// option voting with valid number of options
 			for (unsigned int i = 0; i < numberOptions - 1; ++i)
 			{
 				std::string valueStr = strtok2string(NULL, ",");
