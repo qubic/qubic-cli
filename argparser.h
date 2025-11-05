@@ -81,6 +81,8 @@ void print_help()
     printf("\t\tGet information about a specific poll by its ID.\n");
     printf("\t-qutilcancelpoll <POLL_ID>\n");
     printf("\t\tCancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.\n");
+    printf("\t-qutilgetfee\n");
+    printf("\t\tShow current QUTIL fees.\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -154,6 +156,25 @@ void print_help()
     printf("\t\tCall a contract function of contract index and print the output. Valid node ip/port are required.\t\n");
     printf("\t-invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>\n");
     printf("\t\tInvoke a procedure of contract index. Valid private key and node ip/port are required.\t\n");
+
+    printf("\t-setshareholderproposal <CONTRACT_INDEX> <PROPOSAL_STRING>\n");
+    printf("\t\tSet shareholder proposal in a contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee. You need to be shareholder of the contract.\n");
+    printf("\t\t<PROPOSAL_STRING> is explained if there is a parsing error. Most contracts only support \"Variable|2\" (yes/no proposals to change state variable).\n");
+    printf("\t-clearshareholderproposal <CONTRACT_INDEX>\n");
+    printf("\t\tClear own shareholder proposal in a contract. Costs a fee.\n");
+    printf("\t-getshareholderproposals <CONTRACT_INDEX> <PROPOSAL_INDEX_OR_GROUP>\n");
+    printf("\t\tGet shareholder proposal info from a contract.\n");
+    printf("\t\tEither pass \"active\" to get proposals that are open for voting in the current epoch, or \"finished\" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.\n");
+    printf("\t-shareholdervote <CONTRACT_INDEX> <PROPOSAL_INDEX> <VOTE_VALUE>\n");
+    printf("\t\tCast vote(s) for a shareholder proposal in the contract. You need to be shareholder of the contract.\n");
+    printf("\t\t<VOTE_VALUE> may be a single value to set all your votes (one per share) to the same value.\n");
+    printf("\t\tIn this case, <VOTE_VALUE> is the option in range 0 ... N-1 or \"none\" (in usual case of option voting), or an arbitrary integer or \"none\" (if proposal is for scalar voting).\n");
+    printf("\t\t<VOTE_VALUE> also may be a comma-separated list of pairs of count and value (for example: \"3,0,10,1\" meaning 3 votes for option 0 and 10 votes for option 1).\n");
+    printf("\t\tIf the total count is less than the number of shares you own, the remaining votes will be set to \"none\".\n");
+    printf("\t-getshareholdervotes <CONTRACT_INDEX> <PROPOSAL_INDEX> [VOTER_IDENTITY]\n");
+    printf("\t\tGet shareholder proposal votes of the contract. If VOTER_IDENTITY is skipped, identity of seed is used.\n");
+    printf("\t-getshareholderresults <CONTRACT_INDEX> <PROPOSAL_INDEX>\n");
+    printf("\t\tGet the current result of a shareholder proposal.\n");
 
     printf("\n[QX COMMANDS]\n");
     printf("\t-qxgetfee\n");
@@ -510,7 +531,7 @@ static uint32_t getContractIndex(const char* str)
         idx = 17;
     else
     {
-        constexpr uint32_t contractCount = 17;
+        constexpr uint32_t contractCount = 17 + 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
         if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
@@ -1486,6 +1507,13 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-qutilgetfee") == 0)
+        {
+            g_cmd = QUTIL_PRINT_FEE;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }        
 
         /****************************
          ***** GQMPROP COMMANDS *****
@@ -2522,6 +2550,101 @@ void parseArgument(int argc, char** argv)
             i++;
             CHECK_OVER_PARAMETERS
             return;
+        }
+
+
+        /*****************************************
+         ***** SHAREHOLDER PROPOSAL COMMANDS *****
+         *****************************************/
+
+        if (strcmp(argv[i], "-setshareholderproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = SHAREHOLDER_SET_PROPOSAL;
+            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_proposalString = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-clearshareholderproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = SHAREHOLDER_CLEAR_PROPOSAL;
+            g_contractIndex = getContractIndex(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-getshareholderproposals") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = SHAREHOLDER_GET_PROPOSALS;
+            g_contractIndex = getContractIndex(argv[i + 1]);
+            if (i + 2 >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX_OR_GROUP! E.g.: 0, \"active\", or \"finished\".");
+                exit(1);
+            }
+            g_proposalString = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-shareholdervote") == 0)
+        {
+            g_cmd = SHAREHOLDER_VOTE;
+            if (i + 3 >= argc)
+            {
+                LOG("ERROR: You need to pass CONTRACT_INDEX, PROPOSAL_INDEX, and VOTE_VALUE!");
+                exit(1);
+            }
+            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_proposalString = argv[i + 2];
+            g_voteValueString = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-getshareholdervotes") == 0)
+        {
+            g_cmd = SHAREHOLDER_GET_VOTE;
+            ++i;
+            if (i >= argc)
+            {
+                LOG("ERROR: You need to pass CONTRACT_INDEX and PROPOSAL_INDEX!");
+                exit(1);
+            }
+            g_contractIndex = getContractIndex(argv[i]);
+            ++i;
+            if (i >= argc)
+            {
+                LOG("ERROR: You need to pass PROPOSAL_INDEX!");
+                exit(1);
+            }
+            g_proposalString = argv[i];
+            ++i;
+            if (i < argc)
+            {
+                g_requestedIdentity = argv[i];
+                ++i;
+            }
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-getshareholderresults") == 0)
+        {
+            g_cmd = SHAREHOLDER_GET_VOTING_RESULTS;
+            if (i + 2 >= argc)
+            {
+                LOG("ERROR: You need to pass CONTRACT_INDEX and PROPOSAL_INDEX!");
+                exit(1);
+            }
+            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_proposalString = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
         }
 
         /**************************

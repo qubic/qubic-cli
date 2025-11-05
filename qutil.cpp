@@ -92,6 +92,54 @@ long long getSendToManyV1Fee(QCPtr qc)
     }
 }
 
+struct GetFees_output
+{
+    int64_t smt1InvocationFee;
+    int64_t pollCreationFee;
+    int64_t pollVoteFee;
+    int64_t distributeQuToShareholderFeePerShareholder;
+    int64_t shareholderProposalFee;
+
+    // Placeholder for future fees, preventing incompatibilities for some extensions
+    int64_t _futureFeePlaceholder0;
+    int64_t _futureFeePlaceholder1;
+    int64_t _futureFeePlaceholder2;
+    int64_t _futureFeePlaceholder3;
+    int64_t _futureFeePlaceholder4;
+    int64_t _futureFeePlaceholder5;
+};
+
+
+bool getFees(QCPtr qc, GetFees_output& fees)
+{
+    if (!runContractFunction(nullptr, 0, QUTIL_CONTRACT_ID, qutilFunctionId::GetFees, nullptr, 0, &fees, sizeof(fees), &qc))
+    {
+        LOG("ERROR: Didn't receive valid response from GetFees!\n");
+        return false;
+    }
+    return true;
+}
+
+void qutilPrintFees(const char* nodeIp, int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    if (!qc)
+    {
+        LOG("Failed to connect to node.\n");
+        return;
+    }
+
+    GetFees_output fees;
+    if (!getFees(qc, fees))
+        return;
+
+    LOG("SendToManyV1 fee (var 0):               %" PRIi64 "\n", fees.smt1InvocationFee);
+    LOG("Poll creation fee (var 1):              %" PRIi64 "\n", fees.pollCreationFee);
+    LOG("Poll vote fee (var 2):                  %" PRIi64 "\n", fees.pollVoteFee);
+    LOG("DistributeQuToShareholders fee (var 3): %" PRIi64 " per shareholder\n", fees.distributeQuToShareholderFeePerShareholder);
+    LOG("Shareholder proposal fee (var 4):       %" PRIi64 "\n", fees.shareholderProposalFee);
+}
+
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -418,6 +466,10 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
+    GetFees_output fees;
+    if (!getFees(qc, fees))
+        return;
+
     uint8_t subseed[32] = { 0 };
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
@@ -440,7 +492,7 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     memset(&packet, 0, sizeof(packet));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = QUTIL_POLL_CREATION_FEE;
+    packet.transaction.amount = fees.pollCreationFee;
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = qutilProcedureId::CreatePoll;
@@ -478,6 +530,10 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
+    GetFees_output fees;
+    if (!getFees(qc, fees))
+        return;
+
     Vote_input input;
     memset(&input, 0, sizeof(input));
     input.poll_id = poll_id;
@@ -507,7 +563,7 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     memset(&packet, 0, sizeof(packet));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = QUTIL_VOTE_FEE;
+    packet.transaction.amount = fees.pollVoteFee;
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = qutilProcedureId::Vote;
@@ -757,6 +813,10 @@ void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_
         return;
     }
 
+    GetFees_output fees;
+    if (!getFees(qc, fees))
+        return;
+
     CancelPoll_input input;
     input.poll_id = poll_id;
     uint8_t subseed[32] = { 0 };
@@ -782,7 +842,7 @@ void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_
     memset(&packet, 0, sizeof(packet));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = QUTIL_POLL_CREATION_FEE;
+    packet.transaction.amount = fees.pollCreationFee;
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
     packet.transaction.inputType = qutilProcedureId::CancelPoll;

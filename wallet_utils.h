@@ -28,7 +28,8 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
                              uint64_t amount,
                              int extraDataSize,
                              const void* extraData,
-                             uint32_t scheduledTickOffset);
+                             uint32_t scheduledTickOffset,
+                             QCPtr* qcPtr = nullptr);
 bool runContractFunction(const char* nodeIp, int nodePort,
     unsigned int contractIndex,
     unsigned short funcNumber,

@@ -328,9 +328,10 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint64_t amount,
     int extraDataSize,
     const void* extraData,
-    uint32_t scheduledTickOffset)
+    uint32_t scheduledTickOffset,
+    QCPtr* qcPtr = nullptr)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
@@ -408,14 +409,25 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         memcpy(packetInputData, inputPtr, inputSize);
     qc->sendData(&packet[0], packetHeader.size());
 
-    std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
+    const size_t fullPacketSize = sizeof(RequestResponseHeader) + outputSize;
+    std::vector<uint8_t> buffer(fullPacketSize);
     int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() && 
-        recvByte - sizeof(RequestResponseHeader) == outputSize)
+        recvByte == fullPacketSize)
     {
         memcpy(outputPtr, (buffer.data() + sizeof(RequestResponseHeader)), outputSize);
+
+        if (header->size() > fullPacketSize)
+        {
+            const size_t dropSize = header->size() - fullPacketSize;
+            LOG("WARNING: Response of runContractFunction() is %llu bytes longer than expected. Dropping unexpected part that cannot be interpreted.\n", (unsigned long long)dropSize);
+            if (dropSize > buffer.size())
+                buffer.resize(dropSize);
+            qc->receiveAllDataOrThrowException(buffer.data(), int(dropSize));
+        }
+
         return true;
     }
     

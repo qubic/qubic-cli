@@ -11,8 +11,6 @@ constexpr uint64_t QUTIL_POLL_TYPE_ASSET = 2;
 constexpr uint64_t QUTIL_MAX_ASSETS_PER_POLL = 16;
 constexpr uint64_t QUTIL_MAX_POLL = 128;
 constexpr uint64_t QUTIL_MAX_OPTIONS = 64;
-constexpr int64_t QUTIL_VOTE_FEE = 100LL;
-constexpr int64_t QUTIL_POLL_CREATION_FEE = 10000000LL;
 
 struct CreatePoll_input
 {
@@ -117,6 +115,7 @@ enum qutilFunctionId
     GetPollsByCreator = 4,
     GetCurrentPollId = 5,
     GetPollInfo = 6,
+    GetFees = 7,
 };
 
 struct GetSendToManyV1Fee_output
@@ -155,3 +154,5 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort);
 void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id);
 
 void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_t poll_id, uint32_t scheduledTickOffset);
+
+void qutilPrintFees(const char* nodeIp, int nodePort);
