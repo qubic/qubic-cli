@@ -359,6 +359,11 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             syncTime(g_nodeIp, g_nodePort, g_seed);
             break;
+        case SAVE_SNAPSHOT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            saveSnapshot(g_nodeIp, g_nodePort, g_seed);
+            break;
         case SET_LOGGING_MODE:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -1139,56 +1144,56 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondStake(g_nodeIp, g_nodePort, g_seed, g_qbond_millionsOfQu);
+            qbondStake(g_nodeIp, g_nodePort, g_seed, g_qbond_millionsOfQu, g_offsetScheduledTick);
             break;
         }
         case QBOND_TRANSFER_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondTransfer(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_epoch, g_qbond_mbondsAmount);
+            qbondTransfer(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_epoch, g_qbond_mbondsAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_ADD_ASK_ORDER_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondAddAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            qbondAddAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_REMOVE_ASK_ORDER_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondRemoveAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            qbondRemoveAskOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_ADD_BID_ORDER_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondAddBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            qbondAddBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_REMOVE_BID_ORDER_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondRemoveBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount);
+            qbondRemoveBidOrder(g_nodeIp, g_nodePort, g_seed, g_qbond_epoch, g_qbond_mbondPrice, g_qbond_mbondsAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_BURN_QU_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondBurn(g_nodeIp, g_nodePort, g_seed, g_qbond_burnAmount);
+            qbondBurn(g_nodeIp, g_nodePort, g_seed, g_qbond_burnAmount, g_offsetScheduledTick);
             break;
         }
         case QBOND_UPDATE_CFA_CMD:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            qbondUpdateCFA(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_updateCFAOperation);
+            qbondUpdateCFA(g_nodeIp, g_nodePort, g_seed, g_qbond_targetIdentity, g_qbond_updateCFAOperation, g_offsetScheduledTick);
             break;
         }
         case QBOND_GET_FEES_CMD:

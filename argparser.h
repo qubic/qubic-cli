@@ -148,6 +148,8 @@ void print_help()
     printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.\t\n");
     printf("\t-compmessage \"<MESSAGE>\"\n");
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
+    printf("\t-savesnapshot \n");
+    printf("\t\tRemotely trigger saving snapshot, valid private key and node ip/port are required.\t\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -1022,6 +1024,14 @@ void parseArgument(int argc, char** argv)
             g_cmd = SYNC_TIME;
             g_requestedSpecialCommand = SPECIAL_COMMAND_SEND_TIME;
             i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-savesnapshot") == 0)
+        {
+            g_cmd = SAVE_SNAPSHOT;
+            g_requestedSpecialCommand = SPECIAL_COMMAND_SAVE_SNAPSHOT;
+            i+=1;
             CHECK_OVER_PARAMETERS
             break;
         }

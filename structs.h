@@ -191,6 +191,7 @@ enum COMMAND
     QBOND_GET_TABLE_CMD,
     QBOND_GET_USER_MBONDS_CMD,
     QBOND_GET_CFA_CMD,
+    SAVE_SNAPSHOT,
     SHAREHOLDER_SET_PROPOSAL,
     SHAREHOLDER_CLEAR_PROPOSAL,
     SHAREHOLDER_GET_PROPOSALS,
@@ -816,6 +817,27 @@ struct SpecialCommandSetConsoleLoggingModeRequestAndResponse
     unsigned char loggingMode; // 0 disabled, 1 low computational cost, 2 full logging
     unsigned char padding[7];
 
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+
+struct SpecialCommandSaveSnapshotRequestAndResponse
+{
+    enum
+    {
+        SAVING_TRIGGERED = 0,
+        SAVING_IN_PROGRESS,
+        REMOTE_SAVE_MODE_DISABLED,
+        UNKNOWN_FAILURE,
+    };
+
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned int currentTick;
+    unsigned char status;
+    unsigned char padding[3];
+    
     static constexpr unsigned char type()
     {
         return 255;

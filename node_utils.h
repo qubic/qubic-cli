@@ -34,3 +34,4 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
 void syncTime(const char* nodeIp, const int nodePort, const char* seed);
 void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);
 void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg);
+void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed);

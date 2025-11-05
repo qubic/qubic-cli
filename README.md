@@ -108,6 +108,8 @@ Command:
 		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3)
 	-setloggingmode <MODE>
 		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.
+	-savesnapshot
+		Remotely trigger saving snapshot, valid private key and node ip/port are required.
 
 [SMART CONTRACT COMMANDS]
     -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>
