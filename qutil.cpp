@@ -301,12 +301,14 @@ void qutilBurnQubicForContract(const char* nodeIp, int nodePort, const char* see
     ((uint64_t*)destPublicKey)[2] = 0;
     ((uint64_t*)destPublicKey)[3] = 0;
 
+#pragma pack(push, 1)
     struct {
         RequestResponseHeader header;
         Transaction transaction;
         BurnQubicForContract_input bqi;
         unsigned char signature[64];
     } packet;
+#pragma pack(pop)
     packet.bqi.contractIndexBurnedFor = contractIndex;
     packet.transaction.amount = amount;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
