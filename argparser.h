@@ -1415,7 +1415,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUTIL_BURN_QUBIC_FOR_CONTRACT;
             g_txAmount = charToNumber(argv[i + 1]);
-            g_contractIndex = static_cast<uint32_t>(charToNumber(argv[i + 2]));
+            g_contractIndex = getContractIndex(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1424,7 +1424,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_QUERY_FEE_RESERVE;
-            g_contractIndex = static_cast<uint32_t>(charToNumber(argv[i + 1]));
+            g_contractIndex = getContractIndex(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;

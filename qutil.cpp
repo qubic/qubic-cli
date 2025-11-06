@@ -38,6 +38,10 @@ struct QueryFeeReserve_input
 {
     uint32_t contractIndex;
 };
+struct QueryFeeReserve_output
+{
+    int64_t reserveAmount;
+};
 
 struct SendToManyBenchmark_input
 {
@@ -281,90 +285,21 @@ void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long lon
 
 void qutilBurnQubicForContract(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t contractIndex, uint32_t scheduledTickOffset)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subseed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char publicIdentity[128] = { 0 };
-    char txHash[128] = { 0 };
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-#pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        BurnQubicForContract_input bqi;
-        unsigned char signature[64];
-    } packet;
-#pragma pack(pop)
-    packet.bqi.contractIndexBurnedFor = contractIndex;
-    packet.transaction.amount = amount;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = qutilProcedureId::BurnQubicForContract;
-    packet.transaction.inputSize = sizeof(BurnQubicForContract_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(BurnQubicForContract_input),
-        digest,
-        32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(BurnQubicForContract_input) + SIGNATURE_SIZE,
-        digest,
-        32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("BurnQubicForContract tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    BurnQubicForContract_input input{ contractIndex };
+    makeContractTransaction(nodeIp, nodePort, seed, QUTIL_CONTRACT_ID, qutilProcedureId::BurnQubicForContract, amount, sizeof(input), &input, scheduledTickOffset);
 }
 
 void qutilQueryFeeReserve(const char* nodeIp, int nodePort, uint32_t contractIndex)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QueryFeeReserve_input in;
-    } packet;
-    packet.in.contractIndex = contractIndex;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QueryFeeReserve_input);
-    packet.rcf.inputType = qutilFunctionId::QueryFeeReserve;
-    packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
+    QueryFeeReserve_input input{ contractIndex };
     QueryFeeReserve_output output;
-    try
+    if (runContractFunction(nodeIp, nodePort, QUTIL_CONTRACT_ID, qutilFunctionId::QueryFeeReserve,
+        &input, sizeof(QueryFeeReserve_input), &output, sizeof(QueryFeeReserve_output)))
     {
-        output = qc->receivePacketWithHeaderAs<QueryFeeReserve_output>();
         LOG("Fee reserve for contract %u: %" PRIi64 " Qu\n", contractIndex, output.reserveAmount);
     }
-    catch (std::logic_error& e)
+    else
     {
-        LOG(e.what());
         LOG("Failed to query fee reserve for contract %u\n", contractIndex);
     }
 }

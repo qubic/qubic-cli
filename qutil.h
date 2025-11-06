@@ -96,13 +96,6 @@ struct CancelPoll_input {
     uint64_t poll_id;
 };
 
-struct QueryFeeReserve_output
-{
-    int64_t reserveAmount;
-    static constexpr unsigned char type() {
-        return RespondContractFunction::type();
-    }
-};
 
 enum qutilProcedureId
 {
