@@ -9,7 +9,7 @@
 constexpr uint64_t QUTIL_POLL_TYPE_QUBIC = 1;
 constexpr uint64_t QUTIL_POLL_TYPE_ASSET = 2;
 constexpr uint64_t QUTIL_MAX_ASSETS_PER_POLL = 16;
-constexpr uint64_t QUTIL_MAX_POLL = 128;
+constexpr uint64_t QUTIL_MAX_POLL = 64;
 constexpr uint64_t QUTIL_MAX_OPTIONS = 64;
 
 struct CreatePoll_input
