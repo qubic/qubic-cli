@@ -496,8 +496,9 @@ static uint64_t charToUnsignedNumber(char* a)
     return retVal;
 }
 
-static uint32_t getContractIndex(const char* str)
+static uint32_t getContractIndex(const char* str, bool enableTestContracts = true)
 {
+    uint32_t contractCount = 17;
     uint32_t idx = 0;
     if (strcasecmp(str, "QX") == 0)
         idx = 1;
@@ -535,7 +536,19 @@ static uint32_t getContractIndex(const char* str)
         idx = 17;
     else
     {
-        constexpr uint32_t contractCount = 17 + 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
+        if (enableTestContracts)
+        {
+            if (strcasecmp(str, "TESTEXA") == 0)
+                idx = contractCount + 1;
+            else if (strcasecmp(str, "TESTEXB") == 0)
+                idx = contractCount + 2;
+            else if (strcasecmp(str, "TESTEXC") == 0)
+                idx = contractCount + 3;
+            else if (strcasecmp(str, "TESTEXD") == 0)
+                idx = contractCount + 4;
+
+            contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
+        }
         if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
@@ -1415,7 +1428,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUTIL_BURN_QUBIC_FOR_CONTRACT;
             g_txAmount = charToNumber(argv[i + 1]);
-            g_contractIndex = getContractIndex(argv[i + 2]);
+            g_contractIndex = getContractIndex(argv[i + 2], /*enableTestContracts=*/false);
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1424,7 +1437,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_QUERY_FEE_RESERVE;
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], /*enableTestContracts=*/false);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
