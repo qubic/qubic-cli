@@ -17,6 +17,8 @@
 #define DEFAULT_SEED "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 #define ARBITRATOR "AFZPUAIYVPNUYGJRQVLUKOPPVLHAZQTGLYAAUUNBXFTVTAMSBKQBLEIEPCVJ"
 #define NUMBER_OF_COMPUTORS 676
+#define CONTRACT_COUNT 17 // Change this number when new contracts are added
+
 #define EXCHANGE_PUBLIC_PEERS 0
 #define BROADCAST_MESSAGE 1
 #define BROADCAST_COMPUTORS 2

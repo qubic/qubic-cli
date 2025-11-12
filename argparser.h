@@ -500,7 +500,6 @@ static uint64_t charToUnsignedNumber(char* a)
 
 static uint32_t getContractIndex(const char* str, bool enableTestContracts)
 {
-    uint32_t contractCount = 17;
     uint32_t idx = 0;
     if (strcasecmp(str, "QX") == 0)
         idx = 1;
@@ -538,16 +537,17 @@ static uint32_t getContractIndex(const char* str, bool enableTestContracts)
         idx = 17;
     else
     {
+        unsigned int contractCount = CONTRACT_COUNT;
         if (enableTestContracts)
         {
             if (strcasecmp(str, "TESTEXA") == 0)
-                idx = contractCount + 1;
+                idx = CONTRACT_COUNT + 1;
             else if (strcasecmp(str, "TESTEXB") == 0)
-                idx = contractCount + 2;
+                idx = CONTRACT_COUNT + 2;
             else if (strcasecmp(str, "TESTEXC") == 0)
-                idx = contractCount + 3;
+                idx = CONTRACT_COUNT + 3;
             else if (strcasecmp(str, "TESTEXD") == 0)
-                idx = contractCount + 4;
+                idx = CONTRACT_COUNT + 4;
 
             contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
         }

@@ -11,11 +11,9 @@
 #include "wallet_utils.h"
 
 
-// Change this index when new contracts are added
-#define TESTEXA_CONTRACT_INDEX 18
-#define TESTEXA_ADDRESS "SAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABNI"
-#define TESTEXB_CONTRACT_INDEX 19
-#define TESTEXC_CONTRACT_INDEX 20
+#define TESTEXA_CONTRACT_INDEX (CONTRACT_COUNT + 1)
+#define TESTEXB_CONTRACT_INDEX (CONTRACT_COUNT + 2)
+#define TESTEXC_CONTRACT_INDEX (CONTRACT_COUNT + 3)
 
 // TESTEXA FUNCTIONS
 constexpr uint8_t TESTEXA_QUERY_QPI_FUNCTIONS = 1;
@@ -148,7 +146,7 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
 {
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
+    uint64_t destPublicKey[4] = { TESTEXA_CONTRACT_INDEX, 0, 0, 0 };
     uint8_t subSeed[32] = { 0 };
     uint8_t digest[32] = { 0 };
     uint8_t signature[64] = { 0 };
@@ -156,7 +154,6 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
     getSubseedFromSeed((uint8_t*)seed, subSeed);
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    getPublicKeyFromIdentity(TESTEXA_ADDRESS, destPublicKey);
 
     struct {
         RequestResponseHeader header;
