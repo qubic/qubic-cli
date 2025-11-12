@@ -44,7 +44,7 @@ void print_help()
     printf("\t-enabletestcontracts\n");
     printf("\t\tEnable test contract indices and names for commands using a contract index parameter. This flag has to be passed before the contract index/name. The node to connect to needs to have test contracts running.\n");
 
-    printf("Command:\n");
+    printf("\nCommands:\n");
     printf("\n[WALLET COMMANDS]\n");
     printf("\t-showkeys\n");
     printf("\t\tGenerate identity, public key and private key from seed. Seed must be passed either from params or configuration file.\n");

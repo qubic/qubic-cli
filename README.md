@@ -9,6 +9,7 @@ An intermediate tool to communicate to qubic core node.
 ```
 ./qubic-cli [basic config] [command] [command extra parameters]
 -help print this message
+
 Basic config:
 	-conf <file>
 		Specify configuration file. Relative paths will be prefixed by datadir location. See qubic.conf.example.
@@ -26,7 +27,8 @@ Basic config:
 	-enabletestcontracts
 		Enable test contract indices and names for commands using a contract index parameter. This flag has to be passed before the contract index/name. The node to connect to needs to have test contracts running.
 
-Command:
+Commands:
+
 [WALLET COMMANDS]
 	-showkeys
 		Generate identity, public key and private key from seed. Seed must be passed either from params or configuration file.
