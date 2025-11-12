@@ -14,7 +14,7 @@ Basic config:
 		Specify configuration file. Relative paths will be prefixed by datadir location. See qubic.conf.example.
 		Notice: variables in qubic.conf will be overrided by values on parameters.
 	-seed <SEED>
-		55-char seed private key
+		55-char seed for private key
 	-nodeip <IPv4_ADDRESS>
 		IP address of the target node for querying blockchain information (default: 127.0.0.1)
 	-nodeport <PORT>
@@ -26,7 +26,7 @@ Basic config:
 Command:
 [WALLET COMMANDS]
 	-showkeys
-		Generating identity, pubkey key from private key. Private key must be passed either from params or configuration file.
+		Generate identity, public key and private key from seed. Seed must be passed either from params or configuration file.
 	-getbalance <IDENTITY>
 		Balance of an identity (amount of qubic, number of in/out txs)
 	-getasset <IDENTITY>
@@ -36,27 +36,27 @@ Command:
 	-gettotalnumberofassetshares <ISSUER_ID> <ASSET_NAME>
 		Get total number of shares currently existing of a specific asset.
 	-sendtoaddress <TARGET_IDENTITY> <AMOUNT>
-		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.
+		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid seed and node ip/port are required.
 	-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>
-		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid private key and node ip/port are required.
+		Perform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid seed and node ip/port are required.
 
 [QUTIL COMMANDS]
 	-qutilsendtomanyv1 <FILE>
-		Performs multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.
+		Performs multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! Valid seed and node ip/port are required.
 	-qutilburnqubic <AMOUNT>
-		Performs burning qubic, valid private key and node ip/port are required.
+		Performs burning qubic, valid seed and node ip/port are required.
 	-qutilburnqubicforcontract <AMOUNT> <CONTRACT_INDEX>
-		Burns qubic for the specified contract index, valid private key and node ip/port are required.
+		Burns qubic for the specified contract index, valid seed and node ip/port are required.
 	-qutilqueryfeereserve <CONTRACT_INDEX>
 		Queries the amount of qubic in the fee reserve of the specified contract, valid node ip/port are required.
 	-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>
 		Distribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.
 	-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>
-		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.
+		Sends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid seed and node ip/port are required.
 	-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <SEMICOLON_SEPARATED_ASSETS>
-		Create a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid private key and node ip/port are required.
+		Create a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid seed and node ip/port are required.
 	-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>
-		Vote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid private key and node ip/port are required.
+		Vote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid seed and node ip/port are required.
 	-qutilgetcurrentresult <POLL_ID>
 		Get the current results of a poll. <POLL_ID> is the poll's ID. Valid node ip/port are required.
 	-qutilgetpollsbycreator <CREATOR_ADDRESS>
@@ -88,7 +88,7 @@ Command:
 	-readtickdata <FILE_NAME> <COMPUTOR_LIST>
 		Read tick data from a file, print the output on screen, COMPUTOR_LIST is required if you need to verify block data
 	-sendcustomtransaction <TARGET_IDENTITY> <TX_TYPE> <AMOUNT> <EXTRA_BYTE_SIZE> <EXTRA_BYTE_IN_HEX>
-		Perform a custom transaction (IPO, querying smart contract), valid private key and node ip/port are required.
+		Perform a custom transaction (IPO, querying smart contract), valid seed and node ip/port are required.
 	-dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>
 		Dump spectrum file into csv.
 	-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>
@@ -96,7 +96,7 @@ Command:
 	-dumpcontractfile <CONTRACT_BINARY_FILE> <CONTRACT_ID> <OUTPUT_CSV_FILE>
 		Dump contract file into csv. Current supported CONTRACT_ID: 1-QX
 	-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>
-		Participating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.
+		Participating IPO (dutch auction). valid seed and node ip/port, CONTRACT_INDEX are required.
 	-getipostatus <CONTRACT_INDEX>
 		View IPO status. valid node ip/port, CONTRACT_INDEX are required.
 	-getsysteminfo
@@ -106,36 +106,36 @@ Command:
 	-getcurrenttick
 		Show current tick information of a node
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
-		Perform a special command to node, valid private key and node ip/port are required.	
+		Perform a special command to node, valid seed and node ip/port are required.	
 	-togglemainaux <MODE_0> <Mode_1>
-		Remotely toggle Main/Aux mode on node,valid private key and node ip/port are required.	
+		Remotely toggle Main/Aux mode on node, valid seed and node ip/port are required.	
 		<MODE_0> and <MODE_1> value are: MAIN or AUX	
 	-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> 
-		Remotely set solution threshold for future epoch,valid private key and node ip/port are required.	
+		Remotely set solution threshold for future epoch, valid seed and node ip/port are required.	
 	-refreshpeerlist
-		(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid private key and node ip/port are required.	
+		(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid seed and node ip/port are required.	
 	-forcenexttick
-		(equivalent to F5) Remotely force next tick on node to be empty, valid private key and node ip/port are required.	
+		(equivalent to F5) Remotely force next tick on node to be empty, valid seed and node ip/port are required.	
 	-reissuevote
-		(equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.	
+		(equivalent to F9) Remotely re-issue (re-send) vote on node, valid seed and node ip/port are required.	
 	-sendrawpacket <DATA_IN_HEX> <SIZE>
 		Send a raw packet to nodeip. Valid node ip/port are required.
 	-synctime
-		Sync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!	
+		Sync node time with local time, valid seed and node ip/port are required. Make sure that your local time is synced (with NTP)!	
 	-getminingscoreranking
-		Get current mining score ranking. Valid private key and node ip/port are required.	
+		Get current mining score ranking. Valid seed and node ip/port are required.	
 	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
 		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3)
 	-setloggingmode <MODE>
-		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.
+		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid seed and node ip/port are required.
 	-savesnapshot
-		Remotely trigger saving snapshot, valid private key and node ip/port are required.
+		Remotely trigger saving snapshot, valid seed and node ip/port are required.
 
 [SMART CONTRACT COMMANDS]
     -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>
         Call a contract function of contract index and print the output. Valid node ip/port are required.
     -invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>
-        Invoke a procedure of contract index. Valid private key and node ip/port are required.
+        Invoke a procedure of contract index. Valid seed and node ip/port are required.
 	-setshareholderproposal <CONTRACT_INDEX> <PROPOSAL_STRING>
 		Set shareholder proposal in a contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee. You need to be shareholder of the contract.
 		<PROPOSAL_STRING> is explained if there is a parsing error. Most contracts only support "Variable|2" (yes/no proposals to change state variable).
