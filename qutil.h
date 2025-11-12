@@ -96,6 +96,7 @@ struct CancelPoll_input {
     uint64_t poll_id;
 };
 
+
 enum qutilProcedureId
 {
     SendToManyV1 = 1,
@@ -105,6 +106,7 @@ enum qutilProcedureId
     Vote = 5,
     CancelPoll = 6,
     DistributeQuToShareholders = 7,
+    BurnQubicForContract = 8,
 };
 
 enum qutilFunctionId
@@ -116,6 +118,7 @@ enum qutilFunctionId
     GetCurrentPollId = 5,
     GetPollInfo = 6,
     GetFees = 7,
+    QueryFeeReserve = 8,
 };
 
 struct GetSendToManyV1Fee_output
@@ -130,6 +133,8 @@ struct GetSendToManyV1Fee_output
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset);
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset);
+void qutilBurnQubicForContract(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t contractIndex, uint32_t scheduledTickOffset);
+void qutilQueryFeeReserve(const char* nodeIp, int nodePort, uint32_t contractIndex);
 void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed, uint32_t destinationCount, uint32_t numTransfersEach, uint32_t scheduledTickOffset);
 void qutilGetTotalNumberOfAssetShares(const char* nodeIp, int nodePort, const char* issuerIdentity, const char* assetName);
 void qutilDistributeQuToShareholders(const char* nodeIp, int nodePort, const char* seed,

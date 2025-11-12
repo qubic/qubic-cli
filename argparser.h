@@ -32,7 +32,7 @@ void print_help()
     printf("\t\tSpecify configuration file. Relative paths will be prefixed by datadir location. See qubic.conf.example.\n");
     printf("\t\tNotice: variables in qubic.conf will be overrided by values on parameters.\n");
     printf("\t-seed <SEED>\n");
-    printf("\t\t55-char seed private key\n");
+    printf("\t\t55-char seed for private key\n");
     printf("\t-nodeip <IPv4_ADDRESS>\n");
     printf("\t\tIP address of the target node for querying blockchain information (default: 127.0.0.1)\n");
     printf("\t-nodeport <PORT>\n");
@@ -45,7 +45,7 @@ void print_help()
     printf("Command:\n");
     printf("[WALLET COMMANDS]\n");
     printf("\t-showkeys\n");
-    printf("\t\tGenerating identity, pubkey key from private key. Private key must be passed either from params or configuration file.\n");
+    printf("\t\tGenerate identity, public key and private key from seed. Seed must be passed either from params or configuration file.\n");
     printf("\t-getbalance <IDENTITY>\n");
     printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
     printf("\t-getasset <IDENTITY>\n");
@@ -55,22 +55,26 @@ void print_help()
     printf("\t-gettotalnumberofassetshares <ISSUER_ID> <ASSET_NAME>\n");
     printf("\t\tGet total number of shares currently existing of a specific asset.\n");
     printf("\t-sendtoaddress <TARGET_IDENTITY> <AMOUNT>\n");
-    printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid private key and node ip/port are required.\n");
+    printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY>. A valid seed and node ip/port are required.\n");
     printf("\t-sendtoaddressintick <TARGET_IDENTITY> <AMOUNT> <TICK>\n");
-    printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid private key and node ip/port are required.\n");
+    printf("\t\tPerform a standard transaction to sendData <AMOUNT> qubic to <TARGET_IDENTITY> in a specific <TICK>. A valid seed and node ip/port are required.\n");
 
     printf("\n[QUTIL COMMANDS]\n");
     printf("\t-qutilsendtomanyv1 <FILE>\n");
-    printf("\t\tPerforms multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! valid private key and node ip/port are required.\n");
+    printf("\t\tPerforms multiple transaction within in one tick. <FILE> must contain one ID and amount (space seperated) per line. Max 25 transaction. Fees apply! Valid seed and node ip/port are required.\n");
     printf("\t-qutilburnqubic <AMOUNT>\n");
-    printf("\t\tPerforms burning qubic, valid private key and node ip/port are required.\n");
+    printf("\t\tPerforms burning qubic, valid seed and node ip/port are required.\n");
+    printf("\t-qutilburnqubicforcontract <AMOUNT> <CONTRACT_INDEX>\n");
+    printf("\t\tBurns qubic for the specified contract index, valid seed and node ip/port are required.\n");
+    printf("\t-qutilqueryfeereserve <CONTRACT_INDEX>\n");
+    printf("\t\tQueries the amount of qubic in the fee reserve of the specified contract, valid node ip/port are required.\n");
     printf("\t-qutildistributequbictoshareholders <ISSUER_ID> <ASSET_NAME> <AMOUNT>\n");
     printf("\t\tDistribute QU among shareholders, transferring the same amount of QU for each share. The fee is proportional to the number of shareholders. The remainder that cannot be distributed equally is reimbursed.\n");
     printf("\t-qutilsendtomanybenchmark <DESTINATION_COUNT> <NUM_TRANSFERS_EACH>\n");
-    printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid private key and node ip/port are required.\n");
+    printf("\t\tSends <NUM_TRANSFERS_EACH> transfers of 1 qu to <DESTINATION_COUNT> addresses in the spectrum. Max 16.7M transfers total. Valid seed and node ip/port are required.\n");
     printf("\t-qutilcreatepoll <POLL_NAME> <POLL_TYPE> <MIN_AMOUNT> <GITHUB_LINK> <SEMICOLON_SEPARATED_ASSETS>\n");
-    printf("\t\tCreate a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid private key and node ip/port are required.\n");    printf("\t-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>\n");
-    printf("\t\tVote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid private key and node ip/port are required.\n");
+    printf("\t\tCreate a new poll. <POLL_NAME> is the poll's name (32 bytes), <POLL_TYPE> is 1 for Qubic or 2 for Asset, <MIN_AMOUNT> is the minimum vote amount, <GITHUB_LINK> is a 256-byte GitHub link. For Asset polls (type 2), provide a semicolon-separated list of assets in the format 'asset_name,issuer;asset_name,issuer'. Valid seed and node ip/port are required.\n");    printf("\t-qutilvote <POLL_ID> <AMOUNT> <CHOSEN_OPTION>\n");
+    printf("\t\tVote in a poll. <POLL_ID> is the poll's ID, <AMOUNT> is the vote amount, and <CHOSEN_OPTION> is the selected option (0-63). Valid seed and node ip/port are required.\n");
     printf("\t-qutilgetcurrentresult <POLL_ID>\n");
     printf("\t\tGet the current results of a poll. <POLL_ID> is the poll's ID. Valid node ip/port are required.\n");
     printf("\t-qutilgetpollsbycreator <CREATOR_ADDRESS>\n");
@@ -106,7 +110,7 @@ void print_help()
     printf("\t-readtickdata <FILE_NAME> <COMPUTOR_LIST>\n");
     printf("\t\tRead tick data from a file, print the output on screen, COMPUTOR_LIST is required if you need to verify block data\n");
     printf("\t-sendcustomtransaction <TARGET_IDENTITY> <TX_TYPE> <AMOUNT> <EXTRA_BYTE_SIZE> <EXTRA_BYTE_IN_HEX>\n");
-    printf("\t\tPerform a custom transaction (IPO, querying smart contract), valid private key and node ip/port are required.\n");
+    printf("\t\tPerform a custom transaction (IPO, querying smart contract), valid seed and node ip/port are required.\n");
     printf("\t-dumpspectrumfile <SPECTRUM_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
     printf("\t\tDump spectrum file into csv.\n");
     printf("\t-dumpuniversefile <UNIVERSE_BINARY_FILE> <OUTPUT_CSV_FILE>\n");
@@ -114,7 +118,7 @@ void print_help()
     printf("\t-dumpcontractfile <CONTRACT_BINARY_FILE> <CONTRACT_ID> <OUTPUT_CSV_FILE>\n");
     printf("\t\tDump contract file into csv. Current supported CONTRACT_IDs: 1-QX \n");
     printf("\t-makeipobid <CONTRACT_INDEX> <NUMBER_OF_SHARE> <PRICE_PER_SHARE>\n");
-    printf("\t\tParticipating IPO (dutch auction). valid private key and node ip/port, CONTRACT_INDEX are required.\n");
+    printf("\t\tParticipating IPO (dutch auction). Valid seed and node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getipostatus <CONTRACT_INDEX>\n");
     printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getsysteminfo\n");
@@ -124,38 +128,38 @@ void print_help()
     printf("\t-getcurrenttick\n");
     printf("\t\tShow current tick information of a node\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
-    printf("\t\tPerform a special command to node, valid private key and node ip/port are required.\t\n");
+    printf("\t\tPerform a special command to node, valid seed and node ip/port are required.\t\n");
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
-    printf("\t\tRemotely toggle Main/Aux mode on node,valid private key and node ip/port are required.\t\n");
+    printf("\t\tRemotely toggle Main/Aux mode on node, valid seed and node ip/port are required.\t\n");
     printf("\t\t<MODE_0> and <MODE_1> value are: MAIN or AUX\t\n");
     printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> \n");
-    printf("\t\tRemotely set solution threshold for future epoch,valid private key and node ip/port are required.\t\n");
+    printf("\t\tRemotely set solution threshold for future epoch, valid seed and node ip/port are required.\t\n");
     printf("\t-refreshpeerlist\n");
-    printf("\t\t(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid private key and node ip/port are required.\t\n");
+    printf("\t\t(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid seed and node ip/port are required.\t\n");
     printf("\t-forcenexttick\n");
-    printf("\t\t(equivalent to F5) Remotely force next tick on node to be empty, valid private key and node ip/port are required.\t\n");
+    printf("\t\t(equivalent to F5) Remotely force next tick on node to be empty, valid seed and node ip/port are required.\t\n");
     printf("\t-reissuevote\n");
-    printf("\t\t(equivalent to F9) Remotely re-issue (re-send) vote on node, valid private key and node ip/port are required.\t\n");
+    printf("\t\t(equivalent to F9) Remotely re-issue (re-send) vote on node, valid seed and node ip/port are required.\t\n");
     printf("\t-sendrawpacket <DATA_IN_HEX> <SIZE>\n");
     printf("\t\tSend a raw packet to nodeip. Valid node ip/port are required.\n");
     printf("\t-synctime\n");
-    printf("\t\tSync node time with local time, valid private key and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
+    printf("\t\tSync node time with local time, valid seed and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
     printf("\t-getminingscoreranking\n");
-    printf("\t\tGet current mining score ranking. Valid private key and node ip/port are required.\t\n");
+    printf("\t\tGet current mining score ranking. Valid seed and node ip/port are required.\t\n");
     printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
     printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
     printf("\t-setloggingmode <MODE>\n");
-    printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid private key and node ip/port are required.\t\n");
+    printf("\t\tSet console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid seed and node ip/port are required.\t\n");
     printf("\t-compmessage \"<MESSAGE>\"\n");
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
     printf("\t-savesnapshot \n");
-    printf("\t\tRemotely trigger saving snapshot, valid private key and node ip/port are required.\t\n");
+    printf("\t\tRemotely trigger saving snapshot, valid seed and node ip/port are required.\t\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
     printf("\t\tCall a contract function of contract index and print the output. Valid node ip/port are required.\t\n");
     printf("\t-invokecontractprocedure <CONTRACT_INDEX> <CONTRACT_PROCEDURE> <AMOUNT> <INPUT_FORMAT_STRING>\n");
-    printf("\t\tInvoke a procedure of contract index. Valid private key and node ip/port are required.\t\n");
+    printf("\t\tInvoke a procedure of contract index. Valid seed and node ip/port are required.\t\n");
 
     printf("\t-setshareholderproposal <CONTRACT_INDEX> <PROPOSAL_STRING>\n");
     printf("\t\tSet shareholder proposal in a contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee. You need to be shareholder of the contract.\n");
@@ -492,8 +496,9 @@ static uint64_t charToUnsignedNumber(char* a)
     return retVal;
 }
 
-static uint32_t getContractIndex(const char* str)
+static uint32_t getContractIndex(const char* str, bool enableTestContracts = true)
 {
+    uint32_t contractCount = 17;
     uint32_t idx = 0;
     if (strcasecmp(str, "QX") == 0)
         idx = 1;
@@ -531,7 +536,19 @@ static uint32_t getContractIndex(const char* str)
         idx = 17;
     else
     {
-        constexpr uint32_t contractCount = 17 + 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
+        if (enableTestContracts)
+        {
+            if (strcasecmp(str, "TESTEXA") == 0)
+                idx = contractCount + 1;
+            else if (strcasecmp(str, "TESTEXB") == 0)
+                idx = contractCount + 2;
+            else if (strcasecmp(str, "TESTEXC") == 0)
+                idx = contractCount + 3;
+            else if (strcasecmp(str, "TESTEXD") == 0)
+                idx = contractCount + 4;
+
+            contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
+        }
         if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
         {
             LOG("Contract \"%s\" is unknown!\n", str);
@@ -1403,6 +1420,25 @@ void parseArgument(int argc, char** argv)
             g_cmd = QUTIL_BURN_QUBIC;
             g_txAmount = charToNumber(argv[i + 1]);
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilburnqubicforcontract") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QUTIL_BURN_QUBIC_FOR_CONTRACT;
+            g_txAmount = charToNumber(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 2], /*enableTestContracts=*/false);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutilqueryfeereserve") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QUTIL_QUERY_FEE_RESERVE;
+            g_contractIndex = getContractIndex(argv[i + 1], /*enableTestContracts=*/false);
+            i += 2;
             CHECK_OVER_PARAMETERS
             break;
         }

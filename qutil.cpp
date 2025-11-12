@@ -28,9 +28,19 @@ struct BurnQubic_input
 {
     long long amount;
 };
-struct BurnQubic_output
+
+struct BurnQubicForContract_input
 {
-    long long amount;
+    uint32_t contractIndexBurnedFor;
+};
+
+struct QueryFeeReserve_input
+{
+    uint32_t contractIndex;
+};
+struct QueryFeeReserve_output
+{
+    int64_t reserveAmount;
 };
 
 struct SendToManyBenchmark_input
@@ -271,6 +281,27 @@ void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long lon
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+void qutilBurnQubicForContract(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t contractIndex, uint32_t scheduledTickOffset)
+{
+    BurnQubicForContract_input input{ contractIndex };
+    makeContractTransaction(nodeIp, nodePort, seed, QUTIL_CONTRACT_ID, qutilProcedureId::BurnQubicForContract, amount, sizeof(input), &input, scheduledTickOffset);
+}
+
+void qutilQueryFeeReserve(const char* nodeIp, int nodePort, uint32_t contractIndex)
+{
+    QueryFeeReserve_input input{ contractIndex };
+    QueryFeeReserve_output output;
+    if (runContractFunction(nodeIp, nodePort, QUTIL_CONTRACT_ID, qutilFunctionId::QueryFeeReserve,
+        &input, sizeof(QueryFeeReserve_input), &output, sizeof(QueryFeeReserve_output)))
+    {
+        LOG("Fee reserve for contract %u: %" PRIi64 " Qu\n", contractIndex, output.reserveAmount);
+    }
+    else
+    {
+        LOG("Failed to query fee reserve for contract %u\n", contractIndex);
+    }
 }
 
 void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed, uint32_t destinationCount, uint32_t numTransfersEach, uint32_t scheduledTickOffset)

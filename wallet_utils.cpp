@@ -24,11 +24,10 @@ void printWalletInfo(const char* seed)
     getSubseedFromSeed((uint8_t*)seed, subseed);
     getPrivateKeyFromSubSeed(subseed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, publicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(publicKey, publicIdentity, isLowerCase);
+    getIdentityFromPublicKey(publicKey, publicIdentity, /*isLowerCase=*/false);
 
-    getIdentityFromPublicKey(privateKey, privateKeyQubicFormat, true);
-    getIdentityFromPublicKey(publicKey, publicKeyQubicFormat, true);
+    getIdentityFromPublicKey(privateKey, privateKeyQubicFormat, /*isLowerCase=*/true);
+    getIdentityFromPublicKey(publicKey, publicKeyQubicFormat, /*isLowerCase=*/true);
     LOG("Seed: %s\n", seed);
     LOG("Private key: %s\n", privateKeyQubicFormat);
     LOG("Public key: %s\n", publicKeyQubicFormat);
