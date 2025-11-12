@@ -27,7 +27,7 @@ void print_help()
 {
     printf("./qubic-cli [basic config] [command] [command extra parameters]\n");
     printf("-help print this message\n");
-    printf("Basic config:\n");
+    printf("\nBasic config:\n");
     printf("\t-conf <file>\n");
     printf("\t\tSpecify configuration file. Relative paths will be prefixed by datadir location. See qubic.conf.example.\n");
     printf("\t\tNotice: variables in qubic.conf will be overrided by values on parameters.\n");
@@ -41,9 +41,11 @@ void print_help()
     printf("\t\tOffset number of scheduled tick that will perform a transaction (default: 20)\n");
     printf("\t-force\n");
     printf("\t\tDo action although an error has been detected. Currently only implemented for proposals.\n");
+    printf("\t-enabletestcontracts\n");
+    printf("\t\tEnable test contract indices and names for commands using a contract index parameter. This flag has to be passed before the contract index/name. The node to connect to needs to have test contracts running.\n");
 
     printf("Command:\n");
-    printf("[WALLET COMMANDS]\n");
+    printf("\n[WALLET COMMANDS]\n");
     printf("\t-showkeys\n");
     printf("\t\tGenerate identity, public key and private key from seed. Seed must be passed either from params or configuration file.\n");
     printf("\t-getbalance <IDENTITY>\n");
@@ -496,7 +498,7 @@ static uint64_t charToUnsignedNumber(char* a)
     return retVal;
 }
 
-static uint32_t getContractIndex(const char* str, bool enableTestContracts = true)
+static uint32_t getContractIndex(const char* str, bool enableTestContracts)
 {
     uint32_t contractCount = 17;
     uint32_t idx = 0;
@@ -674,6 +676,18 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_waitUntilFinish = int(charToNumber(argv[i+1]));
             i+=2;
+            continue;
+        }
+        if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "-force") == 0)
+        {
+            g_force = true;
+            ++i;
+            continue;
+        }
+        if (strcmp(argv[i], "-enabletestcontracts") == 0)
+        {
+            g_enableTestContracts = true;
+            ++i;
             continue;
         }
 
@@ -894,7 +908,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-invokecontractprocedure") == 0) {
             CHECK_NUMBER_OF_PARAMETERS(4);
             g_cmd = INVOKE_CONTRACT_PROCEDURE;
-            g_contractIndex = uint32_t(charToNumber(argv[i+1]));
+            g_contractIndex = getContractIndex(argv[i+1], g_enableTestContracts);
             g_txType = uint16_t(charToNumber(argv[i+2]));
             g_txAmount = charToNumber(argv[i+3]);
             g_invokeContractProcedureInputFormat = argv[i+4];
@@ -905,7 +919,7 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-callcontractfunction") == 0) {
             CHECK_NUMBER_OF_PARAMETERS(4);
             g_cmd = CALL_CONTRACT_FUNCTION;
-            g_contractIndex = uint32_t(charToNumber(argv[i+1]));
+            g_contractIndex = getContractIndex(argv[i+1], g_enableTestContracts);
             g_contractFunctionNumber = uint16_t(charToNumber(argv[i+2]));
             g_callContractFunctionInputFormat = argv[i+3];
             g_callContractFunctionOutputFormat = argv[i+4];
@@ -1156,7 +1170,7 @@ void parseArgument(int argc, char** argv)
             g_cmd = QX_TRANSFER_MANAGEMENT_RIGHTS;
             g_qx_assetName = argv[i + 1];
             g_qx_issuer = argv[i + 2];
-            g_contractIndex = getContractIndex(argv[i + 3]);
+            g_contractIndex = getContractIndex(argv[i + 3], g_enableTestContracts);
             g_qx_numberOfShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
@@ -1428,7 +1442,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QUTIL_BURN_QUBIC_FOR_CONTRACT;
             g_txAmount = charToNumber(argv[i + 1]);
-            g_contractIndex = getContractIndex(argv[i + 2], /*enableTestContracts=*/false);
+            g_contractIndex = getContractIndex(argv[i + 2], g_enableTestContracts);
             i += 3;
             CHECK_OVER_PARAMETERS
             break;
@@ -1437,7 +1451,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QUTIL_QUERY_FEE_RESERVE;
-            g_contractIndex = getContractIndex(argv[i + 1], /*enableTestContracts=*/false);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             i += 2;
             CHECK_OVER_PARAMETERS
             break;
@@ -1726,10 +1740,6 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "-force") == 0)
-        {
-            g_force = true;
-        }
 
         /**************************
          ***** QEARN COMMANDS *****
@@ -1970,7 +1980,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_ownersCommaSeparated = argv[i + 3];
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultdeposit") == 0)
         {
@@ -1980,7 +1990,7 @@ void parseArgument(int argc, char** argv)
             g_txAmount = charToNumber(argv[i+2]);
             i+=3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultreleaseto") == 0)
         {
@@ -1991,7 +2001,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_destination = argv[i + 3];
             i+=4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultresetrelease") == 0)
         {
@@ -2000,7 +2010,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetvaults") == 0)
         {
@@ -2009,7 +2019,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_publicId = argv[i + 1];
             i+=2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetreleasestatus") == 0)
         {
@@ -2018,7 +2028,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetbalanceof") == 0)
         {
@@ -2027,7 +2037,7 @@ void parseArgument(int argc, char** argv)
             g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetvaultname") == 0)
         {
@@ -2036,21 +2046,21 @@ void parseArgument(int argc, char** argv)
             g_msvault_id = charToNumber(argv[i+1]);
             i+=2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetrevenueinfo") == 0)
         {
             g_cmd = MSVAULT_GET_REVENUE_INFO_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetfees") == 0)
         {
             g_cmd = MSVAULT_GET_FEES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetvaultowners") == 0)
         {
@@ -2059,24 +2069,24 @@ void parseArgument(int argc, char** argv)
             g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultdepositasset") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(4)
-                g_cmd = MSVAULT_DEPOSIT_ASSET_CMD;
+            g_cmd = MSVAULT_DEPOSIT_ASSET_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             g_msVaultAssetName = argv[i + 2];
             g_msVaultIssuer = argv[i + 3];
             g_txAmount = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultreleaseassetto") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(5)
-                g_cmd = MSVAULT_RELEASE_ASSET_TO_CMD;
+            g_cmd = MSVAULT_RELEASE_ASSET_TO_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             g_msVaultAssetName = argv[i + 2];
             g_msVaultIssuer = argv[i + 3];
@@ -2084,34 +2094,34 @@ void parseArgument(int argc, char** argv)
             g_msvault_destination = argv[i + 5];
             i += 6;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultresetassetrelease") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-                g_cmd = MSVAULT_RESET_ASSET_RELEASE_CMD;
+            g_cmd = MSVAULT_RESET_ASSET_RELEASE_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetassetbalances") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-                g_cmd = MSVAULT_GET_ASSET_BALANCES_CMD;
+            g_cmd = MSVAULT_GET_ASSET_BALANCES_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetassetreleasestatus") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-                g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
+            g_cmd = MSVAULT_GET_ASSET_RELEASE_STATUS_CMD;
             g_msvault_id = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetmanagedassetbalance") == 0)
         {
@@ -2122,18 +2132,18 @@ void parseArgument(int argc, char** argv)
             g_msVaultOwner = argv[i + 3];
             i += 4;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultrevokeassetrights") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-                g_cmd = MSVAULT_REVOKE_ASSET_RIGHTS_CMD;
+            g_cmd = MSVAULT_REVOKE_ASSET_RIGHTS_CMD;
             g_msVaultAssetName = argv[i + 1];
             g_msVaultIssuer = argv[i + 2];
             g_txAmount = charToNumber(argv[i + 3]); // Reusing g_TxAmount for numberOfShares
             i += 4;
             CHECK_OVER_PARAMETERS
-                return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultisshareholder") == 0)
         {
@@ -2142,7 +2152,7 @@ void parseArgument(int argc, char** argv)
             g_msVaultCandidateIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultvotechange") == 0)
         {
@@ -2155,42 +2165,42 @@ void parseArgument(int argc, char** argv)
             g_msVaultNewDepositFee = charToUnsignedNumber(argv[i + 5]);
             i += 6;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetfeevotes") == 0)
         {
             g_cmd = MSVAULT_GET_FEE_VOTES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetfeevotesowner") == 0)
         {
             g_cmd = MSVAULT_GET_FEE_VOTES_OWNER_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetfeevotesscore") == 0)
         {
             g_cmd = MSVAULT_GET_FEE_VOTES_SCORE_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetuniquefeevotes") == 0)
         {
             g_cmd = MSVAULT_GET_UNIQUE_FEE_VOTES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-msvaultgetuniquefeevotesranking") == 0)
         {
             g_cmd = MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
 
         /**************************
@@ -2204,7 +2214,7 @@ void parseArgument(int argc, char** argv)
             g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromologoutfromtier") == 0)
         {
@@ -2212,7 +2222,7 @@ void parseArgument(int argc, char** argv)
             g_cmd = NOSTROMO_LOGOUT_FROM_TIER;
             i += 1;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromocreateproject") == 0)
         {
@@ -2230,7 +2240,7 @@ void parseArgument(int argc, char** argv)
             g_nost_endHour = (uint32_t)charToNumber(argv[i + 10]);
             i += 11;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromovoteinproject") == 0)
         {
@@ -2240,7 +2250,7 @@ void parseArgument(int argc, char** argv)
             g_nost_decision = (bool)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromocreatefundraising") == 0)
         {
@@ -2298,7 +2308,7 @@ void parseArgument(int argc, char** argv)
             g_nost_stepOfVesting = (uint8_t)charToNumber(argv[i + 43]);
             i += 44;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromoinvestinproject") == 0)
         {
@@ -2308,7 +2318,7 @@ void parseArgument(int argc, char** argv)
             g_nost_amount = charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromoclaimtoken") == 0)
         {
@@ -2318,7 +2328,7 @@ void parseArgument(int argc, char** argv)
             g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromoupgradetierlevel") == 0)
         {
@@ -2327,7 +2337,7 @@ void parseArgument(int argc, char** argv)
             g_nost_tierLevel = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromotransfersharemanagementrights") == 0)
         {
@@ -2347,7 +2357,7 @@ void parseArgument(int argc, char** argv)
             g_cmd = NOSTROMO_GET_STATS;
             i += 1;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogettierlevelbyuser") == 0)
         {
@@ -2356,7 +2366,7 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetuservotestatus") == 0)
         {
@@ -2365,7 +2375,7 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromochecktokencreatability") == 0)
         {
@@ -2374,7 +2384,7 @@ void parseArgument(int argc, char** argv)
             g_nost_tokenName = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetnumberofinvestedprojects") == 0)
         {
@@ -2383,7 +2393,7 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetprojectbyindex") == 0)
         {
@@ -2392,7 +2402,7 @@ void parseArgument(int argc, char** argv)
             g_nost_indexOfProject = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetfundraisingbyindex") == 0)
         {
@@ -2401,7 +2411,7 @@ void parseArgument(int argc, char** argv)
             g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetprojectindexlistbycreator") == 0)
         {
@@ -2410,7 +2420,7 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetinfouserinvested") == 0)
         {
@@ -2419,7 +2429,7 @@ void parseArgument(int argc, char** argv)
             g_nost_identity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-nostromogetmaxclaimamount") == 0)
         {
@@ -2429,7 +2439,7 @@ void parseArgument(int argc, char** argv)
             g_nost_indexOfFundraising = (uint32_t)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
 
         /************************
@@ -2443,7 +2453,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_millionsOfQu = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondtransfer") == 0)
         {
@@ -2454,7 +2464,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondaddask") == 0)
         {
@@ -2465,7 +2475,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondremoveask") == 0)
         {
@@ -2476,7 +2486,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondaddbid") == 0)
         {
@@ -2487,7 +2497,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondremovebid") == 0)
         {
@@ -2498,7 +2508,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_mbondsAmount = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondburnqu") == 0)
         {
@@ -2507,7 +2517,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_burnAmount = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondupdatecfa") == 0)
         {
@@ -2517,21 +2527,21 @@ void parseArgument(int argc, char** argv)
             g_qbond_updateCFAOperation = (bool)charToNumber(argv[i + 2]);
             i += 3;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetfees") == 0)
         {
             g_cmd = QBOND_GET_FEES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetearnedfees") == 0)
         {
             g_cmd = QBOND_GET_EARNED_FEES_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetinfoperepoch") == 0)
         {
@@ -2540,7 +2550,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_epoch = charToNumber(argv[i + 1]);
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetorders") == 0)
         {
@@ -2551,7 +2561,7 @@ void parseArgument(int argc, char** argv)
             g_qbond_bidsOffset = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetuserorders") == 0)
         {
@@ -2562,14 +2572,14 @@ void parseArgument(int argc, char** argv)
             g_qbond_bidsOffset = charToNumber(argv[i + 3]);
             i += 4;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondtable") == 0)
         {
             g_cmd = QBOND_GET_TABLE_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetusermbonds") == 0)
         {
@@ -2578,14 +2588,14 @@ void parseArgument(int argc, char** argv)
             g_qbond_owner = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-qbondgetcfa") == 0)
         {
             g_cmd = QBOND_GET_CFA_CMD;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
 
 
@@ -2597,7 +2607,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = SHAREHOLDER_SET_PROPOSAL;
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             g_proposalString = argv[i + 2];
             i += 3;
             CHECK_OVER_PARAMETERS;
@@ -2607,7 +2617,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = SHAREHOLDER_CLEAR_PROPOSAL;
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
@@ -2616,7 +2626,7 @@ void parseArgument(int argc, char** argv)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = SHAREHOLDER_GET_PROPOSALS;
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             if (i + 2 >= argc)
             {
                 LOG("ERROR: You need to pass PROPOSAL_INDEX_OR_GROUP! E.g.: 0, \"active\", or \"finished\".");
@@ -2635,7 +2645,7 @@ void parseArgument(int argc, char** argv)
                 LOG("ERROR: You need to pass CONTRACT_INDEX, PROPOSAL_INDEX, and VOTE_VALUE!");
                 exit(1);
             }
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             g_proposalString = argv[i + 2];
             g_voteValueString = argv[i + 3];
             i += 4;
@@ -2651,7 +2661,7 @@ void parseArgument(int argc, char** argv)
                 LOG("ERROR: You need to pass CONTRACT_INDEX and PROPOSAL_INDEX!");
                 exit(1);
             }
-            g_contractIndex = getContractIndex(argv[i]);
+            g_contractIndex = getContractIndex(argv[i], g_enableTestContracts);
             ++i;
             if (i >= argc)
             {
@@ -2676,7 +2686,7 @@ void parseArgument(int argc, char** argv)
                 LOG("ERROR: You need to pass CONTRACT_INDEX and PROPOSAL_INDEX!");
                 exit(1);
             }
-            g_contractIndex = getContractIndex(argv[i + 1]);
+            g_contractIndex = getContractIndex(argv[i + 1], g_enableTestContracts);
             g_proposalString = argv[i + 2];
             i += 3;
             CHECK_OVER_PARAMETERS;
@@ -2692,14 +2702,14 @@ void parseArgument(int argc, char** argv)
             g_cmd = TEST_QPI_FUNCTIONS_OUTPUT;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-testqpifunctionsoutputpast") == 0)
         {
             g_cmd = TEST_QPI_FUNCTIONS_OUTPUT_PAST;
             i++;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-testgetincomingtransferamounts") == 0)
         {
@@ -2707,7 +2717,7 @@ void parseArgument(int argc, char** argv)
             g_paramString1 = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
         if (strcmp(argv[i], "-testbidinipothroughcontract") == 0)
         {
@@ -2718,7 +2728,7 @@ void parseArgument(int argc, char** argv)
             g_makeIPOBidPricePerShare = charToNumber(argv[i + 4]);
             i += 5;
             CHECK_OVER_PARAMETERS
-            return;
+            break;
         }
 
         i++;
