@@ -22,6 +22,7 @@ const char* g_invokeContractProcedureInputFormat = "";
 const char* g_callContractFunctionInputFormat = "";
 const char* g_callContractFunctionOutputFormat = "";
 bool g_force = false;
+bool g_enableTestContracts = false;
 
 int64_t g_txAmount = 0;
 uint16_t g_txType = 0;
