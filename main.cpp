@@ -791,6 +791,19 @@ int run(int argc, char* argv[])
                             g_qswap_assetTransferAmount,
                             g_offsetScheduledTick);
             break;
+        case QSWAP_TRANSFER_ASSET_RIGHTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckNumberOfUnit(g_qswap_assetTransferAmount);
+            sanityCheckValidAssetName(g_qswap_assetTransferAssetName);
+            sanityCheckIdentity(g_qswap_assetTransferIssuer);
+            qswapTransferAssetRights(g_nodeIp, g_nodePort, g_seed,
+                                        g_qswap_assetTransferAssetName,
+                                        g_qswap_assetTransferIssuer,
+                                        g_qswap_newContractIndex,
+                                        g_qswap_assetTransferAmount,
+                                        g_offsetScheduledTick);
+            break;
         case QSWAP_CREATE_POOL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

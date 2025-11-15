@@ -363,6 +363,8 @@ void print_help()
     printf("\t\tCreate an asset via Qswap contract.\n");
     printf("\t-qswaptransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset via Qswap contract.\n");
+    printf("\t-qswaptransferassetrights <ASSET_NAME> <ISSUER_IN_HEX> <NEW_MANAGING_CONTRACT_INDEX> <AMOUNT_OF_SHARE>\n");
+    printf("\t\tTransfer an asset rights.\n");
     printf("\t-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>\n");
     printf("\t\tCreate an AMM pool via Qswap contract.\n");
     printf("\t-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>\n");
@@ -1200,6 +1202,18 @@ void parseArgument(int argc, char** argv)
             g_qswap_assetTransferAssetName = argv[i+1];
             g_qswap_assetTransferIssuer = argv[i+2];
             g_qswap_assetTransferNewOwnerIdentity = argv[i+3];
+            g_qswap_assetTransferAmount = charToNumber(argv[i+4]);
+            i+=5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qswaptransferassetrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QSWAP_TRANSFER_ASSET_RIGHTS;
+            g_qswap_assetTransferAssetName = argv[i+1];
+            g_qswap_assetTransferIssuer = argv[i+2];
+            g_qswap_newContractIndex = getContractIndex(argv[i + 3], g_enableTestContracts);
             g_qswap_assetTransferAmount = charToNumber(argv[i+4]);
             i+=5;
             CHECK_OVER_PARAMETERS

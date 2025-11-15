@@ -140,6 +140,7 @@ char* g_qswap_assetTransferNewOwnerIdentity = nullptr;
 int64_t g_qswap_assetTransferAmount = -1;
 char* g_qswap_assetTransferAssetName = nullptr;
 char* g_qswap_assetTransferIssuer = nullptr;
+uint32_t g_qswap_newContractIndex = 0;
 
 int64_t g_qswap_addLiquidityQuAmount = -1;
 int64_t g_qswap_addLiquidityAssetAmountDesired = -1;
