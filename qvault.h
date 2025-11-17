@@ -112,7 +112,7 @@ struct QVaultGetData_input
 };
 struct QVaultGetData_output
 {
-    uint8_t adminAddress[32];
+    int32_t returnCode;
     uint64_t totalVotingPower;
     uint64_t proposalCreateFund;
     uint64_t reinvestingFund;
@@ -127,7 +127,6 @@ struct QVaultGetData_output
     uint32_t shareholderDividend;
     uint32_t QCAPHolderPermille;
     uint32_t reinvestingPermille;
-    uint32_t devPermille;
     uint32_t burnPermille;
     uint32_t qcapBurnPermille;
     uint32_t numberOfStaker;
@@ -159,6 +158,7 @@ struct QvaultGetStakedAmountAndVotingPower_input
 
 struct QvaultGetStakedAmountAndVotingPower_output
 {
+    int32_t returnCode;
     uint32_t stakedAmount;
     uint32_t votingPower;
 
@@ -175,6 +175,7 @@ struct QvaultGetGP_input
 
 struct QvaultGetGP_output
 {
+    int32_t returnCode;
     GPInfo proposal;
 
     static constexpr unsigned char type()
@@ -190,6 +191,7 @@ struct QvaultGetQCP_input
 
 struct QvaultGetQCP_output
 {
+    int32_t returnCode;
     QCPInfo proposal;
 
     static constexpr unsigned char type()
@@ -205,6 +207,7 @@ struct QvaultGetIPOP_input
 
 struct QvaultGetIPOP_output
 {
+    int32_t returnCode;
     IPOPInfo proposal;
 
     static constexpr unsigned char type()
@@ -220,6 +223,7 @@ struct QvaultGetQEarnP_input
 
 struct QvaultGetQEarnP_output
 {
+    int32_t returnCode;
     QEarnPInfo proposal;
 
     static constexpr unsigned char type()
@@ -235,6 +239,7 @@ struct QvaultGetFundP_input
 
 struct QvaultGetFundP_output
 {
+    int32_t returnCode;
     FundPInfo proposal;
 
     static constexpr unsigned char type()
@@ -250,6 +255,7 @@ struct QvaultGetMKTP_input
 
 struct QvaultGetMKTP_output
 {
+    int32_t returnCode;
     MKTPInfo proposal;
 
     static constexpr unsigned char type()
@@ -265,6 +271,7 @@ struct QvaultGetAlloP_input
 
 struct QvaultGetAlloP_output
 {
+    int32_t returnCode;
     AlloPInfo proposal;
 
     static constexpr unsigned char type()
@@ -287,6 +294,7 @@ struct stakingInfo
 
 struct QvaultGetIdentitiesHvVtPw_output
 {
+    int32_t returnCode;
     uint8_t idList[256][32];
     uint32_t amountList[256];
 
@@ -303,7 +311,8 @@ struct QvaultppCreationPower_input
 
 struct QvaultppCreationPower_output
 {
-    bool status;         // 0 means that there is no the proposal creation power, 1 means that there is.
+    int32_t returnCode;
+    uint8_t status;         // 0 means that there is no the proposal creation power, 1 means that there is.
 
     static constexpr unsigned char type()
     {
@@ -318,6 +327,7 @@ struct QvaultGetQcapBurntAmountInLastEpoches_input
 
 struct QvaultGetQcapBurntAmountInLastEpoches_output
 {
+    int32_t returnCode;
     uint32_t burntAmount;
 
     static constexpr unsigned char type()
@@ -415,6 +425,7 @@ struct QvaultGetNumberOfHolderAndAvgAm_input
 
 struct QvaultGetNumberOfHolderAndAvgAm_output
 {
+    int32_t returnCode;
     uint32_t numberOfQcapHolder;
     uint32_t avgAmount;
 
@@ -431,6 +442,7 @@ struct QvaultGetAmountForQearnInUpcomingEpoch_input
 
 struct QvaultGetAmountForQearnInUpcomingEpoch_output
 {
+    int32_t returnCode;
     uint64_t amount;
 
     static constexpr unsigned char type()
@@ -447,7 +459,7 @@ void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
 void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url);
 void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url);
 void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url);
-void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t team, uint32_t burn, uint32_t distribute, const char* url);
+void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t burn, uint32_t distribute, const char* url);
 void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes);
 void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap);
 void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex);

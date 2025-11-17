@@ -516,7 +516,7 @@ int run(int argc, char* argv[])
         case QVAULT_COMMAND_SUBMIT_ALLOP:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_team, g_qvault_burn, g_qvault_distribute, g_qvaulturl);
+            submitAlloP(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_reinvested, g_qvault_burn, g_qvault_distribute, g_qvaulturl);
             break;
         case QVAULT_COMMAND_VOTE_IN_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);

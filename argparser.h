@@ -234,13 +234,13 @@ void print_help()
     printf("\t-qvaultsubmitfundproposal <URL> <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
     printf("\t\tSubmit the fund proposal with <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
     printf("\t\t<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale\n");
-    printf("\t-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
-	printf("\t\tSubmit the marketplace proposal with <AMOUNT_OF_QUBIC> <ASSET_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
-	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <ASSET_NAME> - the name of asset that want to sell to the SC\n");
+    printf("\t-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
+	printf("\t\tSubmit the marketplace proposal with <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
+	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <SHARE_NAME> - the share name as a number (uint64)\n");
 	printf("\t\t<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC\n");
-	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
-	printf("\t\tSubmit the allocation proposal with <REINVESTED> <TEAM> <BURN> <DISTRIBUTE>\n");
-	printf("\t\t<REINVESTED> - reinvesting permille, <TEAM> - team permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders\n");
+	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <BURN> <DISTRIBUTE>\n");
+	printf("\t\tSubmit the allocation proposal with <REINVESTED> <BURN> <DISTRIBUTE>\n");
+	printf("\t\t<REINVESTED> - reinvesting permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders. All percentages must sum to 970 (per mille)\n");
 	printf("\t-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\tVote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
 	printf("\t\t<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B\n");
@@ -1411,14 +1411,13 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qvaultsubmitpercentallocationproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(5)
+            CHECK_NUMBER_OF_PARAMETERS(4)
             g_cmd = QVAULT_COMMAND_SUBMIT_ALLOP;
             g_qvaulturl = argv[i + 1];
             g_qvault_reinvested = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_team = uint32_t(charToNumber(argv[i + 3]));
-            g_qvault_burn = uint32_t(charToNumber(argv[i + 4]));
-            g_qvault_distribute = uint32_t(charToNumber(argv[i + 5]));
-            i += 6;
+            g_qvault_burn = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_distribute = uint32_t(charToNumber(argv[i + 4]));
+            i += 5;
             CHECK_OVER_PARAMETERS;
             break;
         }
