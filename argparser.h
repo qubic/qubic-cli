@@ -535,6 +535,8 @@ static uint32_t getContractIndex(const char* str, bool enableTestContracts)
         idx = 16;
     else if (strcasecmp(str, "QBOND") == 0)
         idx = 17;
+    else if (strcasecmp(str, "QIP") == 0)
+        idx = 18;
     else
     {
         unsigned int contractCount = CONTRACT_COUNT;
