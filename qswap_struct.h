@@ -33,6 +33,14 @@ struct QswapTransferAssetOwnershipAndPossession_input
     long long numberOfUnits;
 };
 
+struct QswapTransferAssetRights_input
+{
+    uint8_t issuer[32];
+    int64_t assetName;
+    long long numberOfUnits;
+    uint32_t newContractIndex;
+};
+
 struct SwapQuForAssetAction_input
 {
     uint8_t issuer[32];

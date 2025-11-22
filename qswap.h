@@ -16,6 +16,14 @@ void qswapTransferAsset(const char* nodeIp, int nodePort,
                         long long numberOfUnits,
                         uint32_t scheduledTickOffset);
 
+void qswapTransferAssetRights(const char* nodeIp, int nodePort,
+                                const char* seed,
+                                const char* pAssetName,
+                                const char* pIssuerInQubicFormat,
+                                const uint32_t newContractIndex,
+                                long long numberOfUnits,
+                                uint32_t scheduledTickOffset);
+
 void printQswapFee(const char* nodeIp, const int nodePort);
 
 void qswapCreatePool(const char* nodeIp, int nodePort,
