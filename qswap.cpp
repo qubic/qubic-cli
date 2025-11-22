@@ -239,70 +239,15 @@ void qswapTransferAssetRights(const char* nodeIp, int nodePort,
                                 long long numberOfUnits,
                                 uint32_t scheduledTickOffset)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subSeed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    uint8_t issuer[32] = {0};
-    char txHash[128] = {0};
-    char assetNameU1[8] = {0};
+    QswapTransferAssetRights_input input = {0};
+    getPublicKeyFromIdentity(pIssuerInQubicFormat, input.issuer);
+    memcpy(&input.assetName, pAssetName, strlen(pAssetName));
+    input.newContractIndex = newContractIndex;
+    input.numberOfUnits = numberOfUnits;
 
-    memcpy(assetNameU1, pAssetName, strlen(pAssetName));
-    if (strlen(pIssuerInQubicFormat) != 60)
-    {
-        LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
-        exit(0);
-    }
-    getPublicKeyFromIdentity(pIssuerInQubicFormat, issuer);
-
-    getSubseedFromSeed((uint8_t*)seed, subSeed);
-    getPrivateKeyFromSubSeed(subSeed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    getPublicKeyFromIdentity(QSWAP_ADDRESS, destPublicKey);
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        QswapTransferAssetRights_input tar;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    packet.transaction.amount = 100;
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    uint32_t scheduledTick = currentTick + scheduledTickOffset;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QSWAP_TRANSFER_RIGHTS;
-    packet.transaction.inputSize = sizeof(QswapTransferAssetRights_input);
-
-    // fill the input
-    memcpy(&packet.tar.assetName, assetNameU1, 8);
-    memcpy(packet.tar.issuer, issuer, 32);
-    packet.tar.newContractIndex = newContractIndex;
-    packet.tar.numberOfUnits = numberOfUnits;
-    // sign the packet
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction) + sizeof(QswapTransferAssetRights_input),
-                   digest,
-                   32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-    // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(QswapTransferAssetRights_input)+ SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(Transaction)+sizeof(QswapTransferAssetRights_input)+ SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("Transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.tar));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    LOG("\nSending tx for transferring management rights ...\n");
+    makeContractTransaction(nodeIp, nodePort, seed, QSWAP_CONTRACT_INDEX, QSWAP_TRANSFER_RIGHTS,
+        100, sizeof(input), (uint8_t*)&input, scheduledTickOffset);
 }
 
 void qswapCreatePool(const char* nodeIp, int nodePort,
