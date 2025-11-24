@@ -495,7 +495,7 @@ int run(int argc, char* argv[])
             break;
         case CCF_GET_PROPOSALS:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString);
+            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString, g_ccf_subscriptionDestination);
             break;
         case CCF_VOTE:
             sanityCheckNode(g_nodeIp, g_nodePort);
@@ -517,6 +517,10 @@ int run(int argc, char* argv[])
         case CCF_GET_LATEST_TRANSFERS:
             sanityCheckNode(g_nodeIp, g_nodePort);
             ccfGetLatestTransfers(g_nodeIp, g_nodePort);
+            break;
+        case CCF_GET_REGULAR_PAYMENTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetRegularPayments(g_nodeIp, g_nodePort);
             break;
         case QEARN_LOCK:
             sanityCheckNode(g_nodeIp, g_nodePort);

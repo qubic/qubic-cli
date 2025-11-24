@@ -239,11 +239,13 @@ void print_help()
     printf("\t-ccfsetproposal <PROPOSAL_STRING>\n");
     printf("\t\tSet proposal in computor controlled fund (CCF) contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee.\n");
     printf("\t\t<PROPOSAL_STRING> is explained if there is a parsing error. Only \"Transfer|2\" (yes/no transfer proposals) are allowed in CCF.\n");
+    printf("\t\tFor subscription proposals, append subscription parameters to PROPOSAL_STRING: |<WEEKS_PER_PERIOD>|<START_EPOCH>|<NUMBER_OF_PERIODS>|<AMOUNT_PER_PERIOD>\n");
     printf("\t-ccfclearproposal\n");
     printf("\t\tClear own proposal in CCF contract. Costs a fee.\n");
-    printf("\t-ccfgetproposals <PROPOSAL_INDEX_OR_GROUP>\n");
+    printf("\t-ccfgetproposals <PROPOSAL_INDEX_OR_GROUP> <SUBSCRIPTION_DESTINATION>\n");
     printf("\t\tGet proposal info from CCF contract.\n");
     printf("\t\tEither pass \"active\" to get proposals that are open for voting in the current epoch, or \"finished\" to get proposals of previous epochs not overwritten or cleared yet, or a proposal index.\n");
+    printf("\t\tOptional: SUBSCRIPTION_DESTINATION to look up active subscription for a specific destination.\n");
     printf("\t-ccfvote <PROPOSAL_INDEX> <VOTE_VALUE>\n");
     printf("\t\tCast vote for a proposal in the CCF contract.\n");
     printf("\t\t<VOTE_VALUE> is the option in range 0 ... N-1 or \"none\".\n");
@@ -253,6 +255,8 @@ void print_help()
     printf("\t\tGet the current result of a CCF proposal.\n");
     printf("\t-ccflatesttransfers\n");
     printf("\t\tGet and print latest transfers of CCF granted by quorum.\n");
+    printf("\t-ccfgetregularpayments\n");
+    printf("\t\tGet and print regular subscription payments of CCF.\n");
 
     printf("\n[QEARN COMMANDS]\n");
     printf("\t-qearnlock <LOCK_AMOUNT>\n");
@@ -1684,6 +1688,11 @@ void parseArgument(int argc, char** argv)
             }
             g_proposalString = argv[i + 1];
             i += 2;
+            if (i < argc)
+            {
+                g_ccf_subscriptionDestination = argv[i];
+                ++i;
+            }
             CHECK_OVER_PARAMETERS;
             break;
         }
@@ -1736,6 +1745,13 @@ void parseArgument(int argc, char** argv)
         if (strcmp(argv[i], "-ccflatesttransfers") == 0)
         {
             g_cmd = CCF_GET_LATEST_TRANSFERS;
+            i += 1;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-ccfgetregularpayments") == 0)
+        {
+            g_cmd = CCF_GET_REGULAR_PAYMENTS;
             i += 1;
             CHECK_OVER_PARAMETERS;
             break;

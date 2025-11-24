@@ -25,7 +25,7 @@ void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	bool forceSendingInvalidProposal);
 void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
 	uint32_t scheduledTickOffset);
-void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString);
+void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString, const char* subscriptionDestination = nullptr);
 void ccfVote(const char* nodeIp, int nodePort, const char* seed,
 	const char* proposalIndexString,
 	const char* voteValueString,
@@ -35,6 +35,7 @@ void ccfGetVote(const char* nodeIp, int nodePort, const char* proposalIndexStrin
 	const char* voterIdentity, const char* voterSeed);
 void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString);
 void ccfGetLatestTransfers(const char* nodeIp, int nodePort);
+void ccfGetRegularPayments(const char* nodeIp, int nodePort);
 
 
 void shareholderSetProposal(const char* nodeIp, int nodePort, const char* seed,
@@ -329,3 +330,83 @@ struct ProposalDataYesNo
 	static constexpr bool supportScalarVotes = false;
 };
 static_assert(sizeof(ProposalDataYesNo) == 256 + 8 + 40, "Unexpected struct size.");
+
+// CCF-specific structures for subscription support
+struct CCF_SubscriptionProposalData
+{
+	uint8_t proposerId[32];                  // ID of the proposer (for cancellation checks)
+	uint8_t destination[32];                 // ID of the destination
+	uint8_t url[256];                        // URL of the subscription
+	uint8_t weeksPerPeriod;                  // Number of weeks between payments (e.g., 1 for weekly, 4 for monthly)
+	uint8_t _padding0[1];                    // Padding for alignment
+	uint8_t _padding1[2];                    // Padding for alignment
+	uint32_t numberOfPeriods;                // Total number of periods (e.g., 12 for 12 periods)
+	uint64_t amountPerPeriod;                // Amount in Qubic per period
+	uint32_t startEpoch;                     // Epoch when subscription should start
+};
+
+struct CCF_SubscriptionData
+{
+	uint8_t destination[32];                 // ID of the destination (used as key, one per destination)
+	uint8_t url[256];                         // URL of the subscription
+	uint8_t weeksPerPeriod;                   // Number of weeks between payments (e.g., 1 for weekly, 4 for monthly)
+	uint8_t _padding1[1];                    // Padding for alignment
+	uint8_t _padding2[2];                    // Padding for alignment
+	uint32_t numberOfPeriods;                 // Total number of periods (e.g., 12 for 12 periods)
+	uint64_t amountPerPeriod;                 // Amount in Qubic per period
+	uint32_t startEpoch;                     // Epoch when subscription started (startEpoch >= proposal approval epoch)
+	int32_t currentPeriod;                   // Current period index (0-based, 0 to numberOfPeriods-1)
+};
+
+struct CCF_GetProposal_input
+{
+	uint8_t subscriptionDestination[32];     // Destination ID to look up active subscription (optional, can be zero)
+	uint16_t proposalIndex;
+};
+
+struct CCF_GetProposal_output
+{
+	bool okay;
+	bool hasSubscriptionProposal;                         // True if this proposal has subscription proposal data
+	bool hasActiveSubscription;                           // True if an active subscription was found for the destination
+	uint8_t _padding0[1];                    // Padding for alignment
+	uint8_t _padding1[4];                    // Padding for alignment
+	uint8_t proposerPublicKey[32];
+	ProposalDataYesNo proposal;
+	CCF_SubscriptionData subscription;                    // Active subscription data if found
+	CCF_SubscriptionProposalData subscriptionProposal;    // Subscription proposal data if this is a subscription proposal
+};
+
+struct CCF_SetProposal_input
+{
+	ProposalDataYesNo proposal;
+	// Optional subscription data (only used if isSubscription is true)
+	bool isSubscription;                     // Set to true if this is a subscription proposal
+	uint8_t weeksPerPeriod;                  // Number of weeks between payments (e.g., 1 for weekly, 4 for monthly)
+	uint8_t _padding0[2];                    // Padding for alignment
+	uint32_t startEpoch;                     // Epoch when subscription starts
+	uint64_t amountPerPeriod;                // Amount per period (in Qubic)
+	uint32_t numberOfPeriods;                // Total number of periods
+};
+
+struct CCF_SetProposal_output
+{
+	uint16_t proposalIndex;
+};
+
+struct CCF_RegularPaymentEntry
+{
+	uint8_t destination[32];
+	uint8_t url[256];
+	int64_t amount;
+	uint32_t tick;
+	int32_t periodIndex;                     // Which period this payment is for (0-based)
+	bool success;
+	uint8_t _padding0[1];                    // Padding for alignment
+	uint8_t _padding1[2];                    // Padding for alignment
+};
+
+struct CCF_RegularPayments_output
+{
+	CCF_RegularPaymentEntry entries[128];
+};
