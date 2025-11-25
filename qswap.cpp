@@ -39,6 +39,8 @@
 #define QSWAP_SWAP_EXACT_ASSET_FOR_QU 8
 #define QSWAP_SWAP_ASSET_FOR_EXACT_QU 9
 
+#define QSWAP_TRANSFER_RIGHTS 11
+
 void getQswapFees(const char* nodeIp, const int nodePort, QswapFees_output& result)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -227,6 +229,25 @@ void qswapTransferAsset(const char* nodeIp, int nodePort,
     printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t *>(&packet.ta));
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+void qswapTransferAssetRights(const char* nodeIp, int nodePort,
+                                const char* seed,
+                                const char* pAssetName,
+                                const char* pIssuerInQubicFormat,
+                                const uint32_t newContractIndex,
+                                long long numberOfUnits,
+                                uint32_t scheduledTickOffset)
+{
+    QswapTransferAssetRights_input input = {0};
+    getPublicKeyFromIdentity(pIssuerInQubicFormat, input.issuer);
+    memcpy(&input.assetName, pAssetName, strlen(pAssetName));
+    input.newContractIndex = newContractIndex;
+    input.numberOfUnits = numberOfUnits;
+
+    LOG("\nSending tx for transferring management rights ...\n");
+    makeContractTransaction(nodeIp, nodePort, seed, QSWAP_CONTRACT_INDEX, QSWAP_TRANSFER_RIGHTS,
+        100, sizeof(input), (uint8_t*)&input, scheduledTickOffset);
 }
 
 void qswapCreatePool(const char* nodeIp, int nodePort,
