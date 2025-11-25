@@ -495,7 +495,11 @@ int run(int argc, char* argv[])
             break;
         case CCF_GET_PROPOSALS:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString, g_ccf_subscriptionDestination);
+            ccfGetProposals(g_nodeIp, g_nodePort, g_proposalString);
+            break;
+        case CCF_GET_SUBSCRIPTION:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            ccfGetSubscription(g_nodeIp, g_nodePort, g_ccf_subscriptionDestination);
             break;
         case CCF_VOTE:
             sanityCheckNode(g_nodeIp, g_nodePort);

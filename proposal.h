@@ -25,7 +25,8 @@ void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	bool forceSendingInvalidProposal);
 void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
 	uint32_t scheduledTickOffset);
-void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString, const char* subscriptionDestination = nullptr);
+void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString);
+void ccfGetSubscription(const char* nodeIp, int nodePort, const char* subscriptionDestination);
 void ccfVote(const char* nodeIp, int nodePort, const char* seed,
 	const char* proposalIndexString,
 	const char* voteValueString,
@@ -332,6 +333,17 @@ struct ProposalDataYesNo
 static_assert(sizeof(ProposalDataYesNo) == 256 + 8 + 40, "Unexpected struct size.");
 
 // CCF-specific structures for subscription support
+struct SubscriptionParams
+{
+	bool isSubscription;
+	uint8_t weeksPerPeriod;
+	uint32_t startEpoch;
+	uint32_t numberOfPeriods;
+	uint64_t amountPerPeriod;  // Will be set from transfer proposal amount for CCF
+	
+	SubscriptionParams() : isSubscription(false), weeksPerPeriod(0), startEpoch(0), numberOfPeriods(0), amountPerPeriod(0) {}
+};
+
 struct CCF_SubscriptionProposalData
 {
 	uint8_t proposerId[32];                  // ID of the proposer (for cancellation checks)
