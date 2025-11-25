@@ -110,6 +110,9 @@ uint32_t g_qearn_lockedEpoch = 0;
 uint32_t g_qearn_getInfoEpoch = 0;
 uint32_t g_qearn_getStatsEpoch = 0;
 
+// CCF subscription parameters
+const char* g_ccf_subscriptionDestination = nullptr;
+
 // qvault
 char* g_qvault_identity = nullptr;
 uint32_t g_qvault_numberOfChangedAddress = 0;
