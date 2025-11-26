@@ -1,20 +1,17 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <stdexcept>
 
-#include "structs.h"
 #include "wallet_utils.h"
 #include "key_utils.h"
-#include "asset_utils.h"
-#include "connection.h"
 #include "logger.h"
-#include "node_utils.h"
-#include "k12_and_key_utils.h"
 #include "qvault.h"
 
 #define QVAULT_CONTRACT_INDEX 10
 #define QVAULT_PROPOSAL_CREATION_FEE 10000000
 #define QVAULT_SHARE_MANAGEMENT_TRANSFER_FEE 100
+
+constexpr uint32_t QVAULT_MAX_URLS_COUNT = 256;
 
 // QVAULT FUNCTIONS
 #define QVAULT_GETDATA 1
@@ -190,841 +187,302 @@ struct TransferShareManagementRights_output
     int32_t returnCode;
 };
 
+namespace
+{
+
+bool copyUrlField(uint8_t* dest, const char* url)
+{
+    if (!dest || !url)
+        return false;
+    size_t len = strlen(url);
+    if (len > 255)
+        return false;
+    memset(dest, 0, 256);
+    memcpy(dest, url, len);
+    return true;
+}
+
+bool encodeAssetName(const char* source, uint64_t& encoded)
+{
+    if (!source)
+        return false;
+    size_t len = strlen(source);
+    if (len > 8)
+        return false;
+    char buffer[8] = {0};
+    memcpy(buffer, source, len);
+    memcpy(&encoded, buffer, sizeof(buffer));
+    return true;
+}
+
+bool runQvaultFunction(const char* nodeIp, int nodePort,
+                       unsigned short funcNumber,
+                       void* inputPtr, size_t inputSize,
+                       void* outputPtr, size_t outputSize)
+{
+    if (!runContractFunction(nodeIp, nodePort, QVAULT_CONTRACT_INDEX,
+                             funcNumber, inputPtr, inputSize,
+                             outputPtr, outputSize))
+    {
+        LOG("Failed to receive data\n");
+        return false;
+    }
+    return true;
+}
+
+constexpr const char* EMPTY_IDENTITY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB";
+
+} // namespace
+
 void stake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        stake_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amount = amount;
-    packet.transaction.amount = 0;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_STAKE;
-    packet.transaction.inputSize = sizeof(stake_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(stake_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(stake_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("stake tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    stake_input input{};
+    input.amount = amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_STAKE,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        unStake_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amount = amount;
-    packet.transaction.amount = 0;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_UNSTAKE;
-    packet.transaction.inputSize = sizeof(unStake_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(unStake_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(unStake_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("unStake tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    unStake_input input{};
+    input.amount = amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_UNSTAKE,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* url)
 {
-    if (strlen(url) > 255)
+    submitGP_input input{};
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitGP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-    memcpy(&packet.input.url, url, 256);
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_GP;
-    packet.transaction.inputSize = sizeof(submitGP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitGP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitGP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitGP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_GP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent, const char* url)
 {
-    if (strlen(url) > 255)
+    submitQCP_input input{};
+    input.newQuorumPercent = newQuorumPercent;
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitQCP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.newQuorumPercent = newQuorumPercent;
-    memcpy(&packet.input.url, url, 256);
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_QCP;
-    packet.transaction.inputSize = sizeof(submitQCP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitQCP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitQCP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitQCP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_QCP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex, const char* url)
 {
-    if (strlen(url) > 255)
+    submitIPOP_input input{};
+    input.ipoContractIndex = ipoContractIndex;
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitIPOP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.ipoContractIndex = ipoContractIndex;
-    memcpy(&packet.input.url, url, 256);
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_IPOP;
-    packet.transaction.inputSize = sizeof(submitIPOP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitIPOP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitIPOP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitIPOP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_IPOP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url)
 {
-    if (strlen(url) > 255)
+    submitQEarnP_input input{};
+    input.amountPerEpoch = amountPerEpoch;
+    input.numberOfEpoch = numberOfEpoch;
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitQEarnP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amountPerEpoch = amountPerEpoch;
-    packet.input.numberOfEpoch = numberOfEpoch;
-    memcpy(&packet.input.url, url, 256);
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_QEARNP;
-    packet.transaction.inputSize = sizeof(submitQEarnP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitQEarnP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitQEarnP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitQEarnP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_QEARNP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url)
 {
-    if (strlen(url) > 255)
+    submitFundP_input input{};
+    input.amountOfQcap = amountOfQcap;
+    input.priceOfOneQcap = priceOfOneQcap;
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitFundP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amountOfQcap = amountOfQcap;
-    packet.input.priceOfOneQcap = priceOfOneQcap;
-    memcpy(&packet.input.url, url, 256);
-
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_FUNDP;
-    packet.transaction.inputSize = sizeof(submitFundP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitFundP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitFundP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitFundP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_FUNDP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url)
 {
-    if (strlen(url) > 255)
+    submitMKTP_input input{};
+    if (!encodeAssetName(shareName, input.shareName))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The share name should be at most 8 characters.\n");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    char assetNameS1[8] = {0};
-    size_t shareNameLen = strlen(shareName);
-    if (shareNameLen > sizeof(assetNameS1))
+    if (!copyUrlField(input.url, url))
     {
-        shareNameLen = sizeof(assetNameS1);
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    memcpy(assetNameS1, shareName, shareNameLen);
+    input.amountOfQcap = amountOfQcap;
+    input.amountOfQubic = amountOfQubic;
+    input.amountOfShare = amountOfShare;
+    input.indexOfShare = indexOfShare;
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitMKTP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amountOfQcap = amountOfQcap;
-    packet.input.amountOfQubic = amountOfQubic;
-    packet.input.amountOfShare = amountOfShare;
-    packet.input.indexOfShare = indexOfShare;
-    memcpy(&packet.input.url, url, 256);
-    memcpy(&packet.input.shareName, assetNameS1, 8);
-    
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_MKTP;
-    packet.transaction.inputSize = sizeof(submitMKTP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMKTP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitMKTP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitMKTP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_MKTP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t burn, uint32_t distribute, const char* url)
 {
-    if (strlen(url) > 255)
+    submitAlloP_input input{};
+    input.reinvested = reinvested;
+    input.burn = burn;
+    input.distribute = distribute;
+    if (!copyUrlField(input.url, url))
     {
-        printf("The url should be less than 255.\nThe command is failed"); 
-        return ;
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
     }
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitAlloP_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.burn = burn;
-    packet.input.distribute = distribute;
-    packet.input.reinvested = reinvested;
-    memcpy(&packet.input.url, url, 256);
-    
-    packet.transaction.amount = QVAULT_PROPOSAL_CREATION_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMIT_ALLOP;
-    packet.transaction.inputSize = sizeof(submitAlloP_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAlloP_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAlloP_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitAlloP tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_ALLOP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        voteInProposal_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.priceOfIPO = priceOfIPO;
-    packet.input.proposalId = proposalId;
-    packet.input.proposalType = proposalType;
-    packet.input.yes = yes;
-    
-    packet.transaction.amount = 0;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_VOTE_IN_PROPOSAL;
-    packet.transaction.inputSize = sizeof(voteInProposal_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(voteInProposal_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(voteInProposal_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("voteInProposal tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    voteInProposal_input input{};
+    input.priceOfIPO = priceOfIPO;
+    input.proposalType = proposalType;
+    input.proposalId = proposalId;
+    input.yes = yes;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_VOTE_IN_PROPOSAL,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        buyQcap_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    packet.input.amount = amount;
-    
-    packet.transaction.amount = priceOfOneQcap * amount;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_BUY_QCAP;
-    packet.transaction.inputSize = sizeof(buyQcap_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(buyQcap_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(buyQcap_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("buyQcap tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    buyQcap_input input{};
+    input.amount = amount;
+    const uint64_t txAmount = priceOfOneQcap * amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_BUY_QCAP,
+                            txAmount,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
+    uint64_t encodedAssetName = 0;
+    if (!encodeAssetName(assetName, encodedAssetName))
+    {
+        printf("The asset name should be at most 8 characters.\n");
+        return;
+    }
     uint8_t pubKey[32] = {0};
-    char assetNameS1[8] = {0};
-    memcpy(assetNameS1, assetName, strlen(assetName));
     getPublicKeyFromIdentity(issuer, pubKey);
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    TransferShareManagementRights_input input{};
+    memcpy(input.asset.issuer, pubKey, sizeof(input.asset.issuer));
+    input.asset.assetName = encodedAssetName;
+    input.numberOfShares = numberOfShares;
+    input.newManagingContractIndex = newManagingContractIndex;
 
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        TransferShareManagementRights_input input;
-        unsigned char signature[64];
-    } packet;
-    #pragma pack(pop)
-
-    memcpy(&packet.input.asset.assetName, assetNameS1, 8);
-    memcpy(packet.input.asset.issuer, pubKey, 32);
-    packet.input.newManagingContractIndex = newManagingContractIndex;
-    packet.input.numberOfShares = numberOfShares;
-    
-    packet.transaction.amount = QVAULT_SHARE_MANAGEMENT_TRANSFER_FEE;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
-    packet.transaction.inputSize = sizeof(TransferShareManagementRights_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(TransferShareManagementRights_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(TransferShareManagementRights_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("TransferShareManagementRights tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_TRANSFER_SHARE_MANAGEMENT_RIGHTS,
+                            QVAULT_SHARE_MANAGEMENT_TRANSFER_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void getData(const char* nodeIp, int nodePort)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QVAULT_GETDATA;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QVaultGetData_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QVaultGetData_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QVaultGetData_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort, QVAULT_GETDATA, nullptr, 0, &result, sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1037,39 +495,17 @@ void getData(const char* nodeIp, int nodePort)
 
 void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    uint8_t pubKey[32] = {0};
-    getPublicKeyFromIdentity(address, pubKey);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetStakedAmountAndVotingPower_input input;
-    } packet;
-    #pragma pack(pop)
+    QvaultGetStakedAmountAndVotingPower_input input{};
+    getPublicKeyFromIdentity(address, input.address);
 
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetStakedAmountAndVotingPower_input);
-    packet.rcf.inputType = QVAULT_GET_STAKED_AMOUNT_AND_VOTING_POWER;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-
-    memcpy(packet.input.address, pubKey, 32);
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetStakedAmountAndVotingPower_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetStakedAmountAndVotingPower_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetStakedAmountAndVotingPower_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_STAKED_AMOUNT_AND_VOTING_POWER,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1082,35 +518,16 @@ void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char*
 
 void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetGP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetGP_input);
-    packet.rcf.inputType = QVAULT_GET_GP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetGP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetGP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetGP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetGP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_GP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1121,7 +538,7 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1148,35 +565,16 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetQCP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetQCP_input);
-    packet.rcf.inputType = QVAULT_GET_QCP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetQCP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetQCP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetQCP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetQCP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QCP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1187,7 +585,7 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1219,35 +617,16 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetIPOP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetIPOP_input);
-    packet.rcf.inputType = QVAULT_GET_IPOP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetIPOP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetIPOP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetIPOP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetIPOP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_IPOP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1258,7 +637,7 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1285,35 +664,16 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetQEarnP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetQEarnP_input);
-    packet.rcf.inputType = QVAULT_GET_QEARNP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetQEarnP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetQEarnP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetQEarnP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetQEarnP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QEARNP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1324,7 +684,7 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1351,35 +711,16 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetFundP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetFundP_input);
-    packet.rcf.inputType = QVAULT_GET_FUNDP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetFundP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetFundP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetFundP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetFundP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_FUNDP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1390,7 +731,7 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1421,35 +762,16 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetMKTP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetMKTP_input);
-    packet.rcf.inputType = QVAULT_GET_MKTP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetMKTP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetMKTP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetMKTP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetMKTP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_MKTP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1460,7 +782,7 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1491,35 +813,16 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetAlloP_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetAlloP_input);
-    packet.rcf.inputType = QVAULT_GET_ALLOP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.proposalId = proposalId;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetAlloP_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetAlloP_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetAlloP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetAlloP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_ALLOP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1530,7 +833,7 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    if (strcmp(proposer, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
     {
         printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
         return ;
@@ -1561,36 +864,17 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
 void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetIdentitiesHvVtPw_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetIdentitiesHvVtPw_input);
-    packet.rcf.inputType = QVAULT_GET_IDENTITIES_HV_VT_PW;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.count = count;
-    packet.input.offset = offset;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetIdentitiesHvVtPw_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetIdentitiesHvVtPw_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetIdentitiesHvVtPw_input input{};
+    input.offset = offset;
+    input.count = count;
+    QvaultGetIdentitiesHvVtPw_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_IDENTITIES_HV_VT_PW,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1598,12 +882,12 @@ void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint
         return;
     }
 
-    printf("returnCode: %d\n", result.returnCode);
-    for (uint32_t i = 0; i < count; i++)
+    uint32_t maxEntries = std::min(count, QVAULT_MAX_URLS_COUNT);
+    for (uint32_t i = 0; i < maxEntries; i++)
     {
         char stakerAddress[128] = {0};
         getIdentityFromPublicKey(result.idList[i], stakerAddress, false);
-        if (strcmp(stakerAddress, "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB") == 0)
+        if (strcmp(stakerAddress, EMPTY_IDENTITY) == 0)
         {
             break;
         }
@@ -1613,37 +897,16 @@ void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint
 
 void ppCreationPower(const char* nodeIp, int nodePort, const char* address)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    uint8_t pubKey[32] = {0};
-    getPublicKeyFromIdentity(address, pubKey);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultppCreationPower_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultppCreationPower_input);
-    packet.rcf.inputType = QVAULT_GET_PP_CREATION_POWER;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    memcpy(packet.input.address, pubKey, 32);
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultppCreationPower_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultppCreationPower_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultppCreationPower_input input{};
+    getPublicKeyFromIdentity(address, input.address);
+    QvaultppCreationPower_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_PP_CREATION_POWER,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1656,35 +919,16 @@ void ppCreationPower(const char* nodeIp, int nodePort, const char* address)
 
 void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t numberOfLastEpoches)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetQcapBurntAmountInLastEpoches_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetQcapBurntAmountInLastEpoches_input);
-    packet.rcf.inputType = QVAULT_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.numberOfLastEpoches = numberOfLastEpoches;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetQcapBurntAmountInLastEpoches_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetQcapBurntAmountInLastEpoches_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetQcapBurntAmountInLastEpoches_input input{};
+    input.numberOfLastEpoches = numberOfLastEpoches;
+    QvaultGetQcapBurntAmountInLastEpoches_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1697,211 +941,100 @@ void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t 
 
 void getAmountToBeSoldPerYear(const char* nodeIp, int nodePort, uint32_t year)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetAmountToBeSoldPerYear_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetAmountToBeSoldPerYear_input);
-    packet.rcf.inputType = QVAULT_GET_AMOUNT_TO_BE_SOLD_PER_YEAR;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.year = year;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetAmountToBeSoldPerYear_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetAmountToBeSoldPerYear_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetAmountToBeSoldPerYear_input input{};
+    input.year = year;
+    QvaultGetAmountToBeSoldPerYear_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_TO_BE_SOLD_PER_YEAR,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     printf("%u\n", result.amount);
 }
 
 void getTotalRevenueInQcap(const char* nodeIp, int nodePort)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QVAULT_GET_TOTAL_REVENUE_IN_QCAP;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetTotalRevenueInQcap_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetTotalRevenueInQcap_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetTotalRevenueInQcap_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_TOTAL_REVENUE_IN_QCAP,
+                           nullptr,
+                           0,
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     printf("%llu\n", result.revenue);
 }
 
 void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetRevenueInQcapPerEpoch_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetRevenueInQcapPerEpoch_input);
-    packet.rcf.inputType = QVAULT_GET_REVENUE_IN_QCAP_PER_EPOCH;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.epoch = epoch;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetRevenueInQcapPerEpoch_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetRevenueInQcapPerEpoch_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetRevenueInQcapPerEpoch_input input{};
+    input.epoch = epoch;
+    QvaultGetRevenueInQcapPerEpoch_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_REVENUE_IN_QCAP_PER_EPOCH,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     printf("epochTotalRevenue: %llu\nepochOneQcapRevenue: %llu\nepochOneQvaultRevenue: %llu\nepochReinvestAmount: %llu\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
 }
 
 void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetRevenuePerShare_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetRevenuePerShare_input);
-    packet.rcf.inputType = QVAULT_GET_REVENUE_PER_SHARE;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.contractIndex = contractIndex;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetRevenuePerShare_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetRevenuePerShare_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetRevenuePerShare_input input{};
+    input.contractIndex = contractIndex;
+    QvaultGetRevenuePerShare_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_REVENUE_PER_SHARE,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     printf("revenue: %llu\n", result.revenue);
 }
 
 void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* assetName, const char* issuer)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    uint8_t pubKey[32] = {0};
-    char assetNameS1[8] = {0};
-    memcpy(assetNameS1, assetName, strlen(assetName));
-    getPublicKeyFromIdentity(issuer, pubKey);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetAmountOfShareQvaultHold_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetAmountOfShareQvaultHold_input);
-    packet.rcf.inputType = QVAULT_GET_AMOUNT_OF_SHARE_QVAULT_HOLD;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    memcpy(packet.input.assetInfo.issuer, pubKey, 32);
-    memcpy(&packet.input.assetInfo.assetName, assetNameS1, 8);
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetAmountOfShareQvaultHold_output result;
-    try
+    uint64_t encodedAssetName = 0;
+    if (!encodeAssetName(assetName, encodedAssetName))
     {
-        result = qc->receivePacketWithHeaderAs<QvaultGetAmountOfShareQvaultHold_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+        printf("The asset name should be at most 8 characters.\n");
         return;
     }
+    QvaultGetAmountOfShareQvaultHold_input input{};
+    getPublicKeyFromIdentity(issuer, input.assetInfo.issuer);
+    input.assetInfo.assetName = encodedAssetName;
+
+    QvaultGetAmountOfShareQvaultHold_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_OF_SHARE_QVAULT_HOLD,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
 
     printf("The amount of %s that SC held: %u\n", assetName, result.amount);
 }
 
 void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QVAULT_GET_NUMBER_OF_HOLDER_AND_AVG_AM;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetNumberOfHolderAndAvgAm_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetNumberOfHolderAndAvgAm_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetNumberOfHolderAndAvgAm_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_NUMBER_OF_HOLDER_AND_AVG_AM,
+                           nullptr,
+                           0,
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
@@ -1914,35 +1047,16 @@ void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort)
 
 void getAmountForQearnInUpcomingEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    #pragma pack(push, 1)
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QvaultGetAmountForQearnInUpcomingEpoch_input input;
-    } packet;
-    #pragma pack(pop)
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QvaultGetAmountForQearnInUpcomingEpoch_input);
-    packet.rcf.inputType = QVAULT_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.epoch = epoch;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-
-    QvaultGetAmountForQearnInUpcomingEpoch_output result;
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<QvaultGetAmountForQearnInUpcomingEpoch_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+    QvaultGetAmountForQearnInUpcomingEpoch_input input{};
+    input.epoch = epoch;
+    QvaultGetAmountForQearnInUpcomingEpoch_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
         return;
-    }
 
     if (result.returnCode != 0)
     {
