@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstring>
+#include <cinttypes>
 
 #include "wallet_utils.h"
 #include "key_utils.h"
@@ -490,7 +491,7 @@ void getData(const char* nodeIp, int nodePort)
         return;
     }
 
-    printf("returnCode: %d\ntotalVotingPower: %llu\nproposalCreateFund: %llu\nreinvestingFund: %llu\ntotalEpochRevenue: %llu\nfundForBurn: %llu\ntotalStakedQcapAmount: %llu\nqcapMarketCap: %llu\nraisedFundByQcap: %llu\nlastRoundPriceOfQcap: %llu\nrevenueByQearn:%llu\nqcapSoldAmount: %u\nshareholderDividend: %u\nQCAPHolderPermille: %u\nreinvestingPermille: %u\nburnPermille: %u\nqcapBurnPermille: %u\nnumberOfStaker: %u\nnumberOfVotingPower: %u\nnumberOfGP: %u\nnumberOfQCP: %u\nnumberOfIPOP: %u\nnumberOfQEarnP: %u\nnumberOfFundP: %u\nnumberOfMKTP: %u\nnumberOfAlloP: %u\ntransferRightsFee: %u\nminQuorumRq: %u\nmaxQuorumRq: %u\ntotalQcapBurntAmount: %u\ncirculatingSupply: %u\nquorumPercent: %u\n", result.returnCode, result.totalVotingPower, result.proposalCreateFund, result.reinvestingFund, result.totalEpochRevenue, result.fundForBurn, result.totalStakedQcapAmount, result.qcapMarketCap, result.raisedFundByQcap, result.lastRoundPriceOfQcap, result.revenueByQearn, result.qcapSoldAmount, result.shareholderDividend, result.QCAPHolderPermille, result.reinvestingPermille, result.burnPermille, result.qcapBurnPermille, result.numberOfStaker, result.numberOfVotingPower, result.numberOfGP, result.numberOfQCP, result.numberOfIPOP, result.numberOfQEarnP, result.numberOfFundP, result.numberOfMKTP, result.numberOfAlloP, result.transferRightsFee, result.minQuorumRq, result.maxQuorumRq, result.totalQcapBurntAmount, result.circulatingSupply, result.quorumPercent);
+    printf("returnCode: %d\ntotalVotingPower: %" PRIu64 "\nproposalCreateFund: %" PRIu64 "\nreinvestingFund: %" PRIu64 "\ntotalEpochRevenue: %" PRIu64 "\nfundForBurn: %" PRIu64 "\ntotalStakedQcapAmount: %" PRIu64 "\nqcapMarketCap: %" PRIu64 "\nraisedFundByQcap: %" PRIu64 "\nlastRoundPriceOfQcap: %" PRIu64 "\nrevenueByQearn:%" PRIu64 "\nqcapSoldAmount: %u\nshareholderDividend: %u\nQCAPHolderPermille: %u\nreinvestingPermille: %u\nburnPermille: %u\nqcapBurnPermille: %u\nnumberOfStaker: %u\nnumberOfVotingPower: %u\nnumberOfGP: %u\nnumberOfQCP: %u\nnumberOfIPOP: %u\nnumberOfQEarnP: %u\nnumberOfFundP: %u\nnumberOfMKTP: %u\nnumberOfAlloP: %u\ntransferRightsFee: %u\nminQuorumRq: %u\nmaxQuorumRq: %u\ntotalQcapBurntAmount: %u\ncirculatingSupply: %u\nquorumPercent: %u\n", result.returnCode, result.totalVotingPower, result.proposalCreateFund, result.reinvestingFund, result.totalEpochRevenue, result.fundForBurn, result.totalStakedQcapAmount, result.qcapMarketCap, result.raisedFundByQcap, result.lastRoundPriceOfQcap, result.revenueByQearn, result.qcapSoldAmount, result.shareholderDividend, result.QCAPHolderPermille, result.reinvestingPermille, result.burnPermille, result.qcapBurnPermille, result.numberOfStaker, result.numberOfVotingPower, result.numberOfGP, result.numberOfQCP, result.numberOfIPOP, result.numberOfQEarnP, result.numberOfFundP, result.numberOfMKTP, result.numberOfAlloP, result.transferRightsFee, result.minQuorumRq, result.maxQuorumRq, result.totalQcapBurntAmount, result.circulatingSupply, result.quorumPercent);
 }
 
 void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address)
@@ -643,7 +644,7 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\ntotalWeight: %llu\nassignedFund: %llu\nipoContractIndex: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\ntotalWeight: %" PRIu64 "\nassignedFund: %" PRIu64 "\nipoContractIndex: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");
@@ -690,7 +691,7 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfInvestPerEpoch: %llu\nassignedFundPerEpoch: %llu\nnumberOfEpoch: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfInvestPerEpoch: %" PRIu64 "\nassignedFundPerEpoch: %" PRIu64 "\nnumberOfEpoch: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");
@@ -737,7 +738,7 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\npricePerOneQcap: %llu\namountOfQcap: %u\nrestSaleAmount: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\npricePerOneQcap: %" PRIu64 "\namountOfQcap: %u\nrestSaleAmount: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");
@@ -788,7 +789,7 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %llu\nshareName: %llu\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %" PRIu64 "\nshareName: %" PRIu64 "\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");
@@ -966,7 +967,7 @@ void getTotalRevenueInQcap(const char* nodeIp, int nodePort)
                            sizeof(result)))
         return;
 
-    printf("%llu\n", result.revenue);
+    printf("%" PRIu64 "\n", result.revenue);
 }
 
 void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
@@ -982,7 +983,7 @@ void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
                            sizeof(result)))
         return;
 
-    printf("epochTotalRevenue: %llu\nepochOneQcapRevenue: %llu\nepochOneQvaultRevenue: %llu\nepochReinvestAmount: %llu\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
+    printf("epochTotalRevenue: %" PRIu64 "\nepochOneQcapRevenue: %" PRIu64 "\nepochOneQvaultRevenue: %" PRIu64 "\nepochReinvestAmount: %" PRIu64 "\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
 }
 
 void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex)
@@ -998,7 +999,7 @@ void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex
                            sizeof(result)))
         return;
 
-    printf("revenue: %llu\n", result.revenue);
+    printf("revenue: %" PRIu64 "\n", result.revenue);
 }
 
 void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* assetName, const char* issuer)
@@ -1064,5 +1065,5 @@ void getAmountForQearnInUpcomingEpoch(const char* nodeIp, int nodePort, uint32_t
         return;
     }
 
-    printf("returnCode: %d\namount: %llu\n", result.returnCode, result.amount);
+    printf("returnCode: %d\namount: %" PRIu64 "\n", result.returnCode, result.amount);
 }
