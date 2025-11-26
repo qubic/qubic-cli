@@ -2,15 +2,44 @@
 #include <cstring>
 
 #include "structs.h"
-#include "walletUtils.h"
-#include "keyUtils.h"
-#include "assetUtil.h"
+#include "wallet_utils.h"
+#include "key_utils.h"
+#include "asset_utils.h"
 #include "connection.h"
 #include "logger.h"
-#include "nodeUtils.h"
-#include "K12AndKeyUtil.h"
+#include "node_utils.h"
+#include "k12_and_key_utils.h"
 #include "utils.h"
-#include "sanityCheck.h"
+#include "sanity_check.h"
+
+uint64_t assetNameFromString(const char* assetName)
+{
+    if (!assetName)
+    {
+        LOG("Error: assetNameFromString received a null pointer.\n");
+        return 0;
+    }
+    size_t len = strlen(assetName);
+    if (len > 7)
+    {
+        LOG("Warning: Asset name '%s' is longer than 7 characters. It will be truncated.\n", assetName);
+        len = 7;
+    }
+    uint64_t integer = 0;
+    memcpy(&integer, assetName, len);
+    return integer;
+}
+
+void assetNameToString(uint64_t assetNameInt, char* outAssetName)
+{
+    if (!outAssetName)
+    {
+        LOG("Error: assetNameToString received a null output buffer.\n");
+        return;
+    }
+    memcpy(outAssetName, &assetNameInt, sizeof(uint64_t));
+    outAssetName[7] = '\0';
+}
 
 std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nodePort, const char* requestedIdentity)
 {
@@ -88,7 +117,7 @@ void printAssetDigest(T& respondedAsset)
     LOG("Asset Digest: %s\n", hex_digest);
 }
 
-static void printOwnedAsset(Asset owned, Asset iss)
+static void printOwnedAsset(const AssetRecord& owned, const AssetRecord& iss)
 {
     char issuer[128] = {0};
     char name[8] = {0};
@@ -103,7 +132,7 @@ static void printOwnedAsset(Asset owned, Asset iss)
     LOG("Number Of Shares: %lld\n", owned.varStruct.ownership.numberOfShares);
 }
 
-static void printPossessionAsset(Asset owner, Asset possession, Asset iss)
+static void printPossessionAsset(const AssetRecord& owner, const AssetRecord& possession, const AssetRecord& iss)
 {
     char issuer[128] = {0};
     char name[8] = {0};
@@ -275,7 +304,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
                 {
                     packet.req.byFilter.flags &= ~RequestAssets::anyAssetName;
                     sanityCheckValidAssetName(value.c_str());
-                    memcpy(&packet.req.byFilter.assetName, value.c_str(), 7);
+                    memcpy(&packet.req.byFilter.assetName, value.c_str(), std::min(size_t(7), value.length()));
                 }
                 else
                 {

@@ -19,11 +19,15 @@
 
 // includes for template instantiations
 #include "quottery.h"
-#include "qxStruct.h"
+#include "qx_struct.h"
 #include "qvault.h"
 #include "qearn.h"
 #include "msvault.h"
-#include "testUtils.h"
+#include "qswap_struct.h"
+#include "test_utils.h"
+#include "nostromo.h"
+#include "qutil.h"
+#include "qbond.h"
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
@@ -159,7 +163,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         //   rather than waiting for receipt of the full amount requested."
         // Microsoft docs:
         //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
-        //   return as much data as is currently available�up to the size of the buffer specified. [...]
+        //   return as much data as is currently available up to the size of the buffer specified. [...]
         //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
         int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
         if (recvSz <= 0)
@@ -194,6 +198,15 @@ void QubicConnection::resolveConnection()
 template <typename T>
 T QubicConnection::receivePacketWithHeaderAs()
 {
+    T result;
+    receivePacketWithHeaderAs(result);
+    return result;
+}
+
+// Receive the next qubic packet with a RequestResponseHeader that matches T
+template <typename T>
+void QubicConnection::receivePacketWithHeaderAs(T& result)
+{
     // first receive the header
     RequestResponseHeader header;
     int recvByte = -1, packetSize = -1, remainingSize = -1;
@@ -221,7 +234,7 @@ T QubicConnection::receivePacketWithHeaderAs()
     
     packetSize = header.size();
     remainingSize = packetSize - sizeof(RequestResponseHeader);
-    T result;
+
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
@@ -229,7 +242,6 @@ T QubicConnection::receivePacketWithHeaderAs()
         receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer);
     }
-    return result;
 }
 
 // same as receivePacketWithHeaderAs but without the header
@@ -292,6 +304,7 @@ template SpecialCommandToggleMainModeResquestAndResponse QubicConnection::receiv
 template SpecialCommandSetSolutionThresholdResquestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetSolutionThresholdResquestAndResponse>();
 template SpecialCommandSendTime QubicConnection::receivePacketWithHeaderAs<SpecialCommandSendTime>();
 template SpecialCommandSetConsoleLoggingModeRequestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSetConsoleLoggingModeRequestAndResponse>();
+template SpecialCommandSaveSnapshotRequestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandSaveSnapshotRequestAndResponse>();
 template GetSendToManyV1Fee_output QubicConnection::receivePacketWithHeaderAs<GetSendToManyV1Fee_output>();
 template CurrentTickInfo QubicConnection::receivePacketWithHeaderAs<CurrentTickInfo>();
 template CurrentSystemInfo QubicConnection::receivePacketWithHeaderAs<CurrentSystemInfo>();
@@ -339,6 +352,11 @@ template QEarnGetStatsPerEpoch_output QubicConnection::receivePacketWithHeaderAs
 template QEarnGetEndedStatus_output QubicConnection::receivePacketWithHeaderAs<QEarnGetEndedStatus_output>();
 template QEarnGetBurnedAndBoostedStats_output QubicConnection::receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStats_output>();
 template QEarnGetBurnedAndBoostedStatsPerEpoch_output QubicConnection::receivePacketWithHeaderAs<QEarnGetBurnedAndBoostedStatsPerEpoch_output>();
+// QSWAP
+template QswapFees_output QubicConnection::receivePacketWithHeaderAs<QswapFees_output>();
+template qswapGetLiquidityOf_output QubicConnection::receivePacketWithHeaderAs<qswapGetLiquidityOf_output>();
+template qswapGetPoolBasicState_output QubicConnection::receivePacketWithHeaderAs<qswapGetPoolBasicState_output>();
+template qswapQuote_output QubicConnection::receivePacketWithHeaderAs<qswapQuote_output>();
 
 template ExchangePublicPeers QubicConnection::receivePacketAs<ExchangePublicPeers>();
 
@@ -357,6 +375,43 @@ template MsVaultGetVaultName_output QubicConnection::receivePacketWithHeaderAs<M
 template MsVaultGetRevenueInfo_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetRevenueInfo_output>();
 template MsVaultGetFees_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFees_output>();
 template MsVaultGetVaultOwners_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultOwners_output>();
+template MsVaultGetVaultAssetBalances_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetVaultAssetBalances_output>();
+template MsVaultGetAssetReleaseStatus_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetAssetReleaseStatus_output>();
+template MsVaultGetManagedAssetBalance_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetManagedAssetBalance_output>();
+template MsVaultIsShareHolder_output QubicConnection::receivePacketWithHeaderAs<MsVaultIsShareHolder_output>();
+template MsVaultGetFeeVotes_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotes_output>();
+template MsVaultGetFeeVotesOwner_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotesOwner_output>();
+template MsVaultGetFeeVotesScore_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetFeeVotesScore_output>();
+template MsVaultGetUniqueFeeVotes_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotes_output>();
+template MsVaultGetUniqueFeeVotesRanking_output QubicConnection::receivePacketWithHeaderAs<MsVaultGetUniqueFeeVotesRanking_output>();
+
+// NOSTROMO
+template NOSTROMOGetStats_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetStats_output>();
+template NOSTROMOGetTierLevelByUser_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetTierLevelByUser_output>();
+template NOSTROMOGetUserVoteStatus_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetUserVoteStatus_output>();
+template NOSTROMOCheckTokenCreatability_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOCheckTokenCreatability_output>();
+template NOSTROMOGetNumberOfInvestedProjects_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetNumberOfInvestedProjects_output>();
+template NOSTROMOGetProjectByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectByIndex_output>();
+template NOSTROMOGetFundarasingByIndex_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetFundarasingByIndex_output>();
+template NOSTROMOGetProjectIndexListByCreator_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetProjectIndexListByCreator_output>();
+template NOSTROMOGetInfoUserInvested_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetInfoUserInvested_output>();
+template NOSTROMOGetMaxClaimAmount_output QubicConnection::receivePacketWithHeaderAs<NOSTROMOGetMaxClaimAmount_output>();
+
+// QBOND
+template GetInfoPerEpoch_output QubicConnection::receivePacketWithHeaderAs<GetInfoPerEpoch_output>();
+template GetOrders_output QubicConnection::receivePacketWithHeaderAs<GetOrders_output>();
+template GetUserOrders_output QubicConnection::receivePacketWithHeaderAs<GetUserOrders_output>();
+template MBondsTable_output QubicConnection::receivePacketWithHeaderAs<MBondsTable_output>();
+template GetUserMBonds_output QubicConnection::receivePacketWithHeaderAs<GetUserMBonds_output>();
+template GetFees_output QubicConnection::receivePacketWithHeaderAs<GetFees_output>();
+template GetEarnedFees_output QubicConnection::receivePacketWithHeaderAs<GetEarnedFees_output>();
+template GetCFA_output QubicConnection::receivePacketWithHeaderAs<GetCFA_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();
+
+// QUTIL
+template GetCurrentResult_output QubicConnection::receivePacketWithHeaderAs<GetCurrentResult_output>();
+template GetPollsByCreator_output QubicConnection::receivePacketWithHeaderAs<GetPollsByCreator_output>();
+template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetCurrentPollId_output>();
+template GetPollInfo_output QubicConnection::receivePacketWithHeaderAs<GetPollInfo_output>();

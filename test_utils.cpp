@@ -1,16 +1,19 @@
-#include "testUtils.h"
-#include "nodeUtils.h"
-#include "connection.h"
-#include "logger.h"
-#include "keyUtils.h"
-#include "K12AndKeyUtil.h"
-
 #include <vector>
 #include <array>
+#include <cinttypes>
 
-// Change this index when new contracts are added
-#define TESTEXA_CONTRACT_INDEX 13
-#define TESTEXA_ADDRESS "NAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAML"
+#include "test_utils.h"
+#include "node_utils.h"
+#include "connection.h"
+#include "logger.h"
+#include "key_utils.h"
+#include "k12_and_key_utils.h"
+#include "wallet_utils.h"
+
+
+#define TESTEXA_CONTRACT_INDEX (CONTRACT_COUNT + 1)
+#define TESTEXB_CONTRACT_INDEX (CONTRACT_COUNT + 2)
+#define TESTEXC_CONTRACT_INDEX (CONTRACT_COUNT + 3)
 
 // TESTEXA FUNCTIONS
 constexpr uint8_t TESTEXA_QUERY_QPI_FUNCTIONS = 1;
@@ -26,6 +29,13 @@ constexpr uint8_t TESTEXA_SET_PRE_RELEASE_SHARES_OUTPUT = 4;
 constexpr uint8_t TESTEXA_SET_PRE_ACQUIRE_SHARES_OUTPUT = 5;
 constexpr uint8_t TESTEXA_ACQUIRE_SHARE_MANAGEMENT_RIGHTS = 6;
 constexpr uint8_t TESTEXA_QUERY_QPI_FUNCTIONS_TO_STATE = 7;
+
+// TESTEXB/C FUNCTIONS
+constexpr uint8_t TESTEXBC_INCOMING_TRANSFER_AMOUNTS = 20;
+
+// TESTEXB/C PROCEDURES
+constexpr uint8_t TESTEXBC_QPI_BID_IN_IPO = 30;
+
 
 template <typename T>
 bool checkMatchAndLog(const T& first, const T& second, const std::string& name)
@@ -136,7 +146,7 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
 {
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
+    uint64_t destPublicKey[4] = { TESTEXA_CONTRACT_INDEX, 0, 0, 0 };
     uint8_t subSeed[32] = { 0 };
     uint8_t digest[32] = { 0 };
     uint8_t signature[64] = { 0 };
@@ -144,7 +154,6 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
     getSubseedFromSeed((uint8_t*)seed, subSeed);
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    getPublicKeyFromIdentity(TESTEXA_ADDRESS, destPublicKey);
 
     struct {
         RequestResponseHeader header;
@@ -370,4 +379,78 @@ void testQpiFunctionsOutputPast(const char* nodeIp, const int nodePort)
     uint32_t currentTick = getTickNumberFromNode(qc);
 
     queryAndMatchQpiFunctionsOutput(qc, currentTick - 15, currentTick - 1, false);
+}
+
+static unsigned int getTestContractIndexBC(const char* contractStr)
+{
+    if (strcasecmp(contractStr, "B") == 0)
+    {
+        return TESTEXB_CONTRACT_INDEX;
+    }
+    else if (strcasecmp(contractStr, "C") == 0)
+    {
+        return TESTEXC_CONTRACT_INDEX;
+    }
+    else
+    {
+        LOG("Unsupported test contract %s! Either pass B or C!\n", contractStr);
+        exit(1);
+    }
+}
+
+void testGetIncomingTransferAmounts(
+    const char* nodeIp, const int nodePort,
+    const char* contractToQuery)
+{
+    unsigned int contractIndex = getTestContractIndexBC(contractToQuery);
+
+    struct IncomingTransferAmounts_output
+    {
+        int64_t standardTransactionAmount;
+        int64_t procedureTransactionAmount;
+        int64_t qpiTransferAmount;
+        int64_t qpiDistributeDividendsAmount;
+        int64_t revenueDonationAmount;
+        int64_t ipoBidRefundAmount;
+    };
+
+    IncomingTransferAmounts_output output;
+    if (!runContractFunction(nodeIp, nodePort, contractIndex, TESTEXBC_INCOMING_TRANSFER_AMOUNTS, nullptr, 0, &output, sizeof(output)))
+    {
+        LOG("Failed to get incoming transfer amounts!");
+        exit(1);
+    }
+
+    LOG("incoming standardTransactionAmount:  %" PRId64 "\n", output.standardTransactionAmount);
+    LOG("incoming procedureTransactionAmount: %" PRId64 "\n", output.procedureTransactionAmount);
+    LOG("incoming qpiTransferAmount: %" PRId64 "\n", output.qpiTransferAmount);
+    LOG("incoming qpiDistributeDividendsAmount: %" PRId64 "\n", output.qpiDistributeDividendsAmount);
+    LOG("incoming revenueDonationAmount: %" PRId64 "\n", output.revenueDonationAmount);
+    LOG("incoming ipoBidRefundAmount: %" PRId64 "\n", output.ipoBidRefundAmount);
+}
+
+void testBidInIpoThroughContract(
+    const char* nodeIp, const int nodePort,
+    const char* seed,
+    const char* contractToBidThrough,
+    uint32_t contractIndexToBidFor,
+    uint64_t pricePerShare,
+    uint16_t numberOfShares,
+    uint32_t scheduledTickOffset)
+{
+    unsigned int contractIndexToBidThrough = getTestContractIndexBC(contractToBidThrough);
+
+    struct QpiBidInIpo_input
+    {
+        uint32_t ipoContractIndex;
+        int64_t pricePerShare;
+        uint16_t numberOfShares;
+    } input;
+    memset(&input, 0, sizeof(input));
+    input.ipoContractIndex = contractIndexToBidFor;
+    input.pricePerShare = (int64_t)pricePerShare;
+    input.numberOfShares = numberOfShares;
+
+    makeContractTransaction(nodeIp, nodePort, seed, contractIndexToBidThrough,
+        TESTEXBC_QPI_BID_IN_IPO, 0, sizeof(input), &input, scheduledTickOffset);
 }

@@ -5,12 +5,13 @@
 #include <stdexcept>
 
 #include "utils.h"
-#include "nodeUtils.h"
-#include "keyUtils.h"
+#include "node_utils.h"
+#include "key_utils.h"
 #include "logger.h"
 #include "structs.h"
 #include "connection.h"
-#include "K12AndKeyUtil.h"
+#include "k12_and_key_utils.h"
+#include "sc_utils.h"
 
 void printWalletInfo(const char* seed)
 {
@@ -23,11 +24,10 @@ void printWalletInfo(const char* seed)
     getSubseedFromSeed((uint8_t*)seed, subseed);
     getPrivateKeyFromSubSeed(subseed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, publicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(publicKey, publicIdentity, isLowerCase);
+    getIdentityFromPublicKey(publicKey, publicIdentity, /*isLowerCase=*/false);
 
-    getIdentityFromPublicKey(privateKey, privateKeyQubicFormat, true);
-    getIdentityFromPublicKey(publicKey, publicKeyQubicFormat, true);
+    getIdentityFromPublicKey(privateKey, privateKeyQubicFormat, /*isLowerCase=*/true);
+    getIdentityFromPublicKey(publicKey, publicKeyQubicFormat, /*isLowerCase=*/true);
     LOG("Seed: %s\n", seed);
     LOG("Private key: %s\n", privateKeyQubicFormat);
     LOG("Public key: %s\n", publicKeyQubicFormat);
@@ -149,7 +149,7 @@ void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* 
     {
         char hex_tring[1024*2+1] = {0};
         for (int i = 0; i < tx.inputSize; i++)
-            sprintf(hex_tring + i * 2, "%02x", extraData[i]);
+            snprintf(hex_tring + i * 2, 3, "%02x", extraData[i]);
 
         LOG("Extra data: %s\n", hex_tring);
     }
@@ -206,7 +206,6 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = amount;
-    uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = txTick;
     packet.transaction.inputType = 0;
     packet.transaction.inputSize = 0;
@@ -231,6 +230,7 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
     if (waitUntilFinish)
     {
         LOG("Waiting for tick:\n");
+        uint32_t currentTick = getTickNumberFromNode(qc);
         while (currentTick <= packet.transaction.tick)
         {
             LOG("%d/%d\n", currentTick, packet.transaction.tick);
@@ -326,10 +326,11 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     uint16_t txType,
     uint64_t amount,
     int extraDataSize,
-    const uint8_t* extraData,
-    uint32_t scheduledTickOffset)
+    const void* extraData,
+    uint32_t scheduledTickOffset,
+    QCPtr* qcPtr = nullptr)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
@@ -360,7 +361,8 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     packetTransaction.inputType = txType;
     packetTransaction.inputSize = extraDataSize;
 
-    memcpy(packetInputData, extraData, extraDataSize);
+    if (extraDataSize)
+        memcpy(packetInputData, extraData, extraDataSize);
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize,
@@ -376,7 +378,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
         32); // recompute digest for txhash
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
-    printReceipt(packetTransaction, txHash, extraData);
+    printReceipt(packetTransaction, txHash, (uint8_t*)extraData);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
     LOG("to check your tx confirmation status\n");
 }
@@ -406,18 +408,161 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         memcpy(packetInputData, inputPtr, inputSize);
     qc->sendData(&packet[0], packetHeader.size());
 
-    std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
+    const size_t fullPacketSize = sizeof(RequestResponseHeader) + outputSize;
+    std::vector<uint8_t> buffer(fullPacketSize);
     int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() && 
-        recvByte - sizeof(RequestResponseHeader) == outputSize)
+        recvByte == fullPacketSize)
     {
         memcpy(outputPtr, (buffer.data() + sizeof(RequestResponseHeader)), outputSize);
+
+        if (header->size() > fullPacketSize)
+        {
+            const size_t dropSize = header->size() - fullPacketSize;
+            LOG("WARNING: Response of runContractFunction() is %llu bytes longer than expected. Dropping unexpected part that cannot be interpreted.\n", (unsigned long long)dropSize);
+            if (dropSize > buffer.size())
+                buffer.resize(dropSize);
+            qc->receiveAllDataOrThrowException(buffer.data(), int(dropSize));
+        }
+
         return true;
     }
     
     return false;
+}
+
+bool runContractFunction(const char* nodeIp, int nodePort,
+    unsigned int contractIndex,
+    unsigned short funcNumber,
+    const char* formatInput,
+    const char* formatOutput) {
+    LOG("Calling contract %u function %u | input : %s | output %s\n", contractIndex, funcNumber, formatInput, formatOutput);
+    QCPtr qc = make_qc(nodeIp, nodePort);
+    ContractObject contractObject = buildContractObject(formatInput, true);
+    auto inputSize = contractObject.getSize();
+    void* inputData = nullptr;
+    if (inputSize) {
+        inputData = malloc(inputSize);
+        if (!inputData) {
+            throw std::runtime_error("Failed to allocate memory for inputData");
+        }
+    }
+    contractObject.dumpIntoBuffer(inputData);
+    std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(RequestContractFunction) + inputSize);
+    RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
+    RequestContractFunction& packetRcf = (RequestContractFunction&)packet[sizeof(RequestResponseHeader)];
+    uint8_t* packetInputData = (inputSize) ? &packet[sizeof(RequestResponseHeader) + sizeof(RequestContractFunction)] : nullptr;
+
+    packetHeader.setSize(uint32_t(packet.size()));
+    packetHeader.randomizeDejavu();
+    packetHeader.setType(RequestContractFunction::type());
+    packetRcf.inputSize = uint16_t(inputSize);
+    packetRcf.inputType = funcNumber;
+    packetRcf.contractIndex = contractIndex;
+    if (inputSize)
+        memcpy(packetInputData, inputData, inputSize);
+    qc->sendData(&packet[0], packetHeader.size());
+
+    ContractObject outputContractObject = buildContractObject(formatOutput, true);
+    auto outputSize = outputContractObject.getSize();
+    void* outputData = nullptr;
+    if (outputSize) {
+        outputData = malloc(outputSize);
+        if (!outputData) {
+            free(inputData);
+            throw std::runtime_error("Failed to allocate memory for outputData");
+        }
+    }
+    std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
+    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
+
+    auto header = (RequestResponseHeader*)buffer.data();
+    if (header->type() == RespondContractFunction::type() &&
+        recvByte - sizeof(RequestResponseHeader) == outputSize)
+    {
+        memcpy(outputData, (buffer.data() + sizeof(RequestResponseHeader)), outputSize);
+        outputContractObject = ContractObject::fromBuffer(outputData, formatOutput, true);
+        LOG("------------------ Contract Function Output ------------------\n");
+        outputContractObject.print();
+        return true;
+    }
+
+    return false;
+}
+
+
+void invokeContractProcedure(const char* nodeIp, int nodePort,
+    const char* seed,
+    uint64_t contractIndex,
+    uint16_t txType,
+    uint64_t amount,
+    const char* formatInput,
+    uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint64_t destPublicKey[4] = { contractIndex, 0, 0, 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+    char publicIdentity[128] = { 0 };
+    char txHash[128] = { 0 };
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+
+    ContractObject contractObject = buildContractObject(formatInput, true);
+    auto extraDataSize = (unsigned short)contractObject.getSize();
+    if (extraDataSize > MAX_INPUT_SIZE) {
+        throw std::runtime_error("Input data size exceeds maximum allowed size");
+    }
+    void* extraData = malloc(extraDataSize);
+    if (!extraData) {
+        throw std::runtime_error("Failed to allocate memory for extraData");
+    }
+    contractObject.dumpIntoBuffer(extraData);
+
+    std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(Transaction) + extraDataSize + SIGNATURE_SIZE);
+    RequestResponseHeader& packetHeader = (RequestResponseHeader&)packet[0];
+    Transaction& packetTransaction = (Transaction&)packet[sizeof(RequestResponseHeader)];
+    uint8_t* packetInputData = &packet[sizeof(RequestResponseHeader) + sizeof(Transaction)];
+    uint8_t* packetSignature = packetInputData + extraDataSize;
+
+    packetHeader.setSize(uint32_t(packet.size()));
+    packetHeader.zeroDejavu();
+    packetHeader.setType(BROADCAST_TRANSACTION);
+
+    memcpy(packetTransaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packetTransaction.destinationPublicKey, destPublicKey, 32);
+    packetTransaction.amount = amount;
+    packetTransaction.tick = getTickNumberFromNode(qc) + scheduledTickOffset;
+    packetTransaction.inputType = txType;
+    packetTransaction.inputSize = extraDataSize;
+
+    if (extraDataSize)
+        memcpy(packetInputData, extraData, extraDataSize);
+
+    KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
+        sizeof(Transaction) + extraDataSize,
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, packetSignature);
+
+    qc->sendData(packet.data(), int(packet.size()));
+
+    KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
+        sizeof(Transaction) + extraDataSize + 64,
+        digest,
+        32); // recompute digest for txhash
+    getTxHashFromDigest(digest, txHash);
+    LOG("Transaction has been sent!\n");
+    printReceipt(packetTransaction, txHash, (uint8_t*)extraData);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
+    LOG("to check your tx confirmation status\n");
 }
 
 void makeIPOBid(const char* nodeIp, int nodePort,
@@ -455,6 +600,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
         ContractIPOBid ipo;
         unsigned char signature[64];
     } packet;
+    memset(&packet.ipo, 0, sizeof(packet.ipo));
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     packet.transaction.amount = 0;

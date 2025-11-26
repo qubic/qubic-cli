@@ -27,8 +27,9 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
                              uint16_t txType,
                              uint64_t amount,
                              int extraDataSize,
-                             const uint8_t* extraData,
-                             uint32_t scheduledTickOffset);
+                             const void* extraData,
+                             uint32_t scheduledTickOffset,
+                             QCPtr* qcPtr = nullptr);
 bool runContractFunction(const char* nodeIp, int nodePort,
     unsigned int contractIndex,
     unsigned short funcNumber,
@@ -37,6 +38,18 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     void* outputPtr,
     size_t outputSize,
     QCPtr* qcPtr = nullptr);
+bool runContractFunction(const char* nodeIp, int nodePort,
+    unsigned int contractIndex,
+    unsigned short funcNumber,
+    const char* formatInput,
+    const char* formatOutput);
+void invokeContractProcedure(const char* nodeIp, int nodePort,
+    const char* seed,
+    uint64_t contractIndex,
+    uint16_t txType,
+    uint64_t amount,
+    const char* formatInput,
+    uint32_t scheduledTickOffset);
 
 void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1);
 bool verifyTx(Transaction& tx, const uint8_t* extraData, const uint8_t* signature);

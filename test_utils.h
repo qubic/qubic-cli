@@ -29,3 +29,14 @@ struct QpiFunctionsOutput
 
 void testQpiFunctionsOutput(const char* nodeIp, const int nodePort, const char* seed, uint32_t scheduledTickOffset);
 void testQpiFunctionsOutputPast(const char* nodeIp, const int nodePort);
+void testGetIncomingTransferAmounts(
+    const char* nodeIp, const int nodePort,
+    const char* contractToQuery);
+void testBidInIpoThroughContract(
+    const char* nodeIp, const int nodePort,
+    const char* seed,
+    const char* contractToBidThrough,
+    uint32_t contractIndexToBidFor,
+    uint64_t pricePerShare,
+    uint16_t numberOfShares,
+    uint32_t scheduledTickOffset);

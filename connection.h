@@ -33,6 +33,9 @@ public:
     // May throw std::logic_error or EndResponseReceived.
     template <typename T> T receivePacketWithHeaderAs();
 
+    // Same as receivePacketWithHeaderAs() but with pre-allocated T. Use this for large T to prevent stack overflow.
+    template <typename T> void receivePacketWithHeaderAs(T& result);
+
     // Receive data of type T without a header. 
     // May throw std::logic_error.
     template <typename T> T receivePacketAs();

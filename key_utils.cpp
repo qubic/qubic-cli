@@ -1,7 +1,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "K12AndKeyUtil.h"
+#include "k12_and_key_utils.h"
 #include "logger.h"
 
 bool getSubseedFromSeed(const uint8_t* seed, uint8_t* subseed)

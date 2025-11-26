@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <string>
 
-#include "keyUtils.h"
+#include "key_utils.h"
 
 #define ROL64(a, offset) ((((unsigned long long)a) << offset) ^ (((unsigned long long)a) >> (64 - offset)))
 

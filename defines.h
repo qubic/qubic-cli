@@ -1,6 +1,6 @@
 #pragma once
 
-#include "commonFunctions.h"
+#include "common_functions.h"
 
 #include <chrono>
 #include <thread>
@@ -17,6 +17,8 @@
 #define DEFAULT_SEED "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 #define ARBITRATOR "AFZPUAIYVPNUYGJRQVLUKOPPVLHAZQTGLYAAUUNBXFTVTAMSBKQBLEIEPCVJ"
 #define NUMBER_OF_COMPUTORS 676
+#define CONTRACT_COUNT 18 // Change this number when new contracts are added, also add new indices to getContractIndex in argparser.h
+
 #define EXCHANGE_PUBLIC_PEERS 0
 #define BROADCAST_MESSAGE 1
 #define BROADCAST_COMPUTORS 2
@@ -52,6 +54,7 @@
 #define SPECIAL_COMMAND_SEND_TIME 13ULL     // send this to node to set time, responds with time read from clock after setting
 #define SPECIAL_COMMAND_GET_MINING_SCORE_RANKING 14ULL // get the ranking of miners connect to node
 #define SPECIAL_COMMAND_SET_CONSOLE_LOGGING_MODE 17ULL // PAUSE key
+#define SPECIAL_COMMAND_SAVE_SNAPSHOT 18ULL // F8
 
 #define QX_CONTRACT_INDEX 1
 #define QX_FEE_FUNCTION_INDEX 1
