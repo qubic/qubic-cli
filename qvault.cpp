@@ -5,7 +5,6 @@
 #include "structs.h"
 #include "walletUtils.h"
 #include "keyUtils.h"
-#include "assetUtil.h"
 #include "connection.h"
 #include "logger.h"
 #include "nodeUtils.h"
@@ -659,7 +658,12 @@ void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     auto qc = make_qc(nodeIp, nodePort);
 
     char assetNameS1[8] = {0};
-    memcpy(assetNameS1, shareName, strlen(shareName));
+    size_t shareNameLen = strlen(shareName);
+    if (shareNameLen > sizeof(assetNameS1))
+    {
+        shareNameLen = sizeof(assetNameS1);
+    }
+    memcpy(assetNameS1, shareName, shareNameLen);
 
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};  

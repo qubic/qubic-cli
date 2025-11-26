@@ -105,7 +105,6 @@ char* g_qvault_share_name = nullptr;
 uint32_t g_qvault_index_of_share = 0;
 uint32_t g_qvault_amount_of_share = 0;
 uint32_t g_qvault_reinvested = 0;
-uint32_t g_qvault_team = 0;
 uint32_t g_qvault_burn = 0;
 uint32_t g_qvault_distribute = 0;
 uint32_t g_qvault_share_index = 0;

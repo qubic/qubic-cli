@@ -2,8 +2,10 @@
 #include <cstdlib>
 #include <cerrno>
 #include <sstream>
+#include <vector>
 
 #include "logger.h"
+#include "global.h"
 
 #define CHECK_OVER_PARAMETERS                                                           \
     if (i < argc)                                                                       \
@@ -236,7 +238,7 @@ void print_help()
     printf("\t\t<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale\n");
     printf("\t-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
 	printf("\t\tSubmit the marketplace proposal with <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
-	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <SHARE_NAME> - the share name as a number (uint64)\n");
+	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <SHARE_NAME> - the share name (max 8 uppercase letters or digits)\n");
 	printf("\t\t<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC\n");
 	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <BURN> <DISTRIBUTE>\n");
 	printf("\t\tSubmit the allocation proposal with <REINVESTED> <BURN> <DISTRIBUTE>\n");
