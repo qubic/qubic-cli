@@ -7,6 +7,7 @@
 #include "key_utils.h"
 #include "logger.h"
 #include "qvault.h"
+#include "asset_utils.h"
 
 #define QVAULT_CONTRACT_INDEX 10
 #define QVAULT_PROPOSAL_CREATION_FEE 10000000
@@ -780,6 +781,9 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return;
     }
 
+    char assetNameStr[8] = { 0 };
+    assetNameToString(result.proposal.shareName, assetNameStr);
+
     char proposer[128] = {0};
     getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
@@ -789,7 +793,7 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %" PRIu64 "\nshareName: %" PRIu64 "\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, result.proposal.shareName, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %" PRIu64 "\nshareName: %s\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, assetNameStr, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");
