@@ -657,6 +657,18 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     return result;
 }
 
+std::vector<RespondActiveIPO> _getActiveIPOs(const char* nodeIp, int nodePort)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+    RequestResponseHeader header;
+    header.setSize(sizeof(header));
+    header.randomizeDejavu();
+    header.setType(RequestActiveIPOs::type());
+    qc->sendData((uint8_t*)&header, header.size());
+
+    return qc->getLatestVectorPacketAs<RespondActiveIPO>();
+}
+
 void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex)
 {
     RespondContractIPO status = _getIPOStatus(nodeIp, nodePort, contractIndex);
@@ -670,5 +682,21 @@ void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex)
 
             LOG("%s: %lld\n", identity, status.prices[i]);
         }
+    }
+}
+
+void printActiveIPOs(const char* nodeIp, int nodePort)
+{
+    std::vector<RespondActiveIPO> activeIPOs = _getActiveIPOs(nodeIp, nodePort);
+    if (activeIPOs.empty())
+    {
+        LOG("No active IPOs in this epoch.\n");
+        return;
+    }
+
+    LOG("Active IPOs in this epoch:\n");
+    for (const RespondActiveIPO& ipo : activeIPOs)
+    {
+        LOG("- contract index: %u, asset name: %s\n", ipo.contractIndex, ipo.assetName);
     }
 }
