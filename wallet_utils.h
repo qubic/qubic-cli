@@ -60,3 +60,4 @@ void makeIPOBid(const char* nodeIp, int nodePort,
                 uint16_t numberOfShare,
                 uint32_t scheduledTickOffset);
 void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex);
+void printActiveIPOs(const char* nodeIp, int nodePort);

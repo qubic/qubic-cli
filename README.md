@@ -104,6 +104,8 @@ Commands:
 		Participating IPO (dutch auction). valid seed and node ip/port, CONTRACT_INDEX are required.
 	-getipostatus <CONTRACT_INDEX>
 		View IPO status. valid node ip/port, CONTRACT_INDEX are required.
+	-getactiveipos
+		View list of active IPOs in this epoch. valid node ip/port are required.
 	-getsysteminfo
 		View Current System Status. Includes initial tick, random mining seed, epoch info.
 

@@ -281,6 +281,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printIPOStatus(g_nodeIp, g_nodePort, g_IPOContractIndex);
             break;
+        case GET_ACTIVE_IPOS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printActiveIPOs(g_nodeIp, g_nodePort);
+            break;
         case QUOTTERY_ISSUE_BET:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

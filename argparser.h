@@ -123,6 +123,8 @@ void print_help()
     printf("\t\tParticipating IPO (dutch auction). Valid seed and node ip/port, CONTRACT_INDEX are required.\n");
     printf("\t-getipostatus <CONTRACT_INDEX>\n");
     printf("\t\tView IPO status. valid node ip/port, CONTRACT_INDEX are required.\n");
+    printf("\t-getactiveipos>\n");
+    printf("\t\tView list of active IPOs in this epoch. valid node ip/port are required.\n");
     printf("\t-getsysteminfo\n");
     printf("\t\tView Current System Status. Includes initial tick, random mining seed, epoch info.\n");
 
@@ -979,6 +981,13 @@ void parseArgument(int argc, char** argv)
             g_cmd = GET_IPO_STATUS;
             g_IPOContractIndex = uint32_t(charToNumber(argv[i + 1]));
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-getactiveipos") == 0)
+        {
+            g_cmd = GET_ACTIVE_IPOS;
+            i++;
             CHECK_OVER_PARAMETERS
             break;
         }
