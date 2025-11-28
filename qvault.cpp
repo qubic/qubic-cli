@@ -15,6 +15,14 @@
 
 constexpr uint32_t QVAULT_MAX_URLS_COUNT = 256;
 
+// Proposal result constants
+constexpr uint8_t QVAULT_PROPOSAL_PASSED = 0;
+constexpr uint8_t QVAULT_PROPOSAL_REJECTED = 1;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_QUORUM = 2;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER = 3;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_QCAP = 4;
+constexpr uint8_t QVAULT_PROPOSAL_NOT_STARTED = 5;
+
 // QVAULT FUNCTIONS
 #define QVAULT_GETDATA 1
 #define QVAULT_GET_STAKED_AMOUNT_AND_VOTING_POWER 2
@@ -547,21 +555,29 @@ void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -595,25 +611,29 @@ void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nnewQuorumPercent: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.newQuorumPercent);
 
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 3)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("The proposal has been rejected due to another proposal with more yes vote!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -646,21 +666,29 @@ void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\ntotalWeight: %" PRIu64 "\nassignedFund: %" PRIu64 "\nipoContractIndex: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -693,21 +721,29 @@ void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfInvestPerEpoch: %" PRIu64 "\nassignedFundPerEpoch: %" PRIu64 "\nnumberOfEpoch: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -740,25 +776,29 @@ void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\npricePerOneQcap: %" PRIu64 "\namountOfQcap: %u\nrestSaleAmount: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 3)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("The proposal has been rejected due to overflow sale amount per year!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -794,25 +834,29 @@ void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %" PRIu64 "\nshareName: %s\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, assetNameStr, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 3)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("The proposal has been rejected due to overflow sale amount per year!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
@@ -845,25 +889,29 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
     }
 
     printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nreinvested: %u\ndistributed: %u\nburnQcap: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.reinvested, result.proposal.distributed, result.proposal.burnQcap);
-    if (result.proposal.result == 0)
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
     {
         printf("The proposal has been approved!\n");
     }
-    else if (result.proposal.result == 1)
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
     {
-        printf("The proposal has been rejected due to more no vote!\n");
+        printf("The proposal has been rejected!\n");
     }
-    else if (result.proposal.result == 2)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
     {
         printf("The proposal has been rejected due to insufficient Quorum!\n");
     }
-    else if (result.proposal.result == 3)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
     {
-        printf("The proposal has been rejected due to another proposal with more yes vote!\n");
+        printf("The proposal has been rejected due to insufficient voting power!\n");
     }
-    else if (result.proposal.result == 4)
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
     {
-        printf("Active proposal!\n");
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
     }
 }
 
