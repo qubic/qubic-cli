@@ -844,7 +844,7 @@ void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
         return ;
     }
 
-    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nreinvested: %u\ndistributed: %u\nteam: %u\nburnQcap: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.reinvested, result.proposal.distributed, result.proposal.team, result.proposal.burnQcap);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nreinvested: %u\ndistributed: %u\nburnQcap: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.reinvested, result.proposal.distributed, result.proposal.burnQcap);
     if (result.proposal.result == 0)
     {
         printf("The proposal has been approved!\n");

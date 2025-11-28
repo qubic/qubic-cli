@@ -101,7 +101,6 @@ struct AlloPInfo
     uint32_t currentQuorumPercent;
     uint32_t reinvested;
     uint32_t distributed;
-    uint32_t team;
     uint32_t burnQcap;
     uint8_t url[256];
     uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
@@ -176,6 +175,7 @@ struct QvaultGetGP_input
 struct QvaultGetGP_output
 {
     int32_t returnCode;
+    int32_t _padding;
     GPInfo proposal;
 
     static constexpr unsigned char type()
@@ -192,7 +192,9 @@ struct QvaultGetQCP_input
 struct QvaultGetQCP_output
 {
     int32_t returnCode;
+    int32_t _padding1;
     QCPInfo proposal;
+    int32_t _padding2;
 
     static constexpr unsigned char type()
     {
@@ -272,7 +274,9 @@ struct QvaultGetAlloP_input
 struct QvaultGetAlloP_output
 {
     int32_t returnCode;
+    int32_t _padding1;
     AlloPInfo proposal;
+    int32_t _padding2;
 
     static constexpr unsigned char type()
     {
