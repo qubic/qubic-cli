@@ -713,6 +713,20 @@ void getProposal(const char* nodeIp, int nodePort,
 	}
 }
 
+// Helper function to check if proposal is valid
+template <typename GetProposalType>
+bool isProposalValid(const GetProposalType& outProposal)
+{
+	return outProposal.proposal.type != 0;
+}
+
+// Helper function to get proposer public key
+template <typename GetProposalType>
+const uint8_t* getProposerPublicKey(const GetProposalType& outProposal)
+{
+	return outProposal.proposerPubicKey;
+}
+
 template <typename GetProposalType>
 void getAndPrintProposal(const char* nodeIp, int nodePort,
 	uint32_t contractIndex,
@@ -722,9 +736,9 @@ void getAndPrintProposal(const char* nodeIp, int nodePort,
 {
 	GetProposalType outProposal;
 	getProposal(nodeIp, nodePort, contractIndex, inputType, proposalIndex, outProposal, qcPtr);
-	if (outProposal.proposal.type != 0)
+	if (isProposalValid(outProposal))
 	{
-		printAndCheckProposal(outProposal.proposal, contractIndex, outProposal.proposerPubicKey, proposalIndex);
+		printAndCheckProposal(outProposal.proposal, contractIndex, getProposerPublicKey(outProposal), proposalIndex);
 	}
 	else
 	{
@@ -858,12 +872,12 @@ void getVotingResults(const char* nodeIp, int nodePort,
 	getProposal(nodeIp, nodePort,
 		contractIdx, getProposalInputType,
 		proposalIndex, outProposal, &qc);
-	if (!outProposal.proposal.type)
+	if (!isProposalValid(outProposal))
 	{
 		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
 		return;
 	}
-	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+	printAndCheckProposal(outProposal.proposal, contractIdx, getProposerPublicKey(outProposal), proposalIndex);
 
 	// Get voting results
 	struct GetVotingResults_input
@@ -1205,12 +1219,12 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 	getProposal(nodeIp, nodePort,
 		contractIdx, getProposalInputType,
 		proposalIndex, outProposal, &qc);
-	if (!outProposal.proposal.type)
+	if (!isProposalValid(outProposal))
 	{
 		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
 		return;
 	}
-	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+	printAndCheckProposal(outProposal.proposal, contractIdx, getProposerPublicKey(outProposal), proposalIndex);
 
 	// Check vote value vs proposal?
 	if (!forceSendingInvalidVote)
@@ -1445,6 +1459,33 @@ void ccfGetProposal(const char* nodeIp, int nodePort,
 	}
 }
 
+// Template specialization for CCF_GetProposal_output
+template <>
+void getProposal<CCF_GetProposal_output>(const char* nodeIp, int nodePort,
+	uint32_t contractIndex,
+	uint16_t inputType,
+	uint16_t proposalIndex,
+	CCF_GetProposal_output& outProposal,
+	QCPtr* qcPtr)
+{
+	// Use the CCF-specific function that handles subscription data
+	ccfGetProposal(nodeIp, nodePort, contractIndex, proposalIndex, nullptr, outProposal, qcPtr);
+}
+
+// Specialization for CCF_GetProposal_output - check okay field
+template <>
+bool isProposalValid<CCF_GetProposal_output>(const CCF_GetProposal_output& outProposal)
+{
+	return outProposal.okay && outProposal.proposal.type != 0;
+}
+
+// Specialization for CCF_GetProposal_output - use proposerPublicKey (correct spelling)
+template <>
+const uint8_t* getProposerPublicKey<CCF_GetProposal_output>(const CCF_GetProposal_output& outProposal)
+{
+	return outProposal.proposerPublicKey;
+}
+
 void ccfGetSubscription(const char* nodeIp, int nodePort, const char* subscriptionDestination)
 {
 	if (!subscriptionDestination)
@@ -1591,7 +1632,7 @@ void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndex
 
 void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString)
 {
-	getVotingResults<GetProposal_output<ProposalDataYesNo>, GetVotingResults_output>(
+	getVotingResults<CCF_GetProposal_output, GetVotingResults_output>(
 		nodeIp, nodePort, proposalIndexString,
 		CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_FUNC_GET_VOTING_RESULT);
 }
@@ -1608,7 +1649,7 @@ void ccfVote(const char* nodeIp, int nodePort, const char* seed,
 	uint32_t scheduledTickOffset,
 	bool forceSendingInvalidVote)
 {
-	castVote<GetProposal_output<ProposalDataYesNo>, ProposalSingleVoteDataV1>(
+	castVote<CCF_GetProposal_output, ProposalSingleVoteDataV1>(
 		nodeIp, nodePort, seed, proposalIndexString, voteValueString, scheduledTickOffset, forceSendingInvalidVote,
 		CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_PROC_VOTE);
 }
