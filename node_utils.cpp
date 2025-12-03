@@ -528,7 +528,7 @@ bool compareVote(const Tick&A, const Tick&B, bool compareExpectedNextTickDigest)
     bool sameExpectedNextTickDigest = true;
     if (compareExpectedNextTickDigest)
     {
-        sameExpectedNextTickDigest = memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32);
+        sameExpectedNextTickDigest = memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32) == 0;
     }
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
            (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
@@ -739,11 +739,11 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
     }
     std::vector<Tick> uniqueVote, uniqueVoteNext;
     std::vector<std::vector<int>> voteIndices, voteIndicesNext;
-    getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N, false, false);
+    getUniqueVotes(votes_next, uniqueVoteNext, voteIndicesNext, N, false /*verifySalt*/, false /*Compare expected next digest*/);
     if (votes_next.size() < 451)
     {
         printf("Failed to get votes for tick %d, this will not perform salt check\n", requestedTick+1);
-        getUniqueVotes(votes, uniqueVote, voteIndices, N, false, false);
+        getUniqueVotes(votes, uniqueVote, voteIndices, N, false /*verifySalt*/, true /*Compare expected next digest*/);
     }
     else
     {
@@ -769,7 +769,7 @@ void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTic
         else
         {
             LOG("WARNING: No quorum on tick %u (maximum aligned vote: %d). Skip salt check...\n", requestedTick + 1, int(voteIndicesNext[max_id].size()));
-            getUniqueVotes(votes, uniqueVote, voteIndices, N, false, false);
+            getUniqueVotes(votes, uniqueVote, voteIndices, N, false /*verifySalt*/, true /*Compare expected next digest*/);
         }
     }
 
