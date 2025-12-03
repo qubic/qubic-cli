@@ -35,6 +35,7 @@ enum COMMAND
     PRINT_QX_FEE,
     MAKE_IPO_BID,
     GET_IPO_STATUS,
+    GET_ACTIVE_IPOS,
     QUOTTERY_ISSUE_BET,
     QUOTTERY_JOIN_BET,
     QUOTTERY_GET_BET_INFO,
@@ -750,6 +751,26 @@ struct RespondContractIPO
     static constexpr unsigned char type()
     {
         return RESPOND_CONTRACT_IPO;
+    }
+};
+
+struct RequestActiveIPOs
+{
+    static constexpr unsigned char type()
+    {
+        return 64;
+    }
+};
+
+
+struct RespondActiveIPO
+{
+    unsigned int contractIndex;
+    char assetName[8];
+
+    static constexpr unsigned char type()
+    {
+        return 65;
     }
 };
 
