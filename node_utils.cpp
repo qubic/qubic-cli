@@ -525,6 +525,11 @@ static void dumpQuorumTick(const Tick& A, bool dumpComputorIndex = true)
 
 bool compareVote(const Tick&A, const Tick&B, bool compareExpectedNextTickDigest)
 {
+    bool sameExpectedNextTickDigest = true;
+    if (compareExpectedNextTickDigest)
+    {
+        sameExpectedNextTickDigest = memcmp(A.expectedNextTickTransactionDigest, B.expectedNextTickTransactionDigest, 32);
+    }
     return (A.epoch == B.epoch) && (A.tick == B.tick) &&
            (A.year == B.year) && (A.month == B.month) && (A.day == B.day) && (A.hour == B.hour) && (A.minute == B.minute) && (A.second == B.second) &&
            (A.millisecond == B.millisecond) &&
@@ -532,7 +537,8 @@ bool compareVote(const Tick&A, const Tick&B, bool compareExpectedNextTickDigest)
            (memcmp(A.prevSpectrumDigest, B.prevSpectrumDigest, 32) == 0) &&
            (memcmp(A.prevUniverseDigest, B.prevUniverseDigest, 32) == 0) &&
            (memcmp(A.prevComputerDigest, B.prevComputerDigest, 32) == 0) &&
-           (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0);
+           (memcmp(A.transactionDigest, B.transactionDigest, 32) == 0) &&
+            sameExpectedNextTickDigest;
 }
 
 bool verifyVoteWithSalt(const Tick&A,
