@@ -557,7 +557,7 @@ static uint32_t getContractIndex(const char* str, bool enableTestContracts)
 
             contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
         }
-        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || idx > contractCount)
+        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || (g_nodePort == DEFAULT_NODE_PORT && (idx > contractCount)))
         {
             LOG("Contract \"%s\" is unknown!\n", str);
             exit(1);
