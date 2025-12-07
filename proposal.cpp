@@ -1743,7 +1743,7 @@ void ccfGetRegularPayments(const char* nodeIp, int nodePort)
 	std::cout << "Latest regular subscription payments of CCF (most recent on top):\n";
 	for (int i = 127; i >= 0; --i)
 	{
-		int idx = (i + maxTickIdx) % 128;
+		int idx = (i + maxTickIdx + 1) % 128;
 		const CCF_RegularPaymentEntry& t = output.entries[idx];
 		if (!isZeroPubkey(t.destination))
 		{
