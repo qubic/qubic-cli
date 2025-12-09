@@ -644,9 +644,9 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p, Subscrip
 	{
 		subscriptionParams->isSubscription = true;
 		unsigned int weeksPerPeriodInt;
-		if (sscanf(weeksPerPeriodStr.c_str(), "%u", &weeksPerPeriodInt) != 1 || weeksPerPeriodInt == 0 || weeksPerPeriodInt > 255)
+		if (sscanf(weeksPerPeriodStr.c_str(), "%u", &weeksPerPeriodInt) != 1 || weeksPerPeriodInt > 255)
 		{
-			std::cout << "ERROR: WEEKS_PER_PERIOD must be a positive integer between 1 and 255!" << std::endl;
+			std::cout << "ERROR: WEEKS_PER_PERIOD must be a positive integer between 0 and 255!" << std::endl;
 			return false;
 		}
 		subscriptionParams->weeksPerPeriod = (uint8_t)weeksPerPeriodInt;
@@ -655,7 +655,7 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p, Subscrip
 			std::cout << "ERROR: START_EPOCH must be a positive integer!" << std::endl;
 			return false;
 		}
-		if (sscanf(numberOfPeriodsStr.c_str(), "%u", &subscriptionParams->numberOfPeriods) != 1 || subscriptionParams->numberOfPeriods == 0)
+		if (sscanf(numberOfPeriodsStr.c_str(), "%u", &subscriptionParams->numberOfPeriods) != 1)
 		{
 			std::cout << "ERROR: NUMBER_OF_PERIODS must be a positive integer!" << std::endl;
 			return false;
