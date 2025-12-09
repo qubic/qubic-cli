@@ -1683,7 +1683,7 @@ void ccfGetLatestTransfers(const char* nodeIp, int nodePort)
 	int maxTickIdx = 0;
 	for (int i = 0; i < numEntries; ++i)
 	{
-		if (output->tab[i].tick > maxTick)
+		if (output->tab[i].tick >= maxTick)
 		{
 			maxTick = output->tab[i].tick;
 			maxTickIdx = i;
