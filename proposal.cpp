@@ -1544,22 +1544,6 @@ void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndex
 				std::cout << "\tamountPerPeriod = " << outProposal.subscriptionProposal.amountPerPeriod << std::endl;
 				std::cout << "\tstartEpoch = " << outProposal.subscriptionProposal.startEpoch << std::endl;
 			}
-			
-			// Print active subscription data if available
-			if (outProposal.hasActiveSubscription)
-			{
-				std::cout << "\nActive Subscription Data:" << std::endl;
-				char dstIdentity[128] = { 0 };
-				bool isLowerCase = false;
-				getIdentityFromPublicKey(outProposal.subscription.destination, dstIdentity, isLowerCase);
-				std::cout << "\tdestination = " << dstIdentity << std::endl;
-				std::cout << "\turl = " << outProposal.subscription.url << std::endl;
-				std::cout << "\tweeksPerPeriod = " << (int)outProposal.subscription.weeksPerPeriod << std::endl;
-				std::cout << "\tnumberOfPeriods = " << outProposal.subscription.numberOfPeriods << std::endl;
-				std::cout << "\tamountPerPeriod = " << outProposal.subscription.amountPerPeriod << std::endl;
-				std::cout << "\tstartEpoch = " << outProposal.subscription.startEpoch << std::endl;
-				std::cout << "\tcurrentPeriod = " << outProposal.subscription.currentPeriod << std::endl;
-			}
 		}
 		else
 		{
@@ -1608,22 +1592,6 @@ void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndex
 					std::cout << "\tnumberOfPeriods = " << outProposal.subscriptionProposal.numberOfPeriods << std::endl;
 					std::cout << "\tamountPerPeriod = " << outProposal.subscriptionProposal.amountPerPeriod << std::endl;
 					std::cout << "\tstartEpoch = " << outProposal.subscriptionProposal.startEpoch << std::endl;
-				}
-				
-				// Print active subscription data if available
-				if (outProposal.hasActiveSubscription)
-				{
-					std::cout << "\nActive Subscription Data:" << std::endl;
-					char dstIdentity[128] = { 0 };
-					bool isLowerCase = false;
-					getIdentityFromPublicKey(outProposal.subscription.destination, dstIdentity, isLowerCase);
-					std::cout << "\tdestination = " << dstIdentity << std::endl;
-					std::cout << "\turl = " << outProposal.subscription.url << std::endl;
-					std::cout << "\tweeksPerPeriod = " << (int)outProposal.subscription.weeksPerPeriod << std::endl;
-					std::cout << "\tnumberOfPeriods = " << outProposal.subscription.numberOfPeriods << std::endl;
-					std::cout << "\tamountPerPeriod = " << outProposal.subscription.amountPerPeriod << std::endl;
-					std::cout << "\tstartEpoch = " << outProposal.subscription.startEpoch << std::endl;
-					std::cout << "\tcurrentPeriod = " << outProposal.subscription.currentPeriod << std::endl;
 				}
 			}
 		}
