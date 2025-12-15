@@ -220,6 +220,7 @@ Commands:
 		Set proposal in computor controlled fund (CCF) contract. May overwrite existing proposal, because each seed can have only one proposal at a time. Costs a fee.
 		<PROPOSAL_STRING> is explained if there is a parsing error. Only "Transfer|2" (yes/no transfer proposals) are allowed in CCF.
 		For subscription proposals, append subscription parameters to PROPOSAL_STRING: |<WEEKS_PER_PERIOD>|<START_EPOCH>|<NUMBER_OF_PERIODS>. The AMOUNT in the transfer proposal is used as AMOUNT_PER_PERIOD.
+		To cancel the active subscription, <AMOUNT> or <WEEKS_PER_PERIOD> or <NUMBER_OF_PERIODS> should be zero.
 	-ccfclearproposal
 		Clear own proposal in CCF contract. Costs a fee.
 	-ccfgetproposals <PROPOSAL_INDEX_OR_GROUP>
