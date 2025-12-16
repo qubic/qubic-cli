@@ -292,8 +292,8 @@ int QubicConnection::sendData(uint8_t* buffer, int sz)
         printBytes(buffer + 8, sz - 8, printType);
 
         // this operation may break the normal flow, we need to skip printing error messages to console
-        std::freopen("/dev/null", "w", stdout);
-        std::freopen("/dev/null", "w", stderr);
+        (void)std::freopen("/dev/null", "w", stdout);
+        (void)std::freopen("/dev/null", "w", stderr);
         return 0;
     } else {
         int size = sz;
