@@ -4,6 +4,11 @@
 #include <string>
 #include <vector>
 
+extern char* g_printToScreen;
+
+static const char B64_TABLE[] =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
 static void byteToHex(const uint8_t* byte, char* hex, const int sizeInByte)
 {
     for (int i = 0; i < sizeInByte; i++)
@@ -95,4 +100,71 @@ static std::string unwrapString(const std::string& str, char wrapperCharFront, c
         return str.substr(1, str.size() - 2);
     }
     return str;
+}
+
+static inline std::string base64_encode(const std::vector<uint8_t> &in) {
+    std::string out;
+    int val = 0, valb = -6;
+
+    for (uint8_t c : in) {
+        val = (val << 8) + c;
+        valb += 8;
+        while (valb >= 0) {
+            out.push_back(B64_TABLE[(val >> valb) & 0x3F]);
+            valb -= 6;
+        }
+    }
+    if (valb > -6)
+        out.push_back(B64_TABLE[((val << 8) >> (valb + 8)) & 0x3F]);
+
+    while (out.size() % 4)
+        out.push_back('=');
+
+    return out;
+}
+
+static std::string base64_encode(uint8_t *data, size_t length) {
+    return base64_encode(std::vector<uint8_t>(data, data + length));
+}
+
+static std::vector<uint8_t> base64_decode(const std::string &in) {
+    static int T[256];
+    static bool init = false;
+
+    if (!init) {
+        for (int i = 0; i < 256; i++) T[i] = -1;
+        for (int i = 0; i < 64; i++) T[(unsigned char)B64_TABLE[i]] = i;
+        init = true;
+    }
+
+    std::vector<uint8_t> out;
+    int val = 0, valb = -8;
+
+    for (unsigned char c : in) {
+        if (T[c] == -1) continue;
+        val = (val << 6) + T[c];
+        valb += 6;
+
+        if (valb >= 0) {
+            out.push_back(uint8_t((val >> valb) & 0xFF));
+            valb -= 8;
+        }
+    }
+
+    return out;
+}
+
+static void printBytes(uint8_t* data, size_t length, std::string type = "base64") {\
+    printf("---------------- %s ----------------\n", type.c_str());
+   if (type == "base64") {
+       std::string encoded = base64_encode(data, length);
+       printf("%s\n", encoded.c_str());
+    } else if (type == "hex") {
+         for (size_t i = 0; i < length; i++) {
+              printf("%02x", data[i]);
+         }
+         printf("\n");
+    } else {
+         printf("Unsupported print type: %s\n", type.c_str());
+    }
 }

@@ -26,7 +26,8 @@ Basic config:
 		Do action although an error has been detected. Currently only implemented for proposals.
 	-enabletestcontracts
 		Enable test contract indices and names for commands using a contract index parameter. This flag has to be passed before the contract index/name. The node to connect to needs to have test contracts running.
-
+	-print-only <base64 | hex>
+        Print the raw transaction data without sending it to the network. Useful for offline signing or broadcasting later.
 Commands:
 
 [WALLET COMMANDS]

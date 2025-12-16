@@ -43,6 +43,8 @@ void print_help()
     printf("\t\tDo action although an error has been detected. Currently only implemented for proposals.\n");
     printf("\t-enabletestcontracts\n");
     printf("\t\tEnable test contract indices and names for commands using a contract index parameter. This flag has to be passed before the contract index/name. The node to connect to needs to have test contracts running.\n");
+    printf("\t-print-only <base64 | hex>\n");
+    printf("\t\tPrint the raw transaction data without sending it to the network. Useful for offline signing or broadcasting later.\n");
 
     printf("\nCommands:\n");
     printf("\n[WALLET COMMANDS]\n");
@@ -694,6 +696,13 @@ void parseArgument(int argc, char** argv)
         {
             g_enableTestContracts = true;
             ++i;
+            continue;
+        }
+        if (strcmp(argv[i], "-print-only") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1);
+            g_printToScreen = argv[i+1];
+            i+=2;
             continue;
         }
 
