@@ -35,3 +35,4 @@ void syncTime(const char* nodeIp, const int nodePort, const char* seed);
 void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);
 void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg);
 void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed);
+void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const char* seed, unsigned long long multiplierNumerator, unsigned long long multiplierDenominator);

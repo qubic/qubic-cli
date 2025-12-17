@@ -2210,3 +2210,57 @@ void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed)
         LOG("Failed to trigger saving snapshot\n");
     }
 }
+
+void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const char* seed, unsigned long long multiplierNumerator, unsigned long long multiplierDenominator)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommandSetExecutionFeeMultiplierRequestAndResponse cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_SET_EXECUTION_FEE_MULTIPLIER) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    packet.cmd.multiplierNumerator = multiplierNumerator;
+    packet.cmd.multiplierDenominator = multiplierDenominator;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+        sizeof(packet.cmd),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    SpecialCommandSetExecutionFeeMultiplierRequestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandSetExecutionFeeMultiplierRequestAndResponse>();
+    }
+    catch (std::logic_error)
+    {
+        memset(&response, 0, sizeof(SpecialCommandSetExecutionFeeMultiplierRequestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        LOG("Successfully set execution fee multiplier\n");
+    }
+    else
+    {
+        LOG("Failed to set execution fee multiplier\n");
+    }
+}

@@ -138,6 +138,8 @@ Commands:
 		Set console logging mode: 0 disabled, 1 low computational cost, 2 full logging. Valid seed and node ip/port are required.
 	-savesnapshot
 		Remotely trigger saving snapshot, valid seed and node ip/port are required.
+	-setexecutionfeemultiplier <NUMERATOR> <DENOMINATOR>
+		Set the multiplier for the conversion of raw execution time to contract execution fees to ( NUMERATOR / DENOMINATOR ), valid seed and node ip/port are required.
 
 [SMART CONTRACT COMMANDS]
     -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>

@@ -204,6 +204,7 @@ enum COMMAND
     SHAREHOLDER_VOTE,
     SHAREHOLDER_GET_VOTE,
     SHAREHOLDER_GET_VOTING_RESULTS,
+    SET_EXECUTION_FEE_MULTIPLIER,
     TOTAL_COMMAND // DO NOT CHANGE THIS
 };
 
@@ -864,6 +865,18 @@ struct SpecialCommandSaveSnapshotRequestAndResponse
     unsigned char status;
     unsigned char padding[3];
     
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+
+struct SpecialCommandSetExecutionFeeMultiplierRequestAndResponse
+{
+    unsigned long long everIncreasingNonceAndCommandType;
+    unsigned long long multiplierNumerator;
+    unsigned long long multiplierDenominator;
+
     static constexpr unsigned char type()
     {
         return 255;
