@@ -1277,6 +1277,13 @@ static void table_lookup_fixed_base(point_precomp_t P, unsigned int digit, unsig
     }
 }
 
+// MSVC (VC2022 17.14 specifically) does not strictly preserve left-to-right evaluation order.
+// So turn off the optimization for 2 functions
+// - multiply
+// - Montgomery_multiply_mod_order
+#ifdef _MSC_VER
+#pragma optimize( "", off ) 
+#endif
 static void multiply(const unsigned long long* a, const unsigned long long* b, unsigned long long* c)
 {
     unsigned long long u, v, uv;
@@ -1342,6 +1349,10 @@ static void Montgomery_multiply_mod_order(const unsigned long long* ma, const un
         _addcarry_u64(_addcarry_u64(_addcarry_u64(_addcarry_u64(0, mc[0], CURVE_ORDER_0, &mc[0]), mc[1], CURVE_ORDER_1, &mc[1]), mc[2], CURVE_ORDER_2, &mc[2]), mc[3], CURVE_ORDER_3, &mc[3]);
     }
 }
+
+#ifdef _MSC_VER
+#pragma optimize( "", on ) 
+#endif
 
 static void eccnorm(point_extproj_t P, point_t Q)
 { // Normalize a projective point (X1:Y1:Z1), including full reduction
