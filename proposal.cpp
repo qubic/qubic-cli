@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cinttypes>
+#include <vector>
 
 #include "proposal.h"
 #include "wallet_utils.h"
@@ -30,6 +31,7 @@
 #define CCF_FUNC_GET_VOTING_RESULT 4
 #define CCF_FUNC_GET_LATEST_TRANSFERS 5
 #define CCF_FUNC_GET_PROPOSAL_FEE 6
+#define CCF_FUNC_GET_REGULAR_PAYMENTS 7
 
 #define CCF_PROC_SET_PROPOSAL 1
 #define CCF_PROC_VOTE 2
@@ -415,9 +417,18 @@ void printSetProposalHelp()
 #endif
 
 
-bool parseProposalString(const char* proposalString, ProposalDataV1& p)
+bool parseProposalString(const char* proposalString, ProposalDataV1& p, SubscriptionParams* subscriptionParams = nullptr)
 {
 	memset(&p, 0, sizeof(p));
+	if (subscriptionParams)
+	{
+		subscriptionParams->isSubscription = false;
+		subscriptionParams->weeksPerPeriod = 0;
+		subscriptionParams->startEpoch = 0;
+		subscriptionParams->numberOfPeriods = 0;
+		subscriptionParams->amountPerPeriod = 0;
+	}
+	
 	if (!proposalString)
 	{
 		printSetProposalHelp();
@@ -430,6 +441,15 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	std::string typeClassStr = strtok2string(writableProposalString, "|");
 	std::string proposalDataStr = strtok2string(NULL, "|");
 	std::string url = strtok2string(NULL, "|");
+	std::string weeksPerPeriodStr;
+	std::string startEpochStr;
+	std::string numberOfPeriodsStr;
+	if (subscriptionParams)
+	{
+		weeksPerPeriodStr = strtok2string(NULL, "|");
+		startEpochStr = strtok2string(NULL, "|");
+		numberOfPeriodsStr = strtok2string(NULL, "|");
+	}
 	free(writableProposalString);
 	writableProposalString = STRDUP(proposalDataStr.c_str());
 	std::string numberOptionStr = strtok2string(writableProposalString, ":");
@@ -618,6 +638,31 @@ bool parseProposalString(const char* proposalString, ProposalDataV1& p)
 	strcpy(p.url, url.c_str());
 	p.type = ProposalTypes::type(typeClass, typeOptions);
 	p.epoch = 1;
+	
+	// Parse optional subscription parameters (only for CCF proposals, all must be provided together)
+	if (subscriptionParams && !weeksPerPeriodStr.empty() && !startEpochStr.empty() && !numberOfPeriodsStr.empty())
+	{
+		subscriptionParams->isSubscription = true;
+		unsigned int weeksPerPeriodInt;
+		if (sscanf(weeksPerPeriodStr.c_str(), "%u", &weeksPerPeriodInt) != 1 || weeksPerPeriodInt > 255)
+		{
+			std::cout << "ERROR: WEEKS_PER_PERIOD must be a positive integer between 0 and 255!" << std::endl;
+			return false;
+		}
+		subscriptionParams->weeksPerPeriod = (uint8_t)weeksPerPeriodInt;
+		if (sscanf(startEpochStr.c_str(), "%u", &subscriptionParams->startEpoch) != 1)
+		{
+			std::cout << "ERROR: START_EPOCH must be a positive integer!" << std::endl;
+			return false;
+		}
+		if (sscanf(numberOfPeriodsStr.c_str(), "%u", &subscriptionParams->numberOfPeriods) != 1)
+		{
+			std::cout << "ERROR: NUMBER_OF_PERIODS must be a positive integer!" << std::endl;
+			return false;
+		}
+		// amountPerPeriod will be set from the transfer proposal amount in ccfSetProposal
+	}
+	
 	return true;
 }
 
@@ -668,6 +713,55 @@ void getProposal(const char* nodeIp, int nodePort,
 	}
 }
 
+// Helper function to check if proposal is valid
+template <typename GetProposalType>
+bool isProposalValid(const GetProposalType& outProposal)
+{
+	return outProposal.proposal.type != 0;
+}
+
+// Helper function to get proposer public key
+template <typename GetProposalType>
+const uint8_t* getProposerPublicKey(const GetProposalType& outProposal)
+{
+	return outProposal.proposerPubicKey;
+}
+
+// Forward declaration for CCF-specific function
+void ccfGetProposal(const char* nodeIp, int nodePort,
+	uint32_t contractIndex,
+	uint16_t proposalIndex,
+	const char* subscriptionDestination,
+	CCF_GetProposal_output& outProposal,
+	QCPtr* qcPtr);
+
+// Template specialization for CCF_GetProposal_output
+template <>
+void getProposal<CCF_GetProposal_output>(const char* nodeIp, int nodePort,
+	uint32_t contractIndex,
+	uint16_t inputType,
+	uint16_t proposalIndex,
+	CCF_GetProposal_output& outProposal,
+	QCPtr* qcPtr)
+{
+	// Use the CCF-specific function that handles subscription data
+	ccfGetProposal(nodeIp, nodePort, contractIndex, proposalIndex, nullptr, outProposal, qcPtr);
+}
+
+// Specialization for CCF_GetProposal_output - check okay field
+template <>
+bool isProposalValid<CCF_GetProposal_output>(const CCF_GetProposal_output& outProposal)
+{
+	return outProposal.okay && outProposal.proposal.type != 0;
+}
+
+// Specialization for CCF_GetProposal_output - use proposerPublicKey (correct spelling)
+template <>
+const uint8_t* getProposerPublicKey<CCF_GetProposal_output>(const CCF_GetProposal_output& outProposal)
+{
+	return outProposal.proposerPublicKey;
+}
+
 template <typename GetProposalType>
 void getAndPrintProposal(const char* nodeIp, int nodePort,
 	uint32_t contractIndex,
@@ -677,9 +771,9 @@ void getAndPrintProposal(const char* nodeIp, int nodePort,
 {
 	GetProposalType outProposal;
 	getProposal(nodeIp, nodePort, contractIndex, inputType, proposalIndex, outProposal, qcPtr);
-	if (outProposal.proposal.type != 0)
+	if (isProposalValid(outProposal))
 	{
-		printAndCheckProposal(outProposal.proposal, contractIndex, outProposal.proposerPubicKey, proposalIndex);
+		printAndCheckProposal(outProposal.proposal, contractIndex, getProposerPublicKey(outProposal), proposalIndex);
 	}
 	else
 	{
@@ -791,6 +885,21 @@ struct GetShareholderVotingResults_output
 };
 
 
+// Helper function to print subscription proposal data
+void printSubscriptionProposalData(const CCF_SubscriptionProposalData& subscriptionProposal)
+{
+	std::cout << "\nSubscription Proposal Data:" << std::endl;
+	char dstIdentity[128] = { 0 };
+	bool isLowerCase = false;
+	getIdentityFromPublicKey(subscriptionProposal.destination, dstIdentity, isLowerCase);
+	std::cout << "\tdestination = " << dstIdentity << std::endl;
+	std::cout << "\turl = " << subscriptionProposal.url << std::endl;
+	std::cout << "\tweeksPerPeriod = " << (int)subscriptionProposal.weeksPerPeriod << std::endl;
+	std::cout << "\tnumberOfPeriods = " << subscriptionProposal.numberOfPeriods << std::endl;
+	std::cout << "\tamountPerPeriod = " << subscriptionProposal.amountPerPeriod << std::endl;
+	std::cout << "\tstartEpoch = " << subscriptionProposal.startEpoch << std::endl;
+}
+
 template <typename GetProposalOutputType, typename GetResultsOutputType>
 void getVotingResults(const char* nodeIp, int nodePort,
 	const char* proposalIndexString, uint32_t contractIdx,
@@ -813,12 +922,12 @@ void getVotingResults(const char* nodeIp, int nodePort,
 	getProposal(nodeIp, nodePort,
 		contractIdx, getProposalInputType,
 		proposalIndex, outProposal, &qc);
-	if (!outProposal.proposal.type)
+	if (!isProposalValid(outProposal))
 	{
 		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
 		return;
 	}
-	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+	printAndCheckProposal(outProposal.proposal, contractIdx, getProposerPublicKey(outProposal), proposalIndex);
 
 	// Get voting results
 	struct GetVotingResults_input
@@ -826,6 +935,60 @@ void getVotingResults(const char* nodeIp, int nodePort,
 		uint16 proposalIndex;
 	} input;
 	GetResultsOutputType output;
+	input.proposalIndex = proposalIndex;
+
+	if (!runContractFunction(nodeIp, nodePort, contractIdx,
+		getVotingResultsInputType, &input, sizeof(input), &output, sizeof(output), &qc) || !output.results.totalVotesAuthorized)
+	{
+		std::cout << "ERROR: Didn't receive valid response from GetVotingResults!" << std::endl;
+		return;
+	}
+
+	printVotingResults(output.results, true);
+}
+
+// Specialization for CCF proposals to include subscription proposal information
+template <>
+void getVotingResults<CCF_GetProposal_output, GetVotingResults_output>(const char* nodeIp, int nodePort,
+	const char* proposalIndexString, uint32_t contractIdx,
+	uint16_t getProposalInputType, uint16_t getVotingResultsInputType)
+{
+	unsigned int proposalIndex;
+	if (sscanf(proposalIndexString, "%ui", &proposalIndex) != 1 || proposalIndex > 0xffffu)
+	{
+		std::cout << "ERROR: Proposal index must be positive integer up to 65535.\n"
+			<< "Got: " << proposalIndexString << std::endl;
+		return;
+	}
+
+	// Reuse connection
+	auto qc = make_qc(nodeIp, nodePort);
+
+	// Get proposal
+	std::cout << "Querying data of proposal " << proposalIndex << " ..." << std::endl;
+	CCF_GetProposal_output outProposal;
+	getProposal(nodeIp, nodePort,
+		contractIdx, getProposalInputType,
+		proposalIndex, outProposal, &qc);
+	if (!isProposalValid(outProposal))
+	{
+		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
+		return;
+	}
+	printAndCheckProposal(outProposal.proposal, contractIdx, getProposerPublicKey(outProposal), proposalIndex);
+
+	// Print subscription proposal data if available
+	if (outProposal.hasSubscriptionProposal)
+	{
+		printSubscriptionProposalData(outProposal.subscriptionProposal);
+	}
+
+	// Get voting results
+	struct GetVotingResults_input
+	{
+		uint16 proposalIndex;
+	} input;
+	GetVotingResults_output output;
 	input.proposalIndex = proposalIndex;
 
 	if (!runContractFunction(nodeIp, nodePort, contractIdx,
@@ -1160,12 +1323,12 @@ void castVote(const char* nodeIp, int nodePort, const char* seed,
 	getProposal(nodeIp, nodePort,
 		contractIdx, getProposalInputType,
 		proposalIndex, outProposal, &qc);
-	if (!outProposal.proposal.type)
+	if (!isProposalValid(outProposal))
 	{
 		std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
 		return;
 	}
-	printAndCheckProposal(outProposal.proposal, contractIdx, outProposal.proposerPubicKey, proposalIndex);
+	printAndCheckProposal(outProposal.proposal, contractIdx, getProposerPublicKey(outProposal), proposalIndex);
 
 	// Check vote value vs proposal?
 	if (!forceSendingInvalidVote)
@@ -1314,7 +1477,8 @@ void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
 
 	// Parse and check
 	ProposalDataV1 pv1;
-	bool proposalOkay = parseProposalString(proposalString, pv1) && printAndCheckProposal(pv1, CCF_CONTRACT_INDEX);
+	SubscriptionParams subscriptionParams;
+	bool proposalOkay = parseProposalString(proposalString, pv1, &subscriptionParams) && printAndCheckProposal(pv1, CCF_CONTRACT_INDEX);
 	if (pv1.type != ProposalTypes::TransferYesNo)
 	{
 		std::cout << "ERROR: Only Transfer|2 (TransferYesNo) is supported as proposal type by CCF contract!" << std::endl;
@@ -1327,14 +1491,35 @@ void ccfSetProposal(const char* nodeIp, int nodePort, const char* seed,
 	}
 
 	// Transfer data to yes/no proposal data structure
-	ProposalDataYesNo pyn;
-	convertProposalDataToYesNo(pv1, pyn);
+	CCF_SetProposal_input input;
+	memset(&input, 0, sizeof(input));
+	convertProposalDataToYesNo(pv1, input.proposal);
+	
+	// Set subscription fields from parsed proposal string
+	input.isSubscription = subscriptionParams.isSubscription;
+	input.weeksPerPeriod = subscriptionParams.weeksPerPeriod;
+	input.startEpoch = subscriptionParams.startEpoch;
+	input.numberOfPeriods = subscriptionParams.numberOfPeriods;
+	// Use the transfer amount as amountPerPeriod for subscription proposals
+	if (subscriptionParams.isSubscription)
+	{
+		input.amountPerPeriod = input.proposal.data.transfer.amount;
+	}
+	else
+	{
+		input.amountPerPeriod = 0;
+	}
 
 	// Send transaction
 	std::cout << "\nSending transaction to set your CCF proposal ..." << std::endl;
+	if (subscriptionParams.isSubscription)
+	{
+		std::cout << "Subscription proposal: " << (int)subscriptionParams.weeksPerPeriod << " weeks per period, " 
+			<< subscriptionParams.numberOfPeriods << " periods, " << input.amountPerPeriod << " qus per period, starting epoch " << subscriptionParams.startEpoch << std::endl;
+	}
 	makeContractTransaction(nodeIp, nodePort, seed,
 		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
-		sizeof(pyn), &pyn, scheduledTickOffset);
+		sizeof(input), &input, scheduledTickOffset);
 }
 
 void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
@@ -1344,24 +1529,137 @@ void ccfClearProposal(const char* nodeIp, int nodePort, const char* seed,
 	uint64_t fee = 1000000;
 
 	std::cout << "Sending transaction to clear your CCF proposal ..." << std::endl;
-	ProposalDataYesNo p;
-	memset(&p, 0, sizeof(p));
-	p.epoch = 0;	// epoch 0 clears proposal
+	CCF_SetProposal_input input;
+	memset(&input, 0, sizeof(input));
+	input.proposal.epoch = 0;	// epoch 0 clears proposal
+	input.isSubscription = true;	// set to true to clear subscription proposals as well
 	makeContractTransaction(nodeIp, nodePort, seed,
 		CCF_CONTRACT_INDEX, CCF_PROC_SET_PROPOSAL, fee,
-		sizeof(p), &p, scheduledTickOffset);
+		sizeof(input), &input, scheduledTickOffset);
+}
+
+// CCF-specific GetProposal function that handles subscription data
+void ccfGetProposal(const char* nodeIp, int nodePort,
+	uint32_t contractIndex,
+	uint16_t proposalIndex,
+	const char* subscriptionDestination,
+	CCF_GetProposal_output& outProposal,
+	QCPtr* qcPtr = nullptr)
+{
+	CCF_GetProposal_input input;
+	memset(&input, 0, sizeof(input));
+	input.proposalIndex = proposalIndex;
+	if (subscriptionDestination)
+	{
+		sanityCheckIdentity(subscriptionDestination);
+		getPublicKeyFromIdentity(subscriptionDestination, input.subscriptionDestination);
+	}
+
+	if (!runContractFunction(nodeIp, nodePort, contractIndex, CCF_FUNC_GET_PROPOSAL,
+		&input, sizeof(input), &outProposal, sizeof(outProposal),
+		qcPtr))
+	{
+		outProposal.okay = false;
+	}
+}
+
+void ccfGetSubscription(const char* nodeIp, int nodePort, const char* subscriptionDestination)
+{
+	if (!subscriptionDestination)
+	{
+		std::cout << "ERROR: Subscription destination is required!" << std::endl;
+		return;
+	}
+
+	// Use proposalIndex 0 to query, but the subscriptionDestination will be used to look up the active subscription
+	CCF_GetProposal_output outProposal;
+	ccfGetProposal(nodeIp, nodePort, CCF_CONTRACT_INDEX, 0, subscriptionDestination, outProposal);
+	
+	if (outProposal.hasActiveSubscription)
+	{
+		std::cout << "\nActive Subscription Data:" << std::endl;
+		char dstIdentity[128] = { 0 };
+		bool isLowerCase = false;
+		getIdentityFromPublicKey(outProposal.subscription.destination, dstIdentity, isLowerCase);
+		std::cout << "\tdestination = " << dstIdentity << std::endl;
+		std::cout << "\turl = " << outProposal.subscription.url << std::endl;
+		std::cout << "\tweeksPerPeriod = " << (int)outProposal.subscription.weeksPerPeriod << std::endl;
+		std::cout << "\tnumberOfPeriods = " << outProposal.subscription.numberOfPeriods << std::endl;
+		std::cout << "\tamountPerPeriod = " << outProposal.subscription.amountPerPeriod << std::endl;
+		std::cout << "\tstartEpoch = " << outProposal.subscription.startEpoch << std::endl;
+		std::cout << "\tcurrentPeriod = " << outProposal.subscription.currentPeriod << std::endl;
+	}
+	else
+	{
+		std::cout << "No active subscription found for destination: " << subscriptionDestination << std::endl;
+	}
 }
 
 void ccfGetProposals(const char* nodeIp, int nodePort, const char* proposalIndexString)
 {
-	getAndPrintProposalsCommand<GetProposal_output<ProposalDataYesNo>>(nodeIp, nodePort,
-		proposalIndexString, CCF_CONTRACT_INDEX,
-		CCF_FUNC_GET_PROPOSAL, CCF_FUNC_GET_PROPOSAL_INDICES);
+	unsigned int proposalIndex;
+	if (sscanf(proposalIndexString, "%ui", &proposalIndex) == 1 && proposalIndex <= 0xffffu)
+	{
+		// Print specific proposal
+		CCF_GetProposal_output outProposal;
+		ccfGetProposal(nodeIp, nodePort, CCF_CONTRACT_INDEX, proposalIndex, nullptr, outProposal);
+		if (outProposal.okay)
+		{
+			printAndCheckProposal(outProposal.proposal, CCF_CONTRACT_INDEX, outProposal.proposerPublicKey, proposalIndex);
+			
+			// Print subscription proposal data if available
+			if (outProposal.hasSubscriptionProposal)
+			{
+				printSubscriptionProposalData(outProposal.subscriptionProposal);
+			}
+		}
+		else
+		{
+			std::cout << "ERROR: Didn't receive valid proposal with index " << proposalIndex << "!" << std::endl;
+		}
+	}
+	else
+	{
+		// List all active or finished proposals
+		bool activeProposals = (strcmp(proposalIndexString, "active") == 0);
+		bool finisedProposals = (strcmp(proposalIndexString, "finished") == 0);
+		if (!activeProposals && !finisedProposals)
+		{
+			std::cout << "ERROR: Proposal index must be positive integer up to 65535, \"active\" or \"finished\".\n"
+				<< "Got: " << proposalIndexString << std::endl;
+			return;
+		}
+
+		// Reuse connection
+		auto qc = make_qc(nodeIp, nodePort);
+
+		// Get indices
+		std::vector<uint16_t> proposalIndices;
+		if (getProposalIndices(nodeIp, nodePort, CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL_INDICES, activeProposals, proposalIndices, &qc))
+			std::cout << "Received list of " << proposalIndices.size() << " proposals" << std::endl;
+
+		// Get and print all proposals
+		for (auto idx : proposalIndices)
+		{
+			CCF_GetProposal_output outProposal;
+			ccfGetProposal(nodeIp, nodePort, CCF_CONTRACT_INDEX, idx, nullptr, outProposal, &qc);
+			if (outProposal.okay)
+			{
+				printAndCheckProposal(outProposal.proposal, CCF_CONTRACT_INDEX, outProposal.proposerPublicKey, idx);
+				
+				// Print subscription proposal data if available
+				if (outProposal.hasSubscriptionProposal)
+				{
+					printSubscriptionProposalData(outProposal.subscriptionProposal);
+				}
+			}
+		}
+	}
 }
 
 void ccfGetVotingResults(const char* nodeIp, int nodePort, const char* proposalIndexString)
 {
-	getVotingResults<GetProposal_output<ProposalDataYesNo>, GetVotingResults_output>(
+	getVotingResults<CCF_GetProposal_output, GetVotingResults_output>(
 		nodeIp, nodePort, proposalIndexString,
 		CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_FUNC_GET_VOTING_RESULT);
 }
@@ -1378,7 +1676,7 @@ void ccfVote(const char* nodeIp, int nodePort, const char* seed,
 	uint32_t scheduledTickOffset,
 	bool forceSendingInvalidVote)
 {
-	castVote<GetProposal_output<ProposalDataYesNo>, ProposalSingleVoteDataV1>(
+	castVote<CCF_GetProposal_output, ProposalSingleVoteDataV1>(
 		nodeIp, nodePort, seed, proposalIndexString, voteValueString, scheduledTickOffset, forceSendingInvalidVote,
 		CCF_CONTRACT_INDEX, CCF_FUNC_GET_PROPOSAL, CCF_PROC_VOTE);
 }
@@ -1444,6 +1742,55 @@ void ccfGetLatestTransfers(const char* nodeIp, int nodePort)
 	}
 
 	delete output;
+}
+
+void ccfGetRegularPayments(const char* nodeIp, int nodePort)
+{
+	CCF_RegularPayments_output output;
+
+	if (!runContractFunction(nodeIp, nodePort, CCF_CONTRACT_INDEX,
+		CCF_FUNC_GET_REGULAR_PAYMENTS, nullptr, 0, &output, sizeof(output)))
+	{
+		std::cout << "ERROR: Didn't receive response from GetRegularPayments!" << std::endl;
+		return;
+	}
+
+	// Find highest tick to start output with
+	uint32 maxTick = 0;
+	int maxTickIdx = 0;
+	for (int i = 0; i < 128; ++i)
+	{
+		if (output.entries[i].tick >= maxTick)
+		{
+			maxTick = output.entries[i].tick;
+			maxTickIdx = i;
+		}
+	}
+
+	std::cout << "Latest regular subscription payments of CCF (most recent on top):\n";
+	for (int i = 127; i >= 0; --i)
+	{
+		int idx = (i + maxTickIdx + 1) % 128;
+		const CCF_RegularPaymentEntry& t = output.entries[idx];
+		if (!isZeroPubkey(t.destination))
+		{
+			char identity[100] = { 0 };
+			getIdentityFromPublicKey(t.destination, identity, false);
+			std::cout << " - subscription ";
+			for (int j = 0; j < 256 && t.url[j]; ++j)
+				std::cout << t.url[j];
+			std::cout << "\n";
+			std::cout << "   " << t.amount << " qus to " << identity;
+			uint64_t* dstU64 = (uint64_t*)t.destination;
+			if (dstU64[1] == 0 && dstU64[2] == 0 && dstU64[3] == 0)
+				std::cout << " (contract " << dstU64[0] << ")";
+			std::cout << " (period " << t.periodIndex << ")";
+			if (t.success)
+				std::cout << "\n   transfered in tick " << t.tick << std::endl;
+			else
+				std::cout << "\n   not transfered due to insufficient funds in CCF (in tick " << t.tick << ")" << std::endl;
+		}
+	}
 }
 
 /*
