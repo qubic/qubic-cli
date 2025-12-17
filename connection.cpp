@@ -285,18 +285,30 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
 
 int QubicConnection::sendData(uint8_t* buffer, int sz)
 {
-    int size = sz;
-    int numberOfBytes;
-    while (size) 
-    {
-        if ((numberOfBytes = send(mSocket, (char*)buffer, size, 0)) <= 0) 
+    // also skip printing packets of size 8 (typically used during the preparation step, not the final stage)
+    if (!std::string(g_printToScreen).empty() && sz != 8) {
+        std::string printType = g_printToScreen;
+        // Do not print the first 8 bytes (header)
+        printBytes(buffer + 8, sz - 8, printType);
+
+        // this operation may break the normal flow, we need to skip printing error messages to console
+        if (!std::freopen("/dev/null", "w", stdout)) {}
+        if (!std::freopen("/dev/null", "w", stderr)) {}
+        return 0;
+    } else {
+        int size = sz;
+        int numberOfBytes;
+        while (size)
         {
-            return 0;
+            if ((numberOfBytes = send(mSocket, (char*)buffer, size, 0)) <= 0)
+            {
+                return 0;
+            }
+            buffer += numberOfBytes;
+            size -= numberOfBytes;
         }
-        buffer += numberOfBytes;
-        size -= numberOfBytes;
+        return sz - size;
     }
-	return sz - size;
 }
 
 template SpecialCommand QubicConnection::receivePacketWithHeaderAs<SpecialCommand>();

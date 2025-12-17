@@ -265,6 +265,9 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            const uint8_t* extraData,
                            uint32_t scheduledTickOffset)
 {
+    if (extraDataSize < 0)
+        throw std::invalid_argument("extraDataSize < 0");
+
     auto qc = make_qc(nodeIp, nodePort);
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
