@@ -345,6 +345,7 @@ bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool pr
             if (printTxReceipt)
             {
                 // check for moneyflew status
+                qc->resolveConnection();
                 int moneyFlew = getMoneyFlewStatus(qc, txHash, requestedTick);
                 printReceipt(txs->at(i), txHash, extraData->at(i).vecU8.data(), moneyFlew);
             }
