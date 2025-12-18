@@ -205,6 +205,7 @@ enum COMMAND
     SHAREHOLDER_GET_VOTE,
     SHAREHOLDER_GET_VOTING_RESULTS,
     SET_EXECUTION_FEE_MULTIPLIER,
+    GET_EXECUTION_FEE_MULTIPLIER,
     TOTAL_COMMAND // DO NOT CHANGE THIS
 };
 
@@ -871,7 +872,8 @@ struct SpecialCommandSaveSnapshotRequestAndResponse
     }
 };
 
-struct SpecialCommandSetExecutionFeeMultiplierRequestAndResponse
+// This struct is used as response for the get command and as request and response for the set command.
+struct SpecialCommandExecutionFeeMultiplierRequestAndResponse
 {
     unsigned long long everIncreasingNonceAndCommandType;
     unsigned long long multiplierNumerator;

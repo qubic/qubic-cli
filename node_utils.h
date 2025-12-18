@@ -36,3 +36,4 @@ void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, ch
 void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg);
 void saveSnapshot(const char* nodeIp, const int nodePort, const char* seed);
 void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const char* seed, unsigned long long multiplierNumerator, unsigned long long multiplierDenominator);
+void getExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const char* seed);

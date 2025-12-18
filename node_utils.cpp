@@ -2221,7 +2221,7 @@ void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const cha
 
     struct {
         RequestResponseHeader header;
-        SpecialCommandSetExecutionFeeMultiplierRequestAndResponse cmd;
+        SpecialCommandExecutionFeeMultiplierRequestAndResponse cmd;
         uint8_t signature[64];
     } packet;
     packet.header.setSize(sizeof(packet));
@@ -2245,14 +2245,14 @@ void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const cha
     auto qc = make_qc(nodeIp, nodePort);
     qc->sendData((uint8_t*)&packet, packet.header.size());
 
-    SpecialCommandSetExecutionFeeMultiplierRequestAndResponse response;
+    SpecialCommandExecutionFeeMultiplierRequestAndResponse response;
     try
     {
-        response = qc->receivePacketWithHeaderAs<SpecialCommandSetExecutionFeeMultiplierRequestAndResponse>();
+        response = qc->receivePacketWithHeaderAs<SpecialCommandExecutionFeeMultiplierRequestAndResponse>();
     }
     catch (std::logic_error)
     {
-        memset(&response, 0, sizeof(SpecialCommandSetExecutionFeeMultiplierRequestAndResponse));
+        memset(&response, 0, sizeof(SpecialCommandExecutionFeeMultiplierRequestAndResponse));
     }
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
@@ -2262,5 +2262,59 @@ void setExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const cha
     else
     {
         LOG("Failed to set execution fee multiplier\n");
+    }
+}
+
+void getExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const char* seed)
+{
+    uint8_t privateKey[32] = { 0 };
+    uint8_t sourcePublicKey[32] = { 0 };
+    uint8_t subseed[32] = { 0 };
+    uint8_t digest[32] = { 0 };
+    uint8_t signature[64] = { 0 };
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommand cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_GET_EXECUTION_FEE_MULTIPLIER) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+        sizeof(packet.cmd),
+        digest,
+        32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    auto qc = make_qc(nodeIp, nodePort);
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    SpecialCommandExecutionFeeMultiplierRequestAndResponse response;
+    try
+    {
+        response = qc->receivePacketWithHeaderAs<SpecialCommandExecutionFeeMultiplierRequestAndResponse>();
+    }
+    catch (std::logic_error)
+    {
+        memset(&response, 0, sizeof(SpecialCommandExecutionFeeMultiplierRequestAndResponse));
+    }
+
+    if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
+    {
+        LOG("Execution fee multiplier is currently set to:\n");
+        LOG("- Numerator: %" PRIu64 "\n", response.multiplierNumerator);
+        LOG("- Denominator: %" PRIu64 "\n", response.multiplierDenominator);
+    }
+    else
+    {
+        LOG("Failed to get execution fee multiplier\n");
     }
 }
