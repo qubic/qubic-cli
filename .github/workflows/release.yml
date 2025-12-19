@@ -11,28 +11,24 @@ jobs:
   build-and-release:
     runs-on: ${{ matrix.os }}
     permissions:
-      contents: write # Required to create releases
+      contents: write
 
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        cpp_compiler: [g++, clang++, cl]
         include:
           - os: windows-latest
+            build_type: Release
             cpp_compiler: cl
+            artifact_suffix: "Windows-MSVC.exe" # Unique suffix for Windows
           - os: ubuntu-latest
+            build_type: Release
             cpp_compiler: g++
+            artifact_suffix: "Linux-GCC"        # Unique suffix for GCC
           - os: ubuntu-latest
+            build_type: Release
             cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            cpp_compiler: g++
-          - os: windows-latest
-            cpp_compiler: clang++
-          - os: ubuntu-latest
-            cpp_compiler: cl
+            artifact_suffix: "Linux-Clang"      # Unique suffix for Clang
 
     steps:
       - uses: actions/checkout@v4
@@ -53,25 +49,29 @@ jobs:
       - name: Build
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
-      # Locate the binary file
-      - name: Locate Binary
-        id: locate-binary
+      - name: Rename and Move Binary
         shell: bash
         run: |
+          # define the desired final name
+          NEW_NAME="${{ env.EXECUTABLE_NAME }}-${{ matrix.artifact_suffix }}"
+          
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            echo "binary_path=${{ steps.strings.outputs.build-output-dir }}/Release/${{ env.EXECUTABLE_NAME }}.exe" >> $GITHUB_OUTPUT
+            # On Windows, binary is in Release/ folder
+            # We use wildcard (*) to avoid backslash/path issues in bash
+            mv ${{ steps.strings.outputs.build-output-dir }}/Release/*.exe ./$NEW_NAME
           else
-            echo "binary_path=${{ steps.strings.outputs.build-output-dir }}/${{ env.EXECUTABLE_NAME }}" >> $GITHUB_OUTPUT
+            # On Linux, binary is in build root
+            mv ${{ steps.strings.outputs.build-output-dir }}/${{ env.EXECUTABLE_NAME }} ./$NEW_NAME
           fi
+          
+          echo "Renamed binary to: $NEW_NAME"
 
-      # Create/Update Release and Upload Binary
+      # Upload the renamed file from the current directory
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          # This will append the binary from the current matrix job to the release
-          files: ${{ steps.locate-binary.outputs.binary_path }}
-          # This is where your disclaimer goes:
+          files: ${{ env.EXECUTABLE_NAME }}-${{ matrix.artifact_suffix }}
           body: |
             ## Automated Build
             **Precaution:** These binaries are compiled by github workflow. It's recommended that you should download the source code and compile it yourself.
