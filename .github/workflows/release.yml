@@ -1,0 +1,79 @@
+name: Release Build
+
+on:
+  push:
+    tags: ["*"]
+
+env:
+  EXECUTABLE_NAME: "qubic-cli"
+
+jobs:
+  build-and-release:
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # Required to create releases
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        build_type: [Release]
+        cpp_compiler: [g++, clang++, cl]
+        include:
+          - os: windows-latest
+            cpp_compiler: cl
+          - os: ubuntu-latest
+            cpp_compiler: g++
+          - os: ubuntu-latest
+            cpp_compiler: clang++
+        exclude:
+          - os: windows-latest
+            cpp_compiler: g++
+          - os: windows-latest
+            cpp_compiler: clang++
+          - os: ubuntu-latest
+            cpp_compiler: cl
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set reusable strings
+        id: strings
+        shell: bash
+        run: |
+          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
+
+      - name: Configure CMake
+        run: >
+          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          -S ${{ github.workspace }}
+
+      - name: Build
+        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+
+      # Locate the binary file
+      - name: Locate Binary
+        id: locate-binary
+        shell: bash
+        run: |
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            echo "binary_path=${{ steps.strings.outputs.build-output-dir }}/Release/${{ env.EXECUTABLE_NAME }}.exe" >> $GITHUB_OUTPUT
+          else
+            echo "binary_path=${{ steps.strings.outputs.build-output-dir }}/${{ env.EXECUTABLE_NAME }}" >> $GITHUB_OUTPUT
+          fi
+
+      # Create/Update Release and Upload Binary
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          # This will append the binary from the current matrix job to the release
+          files: ${{ steps.locate-binary.outputs.binary_path }}
+          # This is where your disclaimer goes:
+          body: |
+            ## Automated Build
+            **Precaution:** These binaries are compiled by github workflow. It's recommended that you should download the source code and compile it yourself.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
