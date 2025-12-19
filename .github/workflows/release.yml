@@ -20,53 +20,40 @@ jobs:
           - os: windows-latest
             build_type: Release
             cpp_compiler: cl
-            artifact_suffix: "Windows-MSVC.exe" # Unique suffix for Windows
+            artifact_suffix: "Windows-MSVC.exe"
           - os: ubuntu-latest
             build_type: Release
             cpp_compiler: g++
-            artifact_suffix: "Linux-GCC"        # Unique suffix for GCC
+            artifact_suffix: "Linux-GCC"
           - os: ubuntu-latest
             build_type: Release
             cpp_compiler: clang++
-            artifact_suffix: "Linux-Clang"      # Unique suffix for Clang
+            artifact_suffix: "Linux-Clang"
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
       - name: Configure CMake
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
+          cmake -B build
           -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          -S ${{ github.workspace }}
+          -S .
 
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+        run: cmake --build build --config ${{ matrix.build_type }}
 
       - name: Rename and Move Binary
         shell: bash
         run: |
-          # define the desired final name
           NEW_NAME="${{ env.EXECUTABLE_NAME }}-${{ matrix.artifact_suffix }}"
           
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            # On Windows, binary is in Release/ folder
-            # We use wildcard (*) to avoid backslash/path issues in bash
-            mv ${{ steps.strings.outputs.build-output-dir }}/Release/*.exe ./$NEW_NAME
+            mv ./build/Release/*.exe ./$NEW_NAME
           else
-            # On Linux, binary is in build root
-            mv ${{ steps.strings.outputs.build-output-dir }}/${{ env.EXECUTABLE_NAME }} ./$NEW_NAME
+            mv ./build/${{ env.EXECUTABLE_NAME }} ./$NEW_NAME
           fi
-          
-          echo "Renamed binary to: $NEW_NAME"
 
-      # Upload the renamed file from the current directory
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
