@@ -379,6 +379,16 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             broadcastCompChat(g_nodeIp, g_nodePort, g_seed, g_compChatString);
             break;
+        case SET_EXECUTION_FEE_MULTIPLIER:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            setExecutionFeeMultiplier(g_nodeIp, g_nodePort, g_seed, g_executionFeeMultiplierNumerator, g_executionFeeMultiplierDenominator);
+            break;
+        case GET_EXECUTION_FEE_MULTIPLIER:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            getExecutionFeeMultiplier(g_nodeIp, g_nodePort, g_seed);
+            break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

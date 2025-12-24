@@ -41,6 +41,8 @@ char* g_compressTool = nullptr;
 uint32_t g_contractIndex = 0;
 char g_loggingMode = 0;
 char* g_compChatString = nullptr;
+uint64_t g_executionFeeMultiplierNumerator = 1;
+uint64_t g_executionFeeMultiplierDenominator = 1;
 
 char* g_dumpBinaryFileInput = nullptr;
 char* g_dumpBinaryFileOutput = nullptr;

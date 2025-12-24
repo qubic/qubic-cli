@@ -160,6 +160,11 @@ void print_help()
     printf("\t\tBroadcast a message on Qubic network, the message will be relayed to discord via bot. Node ip/port are required. Seed for a valid comp is required\t\n");
     printf("\t-savesnapshot \n");
     printf("\t\tRemotely trigger saving snapshot, valid seed and node ip/port are required.\t\n");
+    printf("\t-setexecutionfeemultiplier <NUMERATOR> <DENOMINATOR>\n");
+    printf("\t\tSet the multiplier for the conversion of raw execution time to contract execution fees to ( NUMERATOR / DENOMINATOR ), valid seed and node ip/port are required.\t\n");
+    printf("\t-getexecutionfeemultiplier\n");
+    printf("\t\tGet the current multiplier for the conversion of raw execution time to contract execution fees, valid seed and node ip/port are required.\t\n");
+
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -1126,6 +1131,23 @@ void parseArgument(int argc, char** argv)
             g_cmd = COMP_CHAT;
             g_compChatString = argv[i+1];
             i+=2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-setexecutionfeemultiplier") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = SET_EXECUTION_FEE_MULTIPLIER;
+            g_executionFeeMultiplierNumerator = charToNumber(argv[i + 1]);
+            g_executionFeeMultiplierDenominator = charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-getexecutionfeemultiplier") == 0)
+        {
+            g_cmd = GET_EXECUTION_FEE_MULTIPLIER;
+            i++;
             CHECK_OVER_PARAMETERS
             break;
         }
