@@ -749,14 +749,18 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
                 found = true;
                 break;
             }
-            attemptsCounter++;
+            ++attemptsCounter;
             auto currentTime = std::chrono::high_resolution_clock::now();
             auto durationSinceLastPrint = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastPrintTime).count();
             if (durationSinceLastPrint >= 1) {
                 lastPrintTime = currentTime;
-                auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-                double attemptsPerSecond = attemptsCounter.load() / (elapsedTime > 0 ? elapsedTime : 1);
-                double percentTried = (double)attemptsCounter.load() / (double)estimatedAttempts * 100.0;
+                const auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+                const auto attempts = static_cast<double>(attemptsCounter.load());
+                const double seconds = static_cast<double>(elapsedTime) > 0.0
+                                           ? static_cast<double>(elapsedTime)
+                                           : 1.0;
+                const double attemptsPerSecond = attempts / seconds;
+                const double percentTried = static_cast<double>(attemptsCounter.load()) / static_cast<double>(estimatedAttempts) * 100.0;
                 LOG("Attempts: %llu | Estimated Attempts: %llu (%.6f%%) | Attempts/s: %.2f | Elapsed Time: %llus\n",
                     attemptsCounter.load(), estimatedAttempts, percentTried, attemptsPerSecond, elapsedTime);
             }
@@ -766,7 +770,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
     // Start multiple threads to speed up the search
     const unsigned int numThreads = std::min(vanityGenerationThreads, std::thread::hardware_concurrency());
     std::vector<std::thread> threads;
-    VanityAddress result;
+    VanityAddress result{};
     bool found = false;
     for (unsigned int i = 0; i < numThreads; ++i) {
         threads.emplace_back(generateThread, std::ref(result), pattern, isSufix, std::ref(found));
