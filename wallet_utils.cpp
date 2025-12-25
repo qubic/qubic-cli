@@ -719,7 +719,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
         }
     };
 
-    unsigned long long estimatedAttempts = std::pow(24, strlen(pattern));
+    unsigned long long estimatedAttempts = static_cast<unsigned long long>(std::pow(24, strlen(pattern)));
     std::atomic<unsigned long long> attemptsCounter(0);
 
     auto startTime = std::chrono::high_resolution_clock::now();
@@ -727,7 +727,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
 
     // random seed (55 lowercase char)
     auto randomSeed = []() -> std::string {
-        const char charset[] = "abcdefghijklmnopqrstuvwxyz";
+      constexpr char charset[] = "abcdefghijklmnopqrstuvwxyz";
         const size_t max_index = (sizeof(charset) - 1);
         std::string str(55, 0);
         for (size_t i = 0; i < 55; ++i) {
