@@ -1,17 +1,19 @@
 #include <chrono>
-#include <thread>
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
+#include <thread>
+#include <atomic>
 
-#include "utils.h"
-#include "node_utils.h"
-#include "key_utils.h"
-#include "logger.h"
-#include "structs.h"
+#include "wallet_utils.h"
 #include "connection.h"
 #include "k12_and_key_utils.h"
+#include "key_utils.h"
+#include "logger.h"
+#include "node_utils.h"
 #include "sc_utils.h"
+#include "structs.h"
+#include "utils.h"
 
 void printWalletInfo(const char* seed)
 {
@@ -125,7 +127,7 @@ void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort)
     LOG("Spectum Digest: %s\n", hex);
 }
 
-void printReceipt(Transaction& tx, const char* txHash = nullptr, const uint8_t* extraData = nullptr, int moneyFlew = -1)
+void printReceipt(Transaction& tx, const char* txHash, const uint8_t* extraData, int moneyFlew)
 {
     char sourceIdentity[128] = {0};
     char dstIdentity[128] = {0};
@@ -331,7 +333,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     int extraDataSize,
     const void* extraData,
     uint32_t scheduledTickOffset,
-    QCPtr* qcPtr = nullptr)
+    QCPtr* qcPtr)
 {
     QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
 
@@ -393,7 +395,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     size_t inputSize,
     void* outputPtr,
     size_t outputSize,
-    QCPtr* qcPtr = nullptr)
+    QCPtr* qcPtr)
 {
     QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
     std::vector<uint8_t> packet(sizeof(RequestResponseHeader) + sizeof(RequestContractFunction) + inputSize);
@@ -702,4 +704,93 @@ void printActiveIPOs(const char* nodeIp, int nodePort)
     {
         LOG("- contract index: %u, asset name: %s\n", ipo.contractIndex, ipo.assetName);
     }
+}
+
+VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGenerationThreads, bool isSufix) {
+    auto isAddressValid = [](const char* identity, const char* pattern, bool isSufix) -> bool {
+        size_t patternLen = strlen(pattern);
+        size_t identityLen = strlen(identity);
+        if (isSufix) {
+            if (patternLen > identityLen) return false;
+            return strcmp(identity + (identityLen - patternLen), pattern) == 0;
+        } else {
+            if (patternLen > identityLen) return false;
+            return strncmp(identity, pattern, patternLen) == 0;
+        }
+    };
+
+    unsigned long long estimatedAttempts = static_cast<unsigned long long>(std::pow(24, strlen(pattern)));
+    std::atomic<unsigned long long> attemptsCounter(0);
+
+    auto startTime = std::chrono::high_resolution_clock::now();
+    auto lastPrintTime = startTime;
+
+    // random seed (55 lowercase char)
+    constexpr char charset[] = "abcdefghijklmnopqrstuvwxyz";
+    auto randomSeed = [&charset]() -> std::string {
+      thread_local std::mt19937 gen([] {
+        std::random_device rd;
+        std::seed_seq seq{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+        return std::mt19937(seq);
+      }());
+
+      thread_local std::uniform_int_distribution<int> dist(0, sizeof(charset) - 2);
+      std::string str(55, 0);
+      for (size_t i = 0; i < 55; ++i) {
+        str[i] = charset[dist(gen)];
+      }
+      return str;
+    };
+
+    auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, std::atomic<bool>& found) {
+        while (!found.load(std::memory_order_acquire)) {
+            uint8_t publicKey[32] = {0};
+            char identity[61] = {0};
+            auto seed = randomSeed();
+            getPublicKeyFromSeed(seed.c_str(), publicKey);
+            getIdentityFromPublicKey(publicKey, identity, false);
+            if (isAddressValid(identity, pattern, isSufix)) {
+                if (!found.exchange(true)) {
+                    memcpy(result.seed, seed.c_str(), sizeof(result.seed));
+                    memcpy(result.identity, identity, sizeof(result.identity));
+                }
+                found.store(true, std::memory_order_release);
+                break;
+            }
+            ++attemptsCounter;
+            auto currentTime = std::chrono::high_resolution_clock::now();
+            auto durationSinceLastPrint = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastPrintTime).count();
+            if (durationSinceLastPrint >= 1) {
+                lastPrintTime = currentTime;
+                const auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+                const auto attempts = static_cast<double>(attemptsCounter.load());
+                const double seconds = static_cast<double>(elapsedTime) > 0.0
+                                           ? static_cast<double>(elapsedTime)
+                                           : 1.0;
+                const double attemptsPerSecond = attempts / seconds;
+                const double percentTried = static_cast<double>(attemptsCounter.load()) / static_cast<double>(estimatedAttempts) * 100.0;
+                LOG("Attempts: %llu | Estimated Attempts: %llu (%.6f%%) | Attempts/s: %.2f | Elapsed Time: %llus\n",
+                    attemptsCounter.load(), estimatedAttempts, percentTried, attemptsPerSecond, elapsedTime);
+            }
+        }
+    };
+
+    // Start multiple threads to speed up the search
+    const unsigned int numThreads = std::min(vanityGenerationThreads, std::thread::hardware_concurrency());
+    std::vector<std::thread> threads;
+    VanityAddress result{};
+    std::atomic<bool> found{false};
+    for (unsigned int i = 0; i < numThreads; ++i) {
+        threads.emplace_back(generateThread, std::ref(result), pattern, isSufix, std::ref(found));
+    }
+    std::string patternStr = isSufix ? "*" + std::string(pattern) : std::string(pattern) + "*";
+    printf("-------- Starting vanity address generation with %u threads | Pattern %s --------\n", numThreads, patternStr.c_str());
+    for (auto& t : threads) {
+        t.join();
+    }
+
+    printf("Found vanity address!\n");
+    printf("Seed: %s\n", result.seed);
+    printf("Identity: %s\n", result.identity);
+    return result;
 }

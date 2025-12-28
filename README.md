@@ -33,6 +33,10 @@ Commands:
 [WALLET COMMANDS]
 	-showkeys
 		Generate identity, public key and private key from seed. Seed must be passed either from params or configuration file.
+	-generate-vanity-address <EXPECTED_CHARS> <THREADS> <IS_SUFIX>
+        Generates a vanity address matching the expected characters using multiple threads, with an option to match as a suffix.
+        Example: ./qubic-cli -generate-vanity-address ABC 1 false (will generate an address starting with ABC)
+                 ./qubic-cli -generate-vanity-address XYZ 4 true (will generate an address ending with XYZ using 4 threads)
 	-getbalance <IDENTITY>
 		Balance of an identity (amount of qubic, number of in/out txs)
 	-getasset <IDENTITY>
