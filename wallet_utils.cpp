@@ -727,16 +727,19 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
 
     // random seed (55 lowercase char)
     constexpr char charset[] = "abcdefghijklmnopqrstuvwxyz";
-    std::random_device rd;
-    std::seed_seq seq{ rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd() };
-    std::mt19937 gen(seq);
-    std::uniform_int_distribution<int> dist(0, sizeof(charset) - 2);
-    auto randomSeed = [&dist, &gen, &charset]() -> std::string {
-        std::string str(55, 0);
-        for (size_t i = 0; i < 55; ++i) {
-            str[i] = charset[dist(gen)];
-        }
-        return str;
+    auto randomSeed = [&charset]() -> std::string {
+      thread_local std::mt19937 gen([] {
+        std::random_device rd;
+        std::seed_seq seq{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
+        return std::mt19937(seq);
+      }());
+
+      thread_local std::uniform_int_distribution<int> dist(0, sizeof(charset) - 2);
+      std::string str(55, 0);
+      for (size_t i = 0; i < 55; ++i) {
+        str[i] = charset[dist(gen)];
+      }
+      return str;
     };
 
     auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, bool& found) {
