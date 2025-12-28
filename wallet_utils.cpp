@@ -742,17 +742,19 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
       return str;
     };
 
-    auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, bool& found) {
-        while (!found) {
+    auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, std::atomic<bool>& found) {
+        while (!found.load(std::memory_order_acquire)) {
             uint8_t publicKey[32] = {0};
             char identity[61] = {0};
             auto seed = randomSeed();
             getPublicKeyFromSeed(seed.c_str(), publicKey);
             getIdentityFromPublicKey(publicKey, identity, false);
             if (isAddressValid(identity, pattern, isSufix)) {
-                memcpy(result.seed, seed.c_str(), sizeof(result.seed));
-                memcpy(result.identity, identity, sizeof(result.identity));
-                found = true;
+                if (!found.exchange(true)) {
+                    memcpy(result.seed, seed.c_str(), sizeof(result.seed));
+                    memcpy(result.identity, identity, sizeof(result.identity));
+                }
+                found.store(true, std::memory_order_release);
                 break;
             }
             ++attemptsCounter;
@@ -777,7 +779,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
     const unsigned int numThreads = std::min(vanityGenerationThreads, std::thread::hardware_concurrency());
     std::vector<std::thread> threads;
     VanityAddress result{};
-    bool found = false;
+    std::atomic<bool> found{false};
     for (unsigned int i = 0; i < numThreads; ++i) {
         threads.emplace_back(generateThread, std::ref(result), pattern, isSufix, std::ref(found));
     }
