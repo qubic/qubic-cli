@@ -1055,7 +1055,8 @@ void parseArgument(int argc, char** argv)
             g_cmd = SET_SOLUTION_THRESHOLD;
             g_setSolutionThresholdEpoch = int(charToNumber(argv[i+1]));
             g_setSolutionThresholdValue = int(charToNumber(argv[i+2]));
-            i+=3;
+            g_setSolutionThresholdAlgo = int(charToNumber(argv[i+3]));
+            i+=4;
             CHECK_OVER_PARAMETERS
             break;
         }

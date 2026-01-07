@@ -118,7 +118,7 @@ Commands:
 	-togglemainaux <MODE_0> <Mode_1>
 		Remotely toggle Main/Aux mode on node, valid seed and node ip/port are required.	
 		<MODE_0> and <MODE_1> value are: MAIN or AUX	
-	-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> 
+	-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> <ALGO_TYPE_INDEX>
 		Remotely set solution threshold for future epoch, valid seed and node ip/port are required.	
 	-refreshpeerlist
 		(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid seed and node ip/port are required.	
