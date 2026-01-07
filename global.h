@@ -36,6 +36,7 @@ char* g_toggleMainAux0 = nullptr;
 char* g_toggleMainAux1 = nullptr;
 int g_setSolutionThresholdEpoch = -1;
 int g_setSolutionThresholdValue = -1;
+int g_setSolutionThresholdAlgo = -1;
 char* g_filePath = nullptr;
 char* g_compressTool = nullptr;
 uint32_t g_contractIndex = 0;

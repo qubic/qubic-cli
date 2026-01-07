@@ -258,6 +258,16 @@ static void checkValidSolutionThreshold(int thres)
     exit(1);
 }
 
+static void checkValidSolutionThresholdAlgo(int algo)
+{
+    if (algo >= 0 && algo < 2)
+    {
+        return;
+    }
+    LOG("Invalid solution algo. Now only support value 0:hyperidentity, 1:addition\n");
+    exit(1);
+}
+
 static void sanityCheckValidAssetName(const char * name)
 {
     bool okay = false;

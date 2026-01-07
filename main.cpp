@@ -338,7 +338,8 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             checkValidEpoch(g_setSolutionThresholdEpoch);
             checkValidSolutionThreshold(g_setSolutionThresholdValue);
-            setSolutionThreshold(g_nodeIp, g_nodePort, g_seed, g_setSolutionThresholdEpoch, g_setSolutionThresholdValue);
+            checkValidSolutionThresholdAlgo(g_setSolutionThresholdAlgo);
+            setSolutionThreshold(g_nodeIp, g_nodePort, g_seed, g_setSolutionThresholdEpoch, g_setSolutionThresholdValue, g_setSolutionThresholdAlgo);
             break;
         case SEND_SPECIAL_COMMAND:
         case REFRESH_PEER_LIST:
