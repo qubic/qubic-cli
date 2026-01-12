@@ -165,6 +165,9 @@ void print_help()
     printf("\t-getexecutionfeemultiplier\n");
     printf("\t\tGet the current multiplier for the conversion of raw execution time to contract execution fees, valid seed and node ip/port are required.\t\n");
 
+    printf("\n[ORACLE COMMANDS]\n");
+    printf("\t-getoraclequery <...>\n");
+    printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -1148,6 +1151,20 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = GET_EXECUTION_FEE_MULTIPLIER;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        /***********************
+         *** ORACLE COMMANDS ***
+         ***********************/
+
+        if (strcmp(argv[i], "-getoraclequery") == 0)
+        {
+            g_cmd = GET_ORACLE_QUERY;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            i += 2;
             CHECK_OVER_PARAMETERS
             break;
         }
