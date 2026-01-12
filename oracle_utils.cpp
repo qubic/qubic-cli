@@ -1,19 +1,21 @@
-//#include <cstdint>
-//#include <cstring>
 #include <cstdlib>
-//
-//#include "structs.h"
-//#include "wallet_utils.h"
-//#include "key_utils.h"
+#include <cinttypes>
+
 #include "oracle_utils.h"
-//#include "connection.h"
+#include "oracle_structs/oracles.h"
 #include "logger.h"
 #include "utils.h"
+#include "structs.h"
+#include "connection.h"
+#include "defines.h"
 
-//#include "node_utils.h"
-//#include "k12_and_key_utils.h"
-//#include "utils.h"
-//#include "sanity_check.h"
+// make sure this matches core code (capitalization is inconsistent to match names in core)
+constexpr uint16_t MAX_ORACLE_QUERY_SIZE = MAX_INPUT_SIZE - 16;
+constexpr uint16_t MAX_ORACLE_REPLY_SIZE = MAX_INPUT_SIZE - 16;
+constexpr int maxQueryIdCount = 2;
+constexpr int payloadBufferSize = std::max((int)std::max(MAX_ORACLE_QUERY_SIZE, MAX_ORACLE_REPLY_SIZE), maxQueryIdCount * 8);
+static_assert(payloadBufferSize >= sizeof(RespondOracleDataQueryMetadata), "Buffer too small.");
+static_assert(payloadBufferSize < 32 * 1024, "Large alloc in stack may need reconsideration.");
 
 void printGetOracleQueryHelpAndExit()
 {
@@ -26,8 +28,195 @@ void printGetOracleQueryHelpAndExit()
     exit(1);
 }
 
+static std::vector<int64_t> receiveQueryIds(QCPtr qc)
+{   
+    struct {
+        RequestResponseHeader header;
+        RequestOracleData req;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestOracleData::type());
+    memset(&packet.req, 0, sizeof(packet.req));
+    packet.req.reqType = RequestOracleData::requestPendingQueryIds;
+
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    std::vector<int64_t> queryIds;
+
+    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + maxQueryIdCount * sizeof(int64_t);
+    uint8_t buffer[bufferSize];
+    int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+
+    while (recvByte == sizeof(RequestResponseHeader))
+    {
+        auto header = (RequestResponseHeader*)buffer;
+        if (header->type() == RespondOracleData::type())
+        {
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
+            auto resp = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+            if (resp->type() == RespondOracleData::respondQueryIds)
+            {
+                long long payloadNumBytes = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
+                if (payloadNumBytes <= 0 || payloadNumBytes % 8 != 0)
+                    break;
+                queryIds.insert(queryIds.end(),
+                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
+                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + payloadNumBytes);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+    return queryIds;
+}
+
+static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleDataQueryMetadata& metadata, std::vector<uint8_t>& query, std::vector<uint8_t>& reply)
+{
+    struct {
+        RequestResponseHeader header;
+        RequestOracleData req;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestOracleData::type());
+    memset(&packet.req, 0, sizeof(packet.req));
+    packet.req.reqType = RequestOracleData::requestQueryAndResponse;
+    packet.req.reqTickOrId = queryId;
+
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    uint8_t buffer[payloadBufferSize];
+
+    memset(&metadata, 0, sizeof(RespondOracleDataQueryMetadata));
+    query.clear();
+    reply.clear();
+
+    // receive metadata
+    constexpr unsigned long long packetSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryMetadata);
+    int recvByte = qc->receiveAllDataOrThrowException(buffer, packetSize);
+
+    auto header = (RequestResponseHeader*)buffer;
+    auto respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+    if (header->type() == RespondOracleData::type() && respOracleData->type() == RespondOracleData::respondQueryMetadata)
+    {
+        metadata = *(RespondOracleDataQueryMetadata*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
+    }
+    else
+        return;
+
+    // receive query data
+    recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    if (recvByte == sizeof(RequestResponseHeader))
+    {
+        header = (RequestResponseHeader*)buffer;
+        if (header->type() == RespondOracleData::type())
+        {
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
+            respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+            if (respOracleData->type() == RespondOracleData::respondQueryData)
+            {
+                query.insert(query.end(),
+                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
+                    buffer + header->size());
+            }
+            else if (respOracleData->type() == RespondOracleData::respondReplyData)
+            {
+                // if sending the query failed for some reason, the reply might follow the metadata immediately
+                goto receive_reply;
+            }
+            else
+                return;
+        }
+        else
+            return;
+    }
+    else
+        return;
+
+    // receive reply data
+    recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    if (recvByte == sizeof(RequestResponseHeader))
+    {
+        header = (RequestResponseHeader*)buffer;
+        if (header->type() == RespondOracleData::type())
+        {
+            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
+            respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+            if (respOracleData->type() == RespondOracleData::respondReplyData)
+            {
+            receive_reply:
+                reply.insert(reply.end(),
+                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
+                    buffer + header->size());
+            }
+            else
+                return;
+        }
+        else
+            return;
+    }
+    else
+        return;
+}
+
+static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata, const std::vector<uint8_t>& query, const std::vector<uint8_t>& reply)
+{
+    // TODO: implement this
+}
+
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)
 {
     if (strcasecmp(requestType, "") == 0)
         printGetOracleQueryHelpAndExit();
+
+    if (strcasecmp(requestType, "pending") == 0)
+    {
+        auto qc = make_qc(nodeIp, nodePort);
+        std::vector<int64_t> recQueryIds = receiveQueryIds(qc);
+
+        LOG("Pending query ids:\n");
+        for (const int64_t& id : recQueryIds)
+        {
+            LOG("- %" PRIi64 "\n");
+        }
+    }
+    else if (strcasecmp(requestType, "pending+") == 0)
+    {
+        auto qc = make_qc(nodeIp, nodePort);
+        std::vector<int64_t> recQueryIds = receiveQueryIds(qc);
+
+        RespondOracleDataQueryMetadata metadata;
+        std::vector<uint8_t> query, reply;
+        for (const int64_t& id : recQueryIds)
+        {
+            receiveQueryInformation(qc, id, metadata, query, reply);
+            printQueryInformation(metadata, query, reply);
+            LOG("\n");
+        }
+    }
+    else
+    {
+        // no known command, try to interpret param string as query id (8-byte int64_t number)
+        int64_t queryId;
+        try
+        {
+            queryId = std::stoll(std::string(requestType));
+        }
+        catch (std::exception e)
+        {
+            LOG(e.what());
+            return;
+        }
+
+        auto qc = make_qc(nodeIp, nodePort);
+
+        RespondOracleDataQueryMetadata metadata;
+        std::vector<uint8_t> query, reply;
+        receiveQueryInformation(qc, queryId, metadata, query, reply);
+        printQueryInformation(metadata, query, reply);
+    }
 }
