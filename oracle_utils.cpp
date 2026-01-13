@@ -56,20 +56,21 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc)
         {
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
             auto resp = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-            if (resp->type() == RespondOracleData::respondQueryIds)
+            if (resp->resType == RespondOracleData::respondQueryIds)
             {
                 long long payloadNumBytes = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
                 if (payloadNumBytes <= 0 || payloadNumBytes % 8 != 0)
                     break;
+                const uint8_t* queryIdBuffer = buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData);
                 queryIds.insert(queryIds.end(),
-                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
-                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + payloadNumBytes);
-            }
-            else
-            {
-                break;
+                    (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + payloadNumBytes));
             }
         }
+        else if (header->type() == END_RESPOND)
+        {
+            break;
+        }
+        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
     return queryIds;
@@ -102,7 +103,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
 
     auto header = (RequestResponseHeader*)buffer;
     auto respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-    if (header->type() == RespondOracleData::type() && respOracleData->type() == RespondOracleData::respondQueryMetadata)
+    if (header->type() == RespondOracleData::type() && respOracleData->resType == RespondOracleData::respondQueryMetadata)
     {
         metadata = *(RespondOracleDataQueryMetadata*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
     }
@@ -118,13 +119,13 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
         {
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
             respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-            if (respOracleData->type() == RespondOracleData::respondQueryData)
+            if (respOracleData->resType == RespondOracleData::respondQueryData)
             {
                 query.insert(query.end(),
                     buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
                     buffer + header->size());
             }
-            else if (respOracleData->type() == RespondOracleData::respondReplyData)
+            else if (respOracleData->resType == RespondOracleData::respondReplyData)
             {
                 // if sending the query failed for some reason, the reply might follow the metadata immediately
                 goto receive_reply;
