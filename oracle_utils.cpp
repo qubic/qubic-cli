@@ -165,7 +165,20 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
 
 static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata, const std::vector<uint8_t>& query, const std::vector<uint8_t>& reply)
 {
-    // TODO: implement this
+    LOG("Query ID: %" PRIi64 "\n", metadata.queryId);
+    LOG("Type: %" PRIu8 "\n", metadata.type);
+    LOG("Status: %" PRIu8 "\n", metadata.status);
+    LOG("Status Flags: %" PRIu16 "\n", metadata.statusFlags);
+    LOG("Query Tick: %" PRIu32 "\n", metadata.queryTick);
+    // m256i queryingEntity;
+    LOG("Timeout: %" PRIu64 "\n", metadata.timeout);
+    LOG("Interface Index: %" PRIu32 "\n", metadata.interfaceIndex);
+    LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
+    LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
+    LOG("Total Commits: %" PRIu16 "\n", metadata.totalCommits);
+    LOG("Agreeing Commits: %" PRIu16 "\n", metadata.agreeingCommits);
+    LOG("Query: %s\n", query.data());
+    LOG("Reply: %s\n", reply.data());
 }
 
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)
