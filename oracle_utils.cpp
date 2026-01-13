@@ -8,6 +8,7 @@
 #include "structs.h"
 #include "connection.h"
 #include "defines.h"
+#include "key_utils.h"
 
 // make sure this matches core code (capitalization is inconsistent to match names in core)
 constexpr uint16_t MAX_ORACLE_QUERY_SIZE = MAX_INPUT_SIZE - 16;
@@ -170,15 +171,25 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
     LOG("Status: %" PRIu8 "\n", metadata.status);
     LOG("Status Flags: %" PRIu16 "\n", metadata.statusFlags);
     LOG("Query Tick: %" PRIu32 "\n", metadata.queryTick);
-    // m256i queryingEntity;
+
+    char queryingIdentity[128] = { 0 };
+    getIdentityFromPublicKey(metadata.queryingEntity.m256i_u8, queryingIdentity, /*isLowerCase=*/false);
+    LOG("Querying Entity: %s\n", queryingIdentity);
+
     LOG("Timeout: %" PRIu64 "\n", metadata.timeout);
     LOG("Interface Index: %" PRIu32 "\n", metadata.interfaceIndex);
     LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
     LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
     LOG("Total Commits: %" PRIu16 "\n", metadata.totalCommits);
     LOG("Agreeing Commits: %" PRIu16 "\n", metadata.agreeingCommits);
-    LOG("Query: %s\n", query.data());
-    LOG("Reply: %s\n", reply.data());
+
+    std::vector<char> hexQuery(2 * query.size() + 1, 0);
+    byteToHex(query.data(), hexQuery.data(), static_cast<int>(query.size()));
+    LOG("Query: %s\n", hexQuery.data());
+
+    std::vector<char> hexReply(2 * reply.size() + 1, 0);
+    byteToHex(reply.data(), hexReply.data(), static_cast<int>(reply.size()));
+    LOG("Reply: %s\n", hexReply.data());
 }
 
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)
