@@ -752,7 +752,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
         return str;
     };
 
-    auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, std::atomic<bool>& found) {
+    auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, std::atomic<bool>& found, int threadId) {
         while (!found.load(std::memory_order_acquire)) {
             uint8_t publicKey[32] = {0};
             char identity[61] = {0};
@@ -770,7 +770,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
             ++attemptsCounter;
             auto currentTime = std::chrono::high_resolution_clock::now();
             auto durationSinceLastPrint = std::chrono::duration_cast<std::chrono::seconds>(currentTime - lastPrintTime).count();
-            if (durationSinceLastPrint >= 1) {
+            if (durationSinceLastPrint >= 1 && threadId == 0) {
                 lastPrintTime = currentTime;
                 const auto elapsedTime = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
                 const auto attempts = static_cast<double>(attemptsCounter.load());
@@ -791,7 +791,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
     VanityAddress result{};
     std::atomic<bool> found{false};
     for (unsigned int i = 0; i < numThreads; ++i) {
-        threads.emplace_back(generateThread, std::ref(result), pattern, isSufix, std::ref(found));
+        threads.emplace_back(generateThread, std::ref(result), pattern, isSufix, std::ref(found), i);
     }
     std::string patternStr = isSufix ? "*" + std::string(pattern) : std::string(pattern) + "*";
     printf("-------- Starting vanity address generation with %u threads | Pattern %s --------\n", numThreads, patternStr.c_str());
