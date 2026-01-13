@@ -719,6 +719,17 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
         }
     };
 
+    auto get_hw_entropy = []() -> unsigned long long {
+        unsigned long long val = 0;
+        // Try RDRAND (Intel/AMD hardware RNG)
+        if (_rdrand64_step(&val)) {
+            return val;
+        }
+        // Fallback to OS entropy if RDRAND fails or isn't supported
+        std::random_device rd;
+        return (static_cast<unsigned long long>(rd()) << 32) | rd();
+    };
+
     unsigned long long estimatedAttempts = static_cast<unsigned long long>(std::pow(24, strlen(pattern)));
     std::atomic<unsigned long long> attemptsCounter(0);
 
@@ -727,19 +738,18 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
 
     // random seed (55 lowercase char)
     constexpr char charset[] = "abcdefghijklmnopqrstuvwxyz";
-    auto randomSeed = [&charset]() -> std::string {
-      thread_local std::mt19937 gen([] {
-        std::random_device rd;
-        std::seed_seq seq{rd(), rd(), rd(), rd(), rd(), rd(), rd(), rd()};
-        return std::mt19937(seq);
-      }());
-
-      thread_local std::uniform_int_distribution<int> dist(0, sizeof(charset) - 2);
-      std::string str(55, 0);
-      for (size_t i = 0; i < 55; ++i) {
-        str[i] = charset[dist(gen)];
-      }
-      return str;
+    constexpr size_t charset_len = sizeof(charset) - 1;
+    auto randomSeed = [&]() -> std::string {
+        std::string str(55, 0);
+        for (size_t i = 0; i < 55; ++i) {
+            // We use a simple rejection sampling to avoid modulo bias
+            uint64_t rand_val;
+            do {
+                rand_val = get_hw_entropy();
+            } while (rand_val >= (UINT64_MAX - (UINT64_MAX % charset_len)));
+            str[i] = charset[rand_val % charset_len];
+        }
+        return str;
     };
 
     auto generateThread = [&](VanityAddress& result, const char* pattern, bool isSufix, std::atomic<bool>& found) {

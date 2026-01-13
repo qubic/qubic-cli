@@ -65,5 +65,11 @@ set_property(TARGET qubic-cli PROPERTY COMPILE_WARNING_AS_ERROR ON)
 ADD_LIBRARY(fourq-qubic SHARED fourq_qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	target_compile_options(qubic-cli PRIVATE -mrdrnd)
+	target_compile_options(fourq-qubic PRIVATE -mrdrnd)
+endif()
+
 install(TARGETS fourq-qubic LIBRARY)
 
