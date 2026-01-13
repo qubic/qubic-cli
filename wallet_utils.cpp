@@ -730,7 +730,7 @@ VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGene
         return (static_cast<unsigned long long>(rd()) << 32) | rd();
     };
 
-    unsigned long long estimatedAttempts = static_cast<unsigned long long>(std::pow(24, strlen(pattern)));
+    unsigned long long estimatedAttempts = static_cast<unsigned long long>(std::pow(26, strlen(pattern)));
     std::atomic<unsigned long long> attemptsCounter(0);
 
     auto startTime = std::chrono::high_resolution_clock::now();
