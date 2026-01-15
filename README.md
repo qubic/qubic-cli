@@ -456,6 +456,11 @@ enabled.
 
 ### BUILD
 
+Run the following command to get `qubic/core` as a submodule:
+```
+git submodule update --init --recursive
+```
+
 On Linux or MacOS, make sure `cmake` and `make` commands are installed and then run:
 ```
 mkdir build;
