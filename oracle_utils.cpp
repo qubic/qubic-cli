@@ -1,8 +1,10 @@
 #include <cstdlib>
 #include <cinttypes>
 
+#include "core/src/network_messages/common_def.h"
+#include "core/src/network_messages/oracles.h"
+
 #include "oracle_utils.h"
-#include "oracle_structs/oracles.h"
 #include "logger.h"
 #include "utils.h"
 #include "structs.h"
@@ -10,9 +12,8 @@
 #include "defines.h"
 #include "key_utils.h"
 
-// make sure this matches core code (capitalization is inconsistent to match names in core)
-constexpr uint16_t MAX_ORACLE_QUERY_SIZE = MAX_INPUT_SIZE - 16;
-constexpr uint16_t MAX_ORACLE_REPLY_SIZE = MAX_INPUT_SIZE - 16;
+// make sure these variables match the local variables from the core code 
+// in OracleEngine::processRequestOracleData(...) defined in core/src/oracle_core/net_msg_impl.h
 constexpr int maxQueryIdCount = 2;
 constexpr int payloadBufferSize = std::max((int)std::max(MAX_ORACLE_QUERY_SIZE, MAX_ORACLE_REPLY_SIZE), maxQueryIdCount * 8);
 static_assert(payloadBufferSize >= sizeof(RespondOracleDataQueryMetadata), "Buffer too small.");

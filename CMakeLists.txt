@@ -11,6 +11,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/msvault.cpp
 		${CMAKE_SOURCE_DIR}/node_utils.cpp
 		${CMAKE_SOURCE_DIR}/nostromo.cpp
+		${CMAKE_SOURCE_DIR}/oracle_utils.cpp
 		${CMAKE_SOURCE_DIR}/proposal.cpp
 		${CMAKE_SOURCE_DIR}/qbond.cpp
 		${CMAKE_SOURCE_DIR}/qearn.cpp
@@ -23,7 +24,6 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/test_utils.cpp
 		${CMAKE_SOURCE_DIR}/wallet_utils.cpp
 		${CMAKE_SOURCE_DIR}/utils.cpp
-		${CMAKE_SOURCE_DIR}/oracle_utils.cpp
 )
 SET(HEADER_FILES
 	argparser.h	
@@ -39,6 +39,7 @@ SET(HEADER_FILES
 	msvault.h
 	node_utils.h
 	nostromo.h
+	oracle_utils.h
 	prompt.h
 	proposal.h
 	qbond.h
@@ -56,15 +57,17 @@ SET(HEADER_FILES
 	test_utils.h
 	utils.h
 	wallet_utils.h
-	oracle_utils.h
-	oracle_structs/oracles.h
 )
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
+
 ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 set_property(TARGET qubic-cli PROPERTY COMPILE_WARNING_AS_ERROR ON)
+target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules)
+target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules/core)
+
 ADD_LIBRARY(fourq-qubic SHARED fourq_qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
