@@ -149,7 +149,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
         {
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
             respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-            if (respOracleData->type() == RespondOracleData::respondReplyData)
+            if (respOracleData->resType == RespondOracleData::respondReplyData)
             {
             receive_reply:
                 reply.insert(reply.end(),
