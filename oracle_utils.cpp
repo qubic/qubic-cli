@@ -101,9 +101,21 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
 
     // receive metadata
     constexpr unsigned long long packetSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryMetadata);
-    int recvByte = qc->receiveAllDataOrThrowException(buffer, packetSize);
-
+    int recvByte = qc->receiveData(buffer, packetSize);
     auto header = (RequestResponseHeader*)buffer;
+    if (recvByte < sizeof(RequestResponseHeader))
+    {
+        throw std::logic_error("Connection closed.");
+    }
+    else if (header->type() == END_RESPOND)
+    {
+        throw std::logic_error("Unknown query ID!");
+    }
+    else if (recvByte < packetSize)
+    {
+        throw std::logic_error("Received incomplete data!");
+    }
+
     auto respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
     if (header->type() == RespondOracleData::type() && respOracleData->resType == RespondOracleData::respondQueryMetadata)
     {
@@ -234,6 +246,7 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     {
         auto qc = make_qc(nodeIp, nodePort);
         std::vector<int64_t> recQueryIds = receiveQueryIds(qc);
+        LOG("Number of pending query IDs: %d\n\n", (int)recQueryIds.size());
 
         RespondOracleDataQueryMetadata metadata;
         std::vector<uint8_t> query, reply;
