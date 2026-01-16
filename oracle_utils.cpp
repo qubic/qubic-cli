@@ -4,12 +4,13 @@
 #include "core/src/network_messages/common_def.h"
 #include "core/src/network_messages/oracles.h"
 
+#include "oracle_interface_adapter.h"
+
 #include "oracle_utils.h"
 #include "logger.h"
 #include "utils.h"
 #include "structs.h"
 #include "connection.h"
-#include "defines.h"
 #include "key_utils.h"
 
 // make sure these variables match the local variables from the core code 
@@ -185,13 +186,32 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
     LOG("Total Commits: %" PRIu16 "\n", metadata.totalCommits);
     LOG("Agreeing Commits: %" PRIu16 "\n", metadata.agreeingCommits);
 
-    std::vector<char> hexQuery(2 * query.size() + 1, 0);
-    byteToHex(query.data(), hexQuery.data(), static_cast<int>(query.size()));
-    LOG("Query: %s\n", hexQuery.data());
+    std::string queryStr = oracleQueryToString(metadata.interfaceIndex, query);
+    if (queryStr.find("error") != std::string::npos)
+    {
+        std::vector<char> hexQuery(2 * query.size() + 1, 0);
+        byteToHex(query.data(), hexQuery.data(), static_cast<int>(query.size()));
+        LOG("Query: %s %s\n", hexQuery.data(), queryStr.c_str());
+    }
+    else
+    {
+        LOG("Query: %s\n", queryStr.c_str());
+    }
 
-    std::vector<char> hexReply(2 * reply.size() + 1, 0);
-    byteToHex(reply.data(), hexReply.data(), static_cast<int>(reply.size()));
-    LOG("Reply: %s\n", hexReply.data());
+    if (reply.size() > 0)
+    {
+        std::string replyStr = oracleReplyToString(metadata.interfaceIndex, reply);
+        if (replyStr.find("error") != std::string::npos)
+        {
+            std::vector<char> hexReply(2 * reply.size() + 1, 0);
+            byteToHex(reply.data(), hexReply.data(), static_cast<int>(reply.size()));
+            LOG("Reply: %s %s\n", hexReply.data(), replyStr.c_str());
+        }
+        else
+        {
+            LOG("Reply: %s\n", replyStr.c_str());
+        }
+    }
 }
 
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)

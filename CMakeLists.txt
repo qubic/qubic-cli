@@ -39,6 +39,7 @@ SET(HEADER_FILES
 	msvault.h
 	node_utils.h
 	nostromo.h
+	oracle_interface_adapter.h
 	oracle_utils.h
 	prompt.h
 	proposal.h
@@ -67,6 +68,7 @@ ADD_EXECUTABLE(qubic-cli main.cpp ${FILES} ${HEADER_FILES})
 set_property(TARGET qubic-cli PROPERTY COMPILE_WARNING_AS_ERROR ON)
 target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules)
 target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules/core)
+target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules/core/src)
 
 ADD_LIBRARY(fourq-qubic SHARED fourq_qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
