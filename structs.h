@@ -218,7 +218,7 @@ private:
     unsigned int _dejavu;
 
 public:
-    inline unsigned int size()
+    inline unsigned int size() const
     {
         if (((*((unsigned int*)_size)) & 0xFFFFFF)==0) return INT32_MAX; // size is never zero, zero means broken packets
         return (*((unsigned int*)_size)) & 0xFFFFFF;
@@ -231,7 +231,7 @@ public:
         _size[2] = (uint8_t)(size >> 16);
     }
 
-    inline bool isDejavuZero()
+    inline bool isDejavuZero() const
     {
         return !_dejavu;
     }
@@ -250,7 +250,7 @@ public:
         }
     }
 
-    inline uint8_t type()
+    inline uint8_t type() const
     {
         return _type;
     }

@@ -28,6 +28,8 @@ void printGetOracleQueryHelpAndExit()
     LOG("    Print the query IDs for all pending queries.\n");
     LOG("qubic-cli [...] -getoraclequery pending+\n");
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by pending.\n");
+    LOG("qubic-cli [...] -getoraclequery stats\n");
+    LOG("    Print the oracle query statistics of the core node.\n");
     exit(1);
 }
 
@@ -226,6 +228,55 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
     }
 }
 
+static void receiveQueryStats(QCPtr& qc, RespondOracleDataQueryStatistics& stats)
+{
+    struct {
+        RequestResponseHeader header;
+        RequestOracleData req;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestOracleData::type());
+    memset(&packet.req, 0, sizeof(packet.req));
+    packet.req.reqType = RequestOracleData::requestQueryStatistics;
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    constexpr unsigned long long responseSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryStatistics);
+    uint8_t buffer[responseSize];
+    int recvByte = qc->receiveData(buffer, responseSize);
+    if (recvByte != responseSize)
+    {
+        throw std::logic_error("Connection closed.");
+    }
+    const auto* header = (RequestResponseHeader*)buffer;
+    const auto* header2 = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+    if (header->type() != RespondOracleData::type() || header2->resType != RespondOracleData::respondQueryStatistics)
+    {
+        throw std::logic_error("Unexpected response message.");
+    }
+    const auto* receivedStats = (RespondOracleDataQueryStatistics*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
+    stats = *receivedStats;
+}
+
+static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
+{
+    const float revealPerSuccess = (stats.successfulCount) ? float(stats.revealTxCount) / stats.successfulCount : 0;
+    LOG("successful:   % " PRIu64 " queries (takes %.3f ticks on average, %.1f reveal tx / success)\n", stats.successfulCount, float(stats.successAvgMilliTicksPerQuery) / 1000.0f, revealPerSuccess);
+    LOG("timeout:      % " PRIu64 " queries in total (average timeout is %.3f ticks)\n", stats.timeoutCount, float(stats.timeoutAvgMilliTicksPerQuery) / 1000.0f);
+    LOG("              % " PRIu64 " queries before OM reply\n", stats.timeoutNoReplyCount);
+    LOG("              % " PRIu64 " queries before commit quorum\n", stats.timeoutNoCommitCount);
+    LOG("              % " PRIu64 " queries before reveal\n", stats.timeoutNoRevealCount);
+    LOG("unresolvable: % " PRIu64 " queries\n", stats.unresolvableCount);
+    LOG("pending:      % " PRIu64 " queries in total\n", stats.pendingCount);
+    LOG("              % " PRIu64 " queries before OM reply (takes %.3f ticks on average)\n", stats.pendingOracleMachineCount, float(stats.oracleMachineReplyAvgMilliTicksPerQuery) / 1000.0f);
+    LOG("              % " PRIu64 " queries before commit quorum (takes %.3f ticks on average)\n", stats.pendingCommitCount, float(stats.commitAvgMilliTicksPerQuery) / 1000.0f);
+    LOG("              % " PRIu64 " queries before reveal / success\n", stats.pendingRevealCount);
+    if (stats.oracleMachineRepliesDisagreeCount > 0)
+    {
+        LOG("OM issues:    % " PRIu64 " queries had OM replies that differ between OMs\n", stats.oracleMachineRepliesDisagreeCount);
+    }
+}
+
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)
 {
     if (strcasecmp(requestType, "") == 0)
@@ -256,6 +307,13 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
             printQueryInformation(metadata, query, reply);
             LOG("\n");
         }
+    }
+    else if (strcasecmp(requestType, "stats") == 0)
+    {
+        auto qc = make_qc(nodeIp, nodePort);
+        RespondOracleDataQueryStatistics stats;
+        receiveQueryStats(qc, stats);
+        printQueryStats(stats);
     }
     else
     {
