@@ -290,7 +290,7 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
         LOG("Pending query ids:\n");
         for (const int64_t& id : recQueryIds)
         {
-            LOG("- %" PRIi64 "\n");
+            LOG("- %" PRIi64 "\n", id);
         }
     }
     else if (strcasecmp(requestType, "pending+") == 0)
