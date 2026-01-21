@@ -264,7 +264,7 @@ static void checkValidSolutionThresholdAlgo(int algo)
     {
         return;
     }
-    LOG("Invalid solution algo. Now only support value 0:hyperidentity, 1:addition\n");
+    LOG("As of now, the only supported values are 0:hyperidentity, 1:addition\n");
     exit(1);
 }
 
