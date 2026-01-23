@@ -373,8 +373,8 @@ struct CurrentSystemInfo
     unsigned long long currentEntityBalanceDustThreshold;
 
     unsigned int targetTickVoteSignature;
-    unsigned long long _reserve0;
-    unsigned long long _reserve1;
+    unsigned long long computorPacketSignature;
+    unsigned long long solutionAdditionalThreshold;
     unsigned long long _reserve2;
     unsigned long long _reserve3;
     unsigned long long _reserve4;
@@ -793,6 +793,8 @@ struct SpecialCommandSetSolutionThresholdResquestAndResponse
     unsigned long long everIncreasingNonceAndCommandType;
     unsigned int epoch;
     int threshold;
+    int algoType;
+    int padding;
     static constexpr unsigned char type()
     {
         return 255;

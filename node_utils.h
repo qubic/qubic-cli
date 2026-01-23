@@ -30,7 +30,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
 void uploadFile(const char* nodeIp, const int nodePort, const char* filePath, const char* seed, unsigned int tickOffset, const char* compressTool = nullptr);
 // remote tools:
 void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std::string mode0, std::string mode1);
-void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold);
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold, int algoType);
 void syncTime(const char* nodeIp, const int nodePort, const char* seed);
 void setLoggingMode(const char* nodeIp, const int nodePort, const char* seed, char mode);
 void broadcastCompChat(const char* nodeIp, const int nodePort, const char* seed, char* compChatMsg);

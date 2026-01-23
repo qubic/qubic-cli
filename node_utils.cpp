@@ -112,6 +112,7 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
         byteToHex(curSystemInfo.randomMiningSeed, hex, 32);
         LOG("RandomMiningSeed: %s\n", hex);
         LOG("SolutionThreshold: %u\n", curSystemInfo.solutionThreshold);
+        LOG("AdditionSolutionThreshold: %llu\n", curSystemInfo.solutionAdditionalThreshold);
 
         // todo: add initial time
 
@@ -1296,7 +1297,7 @@ void toggleMainAux(const char* nodeIp, const int nodePort, const char* seed, std
     }
 }
 
-void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold)
+void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* seed, int epoch, int threshold, int algo)
 {
     uint8_t privateKey[32] = {0};
     uint8_t sourcePublicKey[32] = {0};
@@ -1317,6 +1318,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
     packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
     packet.cmd.epoch = epoch;
     packet.cmd.threshold = threshold;
+    packet.cmd.algoType = algo;
 
     getSubseedFromSeed((uint8_t*)seed, subseed);
     getPrivateKeyFromSubSeed(subseed, privateKey);
@@ -1342,7 +1344,7 @@ void setSolutionThreshold(const char* nodeIp, const int nodePort, const char* se
 
     if (response.everIncreasingNonceAndCommandType == packet.cmd.everIncreasingNonceAndCommandType)
     {
-        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold)
+        if (response.epoch == packet.cmd.epoch && response.threshold == packet.cmd.threshold && response.algoType == packet.cmd.algoType)
         {
             LOG("Successfully set solution threshold\n");
         } 
