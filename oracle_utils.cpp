@@ -181,12 +181,71 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
         return;
 }
 
+static const char* getOracleQueryTypeStr(uint8_t type)
+{
+    switch (type)
+    {
+    case ORACLE_QUERY_TYPE_CONTRACT_QUERY:
+        return "contract one-time query";
+    case ORACLE_QUERY_TYPE_CONTRACT_SUBSCRIPTION:
+        return "contract subscription";
+    case ORACLE_QUERY_TYPE_USER_QUERY:
+        return "user query";
+    default:
+        return "unknown";
+    }
+}
+
+static const char* getOracleQueryStatusStr(uint8_t type)
+{
+    switch (type)
+    {
+    case ORACLE_QUERY_STATUS_PENDING:
+        return "pending";
+    case ORACLE_QUERY_STATUS_COMMITTED:
+        return "committed";
+    case ORACLE_QUERY_STATUS_SUCCESS:
+        return "success";
+    case ORACLE_QUERY_STATUS_UNRESOLVABLE:
+        return "unresolvable";
+    case ORACLE_QUERY_STATUS_TIMEOUT:
+        return "timeout";
+    default:
+        return "unknown";
+    }
+}
+
+static std::string getOracleQueryStatusFlagsStr(uint16_t flags)
+{
+    std::string str;
+    if (flags & ORACLE_FLAG_REPLY_RECEIVED)
+        str += "-> core node received valid reply from the oracle machine";
+    if (flags & ORACLE_FLAG_INVALID_ORACLE)
+        str += "\n\t- oracle machine reported that oracle (data source) in query was invalid";
+    if (flags & ORACLE_FLAG_ORACLE_UNAVAIL)
+        str += "\n\t- oracle machine reported that oracle (data source) isn't available at the moment";
+    if (flags & ORACLE_FLAG_INVALID_TIME)
+        str += "\n\t- oracle machine reported that time in query was invalid";
+    if (flags & ORACLE_FLAG_INVALID_PLACE)
+        str += "\n\t- oracle machine reported that place in query was invalid";
+    if (flags & ORACLE_FLAG_INVALID_ARG)
+        str += "\n\t- oracle machine reported that an argument in query was invalid";
+    if (flags & ORACLE_FLAG_BAD_SIZE_REPLY)
+        str += "\n\t- core node got reply of wrong size from the oracle machine";
+    if (flags & ORACLE_FLAG_OM_DISAGREE)
+        str += "\n\t- core node got different replies from oracle machine nodes";
+    if (flags & ORACLE_FLAG_BAD_SIZE_REVEAL)
+        str += "\n\t- weren't enough reply commit tx with the same digest before timeout (< 451)";
+
+    return str;
+}
+
 static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata, const std::vector<uint8_t>& query, const std::vector<uint8_t>& reply)
 {
     LOG("Query ID: %" PRIi64 "\n", metadata.queryId);
-    LOG("Type: %" PRIu8 "\n", metadata.type);
-    LOG("Status: %" PRIu8 "\n", metadata.status);
-    LOG("Status Flags: %" PRIu16 "\n", metadata.statusFlags);
+    LOG("Type: %s (%" PRIu8 ")\n", getOracleQueryTypeStr(metadata.type), metadata.type);
+    LOG("Status: %s (%" PRIu8 ")\n", getOracleQueryStatusStr(metadata.status), metadata.status);
+    LOG("Status Flags: %" PRIu16 " %s\n", metadata.statusFlags, getOracleQueryStatusFlagsStr(metadata.statusFlags).c_str());
     LOG("Query Tick: %" PRIu32 "\n", metadata.queryTick);
 
     char queryingIdentity[128] = { 0 };
