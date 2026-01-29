@@ -252,7 +252,7 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
     getIdentityFromPublicKey(metadata.queryingEntity.m256i_u8, queryingIdentity, /*isLowerCase=*/false);
     LOG("Querying Entity: %s\n", queryingIdentity);
 
-    LOG("Timeout: %" PRIu64 "\n", metadata.timeout);
+    LOG("Timeout: %s\n", toString(*(QPI::DateAndTime*)&metadata.timeout).c_str());
     LOG("Interface Index: %" PRIu32 "\n", metadata.interfaceIndex);
     LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
     LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
