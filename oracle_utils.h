@@ -1,3 +1,3 @@
 #pragma once
 
-void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType);
+void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType, const char* reqParam);

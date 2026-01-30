@@ -1164,7 +1164,9 @@ void parseArgument(int argc, char** argv)
             g_cmd = GET_ORACLE_QUERY;
             if (i + 1 < argc)
                 g_paramString1 = argv[i + 1];
-            i += 2;
+            if (i + 2 < argc)
+                g_paramString2 = argv[i + 2];
+            i += 3;
             CHECK_OVER_PARAMETERS
             break;
         }

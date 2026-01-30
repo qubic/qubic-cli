@@ -392,7 +392,7 @@ int run(int argc, char* argv[])
             break;
         case GET_ORACLE_QUERY:
             sanityCheckNode(g_nodeIp, g_nodePort);
-            processGetOracleQuery(g_nodeIp, g_nodePort, g_paramString1);
+            processGetOracleQuery(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);

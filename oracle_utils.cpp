@@ -28,12 +28,16 @@ void printGetOracleQueryHelpAndExit()
     LOG("    Print the query IDs for all pending queries.\n");
     LOG("qubic-cli [...] -getoraclequery pending+\n");
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by pending.\n");
+    LOG("qubic-cli [...]  [TICK]\n");
+    LOG("    Print the query IDs of all queries started in the given tick.\n");
+    LOG("qubic-cli [...] -getoraclequery all+ [TICK]\n");
+    LOG("    Print the oracle query, metadata, and reply if available for each query ID received by all.\n");
     LOG("qubic-cli [...] -getoraclequery stats\n");
     LOG("    Print the oracle query statistics of the core node.\n");
     exit(1);
 }
 
-static std::vector<int64_t> receiveQueryIds(QCPtr qc)
+static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long long reqTickOrId = 0)
 {   
     struct {
         RequestResponseHeader header;
@@ -43,7 +47,8 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc)
     packet.header.randomizeDejavu();
     packet.header.setType(RequestOracleData::type());
     memset(&packet.req, 0, sizeof(packet.req));
-    packet.req.reqType = RequestOracleData::requestPendingQueryIds;
+    packet.req.reqType = reqType;
+    packet.req.reqTickOrId = reqTickOrId;
 
     qc->sendData((uint8_t*)&packet, packet.header.size());
 
@@ -336,7 +341,94 @@ static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
     }
 }
 
-void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType)
+static bool parseTick(const char* tickStr, long long& tickFrom, long long& tickTo)
+{
+    char* writabletickStr = STRDUP(tickStr);
+    std::string part1 = strtok2string(writabletickStr, "-");
+    std::string part2 = strtok2string(NULL, "-");
+    std::string part3 = strtok2string(NULL, "-");
+    free(writabletickStr);
+    if (!part3.empty())
+    {
+        LOG("Failed to parse tick string \"%s\"! Does not follow syntax N1-N2!", tickStr);
+        return false;
+    }
+
+    bool okay = true;
+    try
+    {
+        tickFrom = std::stoll(part1);
+        if (tickFrom <= 0)
+            okay = false;
+        if (!part2.empty())
+        {
+            tickTo = std::stoll(part2);
+            if (tickTo <= 0)
+                okay = false;
+        }
+        else
+            tickTo = tickFrom;
+    }
+    catch (std::exception e)
+    {
+        okay = false;
+    }
+
+    if (!okay)
+    {
+        LOG("Failed to parse tick string \"%s\"! Tick must be a positive number N or rane N1-N2!", tickStr);
+    }
+    return okay;
+}
+
+void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsigned int reqType, const char* reqParam, bool getAllDetails)
+{
+    long long tickFrom = 0, tickTo = 0;
+    if (!parseTick(reqParam, tickFrom, tickTo))
+        return;
+
+    const long long tickCount = tickTo - tickFrom + 1;
+    if (tickCount < 1)
+    {
+        LOG("In range N1-N2, N2 should be greater than N2.");
+        return;
+    }
+    if (tickCount > 1000)
+    {
+        LOG("Range of ticks is too large. Skipped for node performance reasons.");
+        return;
+    }
+
+    auto qc = make_qc(nodeIp, nodePort);
+    for (long long tick = tickFrom; tick <= tickTo; ++tick)
+    {
+        std::vector<int64_t> recQueryIds = receiveQueryIds(qc, reqType, tick);
+
+        if (!getAllDetails)
+        {
+            LOG("Query IDs in tick %" PRIi64 ":\n", tick);
+            for (const int64_t& id : recQueryIds)
+            {
+                LOG("- %" PRIi64 "\n", id);
+            }
+        }
+        else
+        {
+            LOG("Number of query IDs in tick %" PRIi64 ": %d\n\n", tick, (int)recQueryIds.size());
+
+            RespondOracleDataQueryMetadata metadata;
+            std::vector<uint8_t> query, reply;
+            for (const int64_t& id : recQueryIds)
+            {
+                receiveQueryInformation(qc, id, metadata, query, reply);
+                printQueryInformation(metadata, query, reply);
+                LOG("\n");
+            }
+        }
+    }
+}
+
+void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType, const char* reqParam)
 {
     if (strcasecmp(requestType, "") == 0)
         printGetOracleQueryHelpAndExit();
@@ -344,7 +436,7 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     if (strcasecmp(requestType, "pending") == 0)
     {
         auto qc = make_qc(nodeIp, nodePort);
-        std::vector<int64_t> recQueryIds = receiveQueryIds(qc);
+        std::vector<int64_t> recQueryIds = receiveQueryIds(qc, RequestOracleData::requestPendingQueryIds);
 
         LOG("Pending query ids:\n");
         for (const int64_t& id : recQueryIds)
@@ -355,7 +447,7 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     else if (strcasecmp(requestType, "pending+") == 0)
     {
         auto qc = make_qc(nodeIp, nodePort);
-        std::vector<int64_t> recQueryIds = receiveQueryIds(qc);
+        std::vector<int64_t> recQueryIds = receiveQueryIds(qc, RequestOracleData::requestPendingQueryIds);
         LOG("Number of pending query IDs: %d\n\n", (int)recQueryIds.size());
 
         RespondOracleDataQueryMetadata metadata;
@@ -366,6 +458,18 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
             printQueryInformation(metadata, query, reply);
             LOG("\n");
         }
+    }
+    else if (strcasecmp(requestType, "all") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestAllQueryIdsByTick, reqParam,
+            /*getAllDetails=*/false);
+    }
+    else if (strcasecmp(requestType, "all+") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestAllQueryIdsByTick, reqParam,
+            /*getAllDetails=*/true);
     }
     else if (strcasecmp(requestType, "stats") == 0)
     {

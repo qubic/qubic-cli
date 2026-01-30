@@ -410,11 +410,6 @@ void printSetProposalHelp()
 	std::cout << std::endl;
 }
 
-#ifdef _MSC_VER
-#define STRDUP(x) _strdup(x)
-#else
-#define STRDUP(x) strdup(x)
-#endif
 
 
 bool parseProposalString(const char* proposalString, ProposalDataV1& p, SubscriptionParams* subscriptionParams = nullptr)
