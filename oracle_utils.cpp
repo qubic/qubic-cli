@@ -61,6 +61,10 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
     while (recvByte == sizeof(RequestResponseHeader))
     {
         auto header = (RequestResponseHeader*)buffer;
+        if (header->dejavu() != packet.header.dejavu())
+        {
+            throw std::runtime_error("Unexpected dejavue!");
+        }
         if (header->type() == RespondOracleData::type())
         {
             recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
@@ -77,113 +81,107 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
         }
         else if (header->type() == END_RESPOND)
         {
-            break;
+            return queryIds;
+        }
+        else
+        {
+            throw std::runtime_error("Unexpected packet type!");
         }
         recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
     }
 
-    return queryIds;
+    throw ConnectionTimeout();
 }
 
 static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleDataQueryMetadata& metadata, std::vector<uint8_t>& query, std::vector<uint8_t>& reply)
 {
+    // send request
     struct {
         RequestResponseHeader header;
         RequestOracleData req;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestOracleData::type());
-    memset(&packet.req, 0, sizeof(packet.req));
-    packet.req.reqType = RequestOracleData::requestQueryAndResponse;
-    packet.req.reqTickOrId = queryId;
+    } request;
+    request.header.setSize(sizeof(request));
+    request.header.randomizeDejavu();
+    request.header.setType(RequestOracleData::type());
+    memset(&request.req, 0, sizeof(request.req));
+    request.req.reqType = RequestOracleData::requestQueryAndResponse;
+    request.req.reqTickOrId = queryId;
+    qc->sendData((uint8_t*)&request, request.header.size());
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    uint8_t buffer[payloadBufferSize];
-
+    // reset output
     memset(&metadata, 0, sizeof(RespondOracleDataQueryMetadata));
     query.clear();
     reply.clear();
 
-    // receive metadata
-    constexpr unsigned long long packetSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryMetadata);
-    int recvByte = qc->receiveData(buffer, packetSize);
-    auto header = (RequestResponseHeader*)buffer;
-    if (recvByte < sizeof(RequestResponseHeader))
-    {
-        throw std::logic_error("Connection closed.");
-    }
-    else if (header->type() == END_RESPOND)
-    {
-        throw std::logic_error("Unknown query ID!");
-    }
-    else if (recvByte < packetSize)
-    {
-        throw std::logic_error("Received incomplete data!");
-    }
-
-    auto respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-    if (header->type() == RespondOracleData::type() && respOracleData->resType == RespondOracleData::respondQueryMetadata)
-    {
-        metadata = *(RespondOracleDataQueryMetadata*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
-    }
-    else
-        return;
+    // prepare output buffer
+    uint8_t buffer[sizeof(RequestResponseHeader) + payloadBufferSize];
+    auto responseHeader = (RequestResponseHeader*)buffer;
+    auto responsePayload = buffer + sizeof(RequestResponseHeader);
 
     // receive query data
-    recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
-    if (recvByte == sizeof(RequestResponseHeader))
+    int recvHeaderBytes = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    while (recvHeaderBytes == sizeof(RequestResponseHeader))
     {
-        header = (RequestResponseHeader*)buffer;
-        if (header->type() == RespondOracleData::type())
-        {
-            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
-            respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-            if (respOracleData->resType == RespondOracleData::respondQueryData)
-            {
-                query.insert(query.end(),
-                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
-                    buffer + header->size());
-            }
-            else if (respOracleData->resType == RespondOracleData::respondReplyData)
-            {
-                // if sending the query failed for some reason, the reply might follow the metadata immediately
-                goto receive_reply;
-            }
-            else
-                return;
-        }
-        else
-            return;
-    }
-    else
-        return;
+        // get remaining part of the response
+        const unsigned int responsePayloadSize = responseHeader->size() - sizeof(RequestResponseHeader);
+        qc->receiveAllDataOrThrowException(responsePayload, responsePayloadSize);
 
-    // receive reply data
-    recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
-    if (recvByte == sizeof(RequestResponseHeader))
-    {
-        header = (RequestResponseHeader*)buffer;
-        if (header->type() == RespondOracleData::type())
+        // only process if dejavu matches (response is to current request, skip otherwise)
+        if (responseHeader->dejavu() == request.header.dejavu())
         {
-            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
-            respOracleData = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
-            if (respOracleData->resType == RespondOracleData::respondReplyData)
+            if (responseHeader->type() == RespondOracleData::type())
             {
-            receive_reply:
-                reply.insert(reply.end(),
-                    buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData),
-                    buffer + header->size());
+                // Oracle data response
+                if (responsePayloadSize < sizeof(RespondOracleData))
+                {
+                    throw std::runtime_error("Malformatted RespondOracleData reply");
+                }
+                auto respOracleData = (RespondOracleData*)responsePayload;
+                auto responseInnerPayload = responsePayload + sizeof(RespondOracleData);
+                auto responseInnerPayloadSize = responsePayloadSize - sizeof(RespondOracleData);
+
+                if (respOracleData->resType == RespondOracleData::respondQueryMetadata
+                    && responsePayloadSize == sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryMetadata))
+                {
+                    // Query metadata
+                    metadata = *(RespondOracleDataQueryMetadata*)(responseInnerPayload);
+                }
+                else if (respOracleData->resType == RespondOracleData::respondQueryData)
+                {
+                    // Oracle query
+                    query.insert(query.end(),
+                        responseInnerPayload,
+                        responseInnerPayload + responseInnerPayloadSize);
+                }
+                else if (respOracleData->resType == RespondOracleData::respondReplyData)
+                {
+                    // Oracle reply
+                    reply.insert(reply.end(),
+                        responseInnerPayload,
+                        responseInnerPayload + responseInnerPayloadSize);
+                }
+                else
+                {
+                    throw std::runtime_error("Unexpected RespondOracleData message sub-type");
+                }
             }
-            else
-                return;
+            else if (responseHeader->type() == END_RESPOND)
+            {
+                // End of output packages for this request
+                if (metadata.queryId != queryId)
+                    throw std::logic_error("Unknown query ID!");
+                else
+                    break;
+            }
+
+            // try to get next message header
+            recvHeaderBytes = qc->receiveData(buffer, sizeof(RequestResponseHeader));
         }
-        else
-            return;
     }
-    else
-        return;
+    if (recvHeaderBytes < sizeof(RequestResponseHeader))
+    {
+        throw std::logic_error("Error receiving message header.");
+    }
 }
 
 static const char* getOracleQueryTypeStr(uint8_t type)
@@ -421,6 +419,11 @@ void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsig
             for (const int64_t& id : recQueryIds)
             {
                 receiveQueryInformation(qc, id, metadata, query, reply);
+                if (metadata.queryId == 0)
+                {
+                    LOG("Error getting query metadata! Stopping now.\n");
+                    return;
+                }
                 printQueryInformation(metadata, query, reply);
                 LOG("\n");
             }

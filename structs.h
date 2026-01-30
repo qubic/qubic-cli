@@ -231,6 +231,11 @@ public:
         _size[2] = (uint8_t)(size >> 16);
     }
 
+    inline unsigned int dejavu() const
+    {
+        return _dejavu;
+    }
+
     inline bool isDejavuZero() const
     {
         return !_dejavu;

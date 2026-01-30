@@ -62,3 +62,9 @@ class EndResponseReceived : public std::runtime_error
 public:
     explicit EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
 };
+
+class ConnectionTimeout : public std::runtime_error
+{
+public:
+    explicit ConnectionTimeout(const char* message = "Connection timeout") : std::runtime_error(message) {}
+};
