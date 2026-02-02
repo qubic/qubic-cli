@@ -257,10 +257,17 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
 
     LOG("Timeout: %s\n", toString(*(QPI::DateAndTime*)&metadata.timeout).c_str());
     LOG("Interface Index: %" PRIu32 "\n", metadata.interfaceIndex);
-    LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
-    LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
-    LOG("Total Commits: %" PRIu16 "\n", metadata.totalCommits);
-    LOG("Agreeing Commits: %" PRIu16 "\n", metadata.agreeingCommits);
+    if (metadata.type == ORACLE_QUERY_TYPE_CONTRACT_SUBSCRIPTION)
+        LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
+    if (metadata.status == ORACLE_QUERY_STATUS_SUCCESS)
+    {
+        LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
+    }
+    else
+    {
+        LOG("Total Commits: %" PRIu16 "\n", metadata.totalCommits);
+        LOG("Agreeing Commits: %" PRIu16 "\n", metadata.agreeingCommits);
+    }
 
     std::string queryStr = oracleQueryToString(metadata.interfaceIndex, query);
     if (queryStr.find("error") != std::string::npos)
