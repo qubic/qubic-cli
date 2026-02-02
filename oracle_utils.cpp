@@ -4,7 +4,7 @@
 #include "core/src/network_messages/common_def.h"
 #include "core/src/network_messages/oracles.h"
 
-#include "oracle_interface_adapter.h"
+#include "qpi_adapter.h"
 
 #include "oracle_utils.h"
 #include "logger.h"
