@@ -75,7 +75,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
         auto header = (RequestResponseHeader*)buffer;
         if (header->dejavu() != packet.header.dejavu())
         {
-            throw std::runtime_error("Unexpected dejavue!");
+            throw std::runtime_error("Unexpected dejavu!");
         }
         if (header->type() == RespondOracleData::type())
         {
@@ -86,7 +86,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
                 long long payloadNumBytes = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
                 if (payloadNumBytes % 8 != 0)
                 {
-                    throw std::runtime_error("Malformatted RespondOracleData::respondQueryIds messge!");
+                    throw std::runtime_error("Malformatted RespondOracleData::respondQueryIds message!");
 
                 }
                 else if (payloadNumBytes > 0)
@@ -366,11 +366,11 @@ static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
 
 static bool parseTick(const char* tickStr, long long& tickFrom, long long& tickTo)
 {
-    char* writabletickStr = STRDUP(tickStr);
-    std::string part1 = strtok2string(writabletickStr, "-");
+    char* writableTickStr = STRDUP(tickStr);
+    std::string part1 = strtok2string(writableTickStr, "-");
     std::string part2 = strtok2string(NULL, "-");
     std::string part3 = strtok2string(NULL, "-");
-    free(writabletickStr);
+    free(writableTickStr);
     if (!part3.empty())
     {
         LOG("Failed to parse tick string \"%s\"! Does not follow syntax N1-N2!", tickStr);
@@ -399,7 +399,7 @@ static bool parseTick(const char* tickStr, long long& tickFrom, long long& tickT
 
     if (!okay)
     {
-        LOG("Failed to parse tick string \"%s\"! Tick must be a positive number N or rane N1-N2!", tickStr);
+        LOG("Failed to parse tick string \"%s\"! Tick must be a positive number N or range N1-N2!", tickStr);
     }
     return okay;
 }
@@ -422,7 +422,7 @@ void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsig
         return;
     }
 
-    // use longer 3 second timout
+    // use longer 3 second timeout
     unsigned long timeoutMilliseconds = 3000;
 
     auto qc = make_qc(nodeIp, nodePort, timeoutMilliseconds);
