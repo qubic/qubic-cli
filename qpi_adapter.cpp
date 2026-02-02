@@ -1,5 +1,3 @@
-#pragma once
-
 #include "qpi_adapter.h"
 
 #include "key_utils.h"
