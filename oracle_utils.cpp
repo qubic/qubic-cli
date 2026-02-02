@@ -416,7 +416,7 @@ void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsig
         LOG("In range N1-N2, N2 should be greater than N2.");
         return;
     }
-    if (tickCount > 1000)
+    if (tickCount > 10000)
     {
         LOG("Range of ticks is too large. Skipped for node performance reasons.");
         return;
