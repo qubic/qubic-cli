@@ -422,7 +422,10 @@ void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsig
         return;
     }
 
-    auto qc = make_qc(nodeIp, nodePort);
+    // use longer 3 second timout
+    unsigned long timeoutMilliseconds = 3000;
+
+    auto qc = make_qc(nodeIp, nodePort, timeoutMilliseconds);
     for (long long tick = tickFrom; tick <= tickTo; ++tick)
     {
         std::vector<int64_t> recQueryIds = receiveQueryIds(qc, reqType, tick);
