@@ -84,11 +84,17 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
             if (resp->resType == RespondOracleData::respondQueryIds)
             {
                 long long payloadNumBytes = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
-                if (payloadNumBytes <= 0 || payloadNumBytes % 8 != 0)
-                    break;
-                const uint8_t* queryIdBuffer = buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData);
-                queryIds.insert(queryIds.end(),
-                    (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + payloadNumBytes));
+                if (payloadNumBytes % 8 != 0)
+                {
+                    throw std::runtime_error("Malformatted RespondOracleData::respondQueryIds messge!");
+
+                }
+                else if (payloadNumBytes > 0)
+                {
+                    const uint8_t* queryIdBuffer = buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData);
+                    queryIds.insert(queryIds.end(),
+                        (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + payloadNumBytes));
+                }
             }
         }
         else if (header->type() == END_RESPOND)
