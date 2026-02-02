@@ -28,10 +28,22 @@ void printGetOracleQueryHelpAndExit()
     LOG("    Print the query IDs for all pending queries.\n");
     LOG("qubic-cli [...] -getoraclequery pending+\n");
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by pending.\n");
-    LOG("qubic-cli [...]  [TICK]\n");
+    LOG("qubic-cli [...] -getoraclequery all [TICK]\n");
     LOG("    Print the query IDs of all queries started in the given tick.\n");
     LOG("qubic-cli [...] -getoraclequery all+ [TICK]\n");
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by all.\n");
+    LOG("qubic-cli [...] -getoraclequery user [TICK]\n");
+    LOG("    Print the query IDs of user queries started in the given tick.\n");
+    LOG("qubic-cli [...] -getoraclequery user+ [TICK]\n");
+    LOG("    Print the oracle query, metadata, and reply if available for each query ID received by user.\n");
+    LOG("qubic-cli [...] -getoraclequery contract [TICK]\n");
+    LOG("    Print the query IDs of contract one-time queries started in the given tick.\n");
+    LOG("qubic-cli [...] -getoraclequery contract+ [TICK]\n");
+    LOG("    Print the oracle query, metadata, and reply if available for each query ID received by contract.\n");
+    LOG("qubic-cli [...] -getoraclequery subscription [TICK]\n");
+    LOG("    Print the query IDs of contract subscription queries started in the given tick.\n");
+    LOG("qubic-cli [...] -getoraclequery subscription+ [TICK]\n");
+    LOG("    Print the oracle query, metadata, and reply if available for each query ID received by subscription.\n");
     LOG("qubic-cli [...] -getoraclequery stats\n");
     LOG("    Print the oracle query statistics of the core node.\n");
     exit(1);
@@ -479,6 +491,42 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     {
         processGetOracleQueryWithTick(nodeIp, nodePort,
             RequestOracleData::requestAllQueryIdsByTick, reqParam,
+            /*getAllDetails=*/true);
+    }
+    else if (strcasecmp(requestType, "user") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestUserQueryIdsByTick, reqParam,
+            /*getAllDetails=*/false);
+    }
+    else if (strcasecmp(requestType, "user+") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestUserQueryIdsByTick, reqParam,
+            /*getAllDetails=*/true);
+    }
+    else if (strcasecmp(requestType, "contract") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestContractDirectQueryIdsByTick, reqParam,
+            /*getAllDetails=*/false);
+    }
+    else if (strcasecmp(requestType, "contract+") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestContractDirectQueryIdsByTick, reqParam,
+            /*getAllDetails=*/true);
+    }
+    else if (strcasecmp(requestType, "subscription") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestContractSubscriptionQueryIdsByTick, reqParam,
+            /*getAllDetails=*/false);
+    }
+    else if (strcasecmp(requestType, "subscription+") == 0)
+    {
+        processGetOracleQueryWithTick(nodeIp, nodePort,
+            RequestOracleData::requestContractSubscriptionQueryIdsByTick, reqParam,
             /*getAllDetails=*/true);
     }
     else if (strcasecmp(requestType, "stats") == 0)
