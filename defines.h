@@ -17,7 +17,7 @@
 #define DEFAULT_SEED "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 #define ARBITRATOR "AFZPUAIYVPNUYGJRQVLUKOPPVLHAZQTGLYAAUUNBXFTVTAMSBKQBLEIEPCVJ"
 #define NUMBER_OF_COMPUTORS 676
-#define CONTRACT_COUNT 18 // Change this number when new contracts are added, also add new indices to getContractIndex in argparser.h
+#define CONTRACT_COUNT 23 // Change this number when new contracts are added, also add new indices to getContractIndex in argparser.h
 
 #define EXCHANGE_PUBLIC_PEERS 0
 #define BROADCAST_MESSAGE 1

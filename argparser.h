@@ -554,6 +554,16 @@ static uint32_t getContractIndex(const char* str, bool enableTestContracts)
         idx = 17;
     else if (strcasecmp(str, "QIP") == 0)
         idx = 18;
+    else if (strcasecmp(str, "QRAFFLE") == 0)
+        idx = 19;
+    else if (strcasecmp(str, "QRWA") == 0)
+        idx = 20;
+    else if (strcasecmp(str, "QRP") == 0)
+        idx = 21;
+    else if (strcasecmp(str, "QTF") == 0)
+        idx = 22;
+    else if (strcasecmp(str, "QDUEL") == 0)
+        idx = 23;
     else
     {
         unsigned int contractCount = CONTRACT_COUNT;
