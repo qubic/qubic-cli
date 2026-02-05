@@ -138,8 +138,8 @@ void print_help()
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
     printf("\t\tRemotely toggle Main/Aux mode on node, valid seed and node ip/port are required.\t\n");
     printf("\t\t<MODE_0> and <MODE_1> value are: MAIN or AUX\t\n");
-    printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> \n");
-    printf("\t\tRemotely set solution threshold for future epoch, valid seed and node ip/port are required.\t\n");
+    printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> <ALGO_TYPE_INDEX>\n");
+    printf("\t\tRemotely set solution threshold for future epoch, valid seed and node ip/port are required. <ALGO_TYPE_INDEX>: 0 - HYPERIDENTITY, 1 - ADDITION.\t\n");
     printf("\t-refreshpeerlist\n");
     printf("\t\t(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid seed and node ip/port are required.\t\n");
     printf("\t-forcenexttick\n");
