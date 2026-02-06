@@ -168,6 +168,8 @@ void print_help()
     printf("\n[ORACLE COMMANDS]\n");
     printf("\t-getoraclequery <...>\n");
     printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
+    printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n");
+    printf("\t\tSend user oracle query. Skip arguments to get detailed documentation.\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -1167,6 +1169,19 @@ void parseArgument(int argc, char** argv)
             if (i + 2 < argc)
                 g_paramString2 = argv[i + 2];
             i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-queryoracle") == 0)
+        {
+            g_cmd = SEND_ORACLE_QUERY_TX;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_paramString2 = argv[i + 2];
+            if (i + 3 < argc)
+                g_paramString3 = argv[i + 3];
+            i += 4;
             CHECK_OVER_PARAMETERS
             break;
         }

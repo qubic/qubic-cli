@@ -46,3 +46,7 @@ std::string toString(const QPI::id& id);
 std::string toString(const QPI::DateAndTime& dt);
 std::string oracleQueryToString(uint32_t interfaceIndex, const std::vector<uint8_t>& query);
 std::string oracleReplyToString(uint32_t interfaceIndex, const std::vector<uint8_t>& reply);
+std::string oracleInterfaceToString(uint32_t interfaceIndex);
+uint32_t stringToOracleInterface(const char* oracleInterfaceString);
+void printOracleQueryParamHelp(uint32_t interfaceIndex);
+std::vector<uint8_t> parseOracleQueryParams(uint32_t interfaceIndex, const char* oracleQueryString);

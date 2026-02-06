@@ -12,6 +12,7 @@
 #include "structs.h"
 #include "connection.h"
 #include "key_utils.h"
+#include "wallet_utils.h"
 
 
 void printGetOracleQueryHelpAndExit()
@@ -40,6 +41,21 @@ void printGetOracleQueryHelpAndExit()
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by subscription.\n");
     LOG("qubic-cli [...] -getoraclequery stats\n");
     LOG("    Print the oracle query statistics of the core node.\n");
+    exit(1);
+}
+
+void printMakeOracleUserQueryTransactionHelpAndExit()
+{
+    LOG("qubic-cli [...] -queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n\n");
+    LOG("    Send an oracle user query transaction. [INTERFACE] and [QUERY_STRING] are mandatory parameters.\n");
+    LOG("    [TIMEOUT_IN_SECONDS] is optional (the default value is 60 seconds).\n\n");
+    LOG("    As [INTERFACE], the following values are supported:\n");
+    LOG("        ");
+    for (uint32_t idx = 0; idx < OI::oracleInterfacesCount; ++idx)
+        LOG("%s ", oracleInterfaceToString(idx).c_str());
+    LOG("\n\n");
+    LOG("    The [QUERY_STRING] depends on the [INTERFACE]. Run the following to get help:\n");
+    LOG("        qubic-cli [...] queryoracle [INTERFACE]\n");
     exit(1);
 }
 
@@ -559,7 +575,7 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
         }
         catch (std::exception e)
         {
-            LOG(e.what());
+            LOG("Expected query ID (unsigned integer), found unknown command %s!\n", requestType);
             return;
         }
 
@@ -570,4 +586,83 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
         receiveQueryInformation(qc, queryId, metadata, query, reply);
         printQueryInformation(metadata, query, reply);
     }
+}
+
+void makeOracleUserQueryTransaction(
+    const char* nodeIp, int nodePort, const char* seed,
+    const char* oracleInterfaceString,
+    const char* queryString,
+    const char* timeoutSecondsString,
+    uint32_t scheduledTickOffset)
+{
+    if (strcasecmp(oracleInterfaceString, "") == 0)
+        printMakeOracleUserQueryTransactionHelpAndExit();
+
+    const uint32_t interfaceIndex = stringToOracleInterface(oracleInterfaceString);
+    if (interfaceIndex >= OI::oracleInterfacesCount)
+    {
+        LOG("Unknown oracle interface \"%s\"!\nSupported options are:\n\t", oracleInterfaceString);
+        for (uint32_t idx = 0; idx < OI::oracleInterfacesCount; ++idx)
+            LOG("%s ", oracleInterfaceToString(idx).c_str());
+        LOG("\n");
+        return;
+    }
+
+    if (strcasecmp(queryString, "") == 0)
+    {
+        LOG("[QUERY_STRING] in %s oracle:\n", oracleInterfaceToString(interfaceIndex).c_str());
+        printOracleQueryParamHelp(interfaceIndex);
+        return;
+    }
+
+    std::vector<uint8_t> queryData = parseOracleQueryParams(interfaceIndex, queryString);
+    if (queryData.size() == 0)
+    {
+        LOG("Error parsing [QUERY_STRING] \"%s\".\n", queryString);
+        return;
+    }
+
+    uint64_t timeoutSeconds = 60;
+    if (strcasecmp(timeoutSecondsString, "") == 0)
+    {
+        LOG("No timeout specified. Using default timeout of 60 seconds.\n");
+    }
+    else
+    {
+        try
+        {
+            timeoutSeconds = std::stoull(timeoutSecondsString);
+        }
+        catch (...)
+        {
+            timeoutSeconds = 0;
+        }
+        if (timeoutSeconds == 0 || timeoutSeconds > 600)
+        {
+            LOG("Error: Invalid timeout! Please use a value between 1 and 600.\n");
+            return;
+        }
+    }
+
+    // get oracle query fee
+    OI::initOracleInterfaces();
+    int64_t fee = OI::getOracleQueryFeeFunc[interfaceIndex](queryData.data());
+    LOG("Fee for oracle query: %" PRIi64 "\n", fee);
+
+    // build tx input data
+    const int txInputSize = 8 + (int)queryData.size();
+    std::vector<uint8_t> txInputData(txInputSize);
+    *(uint32_t*)(txInputData.data()) = interfaceIndex;
+    *(uint32_t*)(txInputData.data() + 4) = (uint32_t)timeoutSeconds * 1000; // timeout in milliseconds
+    memcpy(txInputData.data() + 8, queryData.data(), queryData.size());
+
+    // send transaction
+    char destinationPublicKey[32] = {0};
+    makeCustomTransaction(nodeIp, nodePort, seed, destinationPublicKey,
+        10, // TODO: define tx types as enum in core and use here
+        fee, txInputSize, txInputData.data(), scheduledTickOffset);
+
+    // TODO: print command to check directly
+    LOG("\n\nYou may run the following command for checking the query:\n");
+    LOG("qubic-cli [...] -getoraclequery user+ [TICK]\n");
 }

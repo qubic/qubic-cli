@@ -394,6 +394,11 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             processGetOracleQuery(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case SEND_ORACLE_QUERY_TX:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            makeOracleUserQueryTransaction(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_paramString2, g_paramString3, g_offsetScheduledTick);
+            break;
         case QUTIL_SEND_TO_MANY_V1:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

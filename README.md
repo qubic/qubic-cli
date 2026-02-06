@@ -146,6 +146,8 @@ Commands:
 [ORACLE COMMANDS]
 	-getoraclequery <...>
 		Get information about oracle queries. Skip arguments to get detailed documentation.
+	-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]
+		Send user oracle query. Skip arguments to get detailed documentation.
 
 [SMART CONTRACT COMMANDS]
     -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>
