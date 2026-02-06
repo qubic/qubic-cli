@@ -13,12 +13,6 @@
 #include "connection.h"
 #include "key_utils.h"
 
-// make sure these variables match the local variables from the core code 
-// in OracleEngine::processRequestOracleData(...) defined in core/src/oracle_core/net_msg_impl.h
-constexpr int maxQueryIdCount = 2;
-constexpr int payloadBufferSize = std::max((int)std::max(MAX_ORACLE_QUERY_SIZE, MAX_ORACLE_REPLY_SIZE), maxQueryIdCount * 8);
-static_assert(payloadBufferSize >= sizeof(RespondOracleDataQueryMetadata), "Buffer too small.");
-static_assert(payloadBufferSize < 32 * 1024, "Large alloc in stack may need reconsideration.");
 
 void printGetOracleQueryHelpAndExit()
 {
@@ -66,34 +60,40 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
 
     std::vector<int64_t> queryIds;
 
-    constexpr unsigned long long bufferSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + maxQueryIdCount * sizeof(int64_t);
-    uint8_t buffer[bufferSize];
-    int recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    uint8_t headerBuffer[sizeof(RequestResponseHeader)];
+    auto header = (const RequestResponseHeader*)headerBuffer;
+    int recvByte = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
+
+    std::vector<uint8_t> payloadBuffer(sizeof(RespondOracleData) + 128 * sizeof(int64_t));
 
     while (recvByte == sizeof(RequestResponseHeader))
     {
-        auto header = (RequestResponseHeader*)buffer;
         if (header->dejavu() != packet.header.dejavu())
         {
             throw std::runtime_error("Unexpected dejavu!");
         }
         if (header->type() == RespondOracleData::type())
         {
-            recvByte = qc->receiveAllDataOrThrowException(buffer + sizeof(RequestResponseHeader), header->size() - sizeof(RequestResponseHeader));
-            auto resp = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+            unsigned int payloadSize = header->size() - sizeof(RequestResponseHeader);
+            if (payloadSize > payloadBuffer.size())
+            {
+                payloadBuffer.resize(payloadSize);
+            }
+            recvByte = qc->receiveAllDataOrThrowException(payloadBuffer.data(), payloadSize);
+            auto resp = (RespondOracleData*)(payloadBuffer.data());
             if (resp->resType == RespondOracleData::respondQueryIds)
             {
-                long long payloadNumBytes = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
-                if (payloadNumBytes % 8 != 0)
+                long long idsNumBytes = payloadSize - sizeof(RespondOracleData);
+                if (idsNumBytes % 8 != 0)
                 {
                     throw std::runtime_error("Malformatted RespondOracleData::respondQueryIds message!");
 
                 }
-                else if (payloadNumBytes > 0)
+                else if (idsNumBytes > 0)
                 {
-                    const uint8_t* queryIdBuffer = buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData);
+                    const uint8_t* queryIdBuffer = payloadBuffer.data() + sizeof(RespondOracleData);
                     queryIds.insert(queryIds.end(),
-                        (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + payloadNumBytes));
+                        (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + idsNumBytes));
                 }
             }
         }
@@ -105,7 +105,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
         {
             throw std::runtime_error("Unexpected packet type!");
         }
-        recvByte = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+        recvByte = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
     }
 
     throw ConnectionTimeout();
@@ -131,18 +131,22 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
     query.clear();
     reply.clear();
 
-    // prepare output buffer
-    uint8_t buffer[sizeof(RequestResponseHeader) + payloadBufferSize];
-    auto responseHeader = (RequestResponseHeader*)buffer;
-    auto responsePayload = buffer + sizeof(RequestResponseHeader);
+    // prepare output buffers
+    uint8_t headerBuffer[sizeof(RequestResponseHeader)];
+    auto responseHeader = (const RequestResponseHeader*)headerBuffer;
+    std::vector<uint8_t> payloadBuffer(2048);
 
     // receive query data
-    int recvHeaderBytes = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+    int recvHeaderBytes = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
     while (recvHeaderBytes == sizeof(RequestResponseHeader))
     {
         // get remaining part of the response
         const unsigned int responsePayloadSize = responseHeader->size() - sizeof(RequestResponseHeader);
-        qc->receiveAllDataOrThrowException(responsePayload, responsePayloadSize);
+        if (responsePayloadSize > payloadBuffer.size())
+        {
+            payloadBuffer.resize(responsePayloadSize);
+        }
+        qc->receiveAllDataOrThrowException(payloadBuffer.data(), responsePayloadSize);
 
         // only process if dejavu matches (response is to current request, skip otherwise)
         if (responseHeader->dejavu() == request.header.dejavu())
@@ -154,8 +158,8 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
                 {
                     throw std::runtime_error("Malformatted RespondOracleData reply");
                 }
-                auto respOracleData = (RespondOracleData*)responsePayload;
-                auto responseInnerPayload = responsePayload + sizeof(RespondOracleData);
+                auto respOracleData = (RespondOracleData*)payloadBuffer.data();
+                auto responseInnerPayload = payloadBuffer.data() + sizeof(RespondOracleData);
                 auto responseInnerPayloadSize = responsePayloadSize - sizeof(RespondOracleData);
 
                 if (respOracleData->resType == RespondOracleData::respondQueryMetadata
@@ -193,7 +197,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
             }
 
             // try to get next message header
-            recvHeaderBytes = qc->receiveData(buffer, sizeof(RequestResponseHeader));
+            recvHeaderBytes = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
         }
     }
     if (recvHeaderBytes < sizeof(RequestResponseHeader))
