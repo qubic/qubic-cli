@@ -138,8 +138,8 @@ void print_help()
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
     printf("\t\tRemotely toggle Main/Aux mode on node, valid seed and node ip/port are required.\t\n");
     printf("\t\t<MODE_0> and <MODE_1> value are: MAIN or AUX\t\n");
-    printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> \n");
-    printf("\t\tRemotely set solution threshold for future epoch, valid seed and node ip/port are required.\t\n");
+    printf("\t-setsolutionthreshold <EPOCH> <SOLUTION_THRESHOLD> <ALGO_TYPE_INDEX>\n");
+    printf("\t\tRemotely set solution threshold for future epoch, valid seed and node ip/port are required. <ALGO_TYPE_INDEX>: 0 - HYPERIDENTITY, 1 - ADDITION.\t\n");
     printf("\t-refreshpeerlist\n");
     printf("\t\t(equivalent to F4) Remotely refresh the peer list of node, all current connections will be closed after this command is sent, valid seed and node ip/port are required.\t\n");
     printf("\t-forcenexttick\n");
@@ -559,6 +559,16 @@ static uint32_t getContractIndex(const char* str, bool enableTestContracts)
         idx = 17;
     else if (strcasecmp(str, "QIP") == 0)
         idx = 18;
+    else if (strcasecmp(str, "QRAFFLE") == 0)
+        idx = 19;
+    else if (strcasecmp(str, "QRWA") == 0)
+        idx = 20;
+    else if (strcasecmp(str, "QRP") == 0)
+        idx = 21;
+    else if (strcasecmp(str, "QTF") == 0)
+        idx = 22;
+    else if (strcasecmp(str, "QDUEL") == 0)
+        idx = 23;
     else
     {
         unsigned int contractCount = CONTRACT_COUNT;
@@ -1060,7 +1070,8 @@ void parseArgument(int argc, char** argv)
             g_cmd = SET_SOLUTION_THRESHOLD;
             g_setSolutionThresholdEpoch = int(charToNumber(argv[i+1]));
             g_setSolutionThresholdValue = int(charToNumber(argv[i+2]));
-            i+=3;
+            g_setSolutionThresholdAlgo = int(charToNumber(argv[i+3]));
+            i+=4;
             CHECK_OVER_PARAMETERS
             break;
         }
