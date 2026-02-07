@@ -41,6 +41,8 @@ void printGetOracleQueryHelpAndExit()
     LOG("    Print the oracle query, metadata, and reply if available for each query ID received by subscription.\n");
     LOG("qubic-cli [...] -getoraclequery stats\n");
     LOG("    Print the oracle query statistics of the core node.\n");
+    LOG("qubic-cli [...] -getoraclequery revenue\n");
+    LOG("    Print the current oracle revenue points of all computors.\n");
     exit(1);
 }
 
@@ -384,6 +386,44 @@ static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
     }
 }
 
+static void receiveOracleRevenuePoints(QCPtr& qc, std::vector<uint64_t>& revenuePoints)
+{
+    struct {
+        RequestResponseHeader header;
+        RequestOracleData req;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(RequestOracleData::type());
+    memset(&packet.req, 0, sizeof(packet.req));
+    packet.req.reqType = RequestOracleData::requestOracleRevenuePoints;
+    qc->sendData((uint8_t*)&packet, packet.header.size());
+
+    constexpr unsigned long long responseSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + 8 * 676;
+    uint8_t buffer[responseSize];
+    int recvByte = qc->receiveData(buffer, responseSize);
+    if (recvByte != responseSize)
+    {
+        throw std::logic_error("Connection closed.");
+    }
+    const auto* header = (RequestResponseHeader*)buffer;
+    const auto* header2 = (RespondOracleData*)(buffer + sizeof(RequestResponseHeader));
+    if (header->type() != RespondOracleData::type() || header2->resType != RespondOracleData::respondOracleRevenuePoints)
+    {
+        throw std::logic_error("Unexpected response message.");
+    }
+    revenuePoints.resize(676);
+    memcpy(revenuePoints.data(), buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData), 8 * 676);
+}
+
+static void printOracleRevenuePoints(const std::vector<uint64_t>& revenuePoints)
+{
+    for (int i = 0; i < (int)revenuePoints.size(); ++i)
+    {
+        LOG("computor %d  ->  %" PRIu64 " oracle rev points\n", i, revenuePoints[i]);
+    }
+}
+
 static bool parseTick(const char* tickStr, long long& tickFrom, long long& tickTo)
 {
     char* writableTickStr = STRDUP(tickStr);
@@ -564,6 +604,13 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
         RespondOracleDataQueryStatistics stats;
         receiveQueryStats(qc, stats);
         printQueryStats(stats);
+    }
+    else if (strcasecmp(requestType, "revenue") == 0)
+    {
+        auto qc = make_qc(nodeIp, nodePort);
+        std::vector<uint64_t> computorRevenuePoints;
+        receiveOracleRevenuePoints(qc, computorRevenuePoints);
+        printOracleRevenuePoints(computorRevenuePoints);
     }
     else
     {
