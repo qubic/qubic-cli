@@ -705,11 +705,15 @@ void makeOracleUserQueryTransaction(
 
     // send transaction
     char destinationPublicKey[32] = {0};
+    uint32_t scheduledTick = 0;
     makeCustomTransaction(nodeIp, nodePort, seed, destinationPublicKey,
         10, // TODO: define tx types as enum in core and use here
-        fee, txInputSize, txInputData.data(), scheduledTickOffset);
+        fee, txInputSize, txInputData.data(), scheduledTickOffset, &scheduledTick);
 
     // TODO: print command to check directly
     LOG("\n\nYou may run the following command for checking the query:\n");
-    LOG("qubic-cli [...] -getoraclequery user+ [TICK]\n");
+    LOG("qubic-cli [...] -getoraclequery user+ %u\n", scheduledTick);
+
+    // TODO: add "my/my+ [TICK]" command that uses a future core command for filtering queries based on seed
+    // (send tick + 4 bytes of public key to core for filtering oracle IDs)
 }
