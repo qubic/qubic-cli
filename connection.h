@@ -5,11 +5,13 @@
 #include <memory>
 #include <stdexcept>
 
+#define DEFAULT_TIMEOUT_MSEC 1000
+
 // Not thread safe
 class QubicConnection
 {
 public:
-	QubicConnection(const char* nodeIp, int nodePort);
+	QubicConnection(const char* nodeIp, int nodePort, unsigned long timeoutMillisec = DEFAULT_TIMEOUT_MSEC);
 	~QubicConnection();
 
     // Establish connection to mNodePort on node mNodeIp. 
@@ -52,13 +54,19 @@ private:
 
 typedef std::shared_ptr<QubicConnection> QCPtr;
 
-static QCPtr make_qc(const char* nodeIp, int nodePort)
+static QCPtr make_qc(const char* nodeIp, int nodePort, unsigned long timeoutMsec = DEFAULT_TIMEOUT_MSEC)
 {
-    return std::make_shared<QubicConnection>(nodeIp, nodePort);
+    return std::make_shared<QubicConnection>(nodeIp, nodePort, timeoutMsec);
 }
 
 class EndResponseReceived : public std::runtime_error
 {
 public:
     explicit EndResponseReceived(const char* message = "Received end response message") : std::runtime_error(message) {}
+};
+
+class ConnectionTimeout : public std::runtime_error
+{
+public:
+    explicit ConnectionTimeout(const char* message = "Connection timeout") : std::runtime_error(message) {}
 };

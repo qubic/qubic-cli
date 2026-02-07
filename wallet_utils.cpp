@@ -263,7 +263,8 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            uint64_t amount,
                            int extraDataSize,
                            const uint8_t* extraData,
-                           uint32_t scheduledTickOffset)
+                           uint32_t scheduledTickOffset,
+                           uint32_t* outputScheduledTick = nullptr)
 {
     if (extraDataSize < 0)
         throw std::invalid_argument("extraDataSize < 0");
@@ -292,7 +293,8 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     memcpy(temp_packet.transaction.destinationPublicKey, destPublicKey, 32);
     temp_packet.transaction.amount = amount;
     uint32_t currentTick = getTickNumberFromNode(qc);
-    temp_packet.transaction.tick = currentTick + scheduledTickOffset;
+    uint32_t scheduleTick = currentTick + scheduledTickOffset;
+    temp_packet.transaction.tick = scheduleTick;
     temp_packet.transaction.inputType = txType;
     temp_packet.transaction.inputSize = extraDataSize;
 
@@ -319,8 +321,11 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     getTxHashFromDigest(digest, txHash);
     LOG("Transaction has been sent!\n");
     printReceipt(temp_packet.transaction, txHash, extraData);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduleTick, txHash);
     LOG("to check your tx confirmation status\n");
+
+    if (outputScheduledTick)
+        *outputScheduledTick = scheduleTick;
 }
 
 void makeContractTransaction(const char* nodeIp, int nodePort,

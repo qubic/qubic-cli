@@ -18,6 +18,9 @@
 
 constexpr int QUTIL_CONTRACT_ID = 4;
 
+// TODO: use value from core source code
+constexpr unsigned long long CONTRACT_ACTION_TRACKER_SIZE = 16 * 1024 * 1024;
+
 struct SendToManyV1_input
 {
     uint8_t addresses[25][32];

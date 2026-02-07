@@ -29,7 +29,6 @@
 #include "qutil.h"
 #include "qbond.h"
 
-#define DEFAULT_TIMEOUT_MSEC 1000
 
 #ifdef _MSC_VER
 
@@ -113,7 +112,7 @@ static int connect(const char* nodeIp, int nodePort)
 
 #endif
 
-QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
+QubicConnection::QubicConnection(const char* nodeIp, int nodePort, unsigned long timeoutMillisec)
 {
 	memset(mNodeIp, 0, 32);
 	memcpy(mNodeIp, nodeIp, strlen(nodeIp));
@@ -136,7 +135,8 @@ QubicConnection::QubicConnection(const char* nodeIp, int nodePort)
         *((RequestComputors*)data) = receivePacketWithHeaderAs<RequestComputors>();
     }
     catch(std::logic_error) {}
-    setTimeout(mSocket, SO_RCVTIMEO, DEFAULT_TIMEOUT_MSEC);
+    setTimeout(mSocket, SO_RCVTIMEO, timeoutMillisec);
+    setTimeout(mSocket, SO_SNDTIMEO, timeoutMillisec);
 }
 
 void QubicConnection::getHandshakeData(std::vector<uint8_t>& buffer)

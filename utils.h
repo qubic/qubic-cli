@@ -45,6 +45,12 @@ static void rand64(uint64_t* r)
     *r = distribution(generator);
 }
 
+#ifdef _MSC_VER
+#define STRDUP(x) _strdup(x)
+#else
+#define STRDUP(x) strdup(x)
+#endif
+
 static inline std::string strtok2string(char* s, const char* delimiter)
 {
     const char* res = strtok(s, delimiter);

@@ -20,7 +20,8 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
                            uint64_t amount,
                            int extraDataSize,
                            const uint8_t* extraData,
-                           uint32_t scheduledTickOffset);
+                           uint32_t scheduledTickOffset,
+                           uint32_t* outputScheduledTick = nullptr);
 void makeContractTransaction(const char* nodeIp, int nodePort,
                              const char* seed,
                              uint64_t contractIndex,

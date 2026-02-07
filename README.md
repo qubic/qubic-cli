@@ -143,6 +143,12 @@ Commands:
 	-getexecutionfeemultiplier
 		Get the current multiplier for the conversion of raw execution time to contract execution fees, valid seed and node ip/port are required.
 
+[ORACLE COMMANDS]
+	-getoraclequery <...>
+		Get information about oracle queries. Skip arguments to get detailed documentation.
+	-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]
+		Send user oracle query. Skip arguments to get detailed documentation.
+
 [SMART CONTRACT COMMANDS]
     -callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>
         Call a contract function of contract index and print the output. Valid node ip/port are required.
@@ -451,6 +457,11 @@ enabled.
 ```
 
 ### BUILD
+
+Run the following command to get `qubic/core` as a submodule:
+```
+git submodule update --init --recursive
+```
 
 On Linux or MacOS, make sure `cmake` and `make` commands are installed and then run:
 ```
