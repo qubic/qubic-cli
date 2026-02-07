@@ -114,6 +114,22 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
                         (int64_t*)queryIdBuffer, (int64_t*)(queryIdBuffer + idsNumBytes));
                 }
             }
+            else if (resp->resType == RespondOracleData::respondTickRange)
+            {
+                if (payloadSize != sizeof(RespondOracleData) + sizeof(RespondOracleDataValidTickRange))
+                {
+                    throw std::runtime_error("Malformatted RespondOracleData::respondTickRange message!");
+                }
+                const auto* tickRange = (RespondOracleDataValidTickRange*)(payloadBuffer.data() + sizeof(RespondOracleData));
+                if (reqTickOrId < tickRange->firstTick)
+                {
+                    throw std::runtime_error("Data is not available, because tick is too old.");
+                }
+                else
+                {
+                    throw std::runtime_error("Data is not available yet. You need to wait. Current tick is " + std::to_string(tickRange->currentTick));
+                }
+            }
         }
         else if (header->type() == END_RESPOND)
         {
