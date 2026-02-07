@@ -51,13 +51,14 @@ void printMakeOracleUserQueryTransactionHelpAndExit()
     LOG("qubic-cli [...] -queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n\n");
     LOG("    Send an oracle user query transaction. [INTERFACE] and [QUERY_STRING] are mandatory parameters.\n");
     LOG("    [TIMEOUT_IN_SECONDS] is optional (the default value is 60 seconds).\n\n");
-    LOG("    As [INTERFACE], the following values are supported:\n");
-    LOG("        ");
+    LOG("    As [INTERFACE], you can currently chose one of following:\n");
     for (uint32_t idx = 0; idx < OI::oracleInterfacesCount; ++idx)
-        LOG("%s ", oracleInterfaceToString(idx).c_str());
-    LOG("\n\n");
+        LOG("        %s\n", oracleInterfaceToString(idx).c_str());
+    LOG("\n");
     LOG("    The [QUERY_STRING] depends on the [INTERFACE]. Run the following to get help:\n");
     LOG("        qubic-cli [...] queryoracle [INTERFACE]\n");
+    LOG("    For example:\n");
+    LOG("        qubic-cli [...] queryoracle price\n");
     exit(1);
 }
 
@@ -641,6 +642,11 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
             LOG("Expected query ID (unsigned integer), found unknown command %s!\n", requestType);
             return;
         }
+        if (queryId <= 0)
+        {
+            LOG("Invalid query ID. Expected positive integer. Use commands such as \"user\" and \"contract\" to get a valid ID.\n");
+            return;
+        }
 
         auto qc = make_qc(nodeIp, nodePort);
 
@@ -664,10 +670,9 @@ void makeOracleUserQueryTransaction(
     const uint32_t interfaceIndex = stringToOracleInterface(oracleInterfaceString);
     if (interfaceIndex >= OI::oracleInterfacesCount)
     {
-        LOG("Unknown oracle interface \"%s\"!\nSupported options are:\n\t", oracleInterfaceString);
+        LOG("Unknown oracle interface \"%s\"!\nSupported options are:\n", oracleInterfaceString);
         for (uint32_t idx = 0; idx < OI::oracleInterfacesCount; ++idx)
-            LOG("%s ", oracleInterfaceToString(idx).c_str());
-        LOG("\n");
+            LOG("\t%s\n", oracleInterfaceToString(idx).c_str());
         return;
     }
 
