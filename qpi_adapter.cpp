@@ -153,10 +153,10 @@ void printOracleQueryParamHelp(uint32_t interfaceIndex)
 		LOG("As [QUERY_PARAMS] pass a oracle, currency1, currency2, and UTC time separated with commas without any spaces.\n");
 		LOG("UTC time is optional, default is now.\n");
 		LOG("Examples:\n");
-		LOG("    binance,BTC,USDT,now\n");
-		LOG("    mexc,ETH,USDT,2026-01-31_15:20:40\n");
-		LOG("    gate,BTC,ETH,2025-12-24_0:0:0.0\n");
-		LOG("    coingecko,BTC,USDT,2026-02-05_23:59:59.999\n");
+		LOG("    binance,btc,usdt,now                (current BTC/USDT price from binance)\n");
+		LOG("    mexc,ETH,BTC,2026-01-31_15:20:40    (ETH/BTC price from MEXC at the given time)\n");
+		LOG("    gate,Qubic,USDT,2026-02-09_0:0:0.0  (QUBIC/USDT price from Gate.io at the given time)\n");
+		LOG("    gate_mexc,QUBIC,USDT                (current average price from gate.io and mexc)\n");
 		break;
 	case OI::Mock::oracleInterfaceIndex:
 		LOG("As [QUERY_PARAMS] pass an unsigned integer value.\n");
