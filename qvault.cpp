@@ -1,966 +1,1121 @@
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
-#include <stdexcept>
+#include <cinttypes>
 
-#include "structs.h"
 #include "wallet_utils.h"
 #include "key_utils.h"
-#include "asset_utils.h"
-#include "connection.h"
 #include "logger.h"
-#include "node_utils.h"
-#include "k12_and_key_utils.h"
 #include "qvault.h"
+#include "asset_utils.h"
 
 #define QVAULT_CONTRACT_INDEX 10
+#define QVAULT_PROPOSAL_CREATION_FEE 10000000
+#define QVAULT_SHARE_MANAGEMENT_TRANSFER_FEE 100
+
+constexpr uint32_t QVAULT_MAX_URLS_COUNT = 256;
+
+// Proposal result constants
+constexpr uint8_t QVAULT_PROPOSAL_PASSED = 0;
+constexpr uint8_t QVAULT_PROPOSAL_REJECTED = 1;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_QUORUM = 2;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER = 3;
+constexpr uint8_t QVAULT_PROPOSAL_INSUFFICIENT_QCAP = 4;
+constexpr uint8_t QVAULT_PROPOSAL_NOT_STARTED = 5;
 
 // QVAULT FUNCTIONS
 #define QVAULT_GETDATA 1
+#define QVAULT_GET_STAKED_AMOUNT_AND_VOTING_POWER 2
+#define QVAULT_GET_GP 3
+#define QVAULT_GET_QCP 4
+#define QVAULT_GET_IPOP 5
+#define QVAULT_GET_QEARNP 6
+#define QVAULT_GET_FUNDP 7
+#define QVAULT_GET_MKTP 8
+#define QVAULT_GET_ALLOP 9
+#define QVAULT_GET_IDENTITIES_HV_VT_PW 11
+#define QVAULT_GET_PP_CREATION_POWER 12
+#define QVAULT_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES 13
+#define QVAULT_GET_AMOUNT_TO_BE_SOLD_PER_YEAR 14
+#define QVAULT_GET_TOTAL_REVENUE_IN_QCAP 15
+#define QVAULT_GET_REVENUE_IN_QCAP_PER_EPOCH 16
+#define QVAULT_GET_REVENUE_PER_SHARE 17
+#define QVAULT_GET_AMOUNT_OF_SHARE_QVAULT_HOLD 18
+#define QVAULT_GET_NUMBER_OF_HOLDER_AND_AVG_AM 19
+#define QVAULT_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH 20
 
 // QVAULT PROCEDURES
-#define QVAULT_SUBMITAUTHADDRESS 1
-#define QVAULT_CHANGEAUTHADDRESS 2
-#define QVAULT_SUBMITFEES 3
-#define QVAULT_CHANGEFEES 4
-#define QVAULT_SUBMITREINVESTINGADDRESS 5
-#define QVAULT_CHANGEREINVESTINGADDRESS 6
-#define QVAULT_SUBMITADMINADDRESS 7
-#define QVAULT_CHANGEADMINADDRESS 8
-#define QVAULT_SUBMITBANNEDADDRESS 9
-#define QVAULT_SAVEBANNEDADDRESS 10
-#define QVAULT_SUBMITUNBANNEDADDRESS 11
-#define QVAULT_SAVEUNBANNEDADDRESS 12
+#define QVAULT_STAKE 1
+#define QVAULT_UNSTAKE 2
+#define QVAULT_SUBMIT_GP 3
+#define QVAULT_SUBMIT_QCP 4
+#define QVAULT_SUBMIT_IPOP 5
+#define QVAULT_SUBMIT_QEARNP 6
+#define QVAULT_SUBMIT_FUNDP 7
+#define QVAULT_SUBMIT_MKTP 8
+#define QVAULT_SUBMIT_ALLOP 9
+#define QVAULT_VOTE_IN_PROPOSAL 11
+#define QVAULT_BUY_QCAP 12
+#define QVAULT_TRANSFER_SHARE_MANAGEMENT_RIGHTS 13
 
-struct submitAuthAddress_input 
+struct stake_input
 {
-    uint8_t newAddress[32];
-};
-struct submitAuthAddress_output
-{
+    uint32_t amount;
 };
 
-struct changeAuthAddress_input
+struct stake_output
 {
-    uint32_t numberOfChangedAddress;
-};
-struct changeAuthAddress_output
-{
+    int32_t returnCode;
 };
 
-struct submitFees_input
+struct unStake_input
 {
-    uint32_t newQCAPHolder_permille;
-    uint32_t newreinvesting_permille;
-    uint32_t newdev_permille;
-};
-struct submitFees_output
-{
+    uint32_t amount;
 };
 
-struct changeFees_input
+struct unStake_output
 {
-    uint32_t newQCAPHolder_permille;
-    uint32_t newreinvesting_permille;
-    uint32_t newdev_permille;
-};
-struct changeFees_output
-{
+    int32_t returnCode;
 };
 
-struct submitReinvestingAddress_input
+struct submitGP_input
 {
-    uint8_t newAddress[32];
-};
-struct submitReinvestingAddress_output
-{
+    uint8_t url[256];
 };
 
-struct changeReinvestingAddress_input
+struct submitGP_output
 {
-    uint8_t newAddress[32];
-};
-struct changeReinvestingAddress_output
-{
+    int32_t returnCode;
 };
 
-struct submitAdminAddress_input
+struct submitQCP_input
 {
-    uint8_t newAddress[32];
-};
-struct submitAdminAddress_output
-{
+    uint32_t newQuorumPercent;
+    uint8_t url[256];
 };
 
-struct changeAdminAddress_input
+struct submitQCP_output
 {
-    uint8_t newAddress[32];
-};
-struct changeAdminAddress_output
-{
+    int32_t returnCode;
 };
 
-struct submitBannedAddress_input
+struct submitIPOP_input
 {
-    uint8_t bannedAddress[32];
-};
-struct submitBannedAddress_output
-{
+    uint32_t ipoContractIndex;
+    uint8_t url[256];
 };
 
-struct saveBannedAddress_input
+struct submitIPOP_output
 {
-    uint8_t bannedAddress[32];
-};
-struct saveBannedAddress_output
-{
+    int32_t returnCode;
 };
 
-struct submitUnbannedAddress_input
+struct submitQEarnP_input
 {
-    uint8_t unbannedAddress[32];
-};
-struct submitUnbannedAddress_output
-{
-};
-
-struct unblockBannedAddress_input
-{
-    uint8_t unbannedAddress[32];
-};
-struct unblockBannedAddress_output
-{
+    uint64_t amountPerEpoch;
+    uint32_t numberOfEpoch;
+    uint8_t url[256];
 };
 
-void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity)
+struct submitQEarnP_output
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    int32_t returnCode;
+};
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+struct submitFundP_input
+{
+    uint64_t priceOfOneQcap;
+    uint32_t amountOfQcap;
+    uint8_t url[256];
+};
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+struct submitFundP_output
+{
+    int32_t returnCode;
+};
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitAuthAddress_input input;
-        unsigned char signature[64];
-    } packet;
+struct submitMKTP_input
+{
+    uint64_t amountOfQubic;
+    uint64_t shareName;
+    uint32_t amountOfQcap;
+    uint32_t indexOfShare;
+    uint32_t amountOfShare;
+    uint8_t url[256];
+};
 
-    memcpy(packet.input.newAddress, publicKey, 32);
+struct submitMKTP_output
+{
+    int32_t returnCode;
+};
 
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITAUTHADDRESS;
-    packet.transaction.inputSize = sizeof(submitAuthAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAuthAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAuthAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitAuthAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+struct submitAlloP_input
+{
+    uint32_t reinvested;
+    uint32_t burn;
+    uint32_t distribute;
+    uint8_t url[256];
+};
+
+struct submitAlloP_output
+{
+    int32_t returnCode;
+};
+
+struct voteInProposal_input
+{
+    uint64_t priceOfIPO;
+    uint32_t proposalType;
+    uint32_t proposalId;
+    bool yes;
+};
+
+struct voteInProposal_output
+{
+    int32_t returnCode;
+};
+
+struct buyQcap_input
+{
+    uint32_t amount;
+};
+
+struct buyQcap_output
+{
+    int32_t returnCode;
+};
+
+struct TransferShareManagementRights_input
+{
+    qpiAsset asset;
+    int64_t numberOfShares;
+    uint32_t newManagingContractIndex;
+};
+struct TransferShareManagementRights_output
+{
+    int64_t transferredNumberOfShares;
+    int32_t returnCode;
+};
+
+namespace
+{
+
+bool copyUrlField(uint8_t* dest, const char* url)
+{
+    if (!dest || !url)
+        return false;
+    size_t len = strlen(url);
+    if (len > 255)
+        return false;
+    memset(dest, 0, 256);
+    memcpy(dest, url, len);
+    return true;
 }
 
-void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t numberOfChangedAddress)
+bool encodeAssetName(const char* source, uint64_t& encoded)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        changeAuthAddress_input input;
-        unsigned char signature[64];
-    } packet;
-    
-    packet.input.numberOfChangedAddress = numberOfChangedAddress;
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_CHANGEAUTHADDRESS;
-    packet.transaction.inputSize = sizeof(changeAuthAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeAuthAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeAuthAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("changeAuthAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    if (!source)
+        return false;
+    size_t len = strlen(source);
+    if (len > 8)
+        return false;
+    char buffer[8] = {0};
+    memcpy(buffer, source, len);
+    memcpy(&encoded, buffer, sizeof(buffer));
+    return true;
 }
 
-void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille)
+bool runQvaultFunction(const char* nodeIp, int nodePort,
+                       unsigned short funcNumber,
+                       void* inputPtr, size_t inputSize,
+                       void* outputPtr, size_t outputSize)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitFees_input input;
-        unsigned char signature[64];
-    } packet;
-    
-    packet.input.newdev_permille = newdev_permille;
-    packet.input.newQCAPHolder_permille = newQCAPHolder_permille;
-    packet.input.newreinvesting_permille = newreinvesting_permille;
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITFEES;
-    packet.transaction.inputSize = sizeof(submitFees_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitFees_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitFees_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitFees tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    if (!runContractFunction(nodeIp, nodePort, QVAULT_CONTRACT_INDEX,
+                             funcNumber, inputPtr, inputSize,
+                             outputPtr, outputSize))
+    {
+        LOG("Failed to receive data\n");
+        return false;
+    }
+    return true;
 }
 
-void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_permille, uint32_t newreinvesting_permille, uint32_t newdev_permille)
+constexpr const char* EMPTY_IDENTITY = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB";
+
+} // namespace
+
+void stake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        changeFees_input input;
-        unsigned char signature[64];
-    } packet;
-
-    packet.input.newdev_permille = newdev_permille;
-    packet.input.newQCAPHolder_permille = newQCAPHolder_permille;
-    packet.input.newreinvesting_permille = newreinvesting_permille;
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_CHANGEFEES;
-    packet.transaction.inputSize = sizeof(changeFees_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeFees_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeFees_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("changeFees tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    stake_input input{};
+    input.amount = amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_STAKE,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
-void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitReinvestingAddress_input input;
-        unsigned char signature[64];
-    } packet;
-
-    memcpy(packet.input.newAddress, publicKey, 32);
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITREINVESTINGADDRESS;
-    packet.transaction.inputSize = sizeof(submitReinvestingAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitReinvestingAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitReinvestingAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitReinvestingAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    unStake_input input{};
+    input.amount = amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_UNSTAKE,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
-void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* url)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        changeReinvestingAddress_input input;
-        unsigned char signature[64];
-    } packet;
-
-    memcpy(packet.input.newAddress, publicKey, 32);
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_CHANGEREINVESTINGADDRESS;
-    packet.transaction.inputSize = sizeof(changeReinvestingAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeReinvestingAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeReinvestingAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("changeReinvestingAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    submitGP_input input{};
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_GP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
-void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent, const char* url)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
-
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitAdminAddress_input input;
-        unsigned char signature[64];
-    } packet;
-
-    memcpy(packet.input.newAddress, publicKey, 32);
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITADMINADDRESS;
-    packet.transaction.inputSize = sizeof(submitAdminAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAdminAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitAdminAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitAdminAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    submitQCP_input input{};
+    input.newQuorumPercent = newQuorumPercent;
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_QCP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
-void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex, const char* url)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    submitIPOP_input input{};
+    input.ipoContractIndex = ipoContractIndex;
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_IPOP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url)
+{
+    submitQEarnP_input input{};
+    input.amountPerEpoch = amountPerEpoch;
+    input.numberOfEpoch = numberOfEpoch;
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_QEARNP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url)
+{
+    submitFundP_input input{};
+    input.amountOfQcap = amountOfQcap;
+    input.priceOfOneQcap = priceOfOneQcap;
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_FUNDP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        changeAdminAddress_input input;
-        unsigned char signature[64];
-    } packet;
+void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url)
+{
+    submitMKTP_input input{};
+    if (!encodeAssetName(shareName, input.shareName))
+    {
+        printf("The share name should be at most 8 characters.\n");
+        return;
+    }
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    input.amountOfQcap = amountOfQcap;
+    input.amountOfQubic = amountOfQubic;
+    input.amountOfShare = amountOfShare;
+    input.indexOfShare = indexOfShare;
 
-    memcpy(packet.input.newAddress, publicKey, 32);
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_MKTP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
 
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_CHANGEADMINADDRESS;
-    packet.transaction.inputSize = sizeof(changeAdminAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeAdminAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(changeAdminAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("changeAdminAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t burn, uint32_t distribute, const char* url)
+{
+    submitAlloP_input input{};
+    input.reinvested = reinvested;
+    input.burn = burn;
+    input.distribute = distribute;
+    if (!copyUrlField(input.url, url))
+    {
+        printf("The url should be less than 255.\nThe command is failed");
+        return;
+    }
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_SUBMIT_ALLOP,
+                            QVAULT_PROPOSAL_CREATION_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
+
+void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes)
+{
+    voteInProposal_input input{};
+    input.priceOfIPO = priceOfIPO;
+    input.proposalType = proposalType;
+    input.proposalId = proposalId;
+    input.yes = yes;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_VOTE_IN_PROPOSAL,
+                            0,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
+
+void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap)
+{
+    buyQcap_input input{};
+    input.amount = amount;
+    const uint64_t txAmount = priceOfOneQcap * amount;
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_BUY_QCAP,
+                            txAmount,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
+}
+
+void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex)
+{
+    uint64_t encodedAssetName = 0;
+    if (!encodeAssetName(assetName, encodedAssetName))
+    {
+        printf("The asset name should be at most 8 characters.\n");
+        return;
+    }
+    uint8_t pubKey[32] = {0};
+    getPublicKeyFromIdentity(issuer, pubKey);
+
+    TransferShareManagementRights_input input{};
+    memcpy(input.asset.issuer, pubKey, sizeof(input.asset.issuer));
+    input.asset.assetName = encodedAssetName;
+    input.numberOfShares = numberOfShares;
+    input.newManagingContractIndex = newManagingContractIndex;
+
+    makeContractTransaction(nodeIp,
+                            nodePort,
+                            seed,
+                            QVAULT_CONTRACT_INDEX,
+                            QVAULT_TRANSFER_SHARE_MANAGEMENT_RIGHTS,
+                            QVAULT_SHARE_MANAGEMENT_TRANSFER_FEE,
+                            sizeof(input),
+                            reinterpret_cast<const uint8_t*>(&input),
+                            scheduledTickOffset);
 }
 
 void getData(const char* nodeIp, int nodePort)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        QVaultGetData_input input;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(QVaultGetData_input);
-    packet.rcf.inputType = QVAULT_GETDATA;
-    packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
-    packet.input.t = 10;
-    
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    QVaultGetData_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort, QVAULT_GETDATA, nullptr, 0, &result, sizeof(result)))
+        return;
 
-    QVaultGetData_output result;
-    try
+    if (result.returnCode != 0)
     {
-        result = qc->receivePacketWithHeaderAs<QVaultGetData_output>();
-    }
-    catch (std::logic_error)
-    {
-        LOG("Failed to receive data\n");
+        printf("Error: returnCode = %d\n", result.returnCode);
         return;
     }
 
-    char auth1[128] = {0};
-    char auth2[128] = {0};
-    char auth3[128] = {0};
-    char reinvesting_address[128] = {0};
-    char admin_address[128] = {0};
-    char newAuth1[128] = {0};
-    char newAuth2[128] = {0};
-    char newAuth3[128] = {0};
-    char newReinvestingAddress1[128] = {0};
-    char newReinvestingAddress2[128] = {0};
-    char newReinvestingAddress3[128] = {0};
-    char newAdminAddress1[128] = {0};
-    char newAdminAddress2[128] = {0};
-    char newAdminAddress3[128] = {0};
-    char newBannedAddress1[128] = {0};
-    char newBannedAddress2[128] = {0};
-    char newBannedAddress3[128] = {0};
-    char newUnbannedAddress1[128] = {0};
-    char newUnbannedAddress2[128] = {0};
-    char newUnbannedAddress3[128] = {0};
-    getIdentityFromPublicKey(result.AUTH_ADDRESS1, auth1, false);
-    getIdentityFromPublicKey(result.AUTH_ADDRESS2, auth2, false);
-    getIdentityFromPublicKey(result.AUTH_ADDRESS3, auth3, false);
-    getIdentityFromPublicKey(result.Reinvesting_address, reinvesting_address, false);
-    getIdentityFromPublicKey(result.admin_address, admin_address, false);
-    getIdentityFromPublicKey(result.newAuthAddress1, newAuth1, false);
-    getIdentityFromPublicKey(result.newAuthAddress2, newAuth2, false);
-    getIdentityFromPublicKey(result.newAuthAddress3, newAuth3, false);
-    getIdentityFromPublicKey(result.newReinvesting_address1, newReinvestingAddress1, false);
-    getIdentityFromPublicKey(result.newReinvesting_address2, newReinvestingAddress2, false);
-    getIdentityFromPublicKey(result.newReinvesting_address3, newReinvestingAddress3, false);
-    getIdentityFromPublicKey(result.newAdmin_address1, newAdminAddress1, false);
-    getIdentityFromPublicKey(result.newAdmin_address2, newAdminAddress2, false);
-    getIdentityFromPublicKey(result.newAdmin_address3, newAdminAddress3, false);
-    getIdentityFromPublicKey(result.bannedAddress1, newBannedAddress1, false);
-    getIdentityFromPublicKey(result.bannedAddress2, newBannedAddress2, false);
-    getIdentityFromPublicKey(result.bannedAddress3, newBannedAddress3, false);
-    getIdentityFromPublicKey(result.unbannedAddress1, newUnbannedAddress1, false);
-    getIdentityFromPublicKey(result.unbannedAddress2, newUnbannedAddress2, false);
-    getIdentityFromPublicKey(result.unbannedAddress3, newUnbannedAddress3, false);
-
-    printf("AUTH_ADDRESS1: %s", auth1);
-    printf("\nAUTH_ADDRESS2: %s", auth2);
-    printf("\nAUTH_ADDRESS3: %s", auth3);
-    printf("\nReinvesting_address: %s", reinvesting_address);
-    printf("\nadmin_address: %s", admin_address);
-    printf("\nnewAuthAddress1: %s", newAuth1);
-    printf("\nnewAuthAddress2: %s", newAuth2);
-    printf("\nnewAuthAddress3: %s", newAuth3);
-    printf("\nnewReinvesting_address1: %s", newReinvestingAddress1);
-    printf("\nnewReinvesting_address2: %s", newReinvestingAddress2);
-    printf("\nnewReinvesting_address3: %s", newReinvestingAddress3);
-    printf("\nnewAdmin_address1: %s", newAdminAddress1);
-    printf("\nnewAdmin_address2: %s", newAdminAddress2);
-    printf("\nnewAdmin_address3: %s", newAdminAddress3);
-    printf("\nPermille for development:%u Permille for Reinvesting:%u Permille for Computors:%u Permille for Holders:%u\n", result.dev_permille, result.reinvesting_permille, result.computor_permille, result.QCAPHolder_permille);
-
-    printf("\nbanned_address1: %s", newBannedAddress1);
-    printf("\nbanned_address2: %s", newBannedAddress2);
-    printf("\nbanned_address3: %s", newBannedAddress3);
-    printf("\nunbanned_address1: %s", newUnbannedAddress1);
-    printf("\nunbanned_address2: %s", newUnbannedAddress2);
-    printf("\nunbanned_address3: %s", newUnbannedAddress3);
+    printf("returnCode: %d\ntotalVotingPower: %" PRIu64 "\nproposalCreateFund: %" PRIu64 "\nreinvestingFund: %" PRIu64 "\ntotalEpochRevenue: %" PRIu64 "\nfundForBurn: %" PRIu64 "\ntotalStakedQcapAmount: %" PRIu64 "\nqcapMarketCap: %" PRIu64 "\nraisedFundByQcap: %" PRIu64 "\nlastRoundPriceOfQcap: %" PRIu64 "\nrevenueByQearn:%" PRIu64 "\nqcapSoldAmount: %u\nshareholderDividend: %u\nQCAPHolderPermille: %u\nreinvestingPermille: %u\nburnPermille: %u\nqcapBurnPermille: %u\nnumberOfStaker: %u\nnumberOfVotingPower: %u\nnumberOfGP: %u\nnumberOfQCP: %u\nnumberOfIPOP: %u\nnumberOfQEarnP: %u\nnumberOfFundP: %u\nnumberOfMKTP: %u\nnumberOfAlloP: %u\ntransferRightsFee: %u\nminQuorumRq: %u\nmaxQuorumRq: %u\ntotalQcapBurntAmount: %u\ncirculatingSupply: %u\nquorumPercent: %u\n", result.returnCode, result.totalVotingPower, result.proposalCreateFund, result.reinvestingFund, result.totalEpochRevenue, result.fundForBurn, result.totalStakedQcapAmount, result.qcapMarketCap, result.raisedFundByQcap, result.lastRoundPriceOfQcap, result.revenueByQearn, result.qcapSoldAmount, result.shareholderDividend, result.QCAPHolderPermille, result.reinvestingPermille, result.burnPermille, result.qcapBurnPermille, result.numberOfStaker, result.numberOfVotingPower, result.numberOfGP, result.numberOfQCP, result.numberOfIPOP, result.numberOfQEarnP, result.numberOfFundP, result.numberOfMKTP, result.numberOfAlloP, result.transferRightsFee, result.minQuorumRq, result.maxQuorumRq, result.totalQcapBurntAmount, result.circulatingSupply, result.quorumPercent);
 }
 
-void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QvaultGetStakedAmountAndVotingPower_input input{};
+    getPublicKeyFromIdentity(address, input.address);
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+    QvaultGetStakedAmountAndVotingPower_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_STAKED_AMOUNT_AND_VOTING_POWER,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitBannedAddress_input input;
-        unsigned char signature[64];
-    } packet;
-
-    memcpy(packet.input.bannedAddress, publicKey, 32);
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITBANNEDADDRESS;
-    packet.transaction.inputSize = sizeof(submitBannedAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitBannedAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitBannedAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitBannedAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    printf("returnCode: %d\nstakedAmount: %u\nvotingPower: %u\n", result.returnCode, result.stakedAmount, result.votingPower);
 }
 
-void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void getGP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QvaultGetGP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetGP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_GP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        saveBannedAddress_input input;
-        unsigned char signature[64];
-    } packet;
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
 
-    memcpy(packet.input.bannedAddress, publicKey, 32);
-
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SAVEBANNEDADDRESS;
-    packet.transaction.inputSize = sizeof(saveBannedAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(saveBannedAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(saveBannedAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("saveBannedAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
 }
 
-void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QvaultGetQCP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetQCP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QCP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        submitUnbannedAddress_input input;
-        unsigned char signature[64];
-    } packet;
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
 
-    memcpy(packet.input.unbannedAddress, publicKey, 32);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nnewQuorumPercent: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.newQuorumPercent);
 
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SUBMITUNBANNEDADDRESS;
-    packet.transaction.inputSize = sizeof(submitUnbannedAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitUnbannedAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(submitUnbannedAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("submitUnbannedannedAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
 }
 
-void saveUnbannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint32_t scheduledTickOffset, const char* identity)
+void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId)
 {
-    auto qc = make_qc(nodeIp, nodePort);
+    QvaultGetIPOP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetIPOP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_IPOP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
 
-    uint8_t publicKey[32] = {0};
-    getPublicKeyFromIdentity(identity, publicKey);
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
 
-    uint8_t privateKey[32] = {0};
-    uint8_t sourcePublicKey[32] = {0};  
-    uint8_t destPublicKey[32] = {0};
-    uint8_t subseed[32] = {0};
-    uint8_t digest[32] = {0};
-    uint8_t signature[64] = {0};
-    char publicIdentity[128] = {0};
-    char txHash[128] = {0};
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QVAULT_CONTRACT_INDEX;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        unblockBannedAddress_input input;
-        unsigned char signature[64];
-    } packet;
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
 
-    memcpy(packet.input.unbannedAddress, publicKey, 32);
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\ntotalWeight: %" PRIu64 "\nassignedFund: %" PRIu64 "\nipoContractIndex: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.totalWeight, result.proposal.assignedFund, result.proposal.ipoContractIndex);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
+}
 
-    packet.transaction.amount = 0;
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QVAULT_SAVEUNBANNEDADDRESS;
-    packet.transaction.inputSize = sizeof(unblockBannedAddress_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(unblockBannedAddress_input),
-                   digest,
-                   32);
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
-    KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(unblockBannedAddress_input) + SIGNATURE_SIZE,
-                   digest,
-                   32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("saveUnbannedAddress tx has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId)
+{
+    QvaultGetQEarnP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetQEarnP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QEARNP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
+
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
+
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfInvestPerEpoch: %" PRIu64 "\nassignedFundPerEpoch: %" PRIu64 "\nnumberOfEpoch: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfInvestPerEpoch, result.proposal.assignedFundPerEpoch, result.proposal.numberOfEpoch);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
+}
+
+void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId)
+{
+    QvaultGetFundP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetFundP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_FUNDP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
+
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
+
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\npricePerOneQcap: %" PRIu64 "\namountOfQcap: %u\nrestSaleAmount: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.pricePerOneQcap, result.proposal.amountOfQcap, result.proposal.restSaleAmount);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
+}
+
+void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId)
+{
+    QvaultGetMKTP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetMKTP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_MKTP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    char assetNameStr[8] = { 0 };
+    assetNameToString(result.proposal.shareName, assetNameStr);
+
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
+
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
+
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\namountOfQubic: %" PRIu64 "\nshareName: %s\namountOfQcap: %u\nshareIndex: %u\namountOfShare: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.amountOfQubic, assetNameStr, result.proposal.amountOfQcap, result.proposal.shareIndex, result.proposal.amountOfShare);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
+}
+
+void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId)
+{
+    QvaultGetAlloP_input input{};
+    input.proposalId = proposalId;
+    QvaultGetAlloP_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_ALLOP,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    char proposer[128] = {0};
+    getIdentityFromPublicKey(result.proposal.proposer, proposer, false);
+
+    if (strcmp(proposer, EMPTY_IDENTITY) == 0)
+    {
+        printf("ERROR: Didn't receive valid proposal with index %u\n", proposalId);
+        return ;
+    }
+
+    printf("returnCode: %d\n%s\nproposer: %s\ncurrentTotalVotingPower: %u\nnumberOfYes: %u\nnumberOfNo: %u\nproposedEpoch: %u\ncurrentQuorumPercent: %u\nreinvested: %u\ndistributed: %u\nburnQcap: %u\n", result.returnCode, result.proposal.url, proposer, result.proposal.currentTotalVotingPower, result.proposal.numberOfYes, result.proposal.numberOfNo, result.proposal.proposedEpoch, result.proposal.currentQuorumPercent, result.proposal.reinvested, result.proposal.distributed, result.proposal.burnQcap);
+    if (result.proposal.result == QVAULT_PROPOSAL_PASSED)
+    {
+        printf("The proposal has been approved!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_REJECTED)
+    {
+        printf("The proposal has been rejected!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QUORUM)
+    {
+        printf("The proposal has been rejected due to insufficient Quorum!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_VOTING_POWER)
+    {
+        printf("The proposal has been rejected due to insufficient voting power!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_INSUFFICIENT_QCAP)
+    {
+        printf("The proposal has been rejected due to insufficient QCAP!\n");
+    }
+    else if (result.proposal.result == QVAULT_PROPOSAL_NOT_STARTED)
+    {
+        printf("The proposal has not started yet!\n");
+    }
+}
+
+void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count)
+{
+    QvaultGetIdentitiesHvVtPw_input input{};
+    input.offset = offset;
+    input.count = count;
+    QvaultGetIdentitiesHvVtPw_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_IDENTITIES_HV_VT_PW,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    uint32_t maxEntries = std::min(count, QVAULT_MAX_URLS_COUNT);
+    for (uint32_t i = 0; i < maxEntries; i++)
+    {
+        char stakerAddress[128] = {0};
+        getIdentityFromPublicKey(result.idList[i], stakerAddress, false);
+        if (strcmp(stakerAddress, EMPTY_IDENTITY) == 0)
+        {
+            break;
+        }
+        printf("stakerAddress: %s amount: %u\n", stakerAddress, result.amountList[i]);
+    }
+}
+
+void ppCreationPower(const char* nodeIp, int nodePort, const char* address)
+{
+    QvaultppCreationPower_input input{};
+    getPublicKeyFromIdentity(address, input.address);
+    QvaultppCreationPower_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_PP_CREATION_POWER,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    printf("returnCode: %d\n%s\n", result.returnCode, (result.status != 0) ? "You have a power to create the proposal": "You can not create the proposal");
+}
+
+void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t numberOfLastEpoches)
+{
+    QvaultGetQcapBurntAmountInLastEpoches_input input{};
+    input.numberOfLastEpoches = numberOfLastEpoches;
+    QvaultGetQcapBurntAmountInLastEpoches_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    printf("returnCode: %d\nburntAmount: %u\n", result.returnCode, result.burntAmount);
+}
+
+void getAmountToBeSoldPerYear(const char* nodeIp, int nodePort, uint32_t year)
+{
+    QvaultGetAmountToBeSoldPerYear_input input{};
+    input.year = year;
+    QvaultGetAmountToBeSoldPerYear_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_TO_BE_SOLD_PER_YEAR,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    printf("%u\n", result.amount);
+}
+
+void getTotalRevenueInQcap(const char* nodeIp, int nodePort)
+{
+    QvaultGetTotalRevenueInQcap_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_TOTAL_REVENUE_IN_QCAP,
+                           nullptr,
+                           0,
+                           &result,
+                           sizeof(result)))
+        return;
+
+    printf("%" PRIu64 "\n", result.revenue);
+}
+
+void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
+{
+    QvaultGetRevenueInQcapPerEpoch_input input{};
+    input.epoch = epoch;
+    QvaultGetRevenueInQcapPerEpoch_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_REVENUE_IN_QCAP_PER_EPOCH,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    printf("epochTotalRevenue: %" PRIu64 "\nepochOneQcapRevenue: %" PRIu64 "\nepochOneQvaultRevenue: %" PRIu64 "\nepochReinvestAmount: %" PRIu64 "\n", result.epochTotalRevenue, result.epochOneQcapRevenue, result.epochOneQvaultRevenue, result.epochReinvestAmount);
+}
+
+void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex)
+{
+    QvaultGetRevenuePerShare_input input{};
+    input.contractIndex = contractIndex;
+    QvaultGetRevenuePerShare_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_REVENUE_PER_SHARE,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    printf("revenue: %" PRIu64 "\n", result.revenue);
+}
+
+void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* assetName, const char* issuer)
+{
+    uint64_t encodedAssetName = 0;
+    if (!encodeAssetName(assetName, encodedAssetName))
+    {
+        printf("The asset name should be at most 8 characters.\n");
+        return;
+    }
+    QvaultGetAmountOfShareQvaultHold_input input{};
+    getPublicKeyFromIdentity(issuer, input.assetInfo.issuer);
+    input.assetInfo.assetName = encodedAssetName;
+
+    QvaultGetAmountOfShareQvaultHold_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_OF_SHARE_QVAULT_HOLD,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    printf("The amount of %s that SC held: %u\n", assetName, result.amount);
+}
+
+void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort)
+{
+    QvaultGetNumberOfHolderAndAvgAm_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_NUMBER_OF_HOLDER_AND_AVG_AM,
+                           nullptr,
+                           0,
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    printf("returnCode: %d\nnumberOfQcapHolder: %u\navgAmount: %u\n", result.returnCode, result.numberOfQcapHolder, result.avgAmount);
+}
+
+void getAmountForQearnInUpcomingEpoch(const char* nodeIp, int nodePort, uint32_t epoch)
+{
+    QvaultGetAmountForQearnInUpcomingEpoch_input input{};
+    input.epoch = epoch;
+    QvaultGetAmountForQearnInUpcomingEpoch_output result{};
+    if (!runQvaultFunction(nodeIp, nodePort,
+                           QVAULT_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH,
+                           &input,
+                           sizeof(input),
+                           &result,
+                           sizeof(result)))
+        return;
+
+    if (result.returnCode != 0)
+    {
+        printf("Error: returnCode = %d\n", result.returnCode);
+        return;
+    }
+
+    printf("returnCode: %d\namount: %" PRIu64 "\n", result.returnCode, result.amount);
 }

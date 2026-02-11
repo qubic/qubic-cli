@@ -4,37 +4,145 @@
 
 // SC structs
 
+struct GPInfo                   // General proposal
+{
+    uint8_t proposer[32];
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t proposedEpoch;
+    uint32_t currentQuorumPercent;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
+};
+
+struct QCPInfo                   // Quorum change proposal
+{
+    uint8_t proposer[32];
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t proposedEpoch;
+    uint32_t currentQuorumPercent;
+    uint32_t newQuorumPercent;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
+};
+
+struct IPOPInfo         // IPO participation
+{
+    uint8_t proposer[32];
+    uint64_t totalWeight;
+    uint64_t assignedFund;
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t proposedEpoch;
+    uint32_t ipoContractIndex;
+    uint32_t currentQuorumPercent;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient invest funds.
+};
+
+struct QEarnPInfo       // Qearn participation proposal
+{
+    uint8_t proposer[32];
+    uint64_t amountOfInvestPerEpoch;
+    uint64_t assignedFundPerEpoch;
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t proposedEpoch;
+    uint32_t currentQuorumPercent;
+    uint8_t url[256];
+    uint8_t numberOfEpoch;
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient funds.
+};
+
+struct FundPInfo            // Fundraising proposal
+{
+    uint8_t proposer[32];
+    uint64_t pricePerOneQcap;
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t amountOfQcap;
+    uint32_t restSaleAmount;
+    uint32_t proposedEpoch;
+    uint32_t currentQuorumPercent;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
+};
+
+struct MKTPInfo                 //  Marketplace proposal
+{
+    uint8_t proposer[32];
+    uint64_t amountOfQubic;
+    uint64_t shareName;
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t amountOfQcap;
+    uint32_t currentQuorumPercent;
+    uint32_t proposedEpoch;
+    uint32_t shareIndex;
+    uint32_t amountOfShare;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum. 3 is the insufficient funds. 4 is the insufficient Qcap.
+};
+
+struct AlloPInfo
+{
+    uint8_t proposer[32];
+    uint32_t currentTotalVotingPower;
+    uint32_t numberOfYes;
+    uint32_t numberOfNo;
+    uint32_t proposedEpoch;
+    uint32_t currentQuorumPercent;
+    uint32_t reinvested;
+    uint32_t distributed;
+    uint32_t burnQcap;
+    uint8_t url[256];
+    uint8_t result;  // 0 is the passed proposal, 1 is the rejected proposal. 2 is the insufficient quorum.
+};
+
 struct QVaultGetData_input
 {
-    uint32_t t;
 };
 struct QVaultGetData_output
 {
-    uint64_t numberOfBannedAddress;
-    uint32_t computor_permille;
-    uint32_t QCAPHolder_permille;
-    uint32_t reinvesting_permille;
-    uint32_t dev_permille;
-    uint8_t AUTH_ADDRESS1[32];
-    uint8_t AUTH_ADDRESS2[32];
-    uint8_t AUTH_ADDRESS3[32];
-    uint8_t Reinvesting_address[32];
-    uint8_t admin_address[32];
-    uint8_t newAuthAddress1[32];
-    uint8_t newAuthAddress2[32];
-    uint8_t newAuthAddress3[32];
-    uint8_t newReinvesting_address1[32];
-    uint8_t newReinvesting_address2[32];
-    uint8_t newReinvesting_address3[32];
-    uint8_t newAdmin_address1[32];
-    uint8_t newAdmin_address2[32];
-    uint8_t newAdmin_address3[32];
-    uint8_t bannedAddress1[32];
-    uint8_t bannedAddress2[32];
-    uint8_t bannedAddress3[32];
-    uint8_t unbannedAddress1[32];
-    uint8_t unbannedAddress2[32];
-    uint8_t unbannedAddress3[32];
+    int32_t returnCode;
+    uint64_t totalVotingPower;
+    uint64_t proposalCreateFund;
+    uint64_t reinvestingFund;
+    uint64_t totalEpochRevenue;
+    uint64_t fundForBurn;
+    uint64_t totalStakedQcapAmount;
+    uint64_t qcapMarketCap;
+    uint64_t raisedFundByQcap;
+    uint64_t lastRoundPriceOfQcap;
+    uint64_t revenueByQearn;
+    uint32_t qcapSoldAmount;
+    uint32_t shareholderDividend;
+    uint32_t QCAPHolderPermille;
+    uint32_t reinvestingPermille;
+    uint32_t burnPermille;
+    uint32_t qcapBurnPermille;
+    uint32_t numberOfStaker;
+    uint32_t numberOfVotingPower;
+    uint32_t numberOfGP;
+    uint32_t numberOfQCP;
+    uint32_t numberOfIPOP;
+    uint32_t numberOfQEarnP;
+    uint32_t numberOfFundP;
+    uint32_t numberOfMKTP;
+    uint32_t numberOfAlloP;
+    uint32_t transferRightsFee;
+    uint32_t minQuorumRq;
+    uint32_t maxQuorumRq;
+    uint32_t totalQcapBurntAmount;
+    uint32_t circulatingSupply;
+    uint32_t quorumPercent;
 
     static constexpr unsigned char type()
     {
@@ -42,16 +150,340 @@ struct QVaultGetData_output
     }
 };
 
-void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t numberOfChangedAddress);
-void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_fee, uint32_t newreinvesting_fee, uint32_t newdev_fee);
-void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQCAPHolder_fee, uint32_t newreinvesting_fee, uint32_t newdev_fee);
-void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
+struct QvaultGetStakedAmountAndVotingPower_input
+{
+    uint8_t address[32];
+};
+
+struct QvaultGetStakedAmountAndVotingPower_output
+{
+    int32_t returnCode;
+    uint32_t stakedAmount;
+    uint32_t votingPower;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetGP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetGP_output
+{
+    int32_t returnCode;
+    int32_t _padding;
+    GPInfo proposal;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetQCP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetQCP_output
+{
+    int32_t returnCode;
+    int32_t _padding1;
+    QCPInfo proposal;
+    int32_t _padding2;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetIPOP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetIPOP_output
+{
+    int32_t returnCode;
+    IPOPInfo proposal;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetQEarnP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetQEarnP_output
+{
+    int32_t returnCode;
+    QEarnPInfo proposal;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetFundP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetFundP_output
+{
+    int32_t returnCode;
+    FundPInfo proposal;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetMKTP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetMKTP_output
+{
+    int32_t returnCode;
+    MKTPInfo proposal;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetAlloP_input
+{
+    uint32_t proposalId;
+};
+
+struct QvaultGetAlloP_output
+{
+    int32_t returnCode;
+    int32_t _padding1;
+    AlloPInfo proposal;
+    int32_t _padding2;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetIdentitiesHvVtPw_input
+{
+    uint32_t offset;
+    uint32_t count;
+};
+
+struct stakingInfo
+{
+    uint8_t stakerAddress[32];
+    uint32_t amount;
+};
+
+struct QvaultGetIdentitiesHvVtPw_output
+{
+    int32_t returnCode;
+    uint8_t idList[256][32];
+    uint32_t amountList[256];
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultppCreationPower_input
+{
+    uint8_t address[32];
+};
+
+struct QvaultppCreationPower_output
+{
+    int32_t returnCode;
+    uint8_t status;         // 0 means that there is no the proposal creation power, 1 means that there is.
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetQcapBurntAmountInLastEpoches_input
+{
+    uint32_t numberOfLastEpoches;
+};
+
+struct QvaultGetQcapBurntAmountInLastEpoches_output
+{
+    int32_t returnCode;
+    uint32_t burntAmount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetAmountToBeSoldPerYear_input
+{
+    uint32_t year;
+};
+
+struct QvaultGetAmountToBeSoldPerYear_output
+{
+    uint32_t amount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetTotalRevenueInQcap_input
+{
+};
+
+struct QvaultGetTotalRevenueInQcap_output
+{
+    uint64_t revenue;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetRevenueInQcapPerEpoch_input
+{
+    uint32_t epoch;
+};
+
+struct QvaultGetRevenueInQcapPerEpoch_output
+{
+    uint64_t epochTotalRevenue;
+    uint64_t epochOneQcapRevenue;
+    uint64_t epochOneQvaultRevenue;
+    uint64_t epochReinvestAmount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetRevenuePerShare_input
+{
+    uint32_t contractIndex;
+};
+
+struct QvaultGetRevenuePerShare_output
+{
+    uint64_t revenue;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct qpiAsset
+{
+    uint8_t issuer[32];
+	uint64_t assetName;
+};
+
+struct QvaultGetAmountOfShareQvaultHold_input
+{
+    qpiAsset assetInfo;
+};
+
+struct QvaultGetAmountOfShareQvaultHold_output
+{
+    uint32_t amount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetNumberOfHolderAndAvgAm_input
+{
+};
+
+struct QvaultGetNumberOfHolderAndAvgAm_output
+{
+    int32_t returnCode;
+    uint32_t numberOfQcapHolder;
+    uint32_t avgAmount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+struct QvaultGetAmountForQearnInUpcomingEpoch_input
+{
+    uint32_t epoch;
+};
+
+struct QvaultGetAmountForQearnInUpcomingEpoch_output
+{
+    int32_t returnCode;
+    uint64_t amount;
+
+    static constexpr unsigned char type()
+    {
+        return RespondContractFunction::type();
+    }
+};
+
+void stake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount);
+void unStake(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount);
+void submitGP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* url);
+void submitQCP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t newQuorumPercent, const char* url);
+void submitIPOP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t ipoContractIndex, const char* url);
+void submitQEarnP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountPerEpoch, uint32_t numberOfEpoch, const char* url);
+void submitFundP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfOneQcap, uint32_t amountOfQcap, const char* url);
+void submitMKTP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t amountOfQubic, const char* shareName, uint32_t amountOfQcap, uint32_t indexOfShare, uint32_t amountOfShare, const char* url);
+void submitAlloP(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t reinvested, uint32_t burn, uint32_t distribute, const char* url);
+void voteInProposal(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t priceOfIPO, uint32_t proposalType, uint32_t proposalId, bool yes);
+void buyQcap(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint32_t amount, uint64_t priceOfOneQcap);
+void TransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* issuer, const char* assetName, int64_t numberOfShares, uint32_t newManagingContractIndex);
+
 void getData(const char* nodeIp, int nodePort);
-void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
-void saveUnbannedAddress(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, const char* identity);
+void getStakedAmountAndVotingPower(const char* nodeIp, int nodePort, const char* address);
+void getGP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getQCP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getIPOP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getQEarnP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getFundP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getMKTP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getAlloP(const char* nodeIp, int nodePort, uint32_t proposalId);
+void getIdentitiesHvVtPw(const char* nodeIp, int nodePort, uint32_t offset, uint32_t count);
+void ppCreationPower(const char* nodeIp, int nodePort, const char* address);
+void getQcapBurntAmountInLastEpoches(const char* nodeIp, int nodePort, uint32_t numberOfLastEpoches);
+void getAmountToBeSoldPerYear(const char* nodeIp, int nodePort, uint32_t year);
+void getTotalRevenueInQcap(const char* nodeIp, int nodePort);
+void getRevenueInQcapPerEpoch(const char* nodeIp, int nodePort, uint32_t epoch);
+void getRevenuePerShare(const char* nodeIp, int nodePort, uint32_t contractIndex);
+void getAmountOfShareQvaultHold(const char* nodeIp, int nodePort, const char* assetName, const char* issuer);
+void getNumberOfHolderAndAvgAm(const char* nodeIp, int nodePort);
+void getAmountForQearnInUpcomingEpoch(const char* nodeIp, int nodePort, uint32_t epoch);

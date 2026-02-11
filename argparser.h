@@ -4,9 +4,11 @@
 #include <cstdlib>
 #include <cerrno>
 #include <sstream>
+#include <vector>
 
 #include "global.h"
 #include "logger.h"
+#include "global.h"
 #include "structs.h"
 
 #define CHECK_OVER_PARAMETERS                                                           \
@@ -297,33 +299,77 @@ void print_help()
     printf("\t\tGet the Stats(burned amount and percent, boosted amount and percent, rewarded amount and percent in epoch <EPOCH>) of QEarn SC\n");
 
     printf("\n[QVAULT COMMANDS]\n");
-    printf("\t-qvaultsubmitauthaddress <NEW_ADDRESS>\n");
-    printf("\t\tSubmit the new authaddress using multisig address.\n");
-    printf("\t-qvaultchangeauthaddress <NUMBER_OF_CHANGED_ADDRESS>\n");
-    printf("\t\tChange the authaddress using multisig address. <NUMBER_OF_CHANGED_ADDRESS> is the one of (1, 2, 3).\n");
-    printf("\t-qvaultsubmitfees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>\n");
-    printf("\t\tSubmit the new permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30.\n");
-    printf("\t-qvaultchangefees <NEW_QCAPHOLDER_PERMILLE> <NEW_REINVESTING_PERMILLE> <NEW_DEV_PERMILLE>\n");
-    printf("\t\tChange the permilles for QcapHolders, Reinvesting, Development using multisig address. the sum of 3 permilles should be 970 because the permille of shareHolder is 30. Get the locked amount that the user <IDENTITY> locked in the epoch <EPOCH>.\n");
-    printf("\t-qvaultsubmitreinvestingaddress <NEW_ADDRESS>\n");
-    printf("\t\tSubmit the new reinvesting address using multisig address.\n");
-    printf("\t-qvaultchangereinvestingaddress <NEW_ADDRESS>\n");
-    printf("\t\tChange the address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitreinvestingaddress command.\n");
-    printf("\t-qvaultsubmitadminaddress <NEW_ADDRESS>\n");
-    printf("\t\tSubmit the admin address using multisig address.\n");
-    printf("\t-qvaultchangeadminaddress <NEW_ADDRESS>\n");
-    printf("\t\tChange the admin address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitadminaddress command.\n");
-    printf("\t-qvaultgetdata\n");
-    printf("\t\tGet the state data of smart contract. anyone can check the changes after using the any command.\n");
-    printf("\t-qvaultsubmitbannedaddress <NEW_ADDRESS>\n");
-    printf("\t\tSubmit the banned address using multisig address.\n");
-    printf("\t-qvaultsavebannedaddress <NEW_ADDRESS>\n");
-    printf("\t\tSave the banned address using multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsubmitbannedaddress command.\n");
-    printf("\t-qvaultsubmitunbannedaddress <NEW_ADDRESS>\n");
-    printf("\t\tSubmit the unbanned address using multisig address.\n");
-    printf("\t-qvaultsaveunbannedaddress <NEW_ADDRESS>\n");
-    printf("\t\tUnban the <NEW_ADDRESS> using the multisig address. <NEW_ADDRESS> should be already submitted by -qvaultsaveunbannedaddress command.\n");
-
+    printf("\t-qvaultstake <AMOUNT>\n");
+    printf("\t\tStake the Qcap with <AMOUNT> amount\n");
+    printf("\t-qvaultunstake <AMOUNT>\n");
+    printf("\t\tUnstake the Qcap with <AMOUNT> amount\n");
+    printf("\t-qvaultsubmitgeneralproposal <URL>\n");
+    printf("\t\tSubmit the general proposal. <URL> can be a website or github url. the max number of letters is 255\n");
+    printf("\t-qvaultsubmitquorumchangeproposal <URL> <NEW_QUORUM_PERMIllE>\n");
+    printf("\t\tSubmit the quorum change proposal with new permille for quorum. it should be permille(0 ~ 1000) for sure. not percent\n");
+    printf("\t-qvaultsubmitipoproposal <URL> <IPO_CONTRACT_INDEX>\n");
+    printf("\t\tSubmit the ipo proposal with <IPO_CONTRACT_INDEX>\n");
+    printf("\t-qvaultsubmitqearnproposal <URL> <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCH>\n");
+    printf("\t\tSubmit the qearn proposal with <AMOUNT_OF_QUBIC> <NUMBER_OF_EPOCHES>\n");
+    printf("\t\t<AMOUNT_OF_QUBIC> - the amount per epoch, <NUMBER_OF_EPOCHES> - the number of epoches for locking\n");
+    printf("\t-qvaultsubmitfundproposal <URL> <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
+    printf("\t\tSubmit the fund proposal with <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
+    printf("\t\t<PRICE_OF_QCAP> - the amount of Qubic for one Qcap, <AMOUNT_OF_QCAP> - the amount of Qcap for sale\n");
+    printf("\t-qvaultsubmitmarketplaceproposal <URL> <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
+	printf("\t\tSubmit the marketplace proposal with <AMOUNT_OF_QUBIC> <SHARE_NAME> <AMOUNT_OF_QCAP> <SHARE_INDEX> <SHARE_AMOUNT>\n");
+	printf("\t\t<AMOUNT_OF_QUBIC> - the amount of qubic received from the SC, <SHARE_NAME> - the share name (max 8 uppercase letters or digits)\n");
+	printf("\t\t<AMOUNT_OF_QCAP> - the amount of qcap received from the SC, <SHARE_INDEX> - the contract index that want to sell the share to the SC, <SHARE_AMOUNT> - the amount of share that want to sell to the SC\n");
+	printf("\t-qvaultsubmitpercentallocationproposal <URL> <REINVESTED> <BURN> <DISTRIBUTE>\n");
+	printf("\t\tSubmit the allocation proposal with <REINVESTED> <BURN> <DISTRIBUTE>\n");
+	printf("\t\t<REINVESTED> - reinvesting permille, <BURN> - Qcap burn permille, <DISTRIBUTE> - distribute permille for Qcap holders. All percentages must sum to 970 (per mille)\n");
+	printf("\t-qvaultvoteinproposal <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
+	printf("\t\tVote in the proposal with <PRICE_OF_IPO> <PROPOSAL_TYPE> <PROPOSAL_ID> <DECISION>\n");
+	printf("\t\t<PRICE_OF_IPO> - if you want to vote in the ipo proposal, you need to input the exact price for ipo, it should be more than 1B\n");
+	printf("\t\t<PROPOSAL_TYPE> - the type of proposal, <PROPOSAL_ID> - the index of proposal, <DECISION> - yes = 1, no = 0\n");
+	printf("\t-qvaultbuyqcap <PRICE_OF_QCAP> <AMOUNT_OF_QCAP>\n");
+	printf("\t\tBuy the qcap. <AMOUNT_OF_QCAP> - the amount of Qcap that want to buy, <PRICE_OF_QCAP> - the price of Qcap for one Qcap\n");
+	printf("\t-qvaulttransfersharemanagementrights <TOKEN_NAME> <TOKEN_ISSUER> <NEWMANAGING_CONTRACT_INDEX> <NUMBER_OF_TOKEN>\n");
+	printf("\t\tTransfer the share management right to the <NEWMANAGING_CONTRACT_INDEX>\n");
+	printf("\t-qvaultgetdata\n");
+	printf("\t\tGetting the state variables from the SC\n");
+    printf("\t-qvaultgetstakedamountandvotingpower <IDENTITY>\n");
+	printf("\t\tGetting the staked amount and voting power of <IDENTITY> from the SC\n");
+	printf("\t-qvaultgetgeneralproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the general proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetquorumchangeproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the quorum change proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetipoproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the ipo proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetqearnproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the qearn proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetfundproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the fund proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetmarketplaceproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the marketplace proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetallocationproposal <PROPOSAL_ID>\n");
+	printf("\t\tGetting the allocation proposal info of <PROPOSAL_ID> proposal\n");
+	printf("\t-qvaultgetidentitieshavingvotingpower <OFFSET> <COUNT>\n");
+	printf("\t\tGetting the identities having the voting power\n");
+	printf("\t\t<OFFSET> - the point to read, <COUNT> - the number of fetching\n");
+	printf("\t-qvaultgetproposalcreationpower <IDENTITY>\n");
+	printf("\t\tChecking if the <IDENTITY> has the proposal creation power\n");
+	printf("\t-qvaultgetqcapburntamountinlastepoches <NUMBER_OF_EPOCH>\n");
+	printf("\t\tGetting the burnt qcap amount in the last <NUMBER_OF_EPOCH> epoches\n");
+	printf("\t-qvaultgetamounttobesoldperyear <YEAR>\n");
+	printf("\t\tGetting the amount to be sold per year\n");
+    printf("\t-qvaultgettotalrevenueinqcap\n");
+	printf("\t\tGetting the total revenue in Qcap\n");
+	printf("\t-qvaultgetrevenueinqcapperepoch <EPOCH>\n");
+	printf("\t\tGetting the revenue for Qcap in <EPOCH> epoch\n");
+	printf("\t-qvaultgetrevenuepershare <CONTRACT_INDEX>\n");
+	printf("\t\tGetting the revenue in share <CONTRACT_INDEX>\n");
+	printf("\t-qvaultgetamountofshareqvaulthold <ASSET_NAME> <ISSUER>\n");
+	printf("\t\tGetting the amount of share the SC hold\n");
+	printf("\t-qvaultgetnumberofholderandaverageamount\n");
+	printf("\t\tGetting the number of Qcap holder and average amount\n");
+	printf("\t-qvaultgetamountforqearninupcomingepoch <EPOCH>\n");
+	printf("\t\tGetting the amount that should be locked in Qearn SC in the <EPOCH>\n");
+    
     printf("\n[MSVAULT COMMANDS]\n");
     printf("\t-msvaultregistervault <REQUIRED_APPROVALS> <VAULT_NAME> <OWNER_ID_COMMA_SEPARATED>\n");
     printf("\t\tRegister a vault. Vault's number of votes for proposal approval <REQUIRED_APPROVALS>, vault name (max 32 chars), and a list of owners (separated by commas). Fee applies.\n");
@@ -1959,126 +2005,312 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitauthaddress") == 0)
+
+
+        /**************************
+         ***** QVAULT COMMANDS *****
+         **************************/
+
+        if (strcmp(argv[i], "-qvaultstake") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SUBMIT_AUTH_ADDRESS;
-            g_qvault_identity = argv[i + 1];
+            g_cmd = QVAULT_COMMAND_STAKE;
+            g_qvault_stake_amount = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultchangeauthaddress") == 0)
+        if (strcmp(argv[i], "-qvaultunstake") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_CHANGE_AUTH_ADDRESS;
-            g_qvault_numberOfChangedAddress = uint32_t(charToNumber(argv[i + 1]));
+            g_cmd = QVAULT_COMMAND_UNSTAKE;
+            g_qvault_stake_amount = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitfees") == 0)
+        if (strcmp(argv[i], "-qvaultsubmitgeneralproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_SUBMIT_GP;
+            g_qvaulturl = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultsubmitquorumchangeproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QVAULT_COMMAND_SUBMIT_QCP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_permille = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultsubmitipoproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QVAULT_COMMAND_SUBMIT_IPOP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_ipo_contract_index = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultsubmitqearnproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-            g_cmd = QVAULT_SUBMIT_FEES;
-            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
+            g_cmd = QVAULT_COMMAND_SUBMIT_QEARNP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_number_of_epoch = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultchangefees") == 0)
+        if (strcmp(argv[i], "-qvaultsubmitfundproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(3)
-            g_cmd = QVAULT_CHANGE_FEES;
-            g_qvault_newQCAPHolderFee = uint32_t(charToNumber(argv[i + 1]));
-            g_qvault_newReinvestingFee = uint32_t(charToNumber(argv[i + 2]));
-            g_qvault_newDevFee = uint32_t(charToNumber(argv[i + 3]));
+            g_cmd = QVAULT_COMMAND_SUBMIT_FUNDP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 3]));
             i += 4;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitreinvestingaddress") == 0)
+        if (strcmp(argv[i], "-qvaultsubmitmarketplaceproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SUBMIT_REINVESTING_ADDRESS;
-            g_qvault_identity = argv[i + 1];
-            i += 2;
+            CHECK_NUMBER_OF_PARAMETERS(6)
+            g_cmd = QVAULT_COMMAND_SUBMIT_MKTP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_amount_of_qubic = uint64_t(charToNumber(argv[i + 2]));
+            g_qvault_share_name = argv[i + 3];
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 4]));
+            g_qvault_index_of_share = uint32_t(charToNumber(argv[i + 5]));
+            g_qvault_amount_of_share = uint32_t(charToNumber(argv[i + 6]));
+            i += 7;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultchangereinvestingaddress") == 0)
+        if (strcmp(argv[i], "-qvaultsubmitpercentallocationproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_CHANGE_REINVESTING_ADDRESS;
-            g_qvault_identity = argv[i + 1];
-            i += 2;
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QVAULT_COMMAND_SUBMIT_ALLOP;
+            g_qvaulturl = argv[i + 1];
+            g_qvault_reinvested = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_burn = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_distribute = uint32_t(charToNumber(argv[i + 4]));
+            i += 5;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitadminaddress") == 0)
+        if (strcmp(argv[i], "-qvaultvoteinproposal") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SUBMIT_ADMIN_ADDRESS;
-            g_qvault_identity = argv[i + 1];
-            i += 2;
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QVAULT_COMMAND_VOTE_IN_PROPOSAL;
+            g_qvault_price_of_ipo = uint64_t(charToNumber(argv[i + 1]));
+            g_qvault_proposal_type = uint32_t(charToNumber(argv[i + 2]));
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_yes = bool(charToNumber(argv[i + 4]));
+            i += 5;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultchangeadminaddress") == 0)
+        if (strcmp(argv[i], "-qvaultbuyqcap") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_CHANGE_ADMIN_ADDRESS;
-            g_qvault_identity = argv[i + 1];
-            i += 2;
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QVAULT_COMMAND_BUY_QCAP;
+            g_qvault_price_of_qcap = uint64_t(charToNumber(argv[i + 1]));
+            g_qvault_amount_of_qcap = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaulttransfersharemanagementrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QVAULT_COMMAND_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
+            g_qvault_assetname = argv[i + 1];
+            g_qvaultIdentity = argv[i + 2];
+            g_qvault_newmanagement_contract_index = uint32_t(charToNumber(argv[i + 3]));
+            g_qvault_number_of_share = int64_t(charToNumber(argv[i + 4]));
+            i += 5;
             CHECK_OVER_PARAMETERS;
             break;
         }
         if (strcmp(argv[i], "-qvaultgetdata") == 0)
         {
-            g_cmd = QVAULT_GET_DATA;
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = QVAULT_COMMAND_GETDATA;
             i += 1;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitbannedaddress") == 0)
+        if (strcmp(argv[i], "-qvaultgetstakedamountandvotingpower") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SUBMIT_BANNED_ADDRESS;
-            g_qvault_identity = argv[i + 1];
+            g_cmd = QVAULT_COMMAND_GET_STAKED_AMOUNT_AND_VOTING_POWER;
+            g_qvaultIdentity = argv[i + 1];
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsavebannedaddress") == 0)
+        if (strcmp(argv[i], "-qvaultgetgeneralproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SAVE_BANNED_ADDRESS;
-            g_qvault_identity = argv[i + 1];
+            g_cmd = QVAULT_COMMAND_GET_GP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsubmitunbannedaddress") == 0)
+        if (strcmp(argv[i], "-qvaultgetquorumchangeproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SUBMIT_UNBANNED_ADDRESS;
-            g_qvault_identity = argv[i + 1];
+            g_cmd = QVAULT_COMMAND_GET_QCP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-        if (strcmp(argv[i], "-qvaultsaveunbannedaddress") == 0)
+        if (strcmp(argv[i], "-qvaultgetipoproposal") == 0)
         {
             CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QVAULT_SAVE_UNBANNED_ADDRESS;
-            g_qvault_identity = argv[i + 1];
+            g_cmd = QVAULT_COMMAND_GET_IPOP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
             i += 2;
             CHECK_OVER_PARAMETERS;
             break;
         }
-
+        if (strcmp(argv[i], "-qvaultgetqearnproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_QEARNP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetfundproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_FUNDP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetmarketplaceproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_MKTP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetallocationproposal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_ALLOP;
+            g_qvault_proposal_id = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetidentitieshavingvotingpower") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QVAULT_COMMAND_GET_IDENTITIES_HV_VT_PW;
+            g_qvault_offset = uint32_t(charToNumber(argv[i + 1]));
+            g_qvault_count = uint32_t(charToNumber(argv[i + 2]));
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetproposalcreationpower") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_PP_CREATION_POWER;
+            g_qvaultIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetqcapburntamountinlastepoches") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_QCAP_BURNT_AMOUNT_IN_LAST_EPOCHES;
+            g_qvault_number_of_epoch = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetamounttobesoldperyear") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_AMOUNT_TO_BE_SOLD_PER_YEAR;
+            g_qvault_year = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgettotalrevenueinqcap") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = QVAULT_COMMAND_GET_TOTAL_REVENUE_IN_QCAP;
+            i += 1;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetrevenueinqcapperepoch") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_REVENUE_IN_QCAP_PER_EPOCH;
+            g_qvault_epoch = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetrevenuepershare") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_REVENUE_PER_SHARE;
+            g_qvault_contract_index = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetamountofshareqvaulthold") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = QVAULT_COMMAND_GET_AMOUNT_OF_SHARE_QVAULT_HOLD;
+            g_qvault_assetname = argv[i + 1];
+            g_qvaultIdentity = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetnumberofholderandaverageamount") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(0)
+            g_cmd = QVAULT_COMMAND_GET_NUMBER_OF_HOLDER_AND_AVG_AM;
+            i += 1;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        if (strcmp(argv[i], "-qvaultgetamountforqearninupcomingepoch") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QVAULT_COMMAND_GET_AMOUNT_FOR_QEARN_IN_UPCOMING_EPOCH;
+            g_qvault_epoch = uint32_t(charToNumber(argv[i + 1]));
+            i += 2;
+            CHECK_OVER_PARAMETERS;
+            break;
+        }
+        
         /**************************
          **** MSVAULT COMMANDS ****
          **************************/

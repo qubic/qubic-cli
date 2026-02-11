@@ -118,11 +118,34 @@ uint32_t g_qearn_getStatsEpoch = 0;
 const char* g_ccf_subscriptionDestination = nullptr;
 
 // qvault
-char* g_qvault_identity = nullptr;
-uint32_t g_qvault_numberOfChangedAddress = 0;
-uint32_t g_qvault_newQCAPHolderFee = 0;
-uint32_t g_qvault_newReinvestingFee = 0;
-uint32_t g_qvault_newDevFee = 0;
+char* g_qvaulturl = nullptr;
+char* g_qvaultIdentity = nullptr;
+uint32_t g_qvault_stake_amount = 0;
+uint32_t g_qvault_permille = 0;
+uint32_t g_qvault_ipo_contract_index = 0;
+uint64_t g_qvault_amount_of_qubic = 0;
+uint32_t g_qvault_number_of_epoch = 0;
+uint64_t g_qvault_price_of_qcap = 0;
+uint32_t g_qvault_amount_of_qcap = 0;
+char* g_qvault_share_name = nullptr;
+uint32_t g_qvault_index_of_share = 0;
+uint32_t g_qvault_amount_of_share = 0;
+uint32_t g_qvault_reinvested = 0;
+uint32_t g_qvault_burn = 0;
+uint32_t g_qvault_distribute = 0;
+uint32_t g_qvault_share_index = 0;
+uint64_t g_qvault_price_of_ipo = 0;
+uint32_t g_qvault_proposal_type = 0;
+uint32_t g_qvault_proposal_id = 0;
+bool g_qvault_yes = 0;
+char* g_qvault_assetname = nullptr;
+int64_t g_qvault_number_of_share = 0;
+uint32_t g_qvault_newmanagement_contract_index = 0;
+uint32_t g_qvault_count = 0;
+uint32_t g_qvault_offset = 0;
+uint32_t g_qvault_year = 0;
+uint32_t g_qvault_epoch = 0;
+uint32_t g_qvault_contract_index = 0;
 
 // msvault
 uint64_t g_msvault_id = 0;
