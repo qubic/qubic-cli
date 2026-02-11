@@ -206,6 +206,8 @@ enum COMMAND
     SHAREHOLDER_GET_VOTING_RESULTS,
     SET_EXECUTION_FEE_MULTIPLIER,
     GET_EXECUTION_FEE_MULTIPLIER,
+    GET_ORACLE_QUERY,
+    SEND_ORACLE_QUERY_TX,
     TOTAL_COMMAND // DO NOT CHANGE THIS
 };
 
@@ -217,7 +219,7 @@ private:
     unsigned int _dejavu;
 
 public:
-    inline unsigned int size()
+    inline unsigned int size() const
     {
         if (((*((unsigned int*)_size)) & 0xFFFFFF)==0) return INT32_MAX; // size is never zero, zero means broken packets
         return (*((unsigned int*)_size)) & 0xFFFFFF;
@@ -230,7 +232,12 @@ public:
         _size[2] = (uint8_t)(size >> 16);
     }
 
-    inline bool isDejavuZero()
+    inline unsigned int dejavu() const
+    {
+        return _dejavu;
+    }
+
+    inline bool isDejavuZero() const
     {
         return !_dejavu;
     }
@@ -249,7 +256,7 @@ public:
         }
     }
 
-    inline uint8_t type()
+    inline uint8_t type() const
     {
         return _type;
     }

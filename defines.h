@@ -5,7 +5,7 @@
 #include <chrono>
 #include <thread>
 
-#define DEFAULT_SCHEDULED_TICK_OFFSET 20
+#define DEFAULT_SCHEDULED_TICK_OFFSET 8
 #define DEFAULT_NODE_PORT 21841
 #define DEFAULT_NODE_IP "127.0.0.1"
 #define NUMBER_OF_TRANSACTIONS_PER_TICK 1024
@@ -60,7 +60,5 @@
 
 #define QX_CONTRACT_INDEX 1
 #define QX_FEE_FUNCTION_INDEX 1
-
-constexpr unsigned long long CONTRACT_ACTION_TRACKER_SIZE = 16 * 1024 * 1024;
 
 #define Q_SLEEP(X) std::this_thread::sleep_for (std::chrono::milliseconds(X));

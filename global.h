@@ -18,6 +18,7 @@ const char* g_proposalString = "";
 const char* g_voteValueString = "";
 const char* g_paramString1 = "";
 const char* g_paramString2 = "";
+const char* g_paramString3 = "";
 const char* g_invokeContractProcedureInputFormat = "";
 const char* g_callContractFunctionInputFormat = "";
 const char* g_callContractFunctionOutputFormat = "";
