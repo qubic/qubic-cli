@@ -45,6 +45,9 @@ char g_loggingMode = 0;
 char* g_compChatString = nullptr;
 uint64_t g_executionFeeMultiplierNumerator = 1;
 uint64_t g_executionFeeMultiplierDenominator = 1;
+char *g_vanityPattern = nullptr;
+unsigned int g_vanityGenerationThreads = 1;
+bool g_isVanitySuffix = false;
 
 char* g_dumpBinaryFileInput = nullptr;
 char* g_dumpBinaryFileOutput = nullptr;
