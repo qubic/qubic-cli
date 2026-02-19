@@ -262,7 +262,6 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
     uint8_t subSeed[32] = {0};
     uint8_t digest[32] = {0};
     uint8_t signature[64] = {0};
-    uint8_t issuer[32] = {0};
     char txHash[128] = {0};
     char assetNameS1[8] = {0};
 
@@ -296,7 +295,6 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
 
     // fill the input
     memcpy(&packet.cp.assetName, assetNameS1, 8);
-    memcpy(packet.cp.issuer, issuer, 32);
 
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,
