@@ -253,7 +253,6 @@ void qswapTransferAssetRights(const char* nodeIp, int nodePort,
 void qswapCreatePool(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* pAssetName,
-                     const char* pIssuerInQubicFormat,
                      uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -263,17 +262,10 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
     uint8_t subSeed[32] = {0};
     uint8_t digest[32] = {0};
     uint8_t signature[64] = {0};
-    uint8_t issuer[32] = {0};
     char txHash[128] = {0};
     char assetNameS1[8] = {0};
 
     memcpy(assetNameS1, pAssetName, strlen(pAssetName));
-    if (strlen(pIssuerInQubicFormat) != 60)
-    {
-        LOG("WARNING: Stop supporting hex format, please use qubic format 60-char length addresses\n");
-        exit(0);
-    }
-    getPublicKeyFromIdentity(pIssuerInQubicFormat, issuer);
 
     getSubseedFromSeed((uint8_t*)seed, subSeed);
     getPrivateKeyFromSubSeed(subSeed, privateKey);
@@ -298,13 +290,11 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QSWAP - CreatePool\n");
-    LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
     LOG("\n-------------------------------------\n\n");
 
     // fill the input
     memcpy(&packet.cp.assetName, assetNameS1, 8);
-    memcpy(packet.cp.issuer, issuer, 32);
 
     // sign the packet
     KangarooTwelve((unsigned char*)&packet.transaction,

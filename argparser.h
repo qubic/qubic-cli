@@ -385,7 +385,7 @@ void print_help()
     printf("\t\tTransfer an asset via Qswap contract.\n");
     printf("\t-qswaptransferassetrights <ASSET_NAME> <ISSUER_IN_HEX> <NEW_MANAGING_CONTRACT_INDEX> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset rights.\n");
-    printf("\t-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>\n");
+    printf("\t-qswapcreatepool <ASSET_NAME>\n");
     printf("\t\tCreate an AMM pool via Qswap contract.\n");
     printf("\t-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>\n");
     printf("\t\tGet the basic information of a pool.\n");
@@ -1321,11 +1321,10 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qswapcreatepool") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(2)
+            CHECK_NUMBER_OF_PARAMETERS(1)
             g_cmd = QSWAP_CREATE_POOL;
             g_qswap_assetName = argv[i+1];
-            g_qswap_issuer = argv[i+2];
-            i+=3;
+            i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }

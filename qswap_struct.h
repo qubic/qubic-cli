@@ -57,7 +57,6 @@ struct SwapAssetForQuAction_input
 };
 
 struct CreatePool_input {
-    uint8_t issuer[32];
     uint64_t assetName;
 };
 

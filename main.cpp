@@ -844,7 +844,6 @@ int run(int argc, char* argv[])
             sanityCheckValidString(g_qswap_issuer);
             qswapCreatePool(g_nodeIp, g_nodePort, g_seed,
                             g_qswap_assetName,
-                            g_qswap_issuer,
                             g_offsetScheduledTick);
             break;
         case QSWAP_ADD_LIQUIDITY:

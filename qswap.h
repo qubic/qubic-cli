@@ -29,7 +29,6 @@ void printQswapFee(const char* nodeIp, const int nodePort);
 void qswapCreatePool(const char* nodeIp, int nodePort,
                      const char* seed,
                      const char* pAssetName,
-                     const char* pHexIssuer,
                      uint32_t scheduledTickOffset);
 
 void qswapAddLiquidity(const char* nodeIp, int nodePort,
