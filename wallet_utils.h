@@ -3,6 +3,11 @@
 #include "structs.h"
 #include "connection.h"
 
+struct VanityAddress {
+  char seed[55 + 1];
+  char identity[60 + 1];
+};
+
 void printWalletInfo(const char* seed);
 void printBalance(const char* publicIdentity, const char* nodeIp, int nodePort);
 void makeStandardTransaction(const char* nodeIp, int nodePort, const char* seed,
@@ -62,3 +67,4 @@ void makeIPOBid(const char* nodeIp, int nodePort,
                 uint32_t scheduledTickOffset);
 void printIPOStatus(const char* nodeIp, int nodePort, uint32_t contractIndex);
 void printActiveIPOs(const char* nodeIp, int nodePort);
+VanityAddress generateVanityAddress(const char* pattern, unsigned int vanityGenerationThreads, bool isSufix = false);

@@ -50,6 +50,8 @@ void print_help()
     printf("\n[WALLET COMMANDS]\n");
     printf("\t-showkeys\n");
     printf("\t\tGenerate identity, public key and private key from seed. Seed must be passed either from params or configuration file.\n");
+    printf("\t-generate-vanity-address <EXPECTED_CHARS> <THREADS> <IS_SUFIX>\n");
+    printf("\t\tGenerates a vanity address matching the expected characters using multiple threads, with an option to match as a suffix.\n");
     printf("\t-getbalance <IDENTITY>\n");
     printf("\t\tBalance of an identity (amount of qubic, number of in/out txs)\n");
     printf("\t-getasset <IDENTITY>\n");
@@ -740,6 +742,16 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = SHOW_KEYS;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-generate-vanity-address") == 0)
+        {
+            g_cmd = GENERATE_VANITY_ADDRESS;
+            g_vanityPattern = argv[i + 1];
+            g_vanityGenerationThreads = uint32_t(charToNumber(argv[i + 2]));
+            g_isVanitySuffix = (strcmp(argv[i + 3], "1") == 0 || strcasecmp(argv[i + 3], "true") == 0);
+            i += 4;
             CHECK_OVER_PARAMETERS
             break;
         }

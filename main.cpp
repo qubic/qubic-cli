@@ -35,6 +35,9 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             printWalletInfo(g_seed);
             break;
+        case GENERATE_VANITY_ADDRESS:
+            generateVanityAddress(g_vanityPattern, g_vanityGenerationThreads, g_isVanitySuffix);
+            break;
         case GET_CURRENT_TICK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printTickInfoFromNode(g_nodeIp, g_nodePort);
