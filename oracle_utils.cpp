@@ -147,7 +147,8 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
     throw ConnectionTimeout();
 }
 
-static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleDataQueryMetadata& metadata, std::vector<uint8_t>& query, std::vector<uint8_t>& reply)
+static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleDataQueryMetadata& metadata,
+    std::vector<uint8_t>& query, std::vector<uint8_t>& reply, std::vector<uint16_t>& contractIndices)
 {
     // send request
     struct {
@@ -166,6 +167,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
     memset(&metadata, 0, sizeof(RespondOracleDataQueryMetadata));
     query.clear();
     reply.clear();
+    contractIndices.clear();
 
     // prepare output buffers
     uint8_t headerBuffer[sizeof(RequestResponseHeader)];
@@ -217,6 +219,13 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
                     reply.insert(reply.end(),
                         responseInnerPayload,
                         responseInnerPayload + responseInnerPayloadSize);
+                }
+                else if (respOracleData->resType == RespondOracleData::respondNotifiedSubscriberContracts)
+                {
+                    // Subscriber contract indices
+                    contractIndices.insert(contractIndices.end(),
+                        (uint16_t*)(responseInnerPayload),
+                        (uint16_t*)(responseInnerPayload + responseInnerPayloadSize));
                 }
                 else
                 {
@@ -301,7 +310,8 @@ static std::string getOracleQueryStatusFlagsStr(uint16_t flags)
     return str;
 }
 
-static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata, const std::vector<uint8_t>& query, const std::vector<uint8_t>& reply)
+static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata, const std::vector<uint8_t>& query,
+    const std::vector<uint8_t>& reply, const std::vector<uint16_t>& contractIndices)
 {
     LOG("Query ID: %" PRIi64 "\n", metadata.queryId);
     LOG("Type: %s (%" PRIu8 ")\n", getOracleQueryTypeStr(metadata.type), metadata.type);
@@ -317,6 +327,19 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
     LOG("Interface Index: %" PRIu32 "\n", metadata.interfaceIndex);
     if (metadata.type == ORACLE_QUERY_TYPE_CONTRACT_SUBSCRIPTION)
         LOG("Subscription ID: %" PRIi32 "\n", metadata.subscriptionId);
+    if (contractIndices.size() > 0)
+    {
+        LOG("Notified subscriber contracts:");
+        for (uint16_t contractIdx : contractIndices)
+        {
+            const char* name = getContractName(contractIdx);
+            if (name)
+                LOG(" %s (%d)", name, (int)contractIdx);
+            else
+                LOG(" %d", (int)contractIdx);
+        }
+        LOG("\n");
+    }
     if (metadata.status == ORACLE_QUERY_STATUS_SUCCESS)
     {
         LOG("Reveal Tick: %" PRIu32 "\n", metadata.revealTick);
@@ -533,15 +556,16 @@ void processGetOracleQueryWithTick(const char* nodeIp, const int nodePort, unsig
 
             RespondOracleDataQueryMetadata metadata;
             std::vector<uint8_t> query, reply;
+            std::vector<uint16_t> contractIndices;
             for (const int64_t& id : recQueryIds)
             {
-                receiveQueryInformation(qc, id, metadata, query, reply);
+                receiveQueryInformation(qc, id, metadata, query, reply, contractIndices);
                 if (metadata.queryId == 0)
                 {
                     LOG("Error getting query metadata! Stopping now.\n");
                     return;
                 }
-                printQueryInformation(metadata, query, reply);
+                printQueryInformation(metadata, query, reply, contractIndices);
                 LOG("\n");
             }
         }
@@ -572,10 +596,11 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
 
         RespondOracleDataQueryMetadata metadata;
         std::vector<uint8_t> query, reply;
+        std::vector<uint16_t> contractIndices;
         for (const int64_t& id : recQueryIds)
         {
-            receiveQueryInformation(qc, id, metadata, query, reply);
-            printQueryInformation(metadata, query, reply);
+            receiveQueryInformation(qc, id, metadata, query, reply, contractIndices);
+            printQueryInformation(metadata, query, reply, contractIndices);
             LOG("\n");
         }
     }
@@ -664,8 +689,9 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
 
         RespondOracleDataQueryMetadata metadata;
         std::vector<uint8_t> query, reply;
-        receiveQueryInformation(qc, queryId, metadata, query, reply);
-        printQueryInformation(metadata, query, reply);
+        std::vector<uint16_t> contractIndices;
+        receiveQueryInformation(qc, queryId, metadata, query, reply, contractIndices);
+        printQueryInformation(metadata, query, reply, contractIndices);
     }
 }
 
