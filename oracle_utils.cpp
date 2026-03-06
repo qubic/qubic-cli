@@ -871,7 +871,7 @@ void makePriceOracleContractTransaction(
 
         // build full input data
         queryData.resize(queryData.size() + 5);
-        *(uint32_t*)(queryData.data() + sizeof(OI::Price::OracleQuery)) = periodInMilliseconds * 1000;
+        *(uint32_t*)(queryData.data() + sizeof(OI::Price::OracleQuery)) = periodInMilliseconds;
         *(queryData.data() + sizeof(OI::Price::OracleQuery) + 4) = true;
 
         uint32_t scheduledTick = 0;
