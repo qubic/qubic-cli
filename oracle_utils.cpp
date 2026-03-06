@@ -820,12 +820,12 @@ static void printSubscriptionInformation(RespondOracleDataSubscription& subscrip
     }
 }
 
-void processGetOracleSubscription(const char* nodeIp, const int nodePort, const char* reqParam)
+int32_t getSubscriptionIdFromString(const char* s)
 {
     int64_t subscriptionId = -1;
     try
     {
-        subscriptionId = std::stoull(reqParam);
+        subscriptionId = std::stoull(s);
     }
     catch (...)
     {
@@ -834,8 +834,16 @@ void processGetOracleSubscription(const char* nodeIp, const int nodePort, const 
     if (subscriptionId < 0 || subscriptionId > 0x7fffffffll)
     {
         LOG("Error: Invalid subscription ID!\n");
-        return;
+        return -1;
     }
+    return (int32_t)subscriptionId;
+}
+
+void processGetOracleSubscription(const char* nodeIp, const int nodePort, const char* reqParam)
+{
+    int64_t subscriptionId = getSubscriptionIdFromString(reqParam);
+    if (subscriptionId < 0)
+        return;
 
     RespondOracleDataSubscription subscription;
     std::vector<uint8_t> query;
@@ -939,6 +947,10 @@ void printMakePriceOracleContractTransactionHelpAndExit()
     LOG("qubic-cli [...] -querypriceviacontract query [CONTRACT] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n\n");
     LOG("qubic-cli [...] -querypriceviacontract subscribe [CONTRACT] [QUERY_STRING] [PERIOD_IN_MINUTES]\n\n");
     LOG("qubic-cli [...] -querypriceviacontract unsubscribe [CONTRACT] [SUBSCRIPTION_ID]\n\n");
+    LOG("\tAs [CONTRACT], you may use \"QUTIL\" at the moment (and \"TESTEXC\" if test contracts are enabled in the net.\n");
+    LOG("\tTo get help about [QUERY_STRING], leave it empty.\n");
+    LOG("\t[TIMEOUT_IN_SECONDS] is optional. Default is 60 seconds.\n");
+
     exit(1);
 }
 
@@ -1019,12 +1031,20 @@ void makePriceOracleContractTransaction(
             scheduledTickOffset, nullptr, &scheduledTick);
 
         // TODO
-        LOG("\n\nYou may run the following command for checking the query:\n");
-        LOG("qubic-cli [...] -getoraclesubscription %u\n", scheduledTick);
+        //LOG("\n\nYou may run the following command for checking the query:\n");
+        //LOG("qubic-cli [...] -getoracle %u\n", scheduledTick);
     }
     else if (strcasecmp(commandString, "unsubscribe") == 0)
     {
-        // TODO
+        int32_t subscriptionId = getSubscriptionIdFromString(queryStringOrSubscriptionId);
+        if (subscriptionId < 0)
+            return;
+
+        makeContractTransaction(nodeIp, nodePort, seed, contractIndex, 102, 0, 4, &subscriptionId,
+            scheduledTickOffset, nullptr);
+
+        LOG("\n\nYou may run the following command for checking the unsubscribe after some time:\n");
+        LOG("qubic-cli [...] -getoraclesubscription %d\n", subscriptionId);
     }
     else
     {
