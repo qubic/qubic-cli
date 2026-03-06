@@ -380,6 +380,10 @@ static void receiveQueryStats(QCPtr& qc, RespondOracleDataQueryStatistics& stats
     {
         throw std::logic_error("Unexpected response message.");
     }
+    if (header->size() != responseSize)
+    {
+        throw std::logic_error("Unexpected response message size.");
+    }
     const auto* receivedStats = (RespondOracleDataQueryStatistics*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
     stats = *receivedStats;
 }
@@ -397,9 +401,16 @@ static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
     LOG("              % " PRIu64 " queries before OM reply (takes %.3f ticks on average)\n", stats.pendingOracleMachineCount, float(stats.oracleMachineReplyAvgMilliTicksPerQuery) / 1000.0f);
     LOG("              % " PRIu64 " queries before commit quorum (takes %.3f ticks on average)\n", stats.pendingCommitCount, float(stats.commitAvgMilliTicksPerQuery) / 1000.0f);
     LOG("              % " PRIu64 " queries before reveal / success\n", stats.pendingRevealCount);
+    LOG("total:        % " PRIu64 " contract one-time queries\n", stats.contractQueries);
+    LOG("              % " PRIu64 " contract subscription queries\n", stats.subscriptionQueries);
+    LOG("              % " PRIu64 " user queries\n", stats.userQueries);
     if (stats.oracleMachineRepliesDisagreeCount > 0)
     {
         LOG("OM issues:    % " PRIu64 " queries had OM replies that differ between OMs\n", stats.oracleMachineRepliesDisagreeCount);
+    }
+    if (stats.wrongKnowledgeProofCount > 0)
+    {
+        LOG("Core issues:  % " PRIu64 " commit tx had wrong knowledge proof\n", stats.wrongKnowledgeProofCount);
     }
 }
 
