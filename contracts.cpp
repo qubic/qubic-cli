@@ -54,19 +54,21 @@ uint32_t getContractIndex(const char* str, bool enableTestContracts)
         idx = 22;
     else if (strcasecmp(str, "QDUEL") == 0)
         idx = 23;
+    else if (strcasecmp(str, "PULSE") == 0)
+        idx = 24;
     else
     {
         unsigned int contractCount = CONTRACT_COUNT;
         if (enableTestContracts)
         {
             if (strcasecmp(str, "TESTEXA") == 0)
-                idx = TESTEXA_CONTRACT_INDEX;
+                return TESTEXA_CONTRACT_INDEX;
             else if (strcasecmp(str, "TESTEXB") == 0)
-                idx = TESTEXB_CONTRACT_INDEX;
+                return TESTEXB_CONTRACT_INDEX;
             else if (strcasecmp(str, "TESTEXC") == 0)
-                idx = TESTEXC_CONTRACT_INDEX;
+                return TESTEXC_CONTRACT_INDEX;
             else if (strcasecmp(str, "TESTEXD") == 0)
-                idx = TESTEXD_CONTRACT_INDEX;
+                return TESTEXD_CONTRACT_INDEX;
 
             contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
         }
@@ -106,6 +108,7 @@ const char* getContractName(uint32_t contractIndex, bool enableTestContracts)
     case 21: return "QRP";
     case 22: return "QTF";
     case 23: return "QDUEL";
+    case 24: return "PULSE";
     default:
         if (enableTestContracts)
         {

@@ -2,7 +2,7 @@
 
 // Change this number when new contracts are added, also add new indices to functions in contracts.cpp and to
 // shareholderProposalSupportPerContract below
-#define CONTRACT_COUNT 23
+#define CONTRACT_COUNT 24
 
 enum {
 	NoShareholderProposalSupported,
@@ -35,6 +35,7 @@ const int shareholderProposalSupportPerContract[] = {
 	NoShareholderProposalSupported, // 21: QRP
 	NoShareholderProposalSupported, // 22: QTF
 	NoShareholderProposalSupported, // 23: QDUEL
+	NoShareholderProposalSupported, // 24: PULSE
 	// add new contracts here
 	DefaultYesNoSingleVarShareholderProposalSupported, // N+1: TESTEXA
 	V1ScalarSingleVarShareholderProposalSupported, // N+2: TESTEXB
@@ -45,7 +46,7 @@ const int shareholderProposalSupportPerContract[] = {
 #define TESTEXA_CONTRACT_INDEX (CONTRACT_COUNT + 1)
 #define TESTEXB_CONTRACT_INDEX (CONTRACT_COUNT + 2)
 #define TESTEXC_CONTRACT_INDEX (CONTRACT_COUNT + 3)
-#define TESTEXD_CONTRACT_INDEX (CONTRACT_COUNT + 3)
+#define TESTEXD_CONTRACT_INDEX (CONTRACT_COUNT + 4)
 
 extern bool g_enableTestContracts;
 
