@@ -395,6 +395,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             processGetOracleQuery(g_nodeIp, g_nodePort, g_paramString1, g_paramString2);
             break;
+        case GET_ORACLE_SUBSCRIPTION:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            processGetOracleSubscription(g_nodeIp, g_nodePort, g_paramString1);
+            break;
         case SEND_ORACLE_QUERY_TX:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);

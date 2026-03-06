@@ -171,6 +171,8 @@ void print_help()
     printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
     printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n");
     printf("\t\tSend user oracle query. Skip arguments to get detailed documentation.\n");
+    printf("\t-getoraclesubscription [SUBSCRIPTION_ID]\n");
+    printf("\t\tGet information about oracle subscriptions.\n");
     printf("\t-querypriceviacontract <...>\n");
     printf("\t\tSend price query via contract. Useful for testing contract queries and subscriptions. Skip arguments to get detailed documentation.\n");
 
@@ -1109,6 +1111,15 @@ void parseArgument(int argc, char** argv)
             if (i + 2 < argc)
                 g_paramString2 = argv[i + 2];
             i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-getoraclesubscription") == 0)
+        {
+            g_cmd = GET_ORACLE_SUBSCRIPTION;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            i += 2;
             CHECK_OVER_PARAMETERS
             break;
         }

@@ -334,7 +334,7 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
         {
             const char* name = getContractName(contractIdx, true);
             if (name)
-                LOG(" %s (%d)", name, (int)contractIdx);
+                LOG(" %d=%s", (int)contractIdx, name);
             else
                 LOG(" %d", (int)contractIdx);
         }
@@ -695,7 +695,156 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     }
 }
 
-uint32_t getTimeoutInSeconds(const char* timeoutSecondsString)
+static void receiveSubscriptionInformation(QCPtr qc, int64_t subscriptionId, RespondOracleDataSubscription& subscription,
+    std::vector<uint8_t>& initialQuery, std::vector<RespondOracleDataSubscriber>& subscribers)
+{
+    // send request
+    struct {
+        RequestResponseHeader header;
+        RequestOracleData req;
+    } request;
+    request.header.setSize(sizeof(request));
+    request.header.randomizeDejavu();
+    request.header.setType(RequestOracleData::type());
+    memset(&request.req, 0, sizeof(request.req));
+    request.req.reqType = RequestOracleData::requestSubscription;
+    request.req.reqTickOrId = subscriptionId;
+    qc->sendData((uint8_t*)&request, request.header.size());
+
+    // reset output
+    memset(&subscription, 0, sizeof(subscription));
+    initialQuery.clear();
+    subscribers.clear();
+
+    // prepare output buffers
+    uint8_t headerBuffer[sizeof(RequestResponseHeader)];
+    auto responseHeader = (const RequestResponseHeader*)headerBuffer;
+    std::vector<uint8_t> payloadBuffer(2048);
+
+    // receive query data
+    int recvHeaderBytes = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
+    while (recvHeaderBytes == sizeof(RequestResponseHeader))
+    {
+        // get remaining part of the response
+        const unsigned int responsePayloadSize = responseHeader->size() - sizeof(RequestResponseHeader);
+        if (responsePayloadSize > payloadBuffer.size())
+        {
+            payloadBuffer.resize(responsePayloadSize);
+        }
+        qc->receiveAllDataOrThrowException(payloadBuffer.data(), responsePayloadSize);
+
+        // only process if dejavu matches (response is to current request, skip otherwise)
+        if (responseHeader->dejavu() == request.header.dejavu())
+        {
+            if (responseHeader->type() == RespondOracleData::type())
+            {
+                // Oracle data response
+                if (responsePayloadSize < sizeof(RespondOracleData))
+                {
+                    throw std::runtime_error("Malformatted RespondOracleData reply");
+                }
+                auto respOracleData = (RespondOracleData*)payloadBuffer.data();
+                auto responseInnerPayload = payloadBuffer.data() + sizeof(RespondOracleData);
+                auto responseInnerPayloadSize = responsePayloadSize - sizeof(RespondOracleData);
+
+                if (respOracleData->resType == RespondOracleData::respondSubscription
+                    && responsePayloadSize == sizeof(RespondOracleData) + sizeof(RespondOracleDataSubscription))
+                {
+                    // Subscription
+                    subscription = *(RespondOracleDataSubscription*)(responseInnerPayload);
+                }
+                else if (respOracleData->resType == RespondOracleData::respondQueryData)
+                {
+                    // Initial oracle query
+                    initialQuery.insert(initialQuery.end(),
+                        responseInnerPayload,
+                        responseInnerPayload + responseInnerPayloadSize);
+                }
+                else if (respOracleData->resType == RespondOracleData::respondSubscriber)
+                {
+                    // Add subscriber
+                    subscribers.push_back(*(RespondOracleDataSubscriber*)(responseInnerPayload));
+                }
+                else
+                {
+                    throw std::runtime_error("Unexpected RespondOracleData message sub-type");
+                }
+            }
+            else if (responseHeader->type() == END_RESPOND)
+            {
+                // End of output packages for this request
+                if (subscription.subscriptionId != subscriptionId)
+                    throw std::logic_error("Unknown subscription ID!");
+                else
+                    break;
+            }
+
+            // try to get next message header
+            recvHeaderBytes = qc->receiveData(headerBuffer, sizeof(RequestResponseHeader));
+        }
+    }
+    if (recvHeaderBytes < sizeof(RequestResponseHeader))
+    {
+        throw std::logic_error("Error receiving message header.");
+    }
+}
+
+static void printSubscriptionInformation(RespondOracleDataSubscription& subscription,
+    std::vector<uint8_t>& initialQuery, std::vector<RespondOracleDataSubscriber>& subscribers)
+{
+    LOG("Subscription ID: %" PRIi32 "\n", subscription.subscriptionId);
+    LOG("Interface Index: %" PRIu32 "\n", subscription.interfaceIndex);
+    std::string queryStr = oracleQueryToString(subscription.interfaceIndex, initialQuery);
+    if (queryStr.find("error") != std::string::npos)
+    {
+        std::vector<char> hexQuery(2 * initialQuery.size() + 1, 0);
+        byteToHex(initialQuery.data(), hexQuery.data(), static_cast<int>(initialQuery.size()));
+        LOG("Initial query: %s %s\n", hexQuery.data(), queryStr.c_str());
+    }
+    else
+    {
+        LOG("Initial query: %s\n", queryStr.c_str());
+    }
+    LOG("Generated queries: %" PRIu32 "\n", subscription.generatedQueriesCount);
+    LOG("Last pending query ID: %" PRIi64 "\n", subscription.lastPendingQueryId);
+    LOG("Last pending revealed ID: %" PRIi64 "\n", subscription.lastRevealedQueryId);
+    LOG("Current subscriber contracts:\n");
+    for (const auto& subscriber : subscribers)
+    {
+        const char* name = getContractName(subscriber.contractIndex, true);
+        if (name)
+            LOG("\t- %d=%s", (int)subscriber.contractIndex, name);
+        else
+            LOG("\t- %d", (int)subscriber.contractIndex);
+        LOG(", period %d minute(s), next query %s\n", (int)subscriber.notificationPeriodMinutes, toString(*(QPI::DateAndTime*)&subscriber.nextQueryTimestamp).c_str());
+    }
+}
+
+void processGetOracleSubscription(const char* nodeIp, const int nodePort, const char* reqParam)
+{
+    int64_t subscriptionId = -1;
+    try
+    {
+        subscriptionId = std::stoull(reqParam);
+    }
+    catch (...)
+    {
+        subscriptionId = -1;
+    }
+    if (subscriptionId < 0 || subscriptionId > 0x7fffffffll)
+    {
+        LOG("Error: Invalid subscription ID!\n");
+        return;
+    }
+
+    RespondOracleDataSubscription subscription;
+    std::vector<uint8_t> query;
+    std::vector<RespondOracleDataSubscriber> subscribers;
+    receiveSubscriptionInformation(make_qc(nodeIp, nodePort), (int32_t)subscriptionId, subscription, query, subscribers);
+    printSubscriptionInformation(subscription, query, subscribers);
+}
+
+static uint32_t getTimeoutInSeconds(const char* timeoutSecondsString)
 {
     uint64_t timeoutSeconds = 60;
     if (strcasecmp(timeoutSecondsString, "") == 0)
@@ -820,15 +969,6 @@ void makePriceOracleContractTransaction(
         LOG("Fee for oracle query: %" PRIi64 "\n", fee);
 
         // build input data
-        /*
-        struct QueryPriceOracle_input
-        {
-            OI::Price::OracleQuery priceOracleQuery;
-            uint32_t timeoutMilliseconds;
-        } input;
-        memcpy(&input.priceOracleQuery, queryData.data(), queryData.size());
-        input.timeoutMilliseconds = timeoutSeconds * 1000;
-        */
         queryData.resize(queryData.size() + 4);
         *(uint32_t*)(queryData.data() + sizeof(OI::Price::OracleQuery)) = timeoutSeconds * 1000;
         
@@ -878,11 +1018,13 @@ void makePriceOracleContractTransaction(
         makeContractTransaction(nodeIp, nodePort, seed, contractIndex, 101, fee, (int)queryData.size(), queryData.data(),
             scheduledTickOffset, nullptr, &scheduledTick);
 
+        // TODO
         LOG("\n\nYou may run the following command for checking the query:\n");
         LOG("qubic-cli [...] -getoraclesubscription %u\n", scheduledTick);
     }
     else if (strcasecmp(commandString, "unsubscribe") == 0)
     {
+        // TODO
     }
     else
     {
