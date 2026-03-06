@@ -13,6 +13,7 @@
 #include "connection.h"
 #include "key_utils.h"
 #include "wallet_utils.h"
+#include "contracts.h"
 
 
 void printGetOracleQueryHelpAndExit()

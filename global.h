@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defines.h"
+#include "structs.h"
 
 COMMAND g_cmd;
 char* g_seed = (char*)DEFAULT_SEED;

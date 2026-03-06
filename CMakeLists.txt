@@ -5,6 +5,7 @@ set (CMAKE_CXX_STANDARD 17)
 # keep the lists sorted alphabetically
 SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/connection.cpp
+		${CMAKE_SOURCE_DIR}/contracts.cpp
 		${CMAKE_SOURCE_DIR}/file_upload.cpp
 		${CMAKE_SOURCE_DIR}/key_utils.cpp
 		${CMAKE_SOURCE_DIR}/main.cpp
@@ -31,6 +32,7 @@ SET(HEADER_FILES
 	asset_utils.h
 	common_functions.h
 	connection.h
+	contracts.h
 	defines.h
 	fourq_qubic.h
 	global.h
