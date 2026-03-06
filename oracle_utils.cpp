@@ -332,7 +332,7 @@ static void printQueryInformation(const RespondOracleDataQueryMetadata& metadata
         LOG("Notified subscriber contracts:");
         for (uint16_t contractIdx : contractIndices)
         {
-            const char* name = getContractName(contractIdx);
+            const char* name = getContractName(contractIdx, true);
             if (name)
                 LOG(" %s (%d)", name, (int)contractIdx);
             else
@@ -695,6 +695,32 @@ void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* r
     }
 }
 
+uint32_t getTimeoutInSeconds(const char* timeoutSecondsString)
+{
+    uint64_t timeoutSeconds = 60;
+    if (strcasecmp(timeoutSecondsString, "") == 0)
+    {
+        LOG("No timeout specified. Using default timeout of 60 seconds.\n");
+    }
+    else
+    {
+        try
+        {
+            timeoutSeconds = std::stoull(timeoutSecondsString);
+        }
+        catch (...)
+        {
+            timeoutSeconds = 0;
+        }
+        if (timeoutSeconds == 0 || timeoutSeconds > 600)
+        {
+            LOG("Error: Invalid timeout! Please use a value between 1 and 600.\n");
+            return UINT32_MAX;
+        }
+    }
+    return (uint32_t)timeoutSeconds;
+}
+
 void makeOracleUserQueryTransaction(
     const char* nodeIp, int nodePort, const char* seed,
     const char* oracleInterfaceString,
@@ -728,27 +754,9 @@ void makeOracleUserQueryTransaction(
         return;
     }
 
-    uint64_t timeoutSeconds = 60;
-    if (strcasecmp(timeoutSecondsString, "") == 0)
-    {
-        LOG("No timeout specified. Using default timeout of 60 seconds.\n");
-    }
-    else
-    {
-        try
-        {
-            timeoutSeconds = std::stoull(timeoutSecondsString);
-        }
-        catch (...)
-        {
-            timeoutSeconds = 0;
-        }
-        if (timeoutSeconds == 0 || timeoutSeconds > 600)
-        {
-            LOG("Error: Invalid timeout! Please use a value between 1 and 600.\n");
-            return;
-        }
-    }
+    uint32_t timeoutSeconds = getTimeoutInSeconds(timeoutSecondsString);
+    if (timeoutSeconds == UINT32_MAX)
+        return;
 
     // get oracle query fee
     OI::initOracleInterfaces();
@@ -775,4 +783,109 @@ void makeOracleUserQueryTransaction(
 
     // TODO: add "my/my+ [TICK]" command that uses a future core command for filtering queries based on seed
     // (send tick + 4 bytes of public key to core for filtering oracle IDs)
+}
+
+void printMakePriceOracleContractTransactionHelpAndExit()
+{
+    LOG("qubic-cli [...] -querypriceviacontract query [CONTRACT] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n\n");
+    LOG("qubic-cli [...] -querypriceviacontract subscribe [CONTRACT] [QUERY_STRING] [PERIOD_IN_MINUTES]\n\n");
+    LOG("qubic-cli [...] -querypriceviacontract unsubscribe [CONTRACT] [SUBSCRIPTION_ID]\n\n");
+    exit(1);
+}
+
+void makePriceOracleContractTransaction(
+    const char* nodeIp, int nodePort, const char* seed,
+    const char* commandString,
+    uint32_t contractIndex,
+    const char* queryStringOrSubscriptionId,
+    const char* timeString,
+    uint32_t scheduledTickOffset)
+{
+    if (strcasecmp(commandString, "query") == 0)
+    {
+        std::vector<uint8_t> queryData = parseOracleQueryParams(0, queryStringOrSubscriptionId);
+        if (queryData.size() != sizeof(OI::Price::OracleQuery))
+        {
+            LOG("Error parsing [QUERY_STRING] \"%s\".\n", queryStringOrSubscriptionId);
+            return;
+        }
+
+        uint32_t timeoutSeconds = getTimeoutInSeconds(timeString);
+        if (timeoutSeconds == UINT32_MAX)
+            return;
+
+        // get oracle query fee
+        OI::initOracleInterfaces();
+        int64_t fee = OI::getOracleQueryFeeFunc[0](queryData.data());
+        LOG("Fee for oracle query: %" PRIi64 "\n", fee);
+
+        // build input data
+        /*
+        struct QueryPriceOracle_input
+        {
+            OI::Price::OracleQuery priceOracleQuery;
+            uint32_t timeoutMilliseconds;
+        } input;
+        memcpy(&input.priceOracleQuery, queryData.data(), queryData.size());
+        input.timeoutMilliseconds = timeoutSeconds * 1000;
+        */
+        queryData.resize(queryData.size() + 4);
+        *(uint32_t*)(queryData.data() + sizeof(OI::Price::OracleQuery)) = timeoutSeconds * 1000;
+        
+        uint32_t scheduledTick = 0;
+        makeContractTransaction(nodeIp, nodePort, seed, contractIndex, 100, fee, (int)queryData.size(), queryData.data(),
+            scheduledTickOffset, nullptr, &scheduledTick);
+
+        LOG("\n\nYou may run the following command for checking the query:\n");
+        LOG("qubic-cli [...] -getoraclequery contract+ %u\n", scheduledTick);
+    }
+    else if (strcasecmp(commandString, "subscribe") == 0)
+    {
+        std::vector<uint8_t> queryData = parseOracleQueryParams(0, queryStringOrSubscriptionId);
+        if (queryData.size() != sizeof(OI::Price::OracleQuery))
+        {
+            LOG("Error parsing [QUERY_STRING] \"%s\".\n", queryStringOrSubscriptionId);
+            return;
+        }
+
+        uint64_t periodInMinutes = 0;
+        try
+        {
+            periodInMinutes = std::stoull(timeString);
+        }
+        catch (...)
+        {
+            periodInMinutes = 0;
+        }
+        if (periodInMinutes == 0 || periodInMinutes > 1440)
+        {
+            LOG("Error: Invalid subscription period! Please use a value between 1 and 1440 (minutes).\n");
+            return;
+        }
+        uint32_t periodInMilliseconds = (uint32_t)periodInMinutes * 60000;
+
+        // get oracle subscription fee
+        OI::initOracleInterfaces();
+        int64_t fee = OI::Price::getSubscriptionFee(*(OI::Price::OracleQuery*)queryData.data(), periodInMilliseconds);
+        LOG("Fee for oracle subscription: %" PRIi64 "\n", fee);
+
+        // build full input data
+        queryData.resize(queryData.size() + 5);
+        *(uint32_t*)(queryData.data() + sizeof(OI::Price::OracleQuery)) = periodInMilliseconds * 1000;
+        *(queryData.data() + sizeof(OI::Price::OracleQuery) + 4) = true;
+
+        uint32_t scheduledTick = 0;
+        makeContractTransaction(nodeIp, nodePort, seed, contractIndex, 101, fee, (int)queryData.size(), queryData.data(),
+            scheduledTickOffset, nullptr, &scheduledTick);
+
+        LOG("\n\nYou may run the following command for checking the query:\n");
+        LOG("qubic-cli [...] -getoraclesubscription %u\n", scheduledTick);
+    }
+    else if (strcasecmp(commandString, "unsubscribe") == 0)
+    {
+    }
+    else
+    {
+        printMakePriceOracleContractTransactionHelpAndExit();
+    }
 }

@@ -171,6 +171,8 @@ void print_help()
     printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
     printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n");
     printf("\t\tSend user oracle query. Skip arguments to get detailed documentation.\n");
+    printf("\t-querypriceviacontract <...>\n");
+    printf("\t\tSend price query via contract. Useful for testing contract queries and subscriptions. Skip arguments to get detailed documentation.\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -1120,6 +1122,21 @@ void parseArgument(int argc, char** argv)
             if (i + 3 < argc)
                 g_paramString3 = argv[i + 3];
             i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-querypriceviacontract") == 0)
+        {
+            g_cmd = SEND_ORACLE_CONTRACT_TX;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_contractIndex = getContractIndex(argv[i + 2], g_enableTestContracts);
+            if (i + 3 < argc)
+                g_paramString2 = argv[i + 3];
+            if (i + 4 < argc)
+                g_paramString3 = argv[i + 4];
+            i += 5;
             CHECK_OVER_PARAMETERS
             break;
         }
