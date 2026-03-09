@@ -394,7 +394,7 @@ static void receiveQueryStats(QCPtr& qc, RespondOracleDataQueryStatistics& stats
     constexpr unsigned long long responseSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryStatistics);
     uint8_t buffer[responseSize];
     int recvByte = qc->receiveData(buffer, responseSize);
-    if (recvByte != responseSize)
+    if (recvByte < sizeof(RequestResponseHeader) + sizeof(RespondOracleData))
     {
         throw std::logic_error("Connection closed.");
     }
@@ -406,10 +406,14 @@ static void receiveQueryStats(QCPtr& qc, RespondOracleDataQueryStatistics& stats
     }
     if (header->size() != responseSize)
     {
-        throw std::logic_error("Unexpected response message size.");
+        LOG("WARNING: Unexpected response message size. Maybe the version of the core and qubic-cli do not match.\n");
     }
+    memset(&stats, 0, sizeof(stats));
     const auto* receivedStats = (RespondOracleDataQueryStatistics*)(buffer + sizeof(RequestResponseHeader) + sizeof(RespondOracleData));
-    stats = *receivedStats;
+    unsigned int copySize = header->size() - sizeof(RequestResponseHeader) - sizeof(RespondOracleData);
+    if (sizeof(stats) < copySize)
+        copySize = sizeof(stats);
+    memcpy(&stats, receivedStats, copySize);
 }
 
 static void printQueryStats(const RespondOracleDataQueryStatistics& stats)
