@@ -59,7 +59,7 @@ uint32_t getContractIndex(const char* str, bool enableTestContracts)
     else
     {
         unsigned int contractCount = CONTRACT_COUNT;
-        if (enableTestContracts)
+        if (enableTestContracts || g_nodePort != DEFAULT_NODE_PORT)
         {
             if (strcasecmp(str, "TESTEXA") == 0)
                 return TESTEXA_CONTRACT_INDEX;
