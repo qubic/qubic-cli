@@ -1,7 +1,7 @@
 #pragma once
 
 void processGetOracleQuery(const char* nodeIp, const int nodePort, const char* requestType, const char* reqParam);
-void processGetOracleSubscription(const char* nodeIp, const int nodePort, const char* reqParam);
+void processGetOracleSubscription(const char* nodeIp, const int nodePort, const char* requestType, const char* reqParam);
 void makeOracleUserQueryTransaction(
     const char* nodeIp, int nodePort, const char* seed,
     const char* oracleInterfaceString,

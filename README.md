@@ -148,8 +148,8 @@ Commands:
 		Get information about oracle queries. Skip arguments to get detailed documentation.
 	-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]
 		Send user oracle query. Skip arguments to get detailed documentation.
-	-getoraclesubscription [SUBSCRIPTION_ID]
-		Get information about oracle subscriptions.
+	-getoraclesubscription <...>
+		Get information about oracle subscriptions. Skip arguments to get detailed documentation.
 	-querypriceviacontract <...>
 		Send price query via contract. Useful for testing contract queries and subscriptions. Skip arguments to get detailed documentation.
 
