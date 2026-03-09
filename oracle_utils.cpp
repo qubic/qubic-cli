@@ -811,7 +811,7 @@ static void printSubscriptionInformation(RespondOracleDataSubscription& subscrip
     }
     LOG("Generated queries: %" PRIu32 "\n", subscription.generatedQueriesCount);
     LOG("Last pending query ID: %" PRIi64 "\n", subscription.lastPendingQueryId);
-    LOG("Last pending revealed ID: %" PRIi64 "\n", subscription.lastRevealedQueryId);
+    LOG("Last revealed query ID: %" PRIi64 "\n", subscription.lastRevealedQueryId);
     LOG("Current subscriber contracts:\n");
     for (const auto& subscriber : subscribers)
     {
