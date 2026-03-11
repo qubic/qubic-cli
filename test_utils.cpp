@@ -9,11 +9,8 @@
 #include "key_utils.h"
 #include "k12_and_key_utils.h"
 #include "wallet_utils.h"
+#include "contracts.h"
 
-
-#define TESTEXA_CONTRACT_INDEX (CONTRACT_COUNT + 1)
-#define TESTEXB_CONTRACT_INDEX (CONTRACT_COUNT + 2)
-#define TESTEXC_CONTRACT_INDEX (CONTRACT_COUNT + 3)
 
 // TESTEXA FUNCTIONS
 constexpr uint8_t TESTEXA_QUERY_QPI_FUNCTIONS = 1;

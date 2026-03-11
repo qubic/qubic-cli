@@ -8,6 +8,7 @@
 #include "global.h"
 #include "logger.h"
 #include "structs.h"
+#include "contracts.h"
 
 #define CHECK_OVER_PARAMETERS                                                           \
     if (i < argc)                                                                       \
@@ -170,6 +171,10 @@ void print_help()
     printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
     printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n");
     printf("\t\tSend user oracle query. Skip arguments to get detailed documentation.\n");
+    printf("\t-getoraclesubscription <...>\n");
+    printf("\t\tGet information about oracle subscriptions. Skip arguments to get detailed documentation.\n");
+    printf("\t-querypriceviacontract <...>\n");
+    printf("\t\tSend price query via contract. Useful for testing contract queries and subscriptions. Skip arguments to get detailed documentation.\n");
 
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
@@ -518,80 +523,6 @@ static uint64_t charToUnsignedNumber(char* a)
     char *endptr = nullptr;
     retVal = strtoll(a, &endptr, 10);
     return retVal;
-}
-
-static uint32_t getContractIndex(const char* str, bool enableTestContracts)
-{
-    uint32_t idx = 0;
-    if (strcasecmp(str, "QX") == 0)
-        idx = 1;
-    else if (strcasecmp(str, "QUOTTERY") == 0 || strcasecmp(str, "QTRY") == 0)
-        idx = 2;
-    else if (strcasecmp(str, "RANDOM") == 0)
-        idx = 3;
-    else if (strcasecmp(str, "QUTIL") == 0)
-        idx = 4;
-    else if (strcasecmp(str, "MLM") == 0)
-        idx = 5;
-    else if (strcasecmp(str, "GQMPROP") == 0)
-        idx = 6;
-    else if (strcasecmp(str, "SWATCH") == 0)
-        idx = 7;
-    else if (strcasecmp(str, "CCF") == 0)
-        idx = 8;
-    else if (strcasecmp(str, "QEARN") == 0)
-        idx = 9;
-    else if (strcasecmp(str, "QVAULT") == 0)
-        idx = 10;
-    else if (strcasecmp(str, "MSVAULT") == 0)
-        idx = 11;
-    else if (strcasecmp(str, "QBAY") == 0)
-        idx = 12;
-    else if (strcasecmp(str, "QSWAP") == 0)
-        idx = 13;
-    else if (strcasecmp(str, "NOST") == 0)
-        idx = 14;
-    else if (strcasecmp(str, "QDRAW") == 0)
-        idx = 15;
-    else if (strcasecmp(str, "RL") == 0)
-        idx = 16;
-    else if (strcasecmp(str, "QBOND") == 0)
-        idx = 17;
-    else if (strcasecmp(str, "QIP") == 0)
-        idx = 18;
-    else if (strcasecmp(str, "QRAFFLE") == 0)
-        idx = 19;
-    else if (strcasecmp(str, "QRWA") == 0)
-        idx = 20;
-    else if (strcasecmp(str, "QRP") == 0)
-        idx = 21;
-    else if (strcasecmp(str, "QTF") == 0)
-        idx = 22;
-    else if (strcasecmp(str, "QDUEL") == 0)
-        idx = 23;
-    else
-    {
-        unsigned int contractCount = CONTRACT_COUNT;
-        if (enableTestContracts)
-        {
-            if (strcasecmp(str, "TESTEXA") == 0)
-                idx = CONTRACT_COUNT + 1;
-            else if (strcasecmp(str, "TESTEXB") == 0)
-                idx = CONTRACT_COUNT + 2;
-            else if (strcasecmp(str, "TESTEXC") == 0)
-                idx = CONTRACT_COUNT + 3;
-            else if (strcasecmp(str, "TESTEXD") == 0)
-                idx = CONTRACT_COUNT + 4;
-
-            contractCount += 4; // + 4 to make contracts TestExampleA-D accessible via contract index number
-        }
-        if (sscanf(str, "%u", &idx) != 1 || idx == 0 || (g_nodePort == DEFAULT_NODE_PORT && (idx > contractCount)))
-        {
-            LOG("Contract \"%s\" is unknown!\n", str);
-            exit(1);
-        }
-    }
-    return idx;
 }
 
 void readConfigFile(const char* path)
@@ -1183,6 +1114,17 @@ void parseArgument(int argc, char** argv)
             CHECK_OVER_PARAMETERS
             break;
         }
+        if (strcmp(argv[i], "-getoraclesubscription") == 0)
+        {
+            g_cmd = GET_ORACLE_SUBSCRIPTION;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_paramString2 = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
         if (strcmp(argv[i], "-queryoracle") == 0)
         {
             g_cmd = SEND_ORACLE_QUERY_TX;
@@ -1193,6 +1135,21 @@ void parseArgument(int argc, char** argv)
             if (i + 3 < argc)
                 g_paramString3 = argv[i + 3];
             i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-querypriceviacontract") == 0)
+        {
+            g_cmd = SEND_ORACLE_CONTRACT_TX;
+            if (i + 1 < argc)
+                g_paramString1 = argv[i + 1];
+            if (i + 2 < argc)
+                g_contractIndex = getContractIndex(argv[i + 2], g_enableTestContracts);
+            if (i + 3 < argc)
+                g_paramString2 = argv[i + 3];
+            if (i + 4 < argc)
+                g_paramString3 = argv[i + 4];
+            i += 5;
             CHECK_OVER_PARAMETERS
             break;
         }

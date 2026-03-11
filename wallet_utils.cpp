@@ -336,7 +336,8 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     int extraDataSize,
     const void* extraData,
     uint32_t scheduledTickOffset,
-    QCPtr* qcPtr = nullptr)
+    QCPtr* qcPtr = nullptr,
+    uint32_t* outputScheduledTick = nullptr)
 {
     QCPtr qc = (!qcPtr) ? make_qc(nodeIp, nodePort) : *qcPtr;
 
@@ -389,6 +390,9 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
     printReceipt(packetTransaction, txHash, (uint8_t*)extraData);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", packetTransaction.tick, txHash);
     LOG("to check your tx confirmation status\n");
+
+    if (outputScheduledTick)
+        *outputScheduledTick = packetTransaction.tick;
 }
 
 bool runContractFunction(const char* nodeIp, int nodePort,
