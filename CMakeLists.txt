@@ -76,6 +76,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(${PROJECT_NAME} PRIVATE -mrdrnd -mavx2)
 endif()
 
+# to make clang++ shut up about "first argument in call to 'memcpy' is a pointer to non-trivially copyable type 'id'"
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-nontrivial-memaccess)
+endif()
+
 ADD_LIBRARY(fourq-qubic SHARED fourq_qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
