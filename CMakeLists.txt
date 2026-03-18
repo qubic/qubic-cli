@@ -85,4 +85,5 @@ ADD_LIBRARY(fourq-qubic SHARED fourq_qubic.cpp)
 set_property(TARGET fourq-qubic PROPERTY SOVERSION 1)
 target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
 install(TARGETS fourq-qubic LIBRARY)
+install(TARGETS qubic-cli RUNTIME)
 
