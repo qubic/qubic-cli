@@ -101,8 +101,6 @@ void escrowCreateDeal(const char* nodeIp, int nodePort, const char* seed,
     LOG("\n%u\n", currentTick);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + DEFAULT_SCHEDULED_TICK_OFFSET, txHash);
     LOG("to check your tx confirmation status\n");
-
-    makeStandardTransaction();
 }
 
 void escrowGetDeals(const char* nodeIp, int nodePort, const char* seed, const int64_t proposedOffset, const int64_t publicOffset)
