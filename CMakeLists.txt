@@ -22,6 +22,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/qutil.cpp
 		${CMAKE_SOURCE_DIR}/qvault.cpp
 		${CMAKE_SOURCE_DIR}/qx.cpp
+		${CMAKE_SOURCE_DIR}/escrow.cpp
 		${CMAKE_SOURCE_DIR}/sc_utils.cpp
 		${CMAKE_SOURCE_DIR}/test_utils.cpp
 		${CMAKE_SOURCE_DIR}/wallet_utils.cpp
@@ -54,6 +55,7 @@ SET(HEADER_FILES
 	qutil.h
 	qvault.h
 	qx.h
+	escrow.h
 	qx_struct.h
 	sanity_check.h
 	sc_utils.h
