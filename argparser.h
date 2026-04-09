@@ -176,6 +176,37 @@ void print_help()
     printf("\t-querypriceviacontract <...>\n");
     printf("\t\tSend price query via contract. Useful for testing contract queries and subscriptions. Skip arguments to get detailed documentation.\n");
 
+    printf("\n[QRWA COMMANDS]\n");
+    printf("\t-qrwapayout <pool_a|pool_b|pool_c|pool_d> [epoch]\n");
+    printf("\t-qrwapayout <ADDRESS> [epoch]\n");
+    printf("\t\tShow payout ring buffer for the specified pool.\n");
+    printf("\t-qrwastatus\n");
+    printf("\t\tShow qRWA totals and configured addresses.\n");
+    printf("\t-qrwaassets\n");
+    printf("\t\tShow assets and tokens held by the qRWA contract.\n");
+    printf("\t-qrwagovparams\n");
+    printf("\t\tShow current governance parameters.\n");
+    printf("\t-qrwagovpoll <proposalId>\n");
+    printf("\t\tShow details of a governance poll by ID.\n");
+    printf("\t-qrwagovpollids\n");
+    printf("\t\tList active governance poll IDs.\n");
+    printf("\t-qrwadividends\n");
+    printf("\t\tShow dividend balances for all pools.\n");
+    printf("\t-qrwascdividends\n");
+    printf("\t\tShow SC dividend tracking (Pool B revenue sources).\n");
+    printf("\t-qrwadonate <amount>\n");
+    printf("\t\tDonate QMINE to the treasury (requires prior QX management rights transfer).\n");
+    printf("\t-qrwavotegov <admin> <electricity> <maintenance> <reinvestment> <qminedev> <elec%%> <maint%%> <reinvest%%>\n");
+    printf("\t\tSubmit or vote on a governance parameter proposal.\n");
+    printf("\t-qrwasetpoolaaddr <ADDRESS>\n");
+    printf("\t\tSet Pool A revenue address (admin-only).\n");
+    printf("\t-qrwasetpooldaddr <ADDRESS>\n");
+    printf("\t\tSet Pool D revenue address (admin-only).\n");
+    printf("\t-qrwadepositasset <ISSUER> <ASSET_NAME> <amount>\n");
+    printf("\t\tDeposit a general asset into the contract (admin-only).\n");
+    printf("\t-qrwarevokeasset <ISSUER> <ASSET_NAME> <numberOfShares>\n");
+    printf("\t\tRevoke asset management rights back to QX (100 QU fee).\n");
+
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
     printf("\t\tCall a contract function of contract index and print the output. Valid node ip/port are required.\t\n");
@@ -1150,6 +1181,156 @@ void parseArgument(int argc, char** argv)
             if (i + 4 < argc)
                 g_paramString3 = argv[i + 4];
             i += 5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        /*************************
+         ***** QRWA COMMANDS *****
+         *************************/
+
+        if (strcmp(argv[i], "-qrwapayout") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            if (strcmp(argv[i + 1], "pool_a") == 0)
+                g_cmd = QRWA_PAYOUT_POOL_A;
+            else if (strcmp(argv[i + 1], "pool_b") == 0)
+                g_cmd = QRWA_PAYOUT_POOL_B;
+            else if (strcmp(argv[i + 1], "pool_c") == 0)
+                g_cmd = QRWA_PAYOUT_POOL_C;
+            else if (strcmp(argv[i + 1], "pool_d") == 0)
+                g_cmd = QRWA_PAYOUT_POOL_D;
+            else if (strlen(argv[i + 1]) == 60)
+            {
+                g_cmd = QRWA_PAYOUT_ADDRESS;
+                g_qrwa_identity = argv[i + 1];
+            }
+            else { LOG("Invalid argument '%s'. Use pool_a, pool_b, pool_c, pool_d, or a 60-char address.\n", argv[i + 1]); exit(1); }
+            if (i + 2 < argc && argv[i + 2][0] != '-')
+            {
+                g_qrwa_epoch = atoi(argv[i + 2]);
+                i += 3;
+            }
+            else
+            {
+                i += 2;
+            }
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwastatus") == 0)
+        {
+            g_cmd = QRWA_STATUS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwaassets") == 0)
+        {
+            g_cmd = QRWA_ASSETS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwagovparams") == 0)
+        {
+            g_cmd = QRWA_GOV_PARAMS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwagovpoll") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QRWA_GOV_POLL;
+            g_qrwa_poll_id = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwagovpollids") == 0)
+        {
+            g_cmd = QRWA_GOV_POLL_IDS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwadividends") == 0)
+        {
+            g_cmd = QRWA_DIVIDENDS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwascdividends") == 0)
+        {
+            g_cmd = QRWA_SC_DIVIDENDS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwadonate") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QRWA_DONATE_TREASURY;
+            g_qrwa_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwavotegov") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(8)
+            g_cmd = QRWA_VOTE_GOV_PARAMS;
+            g_qrwa_gov_admin = argv[i + 1];
+            g_qrwa_gov_electricity = argv[i + 2];
+            g_qrwa_gov_maintenance = argv[i + 3];
+            g_qrwa_gov_reinvestment = argv[i + 4];
+            g_qrwa_gov_qminedev = argv[i + 5];
+            g_qrwa_gov_electricity_pct = strtoull(argv[i + 6], nullptr, 10);
+            g_qrwa_gov_maintenance_pct = strtoull(argv[i + 7], nullptr, 10);
+            g_qrwa_gov_reinvestment_pct = strtoull(argv[i + 8], nullptr, 10);
+            i += 9;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwasetpoolaaddr") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QRWA_SET_POOL_A_ADDR;
+            g_qrwa_new_address = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwasetpooldaddr") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QRWA_SET_POOL_D_ADDR;
+            g_qrwa_new_address = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwadepositasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QRWA_DEPOSIT_ASSET;
+            g_qrwa_issuer = argv[i + 1];
+            g_qrwa_asset_name = argv[i + 2];
+            g_qrwa_amount = strtoull(argv[i + 3], nullptr, 10);
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qrwarevokeasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QRWA_REVOKE_ASSET_MGMT;
+            g_qrwa_issuer = argv[i + 1];
+            g_qrwa_asset_name = argv[i + 2];
+            g_qrwa_num_shares = strtoll(argv[i + 3], nullptr, 10);
+            i += 4;
             CHECK_OVER_PARAMETERS
             break;
         }

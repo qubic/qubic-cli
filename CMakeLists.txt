@@ -17,6 +17,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/qbond.cpp
 		${CMAKE_SOURCE_DIR}/qearn.cpp
 		${CMAKE_SOURCE_DIR}/qpi_adapter.cpp
+		${CMAKE_SOURCE_DIR}/qrwa.cpp
 		${CMAKE_SOURCE_DIR}/qswap.cpp
 		${CMAKE_SOURCE_DIR}/quottery.cpp
 		${CMAKE_SOURCE_DIR}/qutil.cpp
@@ -46,6 +47,7 @@ SET(HEADER_FILES
 	oracle_utils.h
 	prompt.h
 	proposal.h
+	qrwa.h
 	qbond.h
 	qearn.h
 	qswap.h
