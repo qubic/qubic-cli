@@ -107,6 +107,8 @@ enum qutilProcedureId
     CancelPoll = 6,
     DistributeQuToShareholders = 7,
     BurnQubicForContract = 8,
+    TransferShareToManyV1 = 9,
+    TransferShareManagementRights = 10,
 };
 
 enum qutilFunctionId
@@ -132,6 +134,11 @@ struct GetSendToManyV1Fee_output
 
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset);
+void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* seed,
+    const char* issuerIdentity, const char* assetName, const char* payoutListFile, uint32_t scheduledTickOffset);
+void qutilTransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed,
+    const char* assetName, const char* issuerIdentity, uint32_t newManagingContractIndex,
+    int64_t numberOfShares, uint32_t scheduledTickOffset);
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset);
 void qutilBurnQubicForContract(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t contractIndex, uint32_t scheduledTickOffset);
 void qutilQueryFeeReserve(const char* nodeIp, int nodePort, uint32_t contractIndex);

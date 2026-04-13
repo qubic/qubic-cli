@@ -17,6 +17,8 @@
 #include "sanity_check.h"
 
 constexpr int QUTIL_CONTRACT_ID = 4;
+// TODO: QU attached to tx and offeredTransferFee in input 
+constexpr int64_t QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE = 100;
 
 // TODO: use value from core source code
 constexpr unsigned long long CONTRACT_ACTION_TRACKER_SIZE = 16 * 1024 * 1024;
@@ -52,21 +54,60 @@ struct SendToManyBenchmark_input
     int64_t numTransfersEach;
 };
 
-void readPayoutList(const char* payoutListFile, std::vector<std::string>& addresses, std::vector<int64_t>& amounts)
+struct TransferShareToManyV1_input
+{
+    uint8_t issuer[32];
+    uint64_t assetName;
+    uint8_t addresses[24][32];
+    int64_t amounts[24];
+};
+static_assert(sizeof(TransferShareToManyV1_input) == 1000);
+
+struct TransferShareManagementRights_input
+{
+    qpi::Asset asset;
+    int64_t numberOfShares;
+    uint32_t newManagingContractIndex;
+    int64_t offeredTransferFee;
+};
+static_assert(sizeof(TransferShareManagementRights_input) == 64);
+
+bool readPayoutList(const char* payoutListFile, std::vector<std::string>& addresses, std::vector<int64_t>& amounts, std::string& error)
 {
     addresses.resize(0);
     amounts.resize(0);
     std::ifstream infile(payoutListFile);
+    if (!infile.is_open())
+    {
+        error = "failed to open payout file";
+        return false;
+    }
+
     std::string line;
+    uint64_t lineNo = 0;
     while (std::getline(infile, line))
     {
+        ++lineNo;
+        if (line.empty())
+            continue;
+
         std::istringstream iss(line);
-        std::string a;
+        std::string a, extra;
         int64_t b;
-        if (!(iss >> a >> b)) { break; } // error
+        if (!(iss >> a >> b) || (iss >> extra))
+        {
+            error = "invalid format at line " + std::to_string(lineNo) + ", expected: <identity> <amount>";
+            return false;
+        }
+        if (a.size() != 60)
+        {
+            error = "invalid identity length at line " + std::to_string(lineNo) + ", expected 60 chars";
+            return false;
+        }
         addresses.push_back(a);
         amounts.push_back(b);
     }
+    return true;
 }
 
 static std::string assetNameFromInt64(unsigned long long assetName)
@@ -159,7 +200,12 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
 
     std::vector<std::string> addresses;
     std::vector<int64_t> amounts;
-    readPayoutList(payoutListFile, addresses, amounts);
+    std::string parseError;
+    if (!readPayoutList(payoutListFile, addresses, amounts, parseError))
+    {
+        LOG("ERROR: %s\n", parseError.c_str());
+        return;
+    }
     if (addresses.size() > 25)
     {
         LOG("WARNING: payout list has more than 25 addresses, only the first 25 addresses will be paid\n");
@@ -227,6 +273,112 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
+}
+
+void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* seed,
+    const char* issuerIdentity, const char* assetName, const char* payoutListFile, uint32_t scheduledTickOffset)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    std::vector<std::string> addresses;
+    std::vector<int64_t> amounts;
+    std::string parseError;
+    if (!readPayoutList(payoutListFile, addresses, amounts, parseError))
+    {
+        LOG("ERROR: %s\n", parseError.c_str());
+        return;
+    }
+    if (addresses.empty())
+    {
+        LOG("ERROR: payout file is empty or has no valid \"<identity> <amount>\" lines.\n");
+        return;
+    }
+    if (addresses.size() > 24)
+    {
+        LOG("WARNING: payout list has more than 24 addresses, only the first 24 entries will be used\n");
+    }
+
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t destPublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+    char txHash[128] = {0};
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    ((uint64_t*)destPublicKey)[0] = QUTIL_CONTRACT_ID;
+    ((uint64_t*)destPublicKey)[1] = 0;
+    ((uint64_t*)destPublicKey)[2] = 0;
+    ((uint64_t*)destPublicKey)[3] = 0;
+
+    struct {
+        RequestResponseHeader header;
+        Transaction transaction;
+        TransferShareToManyV1_input tsm;
+        unsigned char signature[64];
+    } packet;
+    memset(&packet.tsm, 0, sizeof(TransferShareToManyV1_input));
+    getPublicKeyFromIdentity(issuerIdentity, packet.tsm.issuer);
+    packet.tsm.assetName = 0;
+    memcpy(&packet.tsm.assetName, assetName, std::min(size_t(7), strlen(assetName)));
+
+    for (int i = 0; i < std::min(24, int(addresses.size())); i++)
+    {
+        getPublicKeyFromIdentity(addresses[i].data(), packet.tsm.addresses[i]);
+        packet.tsm.amounts[i] = amounts[i];
+    }
+
+    long long fee = getSendToManyV1Fee(qc);
+    if (fee == -1)
+        return;
+    LOG("TransferShareToManyV1 invocation fee: %lld\n", fee);
+    packet.transaction.amount = fee;
+    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
+    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
+    uint32_t currentTick = getTickNumberFromNode(qc);
+    packet.transaction.tick = currentTick + scheduledTickOffset;
+    packet.transaction.inputType = qutilProcedureId::TransferShareToManyV1;
+    packet.transaction.inputSize = sizeof(TransferShareToManyV1_input);
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(TransferShareToManyV1_input),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    packet.header.setSize(sizeof(packet));
+    packet.header.zeroDejavu();
+    packet.header.setType(BROADCAST_TRANSACTION);
+
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+    KangarooTwelve((unsigned char*)&packet.transaction,
+                   sizeof(packet.transaction) + sizeof(TransferShareToManyV1_input) + SIGNATURE_SIZE,
+                   digest,
+                   32);
+    getTxHashFromDigest(digest, txHash);
+    LOG("TransferShareToManyV1 tx has been sent!\n");
+    printReceipt(packet.transaction, txHash, nullptr);
+    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
+    LOG("to check your tx confirmation status\n");
+}
+
+void qutilTransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed,
+    const char* assetName, const char* issuerIdentity, uint32_t newManagingContractIndex,
+    int64_t numberOfShares, uint32_t scheduledTickOffset)
+{
+    TransferShareManagementRights_input input{};
+    input.asset.assetName = 0;
+    memcpy(&input.asset.assetName, assetName, std::min(size_t(7), strlen(assetName)));
+    getPublicKeyFromIdentity(issuerIdentity, input.asset.issuer);
+    input.numberOfShares = numberOfShares;
+    input.newManagingContractIndex = newManagingContractIndex;
+    input.offeredTransferFee = QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE;
+
+    LOG("\nSending TransferShareManagementRights transaction (fee %" PRIi64 " QU) ...\n",
+        QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE);
+    makeContractTransaction(nodeIp, nodePort, seed, QUTIL_CONTRACT_ID, qutilProcedureId::TransferShareManagementRights,
+        static_cast<uint64_t>(QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE), sizeof(input), &input, scheduledTickOffset);
 }
 
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset)

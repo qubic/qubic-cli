@@ -92,6 +92,7 @@ uint32_t g_quottery_pickedOption = 0;
 
 // qutil
 char* g_qutil_sendToManyV1PayoutListFile = nullptr;
+char* g_qutil_transferSharePayoutListFile = nullptr;
 int64_t g_qutil_sendToManyBenchmarkDestinationCount = 0;
 int64_t g_qutil_sendToManyBenchmarkNumTransfersEach = 0;
 

@@ -92,6 +92,10 @@ void print_help()
     printf("\t\tCancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.\n");
     printf("\t-qutilgetfee\n");
     printf("\t\tShow current QUTIL fees.\n");
+    printf("\t-qutiltransfersharetomanyv1 <ISSUER_ID> <ASSET_NAME> <FILE>\n");
+    printf("\t\tTransfer shares of an asset to up to 24 recipients in one tick. <FILE> is like -qutilsendtomanyv1 (identity and amount per line).Valid seed and node ip/port are required.\n");
+    printf("\t-qutiltransfersharemanagementrights <ASSET_NAME> <ISSUER_ID> <NEW_MANAGING_CONTRACT> <NUM_SHARES>\n");
+    printf("\t\tTransfer asset management rights of shares from QUTIL to another contract. <NEW_MANAGING_CONTRACT> can be given as name or index. You need to own/possess the shares to do this (seed required).\n");
 
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
@@ -1626,7 +1630,30 @@ void parseArgument(int argc, char** argv)
             i += 1;
             CHECK_OVER_PARAMETERS
             break;
-        }        
+        }
+        if (strcmp(argv[i], "-qutiltransfersharetomanyv1") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QUTIL_TRANSFER_SHARE_TO_MANY_V1;
+            g_paramString1 = argv[i + 1];
+            g_paramString2 = argv[i + 2];
+            g_qutil_transferSharePayoutListFile = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutiltransfersharemanagementrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QUTIL_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
+            g_qx_assetName = argv[i + 1];
+            g_qx_issuer = argv[i + 2];
+            g_contractIndex = getContractIndex(argv[i + 3], g_enableTestContracts);
+            g_qx_numberOfShare = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         /****************************
          ***** GQMPROP COMMANDS *****
