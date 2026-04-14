@@ -298,7 +298,7 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
 
     // DEBUG LOG
     LOG("\n-------------------------------------\n\n");
-    LOG("Sending QSWAP - CreatePool\n");\
+    LOG("Sending QSWAP - CreatePool\n");
     LOG("Issuer: %s\n", pIssuerInQubicFormat);
     LOG("assetName: %s\n", assetNameS1);
     LOG("\n-------------------------------------\n\n");
