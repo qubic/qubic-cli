@@ -28,6 +28,7 @@
 #include "nostromo.h"
 #include "qutil.h"
 #include "qbond.h"
+#include "escrow.h"
 
 
 #ifdef _MSC_VER
@@ -401,6 +402,11 @@ template GetUserMBonds_output QubicConnection::receivePacketWithHeaderAs<GetUser
 template GetFees_output QubicConnection::receivePacketWithHeaderAs<GetFees_output>();
 template GetEarnedFees_output QubicConnection::receivePacketWithHeaderAs<GetEarnedFees_output>();
 template GetCFA_output QubicConnection::receivePacketWithHeaderAs<GetCFA_output>();
+
+// ESCROW
+template EscrowGetDeals_output QubicConnection::receivePacketWithHeaderAs<EscrowGetDeals_output>();
+template TransferShareManagementRights_output QubicConnection::receivePacketWithHeaderAs<TransferShareManagementRights_output>();
+template EscrowGetFreeAsset_output QubicConnection::receivePacketWithHeaderAs<EscrowGetFreeAsset_output>();
 
 // TESTING
 template QpiFunctionsOutput QubicConnection::receivePacketWithHeaderAs<QpiFunctionsOutput>();
