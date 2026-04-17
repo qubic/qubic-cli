@@ -331,6 +331,45 @@ Commands:
 	-msvaultgetvaultowners <VAULT_ID>
 			Get MsVault owners given vault ID.
 
+[QRWA COMMANDS]
+	-qrwapayout <pool_a|pool_b|pool_c|pool_d> [epoch]
+	-qrwapayout <ADDRESS> [epoch]
+		Show payout ring buffer for the specified pool or address.
+		Pool A = Qubic Mining, Pool B = SC Assets, Pool C = BTC Mining, Pool D = MLM Water.
+		Optional epoch filter: only show payouts for the given epoch.
+	-qrwastatus
+		Show qRWA totals (distributed per pool) and configured contract addresses.
+	-qrwaassets
+		Show assets and tokens held by the qRWA contract.
+	-qrwagovparams
+		Show current governance parameters (admin, cost addresses, percentages).
+	-qrwagovpoll <PROPOSAL_ID>
+		Show details of a governance poll by ID.
+	-qrwagovpollids
+		List active governance poll IDs.
+	-qrwadividends
+		Show dividend balances for all pools (revenue, QMINE/qRWA splits).
+	-qrwascdividends
+		Show SC dividend tracking — Pool B revenue sources from other smart contracts.
+	-qrwadonate <AMOUNT>
+		Donate QMINE to the treasury. Requires prior QX management rights transfer.
+		Valid seed and node ip/port are required.
+	-qrwavotegov <ADMIN> <ELECTRICITY> <MAINTENANCE> <REINVESTMENT> <QMINEDEV> <ELEC%> <MAINT%> <REINVEST%>
+		Submit or vote on a governance parameter proposal. All 5 addresses and 3 percentages required.
+		Valid seed and node ip/port are required.
+	-qrwasetpoolaaddr <ADDRESS>
+		Set Pool A revenue address (admin-only).
+		Valid seed and node ip/port are required.
+	-qrwasetpooldaddr <ADDRESS>
+		Set Pool D revenue address (admin-only).
+		Valid seed and node ip/port are required.
+	-qrwadepositasset <ISSUER> <ASSET_NAME> <AMOUNT>
+		Deposit a general asset into the contract (admin-only).
+		Valid seed and node ip/port are required.
+	-qrwarevokeasset <ISSUER> <ASSET_NAME> <NUMBER_OF_SHARES>
+		Revoke asset management rights back to QX (100 QU fee).
+		Valid seed and node ip/port are required.
+
 [QSWAP COMMANDS]
 	-qswapgetfee
 		Show current Qswap fees.
