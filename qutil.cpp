@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -17,8 +18,8 @@
 #include "sanity_check.h"
 
 constexpr int QUTIL_CONTRACT_ID = 4;
-// TODO: QU attached to tx and offeredTransferFee in input 
-constexpr int64_t QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE = 100;
+constexpr int64_t QUTIL_TRANSFER_SHARES_TO_MANY_FEE_QU = 2500;
+constexpr int64_t QUTIL_TRANSFER_SHARES_MANAGEMENT_FEE_QU = 100;
 
 // TODO: use value from core source code
 constexpr unsigned long long CONTRACT_ACTION_TRACKER_SIZE = 16 * 1024 * 1024;
@@ -54,23 +55,109 @@ struct SendToManyBenchmark_input
     int64_t numTransfersEach;
 };
 
-struct TransferShareToManyV1_input
+struct TransferSharesToManyV1_input
 {
     uint8_t issuer[32];
     uint64_t assetName;
     uint8_t addresses[24][32];
     int64_t amounts[24];
 };
-static_assert(sizeof(TransferShareToManyV1_input) == 1000);
+static_assert(sizeof(TransferSharesToManyV1_input) == 1000);
 
-struct TransferShareManagementRights_input
+struct TransferSharesManagementRights_input
 {
     qpi::Asset asset;
     int64_t numberOfShares;
     uint32_t newManagingContractIndex;
-    int64_t offeredTransferFee;
 };
-static_assert(sizeof(TransferShareManagementRights_input) == 64);
+static_assert(sizeof(TransferSharesManagementRights_input) == 56);
+
+struct GetBalances16_input
+{
+    uint8_t publicKeys[16][32];
+};
+struct GetBalances16_output
+{
+    int64_t balances[16];
+};
+static_assert(sizeof(GetBalances16_input) == 512);
+static_assert(sizeof(GetBalances16_output) == 128);
+
+static constexpr int kGetBalances16MaxAttempts = 6;
+
+static bool tryGetBalances16Batch(const char* nodeIp, int nodePort,
+    GetBalances16_input* input, GetBalances16_output* output,
+    size_t batchIndex1Based, size_t numBatches)
+{
+    for (int attempt = 1; attempt <= kGetBalances16MaxAttempts; ++attempt)
+    {
+        bool ok = false;
+        try
+        {
+            ok = runContractFunction(nodeIp, nodePort, QUTIL_CONTRACT_ID, qutilFunctionId::GetBalances16,
+                input, sizeof(GetBalances16_input), output, sizeof(GetBalances16_output));
+        }
+        catch (...)
+        {
+#ifdef _DEBUG
+            LOG("WARNING: GetBalances16 batch %zu/%zu: connection or response error.\n", batchIndex1Based, numBatches);
+#endif
+            ok = false;
+        }
+        if (ok)
+            return true;
+        if (attempt < kGetBalances16MaxAttempts)
+        {
+#ifdef _DEBUG
+            LOG("WARNING: GetBalances16 batch %zu/%zu: attempt %d/%d failed; retrying...\n",
+                batchIndex1Based, numBatches, attempt, kGetBalances16MaxAttempts);
+#endif
+        }
+    }
+    return false;
+}
+
+static bool readIdentityList(const char* path, std::vector<std::string>& identities, std::string& error)
+{
+    identities.clear();
+    error.clear();
+    std::ifstream infile(path);
+    if (!infile.is_open())
+    {
+        error = "failed to open identity list file";
+        return false;
+    }
+
+    std::string line;
+    uint64_t lineNo = 0;
+    while (std::getline(infile, line))
+    {
+        ++lineNo;
+        if (!line.empty() && line.back() == '\r')
+            line.pop_back();
+        if (line.empty())
+            continue;
+
+        std::istringstream iss(line);
+        std::string id;
+        std::string extra;
+        if (!(iss >> id) || (iss >> extra))
+        {
+            error = "invalid format at line " + std::to_string(lineNo) + ", expected a single identity token";
+            return false;
+        }
+        if (id.size() != 60)
+        {
+            error = "invalid identity length at line " + std::to_string(lineNo) + ", expected 60 chars";
+            return false;
+        }
+        identities.push_back(id);
+    }
+
+    if (identities.empty())
+        error = "no identities in file";
+    return !identities.empty();
+}
 
 bool readPayoutList(const char* payoutListFile, std::vector<std::string>& addresses, std::vector<int64_t>& amounts, std::string& error)
 {
@@ -192,6 +279,8 @@ void qutilPrintFees(const char* nodeIp, int nodePort)
     LOG("Poll vote fee (var 2):                  %" PRIi64 "\n", fees.pollVoteFee);
     LOG("DistributeQuToShareholders fee (var 3): %" PRIi64 " per shareholder\n", fees.distributeQuToShareholderFeePerShareholder);
     LOG("Shareholder proposal fee (var 4):       %" PRIi64 "\n", fees.shareholderProposalFee);
+    LOG("TransferSharesToManyV1 (fixed):         %" PRIi64 "\n", (int64_t)QUTIL_TRANSFER_SHARES_TO_MANY_FEE_QU);
+    LOG("TransferSharesManagementRights (fixed): %" PRIi64 "\n", (int64_t)QUTIL_TRANSFER_SHARES_MANAGEMENT_FEE_QU);
 }
 
 void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const char* payoutListFile, uint32_t scheduledTickOffset)
@@ -275,7 +364,7 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     LOG("to check your tx confirmation status\n");
 }
 
-void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* seed,
+void qutilTransferSharesToManyV1(const char* nodeIp, int nodePort, const char* seed,
     const char* issuerIdentity, const char* assetName, const char* payoutListFile, uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
@@ -316,10 +405,10 @@ void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* se
     struct {
         RequestResponseHeader header;
         Transaction transaction;
-        TransferShareToManyV1_input tsm;
+        TransferSharesToManyV1_input tsm;
         unsigned char signature[64];
     } packet;
-    memset(&packet.tsm, 0, sizeof(TransferShareToManyV1_input));
+    memset(&packet.tsm, 0, sizeof(TransferSharesToManyV1_input));
     getPublicKeyFromIdentity(issuerIdentity, packet.tsm.issuer);
     packet.tsm.assetName = 0;
     memcpy(&packet.tsm.assetName, assetName, std::min(size_t(7), strlen(assetName)));
@@ -330,19 +419,17 @@ void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* se
         packet.tsm.amounts[i] = amounts[i];
     }
 
-    long long fee = getSendToManyV1Fee(qc);
-    if (fee == -1)
-        return;
-    LOG("TransferShareToManyV1 invocation fee: %lld\n", fee);
-    packet.transaction.amount = fee;
+    const int64_t fee = QUTIL_TRANSFER_SHARES_TO_MANY_FEE_QU;
+    LOG("TransferSharesToManyV1 fee: %lld QU\n", (long long)fee);
+    packet.transaction.amount = (uint64_t)fee;
     memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
     memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
     uint32_t currentTick = getTickNumberFromNode(qc);
     packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = qutilProcedureId::TransferShareToManyV1;
-    packet.transaction.inputSize = sizeof(TransferShareToManyV1_input);
+    packet.transaction.inputType = qutilProcedureId::TransferSharesToManyV1;
+    packet.transaction.inputSize = sizeof(TransferSharesToManyV1_input);
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(TransferShareToManyV1_input),
+                   sizeof(packet.transaction) + sizeof(TransferSharesToManyV1_input),
                    digest,
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
@@ -353,32 +440,73 @@ void qutilTransferShareToManyV1(const char* nodeIp, int nodePort, const char* se
 
     qc->sendData((uint8_t *) &packet, packet.header.size());
     KangarooTwelve((unsigned char*)&packet.transaction,
-                   sizeof(packet.transaction) + sizeof(TransferShareToManyV1_input) + SIGNATURE_SIZE,
+                   sizeof(packet.transaction) + sizeof(TransferSharesToManyV1_input) + SIGNATURE_SIZE,
                    digest,
                    32);
     getTxHashFromDigest(digest, txHash);
-    LOG("TransferShareToManyV1 tx has been sent!\n");
+    LOG("TransferSharesToManyV1 tx has been sent!\n");
     printReceipt(packet.transaction, txHash, nullptr);
     LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
     LOG("to check your tx confirmation status\n");
 }
 
-void qutilTransferShareManagementRights(const char* nodeIp, int nodePort, const char* seed,
+void qutilTransferSharesManagementRights(const char* nodeIp, int nodePort, const char* seed,
     const char* assetName, const char* issuerIdentity, uint32_t newManagingContractIndex,
     int64_t numberOfShares, uint32_t scheduledTickOffset)
 {
-    TransferShareManagementRights_input input{};
+    TransferSharesManagementRights_input input{};
     input.asset.assetName = 0;
     memcpy(&input.asset.assetName, assetName, std::min(size_t(7), strlen(assetName)));
     getPublicKeyFromIdentity(issuerIdentity, input.asset.issuer);
     input.numberOfShares = numberOfShares;
     input.newManagingContractIndex = newManagingContractIndex;
-    input.offeredTransferFee = QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE;
 
-    LOG("\nSending TransferShareManagementRights transaction (fee %" PRIi64 " QU) ...\n",
-        QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE);
-    makeContractTransaction(nodeIp, nodePort, seed, QUTIL_CONTRACT_ID, qutilProcedureId::TransferShareManagementRights,
-        static_cast<uint64_t>(QUTIL_TRANSFER_SHARE_MANAGEMENT_TX_FEE), sizeof(input), &input, scheduledTickOffset);
+    const uint64_t invocationQu = (uint64_t)QUTIL_TRANSFER_SHARES_MANAGEMENT_FEE_QU;
+
+    LOG("\nSending TransferSharesManagementRights transaction (fee %" PRIu64 " QU) ...\n",
+        invocationQu);
+    makeContractTransaction(nodeIp, nodePort, seed, QUTIL_CONTRACT_ID, qutilProcedureId::TransferSharesManagementRights,
+        invocationQu, sizeof(input), &input, scheduledTickOffset);
+}
+
+void qutilGetBalancesMany(const char* nodeIp, int nodePort, const char* identitiesFile)
+{
+    std::vector<std::string> identities;
+    std::string err;
+    if (!readIdentityList(identitiesFile, identities, err))
+    {
+        LOG("ERROR: %s\n", err.c_str());
+        return;
+    }
+
+    constexpr size_t kBatch = 16;
+    const size_t numBatches = (identities.size() + kBatch - 1) / kBatch;
+    if (numBatches > 1)
+        LOG("%zu identities, %zu GetBalances16 request(s).\n", identities.size(), numBatches);
+
+    for (size_t b = 0; b < numBatches; b++)
+    {
+        const size_t offset = b * kBatch;
+        const size_t count = std::min(kBatch, identities.size() - offset);
+
+        GetBalances16_input input{};
+        memset(&input, 0, sizeof(input));
+        for (size_t i = 0; i < count; i++)
+            getPublicKeyFromIdentity(identities[offset + i].c_str(), input.publicKeys[i]);
+
+        GetBalances16_output output{};
+        memset(&output, 0, sizeof(output));
+
+        if (!tryGetBalances16Batch(nodeIp, nodePort, &input, &output, b + 1, numBatches))
+        {
+            LOG("ERROR: GetBalances16 batch %zu / %zu failed after %d attempts.\n",
+                b + 1, numBatches, kGetBalances16MaxAttempts);
+            return;
+        }
+
+        for (size_t i = 0; i < count; i++)
+            LOG("%s  %" PRIi64 "\n", identities[offset + i].c_str(), output.balances[i]);
+    }
 }
 
 void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long long amount, uint32_t scheduledTickOffset)
