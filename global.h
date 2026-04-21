@@ -259,3 +259,23 @@ int64_t g_qbond_mbondPrice = 0;
 int64_t g_qbond_burnAmount = 0;
 char* g_qbond_owner = nullptr;
 bool g_qbond_updateCFAOperation = false;
+
+// qrwa
+uint8_t g_qrwa_pool = 0; // 0=pool_a 1=pool_b 2=pool_c
+int g_qrwa_epoch = -1;   // -1 = all epochs, >=0 = filter by epoch
+char* g_qrwa_identity = nullptr; // address filter for -qrwapayout <address>
+uint64_t g_qrwa_poll_id = 0;    // governance poll ID
+uint64_t g_qrwa_amount = 0;     // amount for donate/deposit
+char* g_qrwa_issuer = nullptr;  // asset issuer for deposit/revoke
+char* g_qrwa_asset_name = nullptr; // asset name for deposit/revoke
+int64_t g_qrwa_num_shares = 0;  // for revoke management rights
+char* g_qrwa_new_address = nullptr; // for SetPoolARevenueAddress
+// Gov params for VoteGovParams
+char* g_qrwa_gov_admin = nullptr;
+char* g_qrwa_gov_electricity = nullptr;
+char* g_qrwa_gov_maintenance = nullptr;
+char* g_qrwa_gov_reinvestment = nullptr;
+char* g_qrwa_gov_qminedev = nullptr;
+uint64_t g_qrwa_gov_electricity_pct = 0;
+uint64_t g_qrwa_gov_maintenance_pct = 0;
+uint64_t g_qrwa_gov_reinvestment_pct = 0;
