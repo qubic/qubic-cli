@@ -482,6 +482,29 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qutilPrintFees(g_nodeIp, g_nodePort);
             break;
+        case QUTIL_GET_BALANCES_MANY:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityFileExist(g_qutil_getBalancesManyFile);
+            qutilGetBalancesMany(g_nodeIp, g_nodePort, g_qutil_getBalancesManyFile);
+            break;
+        case QUTIL_TRANSFER_SHARES_TO_MANY_V1:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckIdentity(g_paramString1);
+            sanityCheckValidAssetName(g_paramString2);
+            sanityFileExist(g_qutil_transferSharePayoutListFile);
+            qutilTransferSharesToManyV1(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_paramString2,
+                g_qutil_transferSharePayoutListFile, g_offsetScheduledTick);
+            break;
+        case QUTIL_TRANSFER_SHARES_MANAGEMENT_RIGHTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qx_assetName);
+            sanityCheckIdentity(g_qx_issuer);
+            sanityCheckNumberOfUnit(g_qx_numberOfShare);
+            qutilTransferSharesManagementRights(g_nodeIp, g_nodePort, g_seed, g_qx_assetName, g_qx_issuer,
+                g_contractIndex, g_qx_numberOfShare, g_offsetScheduledTick);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
