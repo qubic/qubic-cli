@@ -1350,7 +1350,7 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            escrowTransferRights(g_nodeIp, g_nodePort, g_seed, g_escrow_assetName, g_escrow_issuer, g_escrow_amount);
+            escrowTransferRights(g_nodeIp, g_nodePort, g_seed, g_escrow_assetName, g_escrow_issuer, g_contractIndex, g_escrow_amount);
             break;
         }
         case ESCROW_GET_FREE_ASSET_CMD:

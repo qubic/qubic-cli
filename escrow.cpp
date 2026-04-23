@@ -9,8 +9,6 @@
 
 #include <sstream>
 
-#define ESCROW_CONTRACT_INDEX 27
-
 #define ESCROW_CREATE_DEAL 1
 #define ESCROW_ACCEPT_DEAL 2
 #define ESCROW_MAKE_DEAL_PUBLIC 3
@@ -24,8 +22,7 @@ constexpr uint64_t ESCROW_CREATE_DEAL_FEE = 250000ULL;
 constexpr uint64_t ESCROW_ACCEPT_DEAL_FEE = 250000ULL;
 constexpr uint64_t ESCROW_MAKE_DEAL_PUBLIC_FEE = 1ULL;
 constexpr uint64_t ESCROW_CANCEL_DEAL_FEE = 1ULL;
-constexpr uint64_t ESCROW_FEE_PER_SHARE = 3000000ULL;
-constexpr uint64_t ESCROW_ADDITIONAL_CREATION_FEE = 200; // 2%
+constexpr uint64_t ESCROW_FEE_PER_SHARE = 1500000ULL;
 constexpr auto ESCROW_SC_ADDRESS = "BBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAXPZM";
 constexpr auto SHARES_ISSUER = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFXIB";
 
@@ -155,7 +152,7 @@ int64_t escrowGetSharesFeesForDeal(const char* nodeIp, int nodePort, const char*
                 getIdentityFromPublicKey(output.proposedDeals[i].offeredAssets[j].issuer, iden, false);
                 if (strcmp(iden, SHARES_ISSUER) == 0)
                 {
-                    sharesFees += (output.proposedDeals[i].offeredAssets[j].amount * ESCROW_FEE_PER_SHARE / 2);
+                    sharesFees += (output.proposedDeals[i].offeredAssets[j].amount * ESCROW_FEE_PER_SHARE);
                 }
             }
 
@@ -166,7 +163,7 @@ int64_t escrowGetSharesFeesForDeal(const char* nodeIp, int nodePort, const char*
                 getIdentityFromPublicKey(output.proposedDeals[i].requestedAssets[j].issuer, iden, false);
                 if (strcmp(iden, SHARES_ISSUER) == 0)
                 {
-                    sharesFees += (output.proposedDeals[i].requestedAssets[j].amount * ESCROW_FEE_PER_SHARE / 2);
+                    sharesFees += (output.proposedDeals[i].requestedAssets[j].amount * ESCROW_FEE_PER_SHARE);
                 }
             }
 
@@ -186,7 +183,7 @@ int64_t escrowGetSharesFeesForDeal(const char* nodeIp, int nodePort, const char*
                 getIdentityFromPublicKey(output.publicDeals[i].offeredAssets[j].issuer, iden, false);
                 if (strcmp(iden, SHARES_ISSUER) == 0)
                 {
-                    sharesFees += (output.publicDeals[i].offeredAssets[j].amount * ESCROW_FEE_PER_SHARE / 2);
+                    sharesFees += (output.publicDeals[i].offeredAssets[j].amount * ESCROW_FEE_PER_SHARE);
                 }
             }
 
@@ -197,7 +194,7 @@ int64_t escrowGetSharesFeesForDeal(const char* nodeIp, int nodePort, const char*
                 getIdentityFromPublicKey(output.publicDeals[i].requestedAssets[j].issuer, iden, false);
                 if (strcmp(iden, SHARES_ISSUER) == 0)
                 {
-                    sharesFees += (output.publicDeals[i].requestedAssets[j].amount * ESCROW_FEE_PER_SHARE / 2);
+                    sharesFees += (output.publicDeals[i].requestedAssets[j].amount * ESCROW_FEE_PER_SHARE);
                 }
             }
 
@@ -347,7 +344,7 @@ void escrowOperateDeal(const char* nodeIp, int nodePort, const char* seed, const
     LOG("to check your tx confirmation status\n");
 }
 
-void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer, const int64_t amount)
+void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer, const uint32_t newContractIndex, const int64_t amount)
 {
     TransferShareManagementRights_input input;
     memset(&input.asset.assetName, 0, 8);
@@ -355,6 +352,7 @@ void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, co
     input.amount = amount;
     memset(input.asset.issuer, 0, 32);
     getPublicKeyFromIdentity(issuer, input.asset.issuer);
+    input.newContractIndex = newContractIndex;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -525,7 +523,7 @@ int parseAssets(const std::string& inputStr, EscrowCreateDeal_input::AssetWithAm
                 getIdentityFromPublicKey(outputArray[count].issuer, iden, false);
                 if (strcmp(iden, SHARES_ISSUER) == 0)
                 {
-                    sharesFees += (outputArray[count].amount * ESCROW_FEE_PER_SHARE / 2);
+                    sharesFees += (outputArray[count].amount * ESCROW_FEE_PER_SHARE);
                 }
             }
         }

@@ -81,7 +81,9 @@ struct TransferShareManagementRights_input
         uint64_t assetName;
     } asset;
     int64_t amount;
+    uint32_t newContractIndex;
 };
+
 struct TransferShareManagementRights_output
 {
     int64_t transferredShares;
@@ -98,7 +100,7 @@ void escrowGetDeals(const char* nodeIp, int nodePort, const char* seed, const in
 void escrowAcceptDeal(const char* nodeIp, int nodePort, const char* seed, const int64_t index);
 void escrowMakeDealPublic(const char* nodeIp, int nodePort, const char* seed, const int64_t index);
 void escrowCancelDeal(const char* nodeIp, int nodePort, const char* seed, const int64_t index);
-void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer, const int64_t amount);
+void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer, const uint32_t newContractIndex, const int64_t amount);
 void escrowOperateDeal(const char* nodeIp, int nodePort, const char* seed, const int64_t index, const int64_t fee, const unsigned short inputType);
 void escrowGetFreeAsset(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer);
 

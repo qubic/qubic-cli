@@ -327,7 +327,7 @@ void qxTransferAssetManagementRights(const char* nodeIp, int nodePort,
 
     LOG("\nSending tx for transferring management rights ...\n");
     makeContractTransaction(nodeIp, nodePort, seed, QX_CONTRACT_INDEX, QX_TRANSFER_SHARE_MANAGEMENT_RIGHTS,
-        100, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
+        0, sizeof(v), (uint8_t*)&v, scheduledTickOffset);
 }
 
 void qxAddToAskOrder(const char* nodeIp, int nodePort,
