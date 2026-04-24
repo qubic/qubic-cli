@@ -83,12 +83,27 @@ char* g_qx_assetTransferAssetName = nullptr;
 char* g_qx_assetTransferIssuerInHex = nullptr;
 
 // quottery
-uint32_t g_quottery_betId = 0;
+char* g_quottery_subcmd[128] = { nullptr };
+int g_quottery_subcmd_count = 0;
+char* g_event_desc = nullptr;
+char* g_opt0_desc = nullptr;
+char* g_opt1_desc = nullptr;
+char* g_end_date_desc = nullptr;
+uint32_t g_quottery_eventId = 0;
 uint32_t g_quottery_optionId = 0;
 char* g_quottery_creatorId = nullptr;
 uint64_t g_quottery_numberBetSlot = 0;
 uint64_t g_quottery_amountPerBetSlot = 0;
 uint32_t g_quottery_pickedOption = 0;
+uint64_t g_quottery_option = 0;
+uint64_t g_quottery_isBid = 0;
+uint64_t g_quottery_amount = 0;
+int64_t  g_quottery_price = 0;
+uint64_t g_quottery_antiSpamAmount = 0;
+uint64_t g_quottery_offset = 0;
+const char* g_quottery_command1 = nullptr;
+const char* g_quottery_command2 = nullptr;
+const char* g_quottery_positionIdentity = nullptr;
 
 // qutil
 char* g_qutil_sendToManyV1PayoutListFile = nullptr;
