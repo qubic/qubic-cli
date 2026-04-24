@@ -36,15 +36,7 @@ enum COMMAND
     MAKE_IPO_BID,
     GET_IPO_STATUS,
     GET_ACTIVE_IPOS,
-    QUOTTERY_ISSUE_BET,
-    QUOTTERY_JOIN_BET,
-    QUOTTERY_GET_BET_INFO,
-    QUOTTERY_GET_BET_DETAIL,
-    QUOTTERY_GET_ACTIVE_BET,
-    QUOTTERY_GET_ACTIVE_BET_BY_CREATOR,
-    QUOTTERY_GET_BASIC_INFO,
-    QUOTTERY_PUBLISH_RESULT,
-    QUOTTERY_CANCEL_BET,
+    QUOTTERY_COMMAND,
     TOOGLE_MAIN_AUX,
     SET_SOLUTION_THRESHOLD,
     REFRESH_PEER_LIST,
@@ -319,12 +311,16 @@ struct Entity
     unsigned int latestIncomingTransferTick, latestOutgoingTransferTick;
 };
 
-typedef struct
+typedef struct RespondedEntity
 {
     Entity entity;
     unsigned int tick;
     int spectrumIndex;
     unsigned char siblings[SPECTRUM_DEPTH][32];
+    static constexpr unsigned char type()
+    {
+        return 32;
+    }
 } RespondedEntity;
 
 typedef struct

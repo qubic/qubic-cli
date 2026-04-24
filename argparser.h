@@ -216,24 +216,26 @@ void print_help()
     printf("\t\tTransfer asset management rights of shares from QX to another contract. <NEW_MANAGING_CONTRACT> can be given as name or index. You need to own/possess the shares to do this (seed required).\n");
 
     printf("\n[QTRY COMMANDS]\n");
-    printf("\t-qtrygetbasicinfo\n");
-    printf("\t\tShow qtry basic info from a node.\n");
-    printf("\t-qtryissuebet\n");
-    printf("\t\tIssue a bet (prompt mode)\n");
-    printf("\t-qtrygetactivebet\n");
-    printf("\t\tShow all active bet id.\n");
-    printf("\t-qtrygetactivebetbycreator <BET_CREATOR_ID>\n");
-    printf("\t\tShow all active bet id of an ID.\n");
-    printf("\t-qtrygetbetinfo <BET_ID>\n");
-    printf("\t\tGet meta information of a bet\n");
-    printf("\t-qtrygetbetdetail <BET_ID> <OPTION_ID>\n");
-    printf("\t\tGet a list of IDs that bet on <OPTION_ID> of the bet <BET_ID>\n");
-    printf("\t-qtryjoinbet <BET_ID> <NUMBER_OF_BET_SLOT> <AMOUNT_PER_SLOT> <PICKED_OPTION>\n");
-    printf("\t\tJoin a bet\n");
-    printf("\t-qtrypublishresult <BET_ID> <WIN_OPTION>\n");
-    printf("\t\t(Oracle providers only) publish a result for a bet\n");
-    printf("\t-qtrycancelbet <BET_ID>\n");
-    printf("\t\t(Game operator only) cancel a bet\n");
+    printf("\tFormat: -qtry [subcommand for QTRY] [other params]\n");
+    printf("\t-qtry getbasicinfo\n");
+    printf("\t\tShow Quottery basic info from a node.\n");
+    printf("\t-qtry getactiveeventsid\n");
+    printf("\t\tShow recent active event IDs.\n");
+    printf("\t-qtry createevent [EVENT_DESC] [OPTION_0_DESC] [OPTION_1_DESC] [END_DATE]\n");
+    printf("\t\tCreate a new Quottery event.\n");
+    printf("\t\tEND_DATE format: YYYY-MM-DD hh:mm:ss\n");
+    printf("\t-qtry order add/remove bid/ask [EVENT_ID] [OPTION] [AMOUNT] [PRICE]\n");
+    printf("\t\tPlace or remove a bid/ask order on Quottery.\n");
+    printf("\t-qtry getorder bid/ask [EVENT_ID] [OPTION] [OFFSET]\n");
+    printf("\t\tGet bid/ask orders for an event option.\n");
+    printf("\t-qtry getposition [IDENTITY]\n");
+    printf("\t\tGet all positions held by an identity on Quottery.\n");
+    printf("\t-qtry geteventinfo [EVENT_ID]\n");
+    printf("\t\tGet detailed info for a single event.\n");
+    printf("\t-qtry geteventinfobatch [EVENT_ID_1] [EVENT_ID_2] ... [EVENT_ID_N]\n");
+    printf("\t\tGet detailed info for up to 64 events in one request.\n");
+    printf("\t-qtry publishresult [EVENT_ID] [OPTION_ID]\n");
+    printf("\t\tPublish the result for an event. OPTION_ID must be 0 or 1.\n");
 
     printf("\n[GENERAL QUORUM PROPOSAL COMMANDS]\n");
     printf("\t-gqmpropsetproposal <PROPOSAL_STRING>\n");
@@ -1398,85 +1400,11 @@ void parseArgument(int argc, char** argv)
         /*************************
          ***** QTRY COMMANDS *****
          *************************/
-
-        if (strcmp(argv[i], "-qtryissuebet") == 0)
-        {
-            g_cmd = QUOTTERY_ISSUE_BET;
-            i+=1;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtryjoinbet") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(4)
-            g_cmd = QUOTTERY_JOIN_BET;
-            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_numberBetSlot = charToNumber(argv[i+2]);
-            g_quottery_amountPerBetSlot = charToNumber(argv[i+3]);
-            g_quottery_pickedOption = uint32_t(charToNumber(argv[i+4]));
-            i+=5;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrygetbetinfo") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QUOTTERY_GET_BET_INFO;
-            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
-            i+=2;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrygetbetdetail") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(2)
-            g_cmd = QUOTTERY_GET_BET_DETAIL;
-            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
-            i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrygetactivebet") == 0)
-        {
-            g_cmd = QUOTTERY_GET_ACTIVE_BET;
-            i+=1;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrygetactivebetbycreator") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QUOTTERY_GET_ACTIVE_BET_BY_CREATOR;
-            g_quottery_creatorId = argv[i+1];
-            i+=2;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrygetbasicinfo") == 0)
-        {
-            g_cmd = QUOTTERY_GET_BASIC_INFO;
-            i+=1;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrypublishresult") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(2)
-            g_cmd = QUOTTERY_PUBLISH_RESULT;
-            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
-            g_quottery_optionId = uint32_t(charToNumber(argv[i + 2]));
-            i+=3;
-            CHECK_OVER_PARAMETERS
-            break;
-        }
-        if (strcmp(argv[i], "-qtrycancelbet") == 0)
-        {
-            CHECK_NUMBER_OF_PARAMETERS(1)
-            g_cmd = QUOTTERY_CANCEL_BET;
-            g_quottery_betId = uint32_t(charToNumber(argv[i + 1]));
-            i+=2;
-            CHECK_OVER_PARAMETERS
+        if (strcmp(argv[i], "-qtry") == 0) {
+            g_cmd = QUOTTERY_COMMAND;
+            int c = 0;
+            while (i < 128 && i < argc) g_quottery_subcmd[c++] = argv[i++];
+            g_quottery_subcmd_count = c;
             break;
         }
 

@@ -326,12 +326,16 @@ template BroadcastComputors QubicConnection::receivePacketWithHeaderAs<Broadcast
 template RespondContractIPO QubicConnection::receivePacketWithHeaderAs<RespondContractIPO>();
 template std::vector<RespondActiveIPO> QubicConnection::getLatestVectorPacketAs<RespondActiveIPO>();
 template SpecialCommandExecutionFeeMultiplierRequestAndResponse QubicConnection::receivePacketWithHeaderAs<SpecialCommandExecutionFeeMultiplierRequestAndResponse>();
+template RespondedEntity QubicConnection::receivePacketWithHeaderAs<RespondedEntity>();
 // QUOTTERY
 template qtryBasicInfo_output QubicConnection::receivePacketWithHeaderAs<qtryBasicInfo_output>();
-template getBetInfo_output QubicConnection::receivePacketWithHeaderAs<getBetInfo_output>();
-template getBetOptionDetail_output QubicConnection::receivePacketWithHeaderAs<getBetOptionDetail_output>();
-template getActiveBet_output QubicConnection::receivePacketWithHeaderAs<getActiveBet_output>();
-template getActiveBetByCreator_output QubicConnection::receivePacketWithHeaderAs<getActiveBetByCreator_output>();
+template getEventInfo_output QubicConnection::receivePacketWithHeaderAs<getEventInfo_output>();
+template qtryGetOrders_output QubicConnection::receivePacketWithHeaderAs<qtryGetOrders_output>();
+template getUserPosition_output QubicConnection::receivePacketWithHeaderAs<getUserPosition_output>();
+template getActiveEvent_output QubicConnection::receivePacketWithHeaderAs<getActiveEvent_output>();
+template GetEventInfoBatch_output QubicConnection::receivePacketWithHeaderAs<GetEventInfoBatch_output>();
+template getApprovedAmount_output QubicConnection::receivePacketWithHeaderAs<getApprovedAmount_output>();
+template getTopProposals_output QubicConnection::receivePacketWithHeaderAs<getTopProposals_output>();
 // QX
 template QxFees_output QubicConnection::receivePacketWithHeaderAs<QxFees_output>();
 template qxGetAssetOrder_output QubicConnection::receivePacketWithHeaderAs<qxGetAssetOrder_output>();
