@@ -287,46 +287,10 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printActiveIPOs(g_nodeIp, g_nodePort);
             break;
-        case QUOTTERY_ISSUE_BET:
+        case QUOTTERY_COMMAND:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
-            quotteryIssueBet(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
-            break;
-        case QUOTTERY_GET_BET_INFO:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintBetInfo(g_nodeIp, g_nodePort, g_quottery_betId);
-            break;
-        case QUOTTERY_JOIN_BET:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            quotteryJoinBet(g_nodeIp, g_nodePort, g_seed, g_quottery_betId, int(g_quottery_numberBetSlot), g_quottery_amountPerBetSlot, g_quottery_pickedOption, g_offsetScheduledTick);
-            break;
-        case QUOTTERY_GET_BET_DETAIL:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintBetOptionDetail(g_nodeIp, g_nodePort, g_quottery_betId, g_quottery_optionId);
-            break;
-        case QUOTTERY_GET_ACTIVE_BET:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintActiveBet(g_nodeIp, g_nodePort);
-            break;
-        case QUOTTERY_GET_ACTIVE_BET_BY_CREATOR:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckIdentity(g_quottery_creatorId);
-            quotteryPrintActiveBetByCreator(g_nodeIp, g_nodePort, g_quottery_creatorId);
-            break;
-        case QUOTTERY_GET_BASIC_INFO:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            quotteryPrintBasicInfo(g_nodeIp, g_nodePort);
-            break;
-        case QUOTTERY_PUBLISH_RESULT:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            quotteryPublishResult(g_nodeIp, g_nodePort, g_seed, g_quottery_betId, g_quottery_optionId, g_offsetScheduledTick);
-            break;
-        case QUOTTERY_CANCEL_BET:
-            sanityCheckNode(g_nodeIp, g_nodePort);
-            sanityCheckSeed(g_seed);
-            quotteryCancelBet(g_nodeIp, g_nodePort, g_seed, g_quottery_betId, g_offsetScheduledTick);
+            quotteryEntryPoint(g_quottery_subcmd_count, g_quottery_subcmd, g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick);
             break;
         case TOOGLE_MAIN_AUX:
             sanityCheckNode(g_nodeIp, g_nodePort);
