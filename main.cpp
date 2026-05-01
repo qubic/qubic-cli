@@ -23,6 +23,7 @@
 #include "nostromo.h"
 #include "qbond.h"
 #include "qrwa.h"
+#include "escrow.h"
 
 int run(int argc, char* argv[])
 {
@@ -572,6 +573,29 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             qutilPrintFees(g_nodeIp, g_nodePort);
             break;
+        case QUTIL_GET_BALANCES_MANY:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityFileExist(g_qutil_getBalancesManyFile);
+            qutilGetBalancesMany(g_nodeIp, g_nodePort, g_qutil_getBalancesManyFile);
+            break;
+        case QUTIL_TRANSFER_SHARES_TO_MANY_V1:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckIdentity(g_paramString1);
+            sanityCheckValidAssetName(g_paramString2);
+            sanityFileExist(g_qutil_transferSharePayoutListFile);
+            qutilTransferSharesToManyV1(g_nodeIp, g_nodePort, g_seed, g_paramString1, g_paramString2,
+                g_qutil_transferSharePayoutListFile, g_offsetScheduledTick);
+            break;
+        case QUTIL_TRANSFER_SHARES_MANAGEMENT_RIGHTS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_qx_assetName);
+            sanityCheckIdentity(g_qx_issuer);
+            sanityCheckNumberOfUnit(g_qx_numberOfShare);
+            qutilTransferSharesManagementRights(g_nodeIp, g_nodePort, g_seed, g_qx_assetName, g_qx_issuer,
+                g_contractIndex, g_qx_numberOfShare, g_offsetScheduledTick);
+            break;
         case GQMPROP_SET_PROPOSAL:
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
@@ -942,7 +966,7 @@ int run(int argc, char* argv[])
             sanityCheckValidAssetName(g_qswap_assetName);
             sanityCheckValidString(g_qswap_issuer);
             qswapCreatePool(g_nodeIp, g_nodePort, g_seed,
-                            g_qswap_assetName,
+                            g_qswap_assetName, g_qswap_issuer,
                             g_offsetScheduledTick);
             break;
         case QSWAP_ADD_LIQUIDITY:
@@ -1395,6 +1419,58 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             qbondGetCFA(g_nodeIp, g_nodePort);
+            break;
+        }
+        case ESCROW_CREATE_DEAL_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowCreateDeal(g_nodeIp, g_nodePort, g_seed,
+                g_escrowAcceptorId,
+                g_escrow_offeredAssetsCommaSeparated,
+                g_escrow_requestedAssetsCommaSeparated);
+            break;
+        }
+        case ESCROW_GET_DEALS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowGetDeals(g_nodeIp, g_nodePort, g_seed, g_escrow_proposedOffset, g_escrow_publicOffset);
+            break;
+        }
+        case ESCROW_ACCEPT_DEAL_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowAcceptDeal(g_nodeIp, g_nodePort, g_seed, g_escrow_dealIndex);
+            break;
+        }
+        case ESCROW_MAKE_DEAL_PUBLIC_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowMakeDealPublic(g_nodeIp, g_nodePort, g_seed, g_escrow_dealIndex);
+            break;
+        }
+        case ESCROW_CANCEL_DEAL_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowCancelDeal(g_nodeIp, g_nodePort, g_seed, g_escrow_dealIndex);
+            break;
+        }
+        case ESCROW_TRANSFER_RIGHTS_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowTransferRights(g_nodeIp, g_nodePort, g_seed, g_escrow_assetName, g_escrow_issuer, g_contractIndex, g_escrow_amount);
+            break;
+        }
+        case ESCROW_GET_FREE_ASSET_CMD:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            escrowGetFreeAsset(g_nodeIp, g_nodePort, g_seed, g_escrow_assetName, g_escrow_issuer);
             break;
         }
         case SHAREHOLDER_SET_PROPOSAL:

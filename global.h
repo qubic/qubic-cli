@@ -92,6 +92,8 @@ uint32_t g_quottery_pickedOption = 0;
 
 // qutil
 char* g_qutil_sendToManyV1PayoutListFile = nullptr;
+char* g_qutil_transferSharePayoutListFile = nullptr;
+char* g_qutil_getBalancesManyFile = nullptr;
 int64_t g_qutil_sendToManyBenchmarkDestinationCount = 0;
 int64_t g_qutil_sendToManyBenchmarkNumTransfersEach = 0;
 
@@ -277,3 +279,14 @@ char* g_qrwa_gov_qminedev = nullptr;
 uint64_t g_qrwa_gov_electricity_pct = 0;
 uint64_t g_qrwa_gov_maintenance_pct = 0;
 uint64_t g_qrwa_gov_reinvestment_pct = 0;
+
+// escrow
+char* g_escrowAcceptorId = nullptr;
+char* g_escrow_offeredAssetsCommaSeparated = nullptr;
+char* g_escrow_requestedAssetsCommaSeparated = nullptr;
+int64_t g_escrow_dealIndex = 0;
+char* g_escrow_assetName = nullptr;
+char* g_escrow_issuer = nullptr;
+int64_t g_escrow_amount = 0;
+int64_t g_escrow_proposedOffset = 0;
+int64_t g_escrow_publicOffset = 0;

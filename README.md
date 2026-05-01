@@ -377,7 +377,7 @@ Commands:
 		Create an asset via Qswap contract.
 	-qswaptransferasset <ASSET_NAME> <ISSUER_IN_HEX> <NEW_OWNER_IDENTITY> <AMOUNT_OF_SHARE>
 		Transfer an asset via Qswap contract.
-	-qswapcreatepool <ASSET_NAME>
+	-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>
 		Create an AMM pool via Qswap contract.
 	-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>
 		Get the basic info of a pool, totol liquidity, qu reserved, asset reserved.

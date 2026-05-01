@@ -92,7 +92,12 @@ void print_help()
     printf("\t\tCancel a poll by its ID. Only the poll creator can cancel it. Requires seed and node ip/port.\n");
     printf("\t-qutilgetfee\n");
     printf("\t\tShow current QUTIL fees.\n");
-
+    printf("\t-getbalancesmany <FILE>\n");
+    printf("\t\tQuery Qubic balances via QUTIL GetBalances16 in batches of 16 (one 60-char identity per line; any count).\n");
+    printf("\t-qutiltransfersharestomanyv1 <ISSUER_ID> <ASSET_NAME> <FILE>\n");
+    printf("\t\tTransfer shares of an asset to up to 24 recipients in one tick. Fee: 2500 QU (fixed; does not depend on how many lines are in the file). <FILE> is like -qutilsendtomanyv1 (identity and amount per line). Valid seed and node ip/port are required.\n");
+    printf("\t-qutiltransferrights <ASSET_NAME> <ISSUER_ID> <NEW_MANAGING_CONTRACT> <NUM_SHARES>\n");
+    printf("\t\tTransfer asset management rights of shares from Qutil to another contract. <NEW_MANAGING_CONTRACT> can be given as name or index. You need to own/possess the shares to do this (seed required).\n");
     printf("\n[BLOCKCHAIN/PROTOCOL COMMANDS]\n");
     printf("\t-gettickdata <TICK_NUMBER> <OUTPUT_FILE_NAME>\n");
     printf("\t\tGet tick data and write it to a file. Use -readtickdata to examine the file. valid node ip/port are required.\n");
@@ -421,7 +426,7 @@ void print_help()
     printf("\t\tTransfer an asset via Qswap contract.\n");
     printf("\t-qswaptransferassetrights <ASSET_NAME> <ISSUER_IN_HEX> <NEW_MANAGING_CONTRACT_INDEX> <AMOUNT_OF_SHARE>\n");
     printf("\t\tTransfer an asset rights.\n");
-    printf("\t-qswapcreatepool <ASSET_NAME>\n");
+    printf("\t-qswapcreatepool <ASSET_NAME> <ISSUER_IN_HEX>\n");
     printf("\t\tCreate an AMM pool via Qswap contract.\n");
     printf("\t-qswapgetpoolbasicstate <ASSET_NAME> <ISSUER_IN_HEX>\n");
     printf("\t\tGet the basic information of a pool.\n");
@@ -528,6 +533,25 @@ void print_help()
     printf("\t\tGet MBonds owned by the <OWNER>.\n");
     printf("\t-qbondgetcfa\n");
     printf("\t\tGet list of commission free addresses.\n");
+
+    printf("\n[ESCROW COMMANDS]\n");
+    printf("\t-escrowcreatedeal <ACCEPTOR_ID> <OFFERED_ASSETS> <REQUESTED_ASSETS>\n");
+    printf("\t\tCreate deal.\n");
+    printf("\t\t<ACCEPTOR_ID> is identity to which the deal is offered.\n");
+    printf("\t\t<OFFERED_ASSETS> in format QUAmount:name1,issuer1,amount1:name2,issuer2,amount2... Minimum 1 asset, maximum 4 assets (not including QU).\n");
+    printf("\t\t<REQUESTED_ASSETS> in format QUAmount:name1,issuer1,amount1:name2,issuer2,amount2... Minimum 1 asset, maximum 4 assets (not including QU).\n");
+    printf("\t-escrowacceptdeal <DEAL_INDEX>\n");
+    printf("\t\tAccept deal with index. The deal index can be obtained through -escrowgetdeals.\n");
+    printf("\t-escrowmakedealpublic <DEAL_INDEX>\n");
+    printf("\t\tRemove a specific acceptor for the deal and make it open to all users. The deal index can be obtained through -escrowgetdeals.\n");
+    printf("\t-escrowcanceldeal <DEAL_INDEX>\n");
+    printf("\t\tCancel the deal. The deal index can be obtained through -escrowgetdeals.\n");
+    printf("\t-escrowtransferrights <ASSET_NAME> <ISSUER_ID> <NEW_MANAGING_CONTRACT> <NUMBER_OF_SHARES>\n");
+    printf("\t\tTransfer asset management rights of shares from ESCROW to another contract.\n");
+    printf("\t-escrowgetdeals <PROPOSED_OFFSET> <PUBLIC_OFFSET>\n");
+    printf("\t\tGet owned, proposed and public deals. Seed required.\n");
+    printf("\t-escrowgetfreeasset <ASSET_NAME> <ISSUER>\n");
+    printf("\t\tGet unblocked assets amount.\n");
 
     printf("\n[TESTING COMMANDS]\n");
     printf("\t-testqpifunctionsoutput\n");
@@ -1459,10 +1483,11 @@ void parseArgument(int argc, char** argv)
         }
         if (strcmp(argv[i], "-qswapcreatepool") == 0)
         {
-            CHECK_NUMBER_OF_PARAMETERS(1)
+            CHECK_NUMBER_OF_PARAMETERS(2)
             g_cmd = QSWAP_CREATE_POOL;
             g_qswap_assetName = argv[i+1];
-            i+=2;
+            g_qswap_issuer = argv[i+2];
+            i+=3;
             CHECK_OVER_PARAMETERS
             break;
         }
@@ -1807,7 +1832,42 @@ void parseArgument(int argc, char** argv)
             i += 1;
             CHECK_OVER_PARAMETERS
             break;
-        }        
+        }
+        if (strcmp(argv[i], "-getbalancesmany") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = QUTIL_GET_BALANCES_MANY;
+            g_qutil_getBalancesManyFile = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutiltransfersharestomanyv1") == 0
+            || strcmp(argv[i], "-qutiltransfersharetomanyv1") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = QUTIL_TRANSFER_SHARES_TO_MANY_V1;
+            g_paramString1 = argv[i + 1];
+            g_paramString2 = argv[i + 2];
+            g_qutil_transferSharePayoutListFile = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-qutiltransferrights") == 0
+            || strcmp(argv[i], "-qutiltransfersharesmanagementrights") == 0
+            || strcmp(argv[i], "-qutiltransfersharemanagementrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = QUTIL_TRANSFER_SHARES_MANAGEMENT_RIGHTS;
+            g_qx_assetName = argv[i + 1];
+            g_qx_issuer = argv[i + 2];
+            g_contractIndex = getContractIndex(argv[i + 3], g_enableTestContracts);
+            g_qx_numberOfShare = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
 
         /****************************
          ***** GQMPROP COMMANDS *****
@@ -2858,6 +2918,80 @@ void parseArgument(int argc, char** argv)
             break;
         }
 
+        /*************************
+         **** ESCROW COMMANDS ****
+         *************************/
+
+        if (strcmp(argv[i], "-escrowcreatedeal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(3)
+            g_cmd = ESCROW_CREATE_DEAL_CMD;
+            g_escrowAcceptorId = argv[i + 1];
+            g_escrow_offeredAssetsCommaSeparated = argv[i + 2];
+            g_escrow_requestedAssetsCommaSeparated = argv[i + 3];
+            i += 4;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowgetdeals") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = ESCROW_GET_DEALS_CMD;
+            g_escrow_proposedOffset = charToNumber(argv[i + 1]);
+            g_escrow_publicOffset = charToNumber(argv[i + 2]);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowacceptdeal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = ESCROW_ACCEPT_DEAL_CMD;
+            g_escrow_dealIndex = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowmakedealpublic") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = ESCROW_MAKE_DEAL_PUBLIC_CMD;
+            g_escrow_dealIndex = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowcanceldeal") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = ESCROW_CANCEL_DEAL_CMD;
+            g_escrow_dealIndex = charToNumber(argv[i + 1]);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowtransferrights") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(4)
+            g_cmd = ESCROW_TRANSFER_RIGHTS_CMD;
+            g_escrow_assetName = argv[i + 1];
+            g_escrow_issuer = argv[i + 2];
+            g_contractIndex = getContractIndex(argv[i + 3], g_enableTestContracts);
+            g_escrow_amount = charToNumber(argv[i + 4]);
+            i += 5;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
+        if (strcmp(argv[i], "-escrowgetfreeasset") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = ESCROW_GET_FREE_ASSET_CMD;
+            g_escrow_assetName = argv[i + 1];
+            g_escrow_issuer = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            return;
+        }
 
         /*****************************************
          ***** SHAREHOLDER PROPOSAL COMMANDS *****
