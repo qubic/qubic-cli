@@ -22,6 +22,7 @@
 #include "test_utils.h"
 #include "nostromo.h"
 #include "qbond.h"
+#include "qrwa.h"
 #include "escrow.h"
 
 int run(int argc, char* argv[])
@@ -327,6 +328,95 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
             quotteryCancelBet(g_nodeIp, g_nodePort, g_seed, g_quottery_betId, g_offsetScheduledTick);
+            break;
+        case QRWA_PAYOUT_POOL_A:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaPayout(g_nodeIp, g_nodePort, QRWA_POOL_A, g_qrwa_epoch);
+            break;
+        case QRWA_PAYOUT_POOL_B:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaPayout(g_nodeIp, g_nodePort, QRWA_POOL_B, g_qrwa_epoch);
+            break;
+        case QRWA_PAYOUT_POOL_C:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaPayout(g_nodeIp, g_nodePort, QRWA_POOL_C, g_qrwa_epoch);
+            break;
+        case QRWA_PAYOUT_POOL_D:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaPayout(g_nodeIp, g_nodePort, QRWA_POOL_D, g_qrwa_epoch);
+            break;
+        case QRWA_PAYOUT_ADDRESS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaPayoutAddress(g_nodeIp, g_nodePort, g_qrwa_identity, g_qrwa_epoch);
+            break;
+        case QRWA_STATUS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaStatus(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_ASSETS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaAssets(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_GOV_PARAMS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaGovParams(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_GOV_POLL:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaGovPoll(g_nodeIp, g_nodePort, g_qrwa_poll_id);
+            break;
+        case QRWA_GOV_POLL_IDS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaGovPollIds(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_DIVIDENDS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaDividends(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_SC_DIVIDENDS:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            qrwaScDividends(g_nodeIp, g_nodePort);
+            break;
+        case QRWA_DONATE_TREASURY:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qrwaDonateToTreasury(g_nodeIp, g_nodePort, g_seed, g_qrwa_amount, g_offsetScheduledTick);
+            break;
+        case QRWA_VOTE_GOV_PARAMS:
+        {
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            QRWAGovParams proposal = {};
+            getPublicKeyFromIdentity(g_qrwa_gov_admin, proposal.mAdminAddress);
+            getPublicKeyFromIdentity(g_qrwa_gov_electricity, proposal.electricityAddress);
+            getPublicKeyFromIdentity(g_qrwa_gov_maintenance, proposal.maintenanceAddress);
+            getPublicKeyFromIdentity(g_qrwa_gov_reinvestment, proposal.reinvestmentAddress);
+            getPublicKeyFromIdentity(g_qrwa_gov_qminedev, proposal.qmineDevAddress);
+            proposal.electricityPercent = g_qrwa_gov_electricity_pct;
+            proposal.maintenancePercent = g_qrwa_gov_maintenance_pct;
+            proposal.reinvestmentPercent = g_qrwa_gov_reinvestment_pct;
+            qrwaVoteGovParams(g_nodeIp, g_nodePort, g_seed, proposal, g_offsetScheduledTick);
+            break;
+        }
+        case QRWA_SET_POOL_A_ADDR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qrwaSetPoolARevenueAddress(g_nodeIp, g_nodePort, g_seed, g_qrwa_new_address, g_offsetScheduledTick);
+            break;
+        case QRWA_SET_POOL_D_ADDR:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qrwaSetPoolDRevenueAddress(g_nodeIp, g_nodePort, g_seed, g_qrwa_new_address, g_offsetScheduledTick);
+            break;
+        case QRWA_DEPOSIT_ASSET:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qrwaDepositGeneralAsset(g_nodeIp, g_nodePort, g_seed, g_qrwa_issuer, g_qrwa_asset_name, g_qrwa_amount, g_offsetScheduledTick);
+            break;
+        case QRWA_REVOKE_ASSET_MGMT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            qrwaRevokeAssetMgmt(g_nodeIp, g_nodePort, g_seed, g_qrwa_issuer, g_qrwa_asset_name, g_qrwa_num_shares, g_offsetScheduledTick);
             break;
         case TOOGLE_MAIN_AUX:
             sanityCheckNode(g_nodeIp, g_nodePort);
