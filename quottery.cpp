@@ -80,11 +80,6 @@ void unpackDateTime(uint32_t& _year, uint8_t& _month, uint8_t& _day, uint8_t& _h
 #define QUOTTERY_EO_GET_EVENTID(eo) ((eo) & 0x3FFFFFFFFFFFFFFFULL)
 
 static int64_t getBalanceNumber(QCPtr& qc, const uint8_t* publicKey) {
-    RespondedEntity result;
-    memset(&result, 0, sizeof(RespondedEntity));
-    std::vector<uint8_t> buffer;
-    buffer.resize(0);
-    uint8_t tmp[1024] = { 0 };
     struct {
         RequestResponseHeader header;
         RequestedEntity req;
@@ -94,12 +89,16 @@ static int64_t getBalanceNumber(QCPtr& qc, const uint8_t* publicKey) {
     packet.header.setType(REQUEST_ENTITY);
     memcpy(packet.req.publicKey, publicKey, 32);
     qc->sendData((uint8_t*)&packet, packet.header.size());
-    result = qc->receivePacketWithHeaderAs<RespondedEntity>();
+    auto result = qc->receivePacketWithHeaderAs<RespondedEntity>();
     return result.entity.incomingAmount - result.entity.outgoingAmount;
 }
 
 void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result)
 {
+    memset(&result, 0, sizeof(result));
+    // Note: the QCPtr overload is preserved so we can pass an already-open connection.
+    // We reuse runContractFunction by extracting nodeIp/nodePort would not be possible here;
+    // for callers that have only nodeIp/nodePort, prefer quotteryGetBasicInfoByIp().
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -124,10 +123,12 @@ void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result)
 
 void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort)
 {
-    qtryBasicInfo_output result;
-    memset(&result, 1, sizeof(qtryBasicInfo_output));
-    auto qc = make_qc(nodeIp, nodePort);
-    quotteryGetBasicInfo(qc, result);
+    qtryBasicInfo_output result{};
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_BASIC, nullptr, 0, &result, sizeof(result)))
+    {
+        LOG("Failed to get basic info\n");
+        return;
+    }
     LOG("Operation Fee: %.2f%%\n", result.operationFee / 10.0);
     LOG("Shareholders fee: %.2f%%\n", result.shareholderFee / 10.0);
     LOG("Burn fee: %.2f%%\n", result.burnFee / 10.0);
@@ -146,29 +147,10 @@ void quotteryPrintBasicInfo(const char* nodeIp, const int nodePort)
 
 void quotteryGetActiveEvents(const char* nodeIp, int nodePort, getActiveEvent_output& result)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct
+    memset(&result, 0, sizeof(result));
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_ACTIVE_EVENTS, nullptr, 0, &result, sizeof(result)))
     {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-    } packet{};
-
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QTRY_GET_ACTIVE_EVENTS;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    try
-    {
-        result = qc->receivePacketWithHeaderAs<getActiveEvent_output>();
-    }
-    catch (std::logic_error)
-    {
-        memset(&result, 0, sizeof(getActiveEvent_output));
+        memset(&result, 0, sizeof(result));
     }
 }
 
@@ -239,39 +221,14 @@ void quotteryCreateEvent(const char* nodeIp, int nodePort, const char* seed,
     uint16_t tagId,
     uint32_t scheduledTickOffset)
 {
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subseed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char publicIdentity[128] = { 0 };
-    char txHash[128] = { 0 };
-    getSubseedFromSeed((uint8_t*)seed, subseed);
-    getPrivateKeyFromSubSeed(subseed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    const bool isLowerCase = false;
-    getIdentityFromPublicKey(sourcePublicKey, publicIdentity, isLowerCase);
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    QuotteryCreateEvent_input cei{};
 
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        QuotteryCreateEvent_input cei;
-        unsigned char signature[64];
-    } packet;
-    memset(&packet.cei, 0, sizeof(QuotteryCreateEvent_input));
-
-    // Copy desc text, but cap at 30 bytes to reserve last 2 bytes for tagId
-    memcpy(packet.cei.desc, eventDesc.c_str(), std::min(int(eventDesc.size()), 128));
-    // Pack tagId as uint16 LE into desc[30:32]
-    packet.cei.desc[126] = (uint8_t)(tagId & 0xFF);
-    packet.cei.desc[127] = (uint8_t)((tagId >> 8) & 0xFF);
-    memcpy(packet.cei.option0Desc, opt0Desc.c_str(), std::min(int(opt0Desc.size()), 64));
-    memcpy(packet.cei.option1Desc, opt1Desc.c_str(), std::min(int(opt1Desc.size()), 64));
+    // Copy desc text, but cap at 128 bytes; pack tagId as uint16 LE into desc[126:128]
+    memcpy(cei.desc, eventDesc.c_str(), std::min(int(eventDesc.size()), 128));
+    cei.desc[126] = (uint8_t)(tagId & 0xFF);
+    cei.desc[127] = (uint8_t)((tagId >> 8) & 0xFF);
+    memcpy(cei.option0Desc, opt0Desc.c_str(), std::min(int(opt0Desc.size()), 64));
+    memcpy(cei.option1Desc, opt1Desc.c_str(), std::min(int(opt1Desc.size()), 64));
 
     {
         auto buff = endDate.data();
@@ -291,55 +248,27 @@ void quotteryCreateEvent(const char* nodeIp, int nodePort, const char* seed,
         uint8_t hour = (buff[11] - 48) * 10 + (buff[12] - 48);
         uint8_t minute = (buff[14] - 48) * 10 + (buff[15] - 48);
         uint8_t sec = (buff[17] - 48) * 10 + (buff[18] - 48);
-        packDateTime(year, month, day, hour, minute, sec, 0, 0, packet.cei.endDate);
+        packDateTime(year, month, day, hour, minute, sec, 0, 0, cei.endDate);
     }
 
-    // Note: eid and openDate will be set by the SC
-    packet.cei.eid = 0;
-    packet.cei.openDate = 0;
+    // eid and openDate are set by the SC
+    cei.eid = 0;
+    cei.openDate = 0;
 
     LOG("Crafting transaction...\n");
     LOG("Tag ID: %u\n", tagId);
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-    auto qc = make_qc(nodeIp, nodePort);
-    LOG("Established connection...\n");
-    {
-        qtryBasicInfo_output basic{};
-        quotteryGetBasicInfo(qc, basic);
-        packet.transaction.amount = 0;
-    }
-
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    LOG("Getting tick info, latest tick is: %u\n", currentTick);
-    packet.transaction.tick = currentTick + scheduledTickOffset;
-    packet.transaction.inputType = QTRY_CREATE_EVENT;
-    packet.transaction.inputSize = sizeof(QuotteryCreateEvent_input);
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(QuotteryCreateEvent_input),
-        digest,
-        32);
-    LOG("Signing tx packet...\n");
-    sign(subseed, sourcePublicKey, digest, signature);
-    memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet));
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-    LOG("Sending data...\n");
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-    LOG("Sent data...\n");
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(packet.transaction) + sizeof(QuotteryCreateEvent_input) + SIGNATURE_SIZE,
-        digest,
-        32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("Event creation has been sent!\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", currentTick + scheduledTickOffset, txHash);
-    LOG("to check your tx confirmation status\n");
+    
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_CREATE_EVENT,
+        /*amount=*/0,
+        sizeof(cei), &cei,
+        scheduledTickOffset);
 }
 
-void _quotteryGetEventInfo(QCPtr& qc, uint64_t eventId, getEventInfo_output& result) {
+void _quotteryGetEventInfo(QCPtr& qc, uint64_t eventId, getEventInfo_output& result)
+{
+    // Kept for callers that already hold a QCPtr.
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
@@ -367,8 +296,15 @@ void _quotteryGetEventInfo(QCPtr& qc, uint64_t eventId, getEventInfo_output& res
 
 void quotteryGetEventInfo(const char* nodeIp, const int nodePort, uint64_t eventId, getEventInfo_output& result)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    _quotteryGetEventInfo(qc, eventId, result);
+    getEventInfo_input input{};
+    input.eventId = eventId;
+    memset(&result, 0, sizeof(result));
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_EVENT,
+                             &input, sizeof(input), &result, sizeof(result)))
+    {
+        memset(&result, 0, sizeof(result));
+        result.resultByGO = -1;
+    }
 }
 
 static void quotteryPrintEventMetaData(const QtryEventInfo& result, uint64_t requestedEventId)
@@ -457,36 +393,17 @@ void quotteryPrintEventInfo(const char* nodeIp, const int nodePort, uint64_t eve
 
 void quotteryGetEventInfoBatch(const char* nodeIp, int nodePort, const uint64_t* eventIds, GetEventInfoBatch_output& result)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct
-    {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        GetEventInfoBatch_input input;
-    } packet{};
-
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(GetEventInfoBatch_input);
-    packet.rcf.inputType = QTRY_GET_EVENT_BATCH;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-
-    memset(&packet.input, 0, sizeof(packet.input));
+    GetEventInfoBatch_input input{};
     for (size_t j = 0; j < 64; ++j)
     {
-        packet.input.eventIds[j] = eventIds[j];
+        input.eventIds[j] = eventIds[j];
     }
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    try
+    memset(&result, 0, sizeof(result));
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_EVENT_BATCH,
+                             &input, sizeof(input), &result, sizeof(result)))
     {
-        result = qc->receivePacketWithHeaderAs<GetEventInfoBatch_output>();
-    }
-    catch (std::logic_error)
-    {
-        memset(&result, 0, sizeof(GetEventInfoBatch_output));
+        memset(&result, 0, sizeof(result));
     }
 }
 
@@ -538,42 +455,10 @@ void qtryOrderAction(const char* nodeIp, int nodePort,
     uint32_t scheduledTickOffset)
 {
     auto qc = make_qc(nodeIp, nodePort);
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
-
-    getSubseedFromSeed((uint8_t*)seed, subSeed);
-    getPrivateKeyFromSubSeed(subSeed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryOrderAction_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet;
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
 
     qtryBasicInfo_output qbi{};
     quotteryGetBasicInfo(qc, qbi);
     antiSpamAmount = qbi.antiSpamAmount;
-    packet.transaction.amount = (int64_t)antiSpamAmount;
-
-    uint32_t currentTick = getTickNumberFromNode(qc);
-    uint32_t scheduledTick = currentTick + scheduledTickOffset;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = functionNumber;
-    packet.transaction.inputSize = sizeof(qtryOrderAction_input);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY order action - functionNumber: %d\n", functionNumber);
@@ -584,33 +469,19 @@ void qtryOrderAction(const char* nodeIp, int nodePort,
     LOG("antiSpamAmount: %" PRIu64 "\n", antiSpamAmount);
     LOG("\n-------------------------------------\n\n");
 
-    packet.input.eventId = eventId;
-    packet.input.option = option;
-    packet.input.amount = amount;
-    packet.input.price = price;
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryOrderAction_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryOrderAction_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryOrderAction_input) + SIGNATURE_SIZE,
-        digest,
-        32); // recompute digest for txhash
-    getTxHashFromDigest(digest, txHash);
-    LOG("Transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    qtryOrderAction_input input{};
+    input.eventId = eventId;
+    input.option = option;
+    input.amount = amount;
+    input.price = price;
+    
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        functionNumber,
+        /*amount=*/(int64_t)antiSpamAmount,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 void qtryAddToAskOrder(const char* nodeIp, int nodePort, const char* seed,
@@ -645,31 +516,17 @@ void qtryGetOrders(const char* nodeIp, int nodePort,
     uint64_t eventId, uint64_t option, uint64_t isBid, uint64_t offset,
     qtryGetOrders_output& result)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        qtryGetOrders_input input;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(qtryGetOrders_input);
-    packet.rcf.inputType = QTRY_GET_ORDERS;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-    packet.input.eventId = eventId;
-    packet.input.option = option;
-    packet.input.isBid = isBid;
-    packet.input.offset = offset;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qtryGetOrders_input input{};
+    input.eventId = eventId;
+    input.option = option;
+    input.isBid = isBid;
+    input.offset = offset;
 
-    try
+    memset(&result, 0, sizeof(result));
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_ORDERS,
+                             &input, sizeof(input), &result, sizeof(result)))
     {
-        result = qc->receivePacketWithHeaderAs<qtryGetOrders_output>();
-    }
-    catch (std::logic_error)
-    {
-        memset(&result, 0, sizeof(qtryGetOrders_output));
+        memset(&result, 0, sizeof(result));
     }
 }
 
@@ -703,29 +560,14 @@ struct getUserPosition_input
 
 void quotteryGetUserPosition(const char* nodeIp, int nodePort, const char* identity, getUserPosition_output& result)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        getUserPosition_input input;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(getUserPosition_input);
-    packet.rcf.inputType = QUOTTERY_GET_USER_POSITION;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-    memset(&packet.input, 0, sizeof(getUserPosition_input));
-    getPublicKeyFromIdentity(identity, packet.input.uid);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    getUserPosition_input input{};
+    getPublicKeyFromIdentity(identity, input.uid);
 
-    try
+    memset(&result, 0, sizeof(result));
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QUOTTERY_GET_USER_POSITION,
+                             &input, sizeof(input), &result, sizeof(result)))
     {
-        result = qc->receivePacketWithHeaderAs<getUserPosition_output>();
-    }
-    catch (std::logic_error)
-    {
-        memset(&result, 0, sizeof(getUserPosition_output));
+        memset(&result, 0, sizeof(result));
     }
 }
 
@@ -796,11 +638,7 @@ void qtryPublishResult(const char* nodeIp, int nodePort, const char* seed, uint3
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
     char goIdentity[128] = { 0 };
 
@@ -808,11 +646,6 @@ void qtryPublishResult(const char* nodeIp, int nodePort, const char* seed, uint3
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
-
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
 
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
@@ -858,60 +691,24 @@ void qtryPublishResult(const char* nodeIp, int nodePort, const char* seed, uint3
         return;
     }
 
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryPublishResult_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = static_cast<int64_t>(basic.depositAmountForDispute);
-
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_PUBLISH_RESULT;
-    packet.transaction.inputSize = sizeof(qtryPublishResult_input);
-
-    packet.input.eventId = eventId;
-    packet.input.option = result;
+    qtryPublishResult_input input{};
+    input.eventId = eventId;
+    input.option = result;
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY publish result\n");
     LOG("eventId: %" PRIu64 "\n", eventId);
     LOG("result: %" PRIu64 "\n", result);
     LOG("depositAmountForDispute: %" PRIu64 "\n", basic.depositAmountForDispute);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryPublishResult_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryPublishResult_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryPublishResult_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("Publish result transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_PUBLISH_RESULT,
+        /*amount=*/(int64_t)basic.depositAmountForDispute,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 void qtryTryFinalizeEvent(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset, uint64_t eventId)
@@ -920,11 +717,7 @@ void qtryTryFinalizeEvent(const char* nodeIp, int nodePort, const char* seed, ui
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
     char goIdentity[128] = { 0 };
 
@@ -932,11 +725,6 @@ void qtryTryFinalizeEvent(const char* nodeIp, int nodePort, const char* seed, ui
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
-
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
 
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
@@ -995,55 +783,22 @@ void qtryTryFinalizeEvent(const char* nodeIp, int nodePort, const char* seed, ui
         return;
     }
 
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryTryFinalizeEvent_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_TRY_FINALIZE_EVENT;
-    packet.transaction.inputSize = sizeof(qtryTryFinalizeEvent_input);
-
-    packet.input.eventId = eventId;
+    qtryTryFinalizeEvent_input input{};
+    input.eventId = eventId;
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY try finalize event\n");
     LOG("eventId: %" PRIu64 "\n", eventId);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("publishTickTime: %" PRIu32 "\n", eventInfo.publishTickTime);
-    LOG("earliestFinalizeTick: %" PRIu32 "\n", eventInfo.publishTickTime + 1000);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTryFinalizeEvent_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryTryFinalizeEvent_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTryFinalizeEvent_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("Try finalize event transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_TRY_FINALIZE_EVENT,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 struct qtryDispute_input
@@ -1057,22 +812,12 @@ void qtryDispute(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
 
     getSubseedFromSeed((uint8_t*)seed, subSeed);
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    // Fetch basic info to get depositAmountForDispute
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
 
@@ -1100,21 +845,18 @@ void qtryDispute(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
         return;
     }
 
-    // Check: result must have been published (event is in dispute window)
     if (eventInfo.resultByGO == -1)
     {
         LOG("Error: event %" PRIu64 " does not have a published result yet. Nothing to dispute.\n", eventId);
         return;
     }
 
-    // Check: event must not already be finalized
     if (eventInfo.publishTickTime == 0xffffffffu)
     {
         LOG("Error: event %" PRIu64 " is already finalized. Cannot dispute.\n", eventId);
         return;
     }
 
-    // Check: event must not already be under dispute
     if (!isZeroPubkey(eventInfo.disputerInfo.pubkey))
     {
         char existingDisputer[128] = { 0 };
@@ -1123,7 +865,6 @@ void qtryDispute(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
         return;
     }
 
-    // Check: event is still in the dispute window (not yet eligible for finalization)
     const uint32_t currentTick = getTickNumberFromNode(qc);
     const uint32_t scheduledTick = currentTick + scheduledTickOffset;
 
@@ -1135,7 +876,6 @@ void qtryDispute(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
         LOG("The event may already be finalized by the time this transaction executes.\n");
     }
 
-    // Check: user balance >= depositAmount
     {
         long long balance = getBalanceNumber(qc, sourcePublicKey);
         if (balance < 0)
@@ -1151,55 +891,22 @@ void qtryDispute(const char* nodeIp, int nodePort, const char* seed, uint32_t sc
         }
     }
 
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryDispute_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    // The SC checks: qpi.invocationReward() == mDepositAmountForDispute
-    packet.transaction.amount = static_cast<int64_t>(depositAmount);
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_DISPUTE;
-    packet.transaction.inputSize = sizeof(qtryDispute_input);
-
-    packet.input.eventId = eventId;
+    qtryDispute_input input{};
+    input.eventId = eventId;
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY Dispute\n");
     LOG("eventId: %" PRIu64 "\n", eventId);
     LOG("depositAmountForDispute: %" PRIu64 "\n", depositAmount);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryDispute_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryDispute_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryDispute_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("Dispute transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_DISPUTE,
+        /*amount=*/(int64_t)depositAmount,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 struct qtryResolveDispute_input
@@ -1220,11 +927,7 @@ void qtryResolveDispute(const char* nodeIp, int nodePort, const char* seed, uint
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
 
     getSubseedFromSeed((uint8_t*)seed, subSeed);
@@ -1232,12 +935,6 @@ void qtryResolveDispute(const char* nodeIp, int nodePort, const char* seed, uint
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    // Fetch event info to validate preconditions
     getEventInfo_output eventInfo{};
     _quotteryGetEventInfo(qc, eventId, eventInfo);
 
@@ -1253,17 +950,14 @@ void qtryResolveDispute(const char* nodeIp, int nodePort, const char* seed, uint
         return;
     }
 
-    // Check: event must be under dispute
     if (isZeroPubkey(eventInfo.disputerInfo.pubkey))
     {
         LOG("Error: event %" PRIu64 " is not under dispute\n", eventId);
         return;
     }
 
-    // SC requires invocationReward >= 10000000, but refunds it to computors
     constexpr int64_t MIN_INVOCATION_REWARD = 10000000;
 
-    // Check balance
     {
         long long balance = getBalanceNumber(qc, sourcePublicKey);
         if (balance < 0)
@@ -1279,28 +973,9 @@ void qtryResolveDispute(const char* nodeIp, int nodePort, const char* seed, uint
         }
     }
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryResolveDispute_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    // SC requires invocationReward >= 10000000; refunded to computors
-    packet.transaction.amount = MIN_INVOCATION_REWARD;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_RESOLVE_DISPUTE;
-    packet.transaction.inputSize = sizeof(qtryResolveDispute_input);
-
-    packet.input.eventId = eventId;
-    packet.input.vote = vote;
+    qtryResolveDispute_input input{};
+    input.eventId = eventId;
+    input.vote = vote;
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY ResolveDispute\n");
@@ -1308,33 +983,16 @@ void qtryResolveDispute(const char* nodeIp, int nodePort, const char* seed, uint
     LOG("eventId: %" PRIu64 "\n", eventId);
     LOG("vote: %" PRId64 " (%s)\n", vote, vote == 0 ? "No" : "Yes");
     LOG("invocationReward: %" PRId64 " (refunded if caller is a computor)\n", MIN_INVOCATION_REWARD);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryResolveDispute_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryResolveDispute_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryResolveDispute_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("ResolveDispute transaction has been sent!\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_RESOLVE_DISPUTE,
+        /*amount=*/MIN_INVOCATION_REWARD,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
     LOG("Note: only computors can resolve disputes. If the caller is not a computor, the invocation reward will NOT be refunded.\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
 }
 
 struct qtryUserClaimReward_input
@@ -1348,11 +1006,7 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
 
     getSubseedFromSeed((uint8_t*)seed, subSeed);
@@ -1360,12 +1014,6 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    // Fetch event info to validate preconditions
     getEventInfo_output eventInfo{};
     _quotteryGetEventInfo(qc, eventId, eventInfo);
 
@@ -1381,15 +1029,12 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
         return;
     }
 
-    // Check: result must be set (finalized)
     if (eventInfo.resultByGO == -1)
     {
         LOG("Error: event %" PRIu64 " does not have a result yet. Cannot claim reward.\n", eventId);
         return;
     }
 
-    // Check: event should be finalized (publishTickTime == 0xFFFFFFFF indicates finalized & waiting for cleanup)
-    // If still in dispute window, warn the user
     if (eventInfo.publishTickTime != 0xffffffffu)
     {
         if (!isZeroPubkey(eventInfo.disputerInfo.pubkey))
@@ -1404,7 +1049,6 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
         }
     }
 
-    // Check user has a position in this event (winning side)
     {
         getUserPosition_output posResult{};
         quotteryGetUserPosition(nodeIp, nodePort, sourceIdentity, posResult);
@@ -1431,10 +1075,8 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
         }
     }
 
-    // SC requires exactly 1,000,000 qu — NOT refunded if user has no winning position (anti-spam)
     constexpr int64_t CLAIM_INVOCATION_REWARD = 1000000;
 
-    // Check balance
     {
         long long balance = getBalanceNumber(qc, sourcePublicKey);
         if (balance < 0)
@@ -1451,59 +1093,24 @@ void qtryUserClaimReward(const char* nodeIp, int nodePort, const char* seed, uin
         }
     }
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryUserClaimReward_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = CLAIM_INVOCATION_REWARD;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_USER_CLAIM_REWARD;
-    packet.transaction.inputSize = sizeof(qtryUserClaimReward_input);
-
-    packet.input.eventId = eventId;
+    qtryUserClaimReward_input input{};
+    input.eventId = eventId;
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY UserClaimReward\n");
     LOG("Caller: %s\n", sourceIdentity);
     LOG("eventId: %" PRIu64 "\n", eventId);
     LOG("invocationReward: %" PRId64 " (refunded if winning position exists)\n", CLAIM_INVOCATION_REWARD);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryUserClaimReward_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryUserClaimReward_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryUserClaimReward_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("UserClaimReward transaction has been sent!\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_USER_CLAIM_REWARD,
+        /*amount=*/CLAIM_INVOCATION_REWARD,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
     LOG("Note: the 1,000,000 qu fee is only refunded if you have a winning position. Otherwise it is lost (anti-spam).\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
 }
 
 struct qtryGOForceClaimReward_input
@@ -1526,11 +1133,7 @@ void qtryGOForceClaimReward(const char* nodeIp, int nodePort, const char* seed,
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
     char goIdentity[128] = { 0 };
 
@@ -1539,12 +1142,6 @@ void qtryGOForceClaimReward(const char* nodeIp, int nodePort, const char* seed,
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    // Verify caller is the game operator
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
 
@@ -1563,7 +1160,6 @@ void qtryGOForceClaimReward(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
-    // Verify event exists and has a result
     getEventInfo_output eventInfo{};
     _quotteryGetEventInfo(qc, eventId, eventInfo);
 
@@ -1585,27 +1181,9 @@ void qtryGOForceClaimReward(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryGOForceClaimReward_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_GO_FORCE_CLAIM_REWARD;
-    packet.transaction.inputSize = sizeof(qtryGOForceClaimReward_input);
-
-    packet.input.eventId = eventId;
-    memset(packet.input.pubkeys, 0, sizeof(packet.input.pubkeys));
+    qtryGOForceClaimReward_input input{};
+    input.eventId = eventId;
+    memset(input.pubkeys, 0, sizeof(input.pubkeys));
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY GOForceClaimReward\n");
@@ -1615,38 +1193,20 @@ void qtryGOForceClaimReward(const char* nodeIp, int nodePort, const char* seed,
 
     for (int idx = 0; idx < identityCount; idx++)
     {
-        getPublicKeyFromIdentity(identities[idx], packet.input.pubkeys[idx]);
+        getPublicKeyFromIdentity(identities[idx], input.pubkeys[idx]);
         char verifyId[128] = { 0 };
-        getIdentityFromPublicKey(packet.input.pubkeys[idx], verifyId, false);
+        getIdentityFromPublicKey(input.pubkeys[idx], verifyId, false);
         LOG("  [%d] %s\n", idx, verifyId);
     }
-
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryGOForceClaimReward_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryGOForceClaimReward_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryGOForceClaimReward_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("GOForceClaimReward transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_GO_FORCE_CLAIM_REWARD,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 struct qtryTransferShareManagementRights_input
@@ -1695,89 +1255,29 @@ void qtryTransferShareManagementRights(const char* nodeIp, int nodePort, const c
         return;
     }
 
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
-    char sourceIdentity[128] = { 0 };
-
-    getSubseedFromSeed((uint8_t*)seed, subSeed);
-    getPrivateKeyFromSubSeed(subSeed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
-
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryTransferShareManagementRights_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    // The SC uses invocationReward() for releaseShares fee; any excess is refunded
-    packet.transaction.amount = 0;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_TRANSFER_SHARE_MANAGEMENT_RIGHTS;
-    packet.transaction.inputSize = sizeof(qtryTransferShareManagementRights_input);
-
-    memset(&packet.input, 0, sizeof(qtryTransferShareManagementRights_input));
-    getPublicKeyFromIdentity(issuerIdentity, packet.input.issuer);
-    packet.input.assetName = encodedAssetName;
-    packet.input.numberOfShares = numberOfShares;
-    packet.input.newManagingContractIndex = newManagingContractIndex;
+    qtryTransferShareManagementRights_input input{};
+    getPublicKeyFromIdentity(issuerIdentity, input.issuer);
+    input.assetName = encodedAssetName;
+    input.numberOfShares = numberOfShares;
+    input.newManagingContractIndex = newManagingContractIndex;
 
     char issuerBuf[128] = { 0 };
-    getIdentityFromPublicKey(packet.input.issuer, issuerBuf, false);
+    getIdentityFromPublicKey(input.issuer, issuerBuf, false);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY TransferShareManagementRights\n");
-    LOG("Caller: %s\n", sourceIdentity);
     LOG("Asset issuer: %s\n", issuerBuf);
     LOG("Asset name: %s (encoded: %" PRIu64 ")\n", assetName, encodedAssetName);
     LOG("Number of shares: %" PRId64 "\n", numberOfShares);
     LOG("New managing contract index: %" PRIu32 "\n", newManagingContractIndex);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferShareManagementRights_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryTransferShareManagementRights_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferShareManagementRights_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("TransferShareManagementRights transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_TRANSFER_SHARE_MANAGEMENT_RIGHTS,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset);
 }
 
 void qtryCleanMemory(const char* nodeIp, int nodePort, const char* seed, uint32_t scheduledTickOffset)
@@ -1786,11 +1286,7 @@ void qtryCleanMemory(const char* nodeIp, int nodePort, const char* seed, uint32_
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
     char goIdentity[128] = { 0 };
 
@@ -1799,12 +1295,6 @@ void qtryCleanMemory(const char* nodeIp, int nodePort, const char* seed, uint32_
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    // Verify caller is the game operator
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
 
@@ -1823,54 +1313,19 @@ void qtryCleanMemory(const char* nodeIp, int nodePort, const char* seed, uint32_
         return;
     }
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_CLEAN_MEMORY;
-    packet.transaction.inputSize = 0; // NoData input
-
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY CleanMemory\n");
     LOG("Caller (GO): %s\n", sourceIdentity);
-    LOG("scheduledTick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("CleanMemory transaction has been sent!\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_CLEAN_MEMORY,
+        /*amount=*/0,
+        /*extraDataSize=*/0, nullptr,
+        scheduledTickOffset,
+        &qc);
     LOG("This will finalize events with published results (past dispute window) and clean up state.\n");
-    printReceipt(packet.transaction, txHash, nullptr);
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
 }
 
 struct qtryTransferQUSD_input
@@ -1883,81 +1338,25 @@ void qtryTransferQUSD(const char* nodeIp, int nodePort, const char* seed,
     const char* receiverIdentity, int64_t amount,
     uint32_t scheduledTickOffset)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
-
-    getSubseedFromSeed((uint8_t*)seed, subSeed);
-    getPrivateKeyFromSubSeed(subSeed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryTransferQUSD_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0; // no invocation reward needed
-
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_TRANSFER_QUSD;
-    packet.transaction.inputSize = sizeof(qtryTransferQUSD_input);
-
-    memset(&packet.input, 0, sizeof(qtryTransferQUSD_input));
-    getPublicKeyFromIdentity(receiverIdentity, packet.input.receiver);
-    packet.input.amount = amount;
+    qtryTransferQUSD_input input{};
+    getPublicKeyFromIdentity(receiverIdentity, input.receiver);
+    input.amount = amount;
 
     char receiverBuf[128] = { 0 };
-    getIdentityFromPublicKey(packet.input.receiver, receiverBuf, false);
+    getIdentityFromPublicKey(input.receiver, receiverBuf, false);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY TransferQUSD (GARTH transfer via Quottery contract)\n");
     LOG("Receiver: %s\n", receiverBuf);
     LOG("Amount: %" PRId64 "\n", amount);
-    LOG("Scheduled tick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferQUSD_input),
-        digest,
-        32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryTransferQUSD_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferQUSD_input) + SIGNATURE_SIZE,
-        digest,
-        32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("TransferQUSD transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_TRANSFER_QUSD,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset);
 }
 
 // TransferQTRYGOV (proc 15)
@@ -1977,79 +1376,25 @@ void qtryTransferQTRYGOV(const char* nodeIp, int nodePort, const char* seed,
         return;
     }
 
-    auto qc = make_qc(nodeIp, nodePort);
-
-    uint8_t privateKey[32] = { 0 };
-    uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
-    uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
-
-    getSubseedFromSeed((uint8_t*)seed, subSeed);
-    getPrivateKeyFromSubSeed(subSeed, privateKey);
-    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryTransferQTRYGOV_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0;
-
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_TRANSFER_QTRYGOV;
-    packet.transaction.inputSize = sizeof(qtryTransferQTRYGOV_input);
-
-    memset(&packet.input, 0, sizeof(qtryTransferQTRYGOV_input));
-    getPublicKeyFromIdentity(receiverIdentity, packet.input.receiver);
-    packet.input.amount = amount;
+    qtryTransferQTRYGOV_input input{};
+    getPublicKeyFromIdentity(receiverIdentity, input.receiver);
+    input.amount = amount;
 
     char receiverBuf[128] = { 0 };
-    getIdentityFromPublicKey(packet.input.receiver, receiverBuf, false);
+    getIdentityFromPublicKey(input.receiver, receiverBuf, false);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY TransferQTRYGOV\n");
     LOG("Receiver: %s\n", receiverBuf);
     LOG("Amount: %" PRId64 "\n", amount);
-    LOG("Scheduled tick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferQTRYGOV_input),
-        digest, 32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryTransferQTRYGOV_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryTransferQTRYGOV_input) + SIGNATURE_SIZE,
-        digest, 32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("TransferQTRYGOV transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_TRANSFER_QTRYGOV,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset);
 }
 
 // UpdateFeeDiscountList (proc 20)
@@ -2080,11 +1425,7 @@ void qtryUpdateFeeDiscountList(const char* nodeIp, int nodePort, const char* see
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
     char goIdentity[128] = { 0 };
 
@@ -2092,11 +1433,6 @@ void qtryUpdateFeeDiscountList(const char* nodeIp, int nodePort, const char* see
     getPrivateKeyFromSubSeed(subSeed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
-
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
 
     qtryBasicInfo_output basic{};
     quotteryGetBasicInfo(qc, basic);
@@ -2110,62 +1446,28 @@ void qtryUpdateFeeDiscountList(const char* nodeIp, int nodePort, const char* see
         return;
     }
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryUpdateFeeDiscountList_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    packet.transaction.amount = 0;
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_UPDATE_FEE_DISCOUNT_LIST;
-    packet.transaction.inputSize = sizeof(qtryUpdateFeeDiscountList_input);
-
-    memset(&packet.input, 0, sizeof(qtryUpdateFeeDiscountList_input));
-    getPublicKeyFromIdentity(userIdentity, packet.input.userId);
-    packet.input.newFeeRate = newFeeRate;
-    packet.input.ops = ops;
+    qtryUpdateFeeDiscountList_input input{};
+    getPublicKeyFromIdentity(userIdentity, input.userId);
+    input.newFeeRate = newFeeRate;
+    input.ops = ops;
 
     char userBuf[128] = { 0 };
-    getIdentityFromPublicKey(packet.input.userId, userBuf, false);
+    getIdentityFromPublicKey(input.userId, userBuf, false);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY UpdateFeeDiscountList\n");
     LOG("User: %s\n", userBuf);
     LOG("Operation: %s\n", ops == 0 ? "remove" : "set");
     if (ops == 1) LOG("New fee rate: %" PRIu64 " (%.1f%%)\n", newFeeRate, newFeeRate / 10.0);
-    LOG("Scheduled tick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryUpdateFeeDiscountList_input),
-        digest, 32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryUpdateFeeDiscountList_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryUpdateFeeDiscountList_input) + SIGNATURE_SIZE,
-        digest, 32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("UpdateFeeDiscountList transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_UPDATE_FEE_DISCOUNT_LIST,
+        /*amount=*/0,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 // ProposalVote (proc 100)
@@ -2184,11 +1486,7 @@ void qtryProposalVote(const char* nodeIp, int nodePort, const char* seed,
 
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
-    uint8_t destPublicKey[32] = { 0 };
     uint8_t subSeed[32] = { 0 };
-    uint8_t digest[32] = { 0 };
-    uint8_t signature[64] = { 0 };
-    char txHash[128] = { 0 };
     char sourceIdentity[128] = { 0 };
 
     getSubseedFromSeed((uint8_t*)seed, subSeed);
@@ -2196,44 +1494,20 @@ void qtryProposalVote(const char* nodeIp, int nodePort, const char* seed,
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
     getIdentityFromPublicKey(sourcePublicKey, sourceIdentity, false);
 
-    ((uint64_t*)destPublicKey)[0] = QUOTTERY_CONTRACT_ID;
-    ((uint64_t*)destPublicKey)[1] = 0;
-    ((uint64_t*)destPublicKey)[2] = 0;
-    ((uint64_t*)destPublicKey)[3] = 0;
+    qtryBasicInfo_output basic{};
+    quotteryGetBasicInfo(qc, basic);
+    const int64_t txAmount = static_cast<int64_t>(basic.antiSpamAmount);
 
-    const uint32_t currentTick = getTickNumberFromNode(qc);
-    const uint32_t scheduledTick = currentTick + scheduledTickOffset;
-
-    struct
-    {
-        RequestResponseHeader header;
-        Transaction transaction;
-        qtryProposalVote_input input;
-        uint8_t sig[SIGNATURE_SIZE];
-    } packet{};
-
-    memcpy(packet.transaction.sourcePublicKey, sourcePublicKey, 32);
-    memcpy(packet.transaction.destinationPublicKey, destPublicKey, 32);
-
-    {
-        qtryBasicInfo_output basic{};
-        quotteryGetBasicInfo(qc, basic);
-        packet.transaction.amount = static_cast<int64_t>(basic.antiSpamAmount);
-    }
-    packet.transaction.tick = scheduledTick;
-    packet.transaction.inputType = QTRY_PROPOSAL_VOTE;
-    packet.transaction.inputSize = sizeof(qtryProposalVote_input);
-
-    memset(&packet.input, 0, sizeof(qtryProposalVote_input));
-    packet.input.proposed.mOperationFee = operationFee;
-    packet.input.proposed.mShareHolderFee = shareholderFee;
-    packet.input.proposed.mBurnFee = burnFee;
-    packet.input.proposed.feePerDay = feePerDay;
-    packet.input.proposed.mDepositAmountForDispute = depositAmountForDispute;
-    getPublicKeyFromIdentity(operationIdIdentity, packet.input.proposed.mOperationId);
+    qtryProposalVote_input input{};
+    input.proposed.mOperationFee = operationFee;
+    input.proposed.mShareHolderFee = shareholderFee;
+    input.proposed.mBurnFee = burnFee;
+    input.proposed.feePerDay = feePerDay;
+    input.proposed.mDepositAmountForDispute = depositAmountForDispute;
+    getPublicKeyFromIdentity(operationIdIdentity, input.proposed.mOperationId);
 
     char opIdBuf[128] = { 0 };
-    getIdentityFromPublicKey(packet.input.proposed.mOperationId, opIdBuf, false);
+    getIdentityFromPublicKey(input.proposed.mOperationId, opIdBuf, false);
 
     LOG("\n-------------------------------------\n\n");
     LOG("Sending QTRY ProposalVote\n");
@@ -2245,57 +1519,30 @@ void qtryProposalVote(const char* nodeIp, int nodePort, const char* seed,
     LOG("  feePerDay: %" PRId64 "\n", feePerDay);
     LOG("  depositAmountForDispute: %" PRId64 "\n", depositAmountForDispute);
     LOG("  operationId: %s\n", opIdBuf);
-    LOG("Scheduled tick: %u\n", scheduledTick);
     LOG("\n-------------------------------------\n\n");
 
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryProposalVote_input),
-        digest, 32);
-    sign(subSeed, sourcePublicKey, digest, signature);
-    memcpy(packet.sig, signature, SIGNATURE_SIZE);
-
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + sizeof(qtryProposalVote_input) + SIGNATURE_SIZE);
-    packet.header.zeroDejavu();
-    packet.header.setType(BROADCAST_TRANSACTION);
-
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    KangarooTwelve((unsigned char*)&packet.transaction,
-        sizeof(Transaction) + sizeof(qtryProposalVote_input) + SIGNATURE_SIZE,
-        digest, 32);
-    getTxHashFromDigest(digest, txHash);
-
-    LOG("ProposalVote transaction has been sent!\n");
-    printReceipt(packet.transaction, txHash, reinterpret_cast<const uint8_t*>(&packet.input));
-    LOG("run ./qubic-cli [...] -checktxontick %u %s\n", scheduledTick, txHash);
-    LOG("to check your tx confirmation status\n");
+    makeContractTransaction(nodeIp, nodePort, seed,
+        QUOTTERY_CONTRACT_ID,
+        QTRY_PROPOSAL_VOTE,
+        /*amount=*/txAmount,
+        sizeof(input), &input,
+        scheduledTickOffset,
+        &qc);
 }
 
 // GetApprovedAmount (fn 7)
 void quotteryGetApprovedAmount(const char* nodeIp, int nodePort, const char* identity)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        getApprovedAmount_input input;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = sizeof(getApprovedAmount_input);
-    packet.rcf.inputType = QTRY_GET_APPROVED_AMOUNT;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-    memset(&packet.input, 0, sizeof(getApprovedAmount_input));
-    getPublicKeyFromIdentity(identity, packet.input.pk);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    getApprovedAmount_input input{};
+    getPublicKeyFromIdentity(identity, input.pk);
 
-    try
+    getApprovedAmount_output result{};
+    if (runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_APPROVED_AMOUNT,
+                            &input, sizeof(input), &result, sizeof(result)))
     {
-        auto result = qc->receivePacketWithHeaderAs<getApprovedAmount_output>();
         LOG("Approved QUSD amount for %s: %" PRIu64 "\n", identity, result.amount);
     }
-    catch (std::logic_error)
+    else
     {
         LOG("Failed to get approved amount\n");
     }
@@ -2304,43 +1551,30 @@ void quotteryGetApprovedAmount(const char* nodeIp, int nodePort, const char* ide
 // GetTopProposals (fn 8)
 void quotteryGetTopProposals(const char* nodeIp, int nodePort)
 {
-    auto qc = make_qc(nodeIp, nodePort);
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-    } packet;
-    packet.header.setSize(sizeof(packet));
-    packet.header.randomizeDejavu();
-    packet.header.setType(RequestContractFunction::type());
-    packet.rcf.inputSize = 0;
-    packet.rcf.inputType = QTRY_GET_TOP_PROPOSALS;
-    packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
-
-    try
-    {
-        auto result = qc->receivePacketWithHeaderAs<getTopProposals_output>();
-        LOG("Top governance proposals (%" PRId32 " unique this epoch):\n", result.uniqueCount);
-        for (int i = 0; i < 3 && i < result.uniqueCount; i++)
-        {
-            const auto& p = result.top[i];
-            if (p.totalVotes == 0) break;
-            char opId[128] = { 0 };
-            getIdentityFromPublicKey(p.proposed.mOperationId, opId, false);
-            LOG("\n  #%d (%" PRId64 " votes):\n", i + 1, p.totalVotes);
-            LOG("    operationFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mOperationFee, p.proposed.mOperationFee / 10.0);
-            LOG("    shareholderFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mShareHolderFee, p.proposed.mShareHolderFee / 10.0);
-            LOG("    burnFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mBurnFee, p.proposed.mBurnFee / 10.0);
-            LOG("    feePerDay: %" PRId64 "\n", p.proposed.feePerDay);
-            LOG("    depositAmountForDispute: %" PRId64 "\n", p.proposed.mDepositAmountForDispute);
-            LOG("    operationId: %s\n", opId);
-        }
-        if (result.uniqueCount == 0) LOG("  (none)\n");
-    }
-    catch (std::logic_error)
+    getTopProposals_output result{};
+    if (!runContractFunction(nodeIp, nodePort, QUOTTERY_CONTRACT_ID, QTRY_GET_TOP_PROPOSALS,
+                             nullptr, 0, &result, sizeof(result)))
     {
         LOG("Failed to get top proposals\n");
+        return;
     }
+    
+    LOG("Top governance proposals (%" PRId32 " unique this epoch):\n", result.uniqueCount);
+    for (int i = 0; i < 3 && i < result.uniqueCount; i++)
+    {
+        const auto& p = result.top[i];
+        if (p.totalVotes == 0) break;
+        char opId[128] = { 0 };
+        getIdentityFromPublicKey(p.proposed.mOperationId, opId, false);
+        LOG("\n  #%d (%" PRId64 " votes):\n", i + 1, p.totalVotes);
+        LOG("    operationFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mOperationFee, p.proposed.mOperationFee / 10.0);
+        LOG("    shareholderFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mShareHolderFee, p.proposed.mShareHolderFee / 10.0);
+        LOG("    burnFee: %" PRIu64 " (%.1f%%)\n", p.proposed.mBurnFee, p.proposed.mBurnFee / 10.0);
+        LOG("    feePerDay: %" PRId64 "\n", p.proposed.feePerDay);
+        LOG("    depositAmountForDispute: %" PRId64 "\n", p.proposed.mDepositAmountForDispute);
+        LOG("    operationId: %s\n", opId);
+    }
+    if (result.uniqueCount == 0) LOG("  (none)\n");
 }
 
 static bool hasRequiredParameters(int currentIndex, int argc, int requiredCount, const char* command)
