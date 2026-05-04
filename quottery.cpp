@@ -1579,7 +1579,8 @@ void quotteryGetTopProposals(const char* nodeIp, int nodePort)
 
 static bool hasRequiredParameters(int currentIndex, int argc, int requiredCount, const char* command)
 {
-    if (currentIndex + requiredCount >= argc)
+    const int expectedArgc = currentIndex + requiredCount + 1;
+    if (expectedArgc != argc)
     {
         LOG("Error: %s expects %d parameter(s)\n", command, requiredCount);
         return false;
@@ -1587,11 +1588,11 @@ static bool hasRequiredParameters(int currentIndex, int argc, int requiredCount,
     return true;
 }
 
-static bool hasNoExtraParameters(int nextIndex, int argc, const char* command)
+static bool hasAtLeastRequiredParameters(int currentIndex, int argc, int requiredCount, const char* command)
 {
-    if (nextIndex != argc)
+    if (currentIndex + requiredCount >= argc)
     {
-        LOG("Error: unexpected extra parameter(s) after %s\n", command);
+        LOG("Error: %s expects at least %d parameter(s)\n", command, requiredCount);
         return false;
     }
     return true;
@@ -1626,7 +1627,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
     {
         if (strcmp(argv[i], "getbasicinfo") == 0)
         {
-            if (!hasNoExtraParameters(i + 1, argc, "getbasicinfo"))
+            if (!hasRequiredParameters(i, argc, 0, "getbasicinfo"))
                 return;
             quotteryPrintBasicInfo(nodeIp, nodePort);
             return;
@@ -1634,7 +1635,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
 
         if (strcmp(argv[i], "getactiveeventsid") == 0)
         {
-            if (!hasNoExtraParameters(i + 1, argc, "getactiveeventsid"))
+            if (!hasRequiredParameters(i, argc, 0, "getactiveeventsid"))
                 return;
 
             quotteryPrintActiveEvents(nodeIp, nodePort);
@@ -1655,10 +1656,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 5], tagIdRaw, "tagId"))
                 return;
             uint16_t tagId = static_cast<uint16_t>(tagIdRaw);
-
-            i += 6;
-            if (!hasNoExtraParameters(i, argc, "createevent"))
-                return;
 
             quotteryCreateEvent(nodeIp, nodePort, seed,
                 eventDesc,
@@ -1690,10 +1687,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 5], amount, "amount"))
                 return;
             if (!tryParseUint64Arg(argv[i + 6], price, "price"))
-                return;
-
-            i += 7;
-            if (!hasNoExtraParameters(i, argc, "order"))
                 return;
 
             if (strcmp(action, "add") == 0 && strcmp(side, "ask") == 0)
@@ -1740,10 +1733,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 4], offset, "offset"))
                 return;
 
-            i += 5;
-            if (!hasNoExtraParameters(i, argc, "getorder"))
-                return;
-
             const uint64_t isBid = (strcmp(side, "bid") == 0) ? 1 : 0;
             if (strcmp(side, "bid") != 0 && strcmp(side, "ask") != 0)
             {
@@ -1761,9 +1750,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
                 return;
 
             const char* identity = argv[i + 1];
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "getposition"))
-                return;
 
             quotteryPrintUserPosition(nodeIp, nodePort, identity);
             return;
@@ -1778,17 +1764,13 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 1], eventId, "eventId"))
                 return;
 
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "geteventinfo"))
-                return;
-
             quotteryPrintEventInfo(nodeIp, nodePort, eventId);
             return;
         }
 
         if (strcmp(argv[i], "geteventinfobatch") == 0)
         {
-            if (!hasRequiredParameters(i, argc, 1, "geteventinfobatch"))
+            if (!hasAtLeastRequiredParameters(i, argc, 1, "geteventinfobatch"))
                 return;
 
             uint64_t eventIds[64] = {};
@@ -1824,10 +1806,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 2], optionId, "optionId"))
                 return;
 
-            i += 3;
-            if (!hasNoExtraParameters(i, argc, "publishresult"))
-                return;
-
             qtryPublishResult(nodeIp, nodePort, seed, scheduledTickOffset, eventId, optionId);
             return;
         }
@@ -1841,10 +1819,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 1], eventId, "eventId"))
                 return;
 
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "tryfinalizeevent"))
-                return;
-
             qtryTryFinalizeEvent(nodeIp, nodePort, seed, scheduledTickOffset, eventId);
             return;
         }
@@ -1856,10 +1830,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
 
             uint64_t eventId = 0;
             if (!tryParseUint64Arg(argv[i + 1], eventId, "eventId"))
-                return;
-
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "dispute"))
                 return;
 
             qtryDispute(nodeIp, nodePort, seed, scheduledTickOffset, eventId);
@@ -1884,10 +1854,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
                 return;
             }
 
-            i += 3;
-            if (!hasNoExtraParameters(i, argc, "resolvedispute"))
-                return;
-
             qtryResolveDispute(nodeIp, nodePort, seed, scheduledTickOffset, eventId, static_cast<int64_t>(voteRaw));
             return;
         }
@@ -1901,10 +1867,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 1], eventId, "eventId"))
                 return;
 
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "claimreward"))
-                return;
-
             qtryUserClaimReward(nodeIp, nodePort, seed, scheduledTickOffset, eventId);
             return;
         }
@@ -1912,7 +1874,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
         if (strcmp(argv[i], "forceclaimreward") == 0)
         {
             // Usage: forceclaimreward <eventId> <identity1> [identity2] ... [identity16]
-            if (!hasRequiredParameters(i, argc, 2, "forceclaimreward"))
+            if (!hasAtLeastRequiredParameters(i, argc, 2, "forceclaimreward"))
                 return;
 
             uint64_t eventId = 0;
@@ -1964,10 +1926,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 4], contractIndexRaw, "newManagingContractIndex"))
                 return;
 
-            i += 5;
-            if (!hasNoExtraParameters(i, argc, "transfersharemgmt"))
-                return;
-
             qtryTransferShareManagementRights(nodeIp, nodePort, seed, scheduledTickOffset,
                 issuerIdentity, assetName,
                 static_cast<int64_t>(sharesRaw),
@@ -1977,8 +1935,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
 
         if (strcmp(argv[i], "cleanmemory") == 0)
         {
-            i += 1;
-            if (!hasNoExtraParameters(i, argc, "cleanmemory"))
+            if (!hasRequiredParameters(i, argc, 0, "cleanmemory"))
                 return;
 
             qtryCleanMemory(nodeIp, nodePort, seed, scheduledTickOffset);
@@ -1995,10 +1952,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 2], amount, "amount"))
                 return;
 
-            i += 3;
-            if (!hasNoExtraParameters(i, argc, "transferqtrygov"))
-                return;
-
             qtryTransferQTRYGOV(nodeIp, nodePort, seed, receiverIdentity,
                 static_cast<int64_t>(amount), scheduledTickOffset);
             return;
@@ -2007,7 +1960,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
         if (strcmp(argv[i], "updatediscount") == 0)
         {
             // Usage: updatediscount <userIdentity> <set|remove> [newFeeRate]
-            if (!hasRequiredParameters(i, argc, 2, "updatediscount"))
+            if (!hasAtLeastRequiredParameters(i, argc, 2, "updatediscount"))
                 return;
 
             const char* userIdentity = argv[i + 1];
@@ -2015,8 +1968,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
 
             if (strcmp(action, "remove") == 0)
             {
-                i += 3;
-                if (!hasNoExtraParameters(i, argc, "updatediscount"))
+                if (!hasRequiredParameters(i, argc, 2, "updatediscount"))
                     return;
                 qtryUpdateFeeDiscountList(nodeIp, nodePort, seed, scheduledTickOffset,
                     userIdentity, 0, 0);
@@ -2027,9 +1979,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
                     return;
                 uint64_t newFeeRate = 0;
                 if (!tryParseUint64Arg(argv[i + 3], newFeeRate, "newFeeRate"))
-                    return;
-                i += 4;
-                if (!hasNoExtraParameters(i, argc, "updatediscount"))
                     return;
                 qtryUpdateFeeDiscountList(nodeIp, nodePort, seed, scheduledTickOffset,
                     userIdentity, newFeeRate, 1);
@@ -2057,10 +2006,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             if (!tryParseUint64Arg(argv[i + 5], depositRaw, "depositAmountForDispute")) return;
             const char* opIdIdentity = argv[i + 6];
 
-            i += 7;
-            if (!hasNoExtraParameters(i, argc, "proposalvote"))
-                return;
-
             qtryProposalVote(nodeIp, nodePort, seed, scheduledTickOffset,
                 opFee, shFee, burnFee,
                 static_cast<int64_t>(feePerDayRaw),
@@ -2075,9 +2020,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
                 return;
 
             const char* identity = argv[i + 1];
-            i += 2;
-            if (!hasNoExtraParameters(i, argc, "getapprovedamount"))
-                return;
 
             quotteryGetApprovedAmount(nodeIp, nodePort, identity);
             return;
@@ -2085,7 +2027,7 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
 
         if (strcmp(argv[i], "gettopproposals") == 0)
         {
-            if (!hasNoExtraParameters(i + 1, argc, "gettopproposals"))
+            if (!hasRequiredParameters(i, argc, 0, "gettopproposals"))
                 return;
 
             quotteryGetTopProposals(nodeIp, nodePort);
@@ -2100,10 +2042,6 @@ void quotteryEntryPoint(int argc, char** argv, const char* nodeIp, int nodePort,
             const char* receiverIdentity = argv[i + 1];
             uint64_t amount = 0;
             if (!tryParseUint64Arg(argv[i + 2], amount, "amount"))
-                return;
-
-            i += 3;
-            if (!hasNoExtraParameters(i, argc, "transferqusd"))
                 return;
 
             qtryTransferQUSD(nodeIp, nodePort, seed, receiverIdentity,
