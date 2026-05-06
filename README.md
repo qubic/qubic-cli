@@ -194,24 +194,58 @@ Commands:
 		You need to own/possess the shares to do this (seed required).
 
 [QTRY COMMANDS]
-	-qtrygetbasicinfo
-		Show qtry basic info from a node.
-	-qtryissuebet
-		Issue a bet (prompt mode)
-	-qtrygetactivebet
-		Show all active bet id.
-	-qtrygetactivebetbycreator <BET_CREATOR_ID>
-		Show all active bet id of an ID.
-	-qtrygetbetinfo <BET_ID>
-		Get meta information of a bet
-	-qtrygetbetdetail <BET_ID> <OPTION_ID>
-		Get a list of IDs that bet on <OPTION_ID> of the bet <BET_ID>
-	-qtryjoinbet <BET_ID> <NUMBER_OF_BET_SLOT> <AMOUNT_PER_SLOT> <PICKED_OPTION>
-		Join a bet
-	-qtrypublishresult <BET_ID> <WIN_OPTION>
-		(Oracle providers only) publish a result for a bet
-	-qtrycancelbet <BET_ID>
-		(Game operator only) cancel a bet
+	Format: -qtry [subcommand for QTRY] [other params]
+	-qtry getbasicinfo
+		Show Quottery basic info from a node (fees, revenues, game operator, anti-spam amount, etc.).
+	-qtry getactiveeventsid
+		Show recent active event IDs.
+	-qtry createevent [EVENT_DESC] [OPTION_0_DESC] [OPTION_1_DESC] [END_DATE] [TAG_ID]
+		Create a new Quottery event. EVENT_DESC max 126 bytes, OPTION_*_DESC max 64 bytes each. Game operator only.
+		END_DATE format: \"YYYY-MM-DD hh:mm:ss\" (UTC). TAG_ID is a uint16 category tag.
+	-qtry order add/remove bid/ask [EVENT_ID] [OPTION] [AMOUNT] [PRICE]
+		Place or remove a bid/ask order on Quottery. OPTION must be 0 or 1.
+	-qtry getorder bid/ask [EVENT_ID] [OPTION] [OFFSET]
+		Get bid/ask orders for an event option, paginated by OFFSET.
+	-qtry getposition [IDENTITY]
+		Get all positions held by an identity on Quottery.
+	-qtry geteventinfo [EVENT_ID]
+		Get detailed info for a single event (description, options, dates, result, dispute state).
+	-qtry geteventinfobatch [EVENT_ID_1] [EVENT_ID_2] ... [EVENT_ID_N]
+		Get detailed info for up to 64 events in one request.
+	-qtry publishresult [EVENT_ID] [OPTION_ID]
+		Publish the result for an event. OPTION_ID must be 0 or 1. Game operator only.
+		Requires the event's end date to have passed. Locks the dispute deposit amount.
+	-qtry tryfinalizeevent [EVENT_ID]
+		Finalize an event after the dispute window (~1000 ticks past publish). Game operator only.
+	-qtry dispute [EVENT_ID]
+		Dispute a published result. Requires the dispute deposit amount; only valid before finalization.
+	-qtry resolvedispute [EVENT_ID] [VOTE]
+		Resolve a dispute by voting (VOTE: 0 = No, 1 = Yes). Computor only.
+		Requires a small invocation reward (refunded if caller is a computor).
+	-qtry claimreward [EVENT_ID]
+		Claim reward for a winning position in a finalized event. Requires a 1,000,000 qu fee
+		(refunded only if you have a winning position; otherwise lost as anti-spam).
+	-qtry forceclaimreward [EVENT_ID] [IDENTITY_1] [IDENTITY_2] ... [IDENTITY_16]
+		Force-claim rewards on behalf of up to 16 identities. Game operator only.
+	-qtry transfersharemgmt [ISSUER_IDENTITY] [ASSET_NAME] [NUMBER_OF_SHARES] [NEW_MANAGING_CONTRACT_INDEX]
+		Transfer asset share management rights from Quottery to another contract.
+	-qtry cleanmemory
+		Finalize events with published results past dispute window and clean up state. Game operator only.
+	-qtry transferqusd [RECEIVER_IDENTITY] [AMOUNT]
+		Transfer QUSD (GARTH) via the Quottery contract.
+	-qtry transferqtrygov [RECEIVER_IDENTITY] [AMOUNT]
+		Transfer QTRYGOV tokens via the Quottery contract. AMOUNT must be positive.
+	-qtry updatediscount [USER_IDENTITY] set [NEW_FEE_RATE]
+	-qtry updatediscount [USER_IDENTITY] remove
+		Set or remove a fee discount for a user. Game operator only.
+		NEW_FEE_RATE is in tenths of a percent (max 1000 = 100%%).
+	-qtry proposalvote [OPERATION_FEE] [SHAREHOLDER_FEE] [BURN_FEE] [FEE_PER_DAY] [DEPOSIT_FOR_DISPUTE] [OPERATION_ID_IDENTITY]
+		Cast a governance proposal vote with the proposed parameters. Costs the anti-spam amount. QTRYGOV holder only.
+		Fees are in tenths of a percent (e.g. 50 = 5.0%%).
+	-qtry getapprovedamount [IDENTITY]
+		Get the approved QUSD amount for an identity.
+	-qtry gettopproposals
+		Get the top governance proposals (up to 3) for the current epoch.
 
 [GENERAL QUORUM PROPOSAL COMMANDS]
 	-gqmpropsetproposal <PROPOSAL_STRING>
