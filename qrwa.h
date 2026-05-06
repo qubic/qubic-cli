@@ -42,7 +42,40 @@ constexpr uint8_t QRWA_PAYOUT_TYPE_DEDICATED_QRWA = 3;
 constexpr uint8_t QRWA_PAYOUT_TYPE_POOL_D_QRWA    = 4;
 
 // ─── Input/Output structs ──────────────────────────────────────
+//
+// All structs below are byte-for-byte mirrors of the equivalent QPI types in
+// submodules/core/src/contracts/qRWA.h (e.g. QRWAPayoutEntry, QRWAGovParams,
+// QRWAGovProposal, QRWAAsset). The submodule pin is up-to-date so the canonical
+// definitions are available, and we'd ideally just `using QRWAGovParams =
+// ::QRWA::QRWAGovParams;` etc.
+//
+// Why we still mirror them as flat structs here:
+//   * contracts/qRWA.h begins with `using namespace QPI;` at file scope and
+//     pulls in qpi.h, which transitively requires CONTRACT_INDEX /
+//     CONTRACT_STATE_TYPE / CONTRACT_STATE2_TYPE macros to be defined per
+//     translation unit and depends on contract_core/pre_qpi_def.h.
+//   * That setup conflicts with this CLI's `defines.h` (e.g. defines.h has
+//     `#define EXCHANGE_PUBLIC_PEERS 0` while
+//     core/src/network_messages/network_message_type.h declares an enum value
+//     `EXCHANGE_PUBLIC_PEERS = 0` — the macro expansion breaks the enum).
+//   * Pulling qpi.h via qrwa.h would also leak `using namespace QPI;` into
+//     every other CLI translation unit that includes us (main.cpp), polluting
+//     names like `id`, `uint64`, `Asset` globally.
+//
+// Once the CLI grows a generic adapter that quarantines QPI types behind a
+// thin shim (similar to qpi_adapter.h but without macro collisions), these
+// flat duplicates can be replaced with `using` aliases. Until then the wire
+// layout is the contract here.
 
+// Mirrors ::QRWA::QRWAPayoutEntry. The trailing 1-byte `_pad0` exists in the
+// contract for two reasons that the wire format inherits:
+//   1. After `payoutType` (1 byte) at offset 55, `_pad0` rounds the entry
+//      total to 56 bytes — a multiple of 8 — so QPI's
+//      Array<QRWAPayoutEntry, QRWA_PAYOUT_RING_SIZE> packs without internal
+//      gaps and reads/writes are 8-byte aligned for `amount`/`holding` etc.
+//   2. The contract serializer copies entries with sizeof(QRWAPayoutEntry);
+//      omitting the pad here would produce a 1-byte short-read on the next
+//      entry and corrupt the whole payouts page.
 struct QRWAPayoutEntry
 {
     uint8_t  recipient[32];
@@ -55,7 +88,7 @@ struct QRWAPayoutEntry
     uint8_t  _pad0;
 };
 
-// fn 1
+// fn 1 — mirrors ::QRWA::QRWAGovParams
 struct QRWAGovParams
 {
     uint8_t  mAdminAddress[32];
