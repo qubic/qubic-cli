@@ -77,7 +77,14 @@ target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules)
 target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules/core)
 target_include_directories(qubic-cli PUBLIC ${CMAKE_SOURCE_DIR}/submodules/core/src)
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-    target_compile_options(${PROJECT_NAME} PRIVATE -mrdrnd -mavx2)
+	if(APPLE)
+		add_compile_definitions(QUBIC_ARCH_ARM64=1)
+		target_include_directories(qubic-cli BEFORE PRIVATE
+				${CMAKE_SOURCE_DIR}/arm_compat
+		)
+	else()
+		target_compile_options(${PROJECT_NAME} PRIVATE -mrdrnd -mavx2)
+	endif()
 endif()
 
 # to make clang++ shut up about "first argument in call to 'memcpy' is a pointer to non-trivially copyable type 'id'"

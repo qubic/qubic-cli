@@ -39,10 +39,17 @@ std::string toString(const QPI::id& id)
 std::string toString(const QPI::DateAndTime& dt)
 {
 	char buffer[100];
+#ifdef QUBIC_ARCH_ARM64
 	if (dt.getMicrosecDuringMillisec())
 		snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d_%02d:%02d:%02d.%03d'%03d", dt.getYear(), dt.getMonth(), dt.getDay(), dt.getHour(), dt.getMinute(), dt.getSecond(), dt.getMillisec(), dt.getMicrosecDuringMillisec());
 	else
 		snprintf(buffer, sizeof(buffer), "%04d-%02d-%02d_%02d:%02d:%02d.%03d", dt.getYear(), dt.getMonth(), dt.getDay(), dt.getHour(), dt.getMinute(), dt.getSecond(), dt.getMillisec());
+#else
+	if (dt.getMicrosecDuringMillisec())
+		snprintf(buffer, "%04d-%02d-%02d_%02d:%02d:%02d.%03d'%03d", dt.getYear(), dt.getMonth(), dt.getDay(), dt.getHour(), dt.getMinute(), dt.getSecond(), dt.getMillisec(), dt.getMicrosecDuringMillisec());
+	else
+		snprintf(buffer, "%04d-%02d-%02d_%02d:%02d:%02d.%03d", dt.getYear(), dt.getMonth(), dt.getDay(), dt.getHour(), dt.getMinute(), dt.getSecond(), dt.getMillisec());
+#endif
 	std::string str(buffer);
 	if (!dt.isValid())
 		str += " (invalid date)";
