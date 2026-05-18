@@ -520,6 +520,44 @@ Commands:
 	-qbondgetcfa
 			Get list of commission free addresses.
 
+[WOLFPACK COMMANDS]
+	-ggwpstatus
+		Show WolfPack (GGWP) contract status.
+	-ggwpholderinfo <ADDRESS>
+		Show token balance and holder status for an address.
+	-ggwpclaninfo <ADDRESS>
+		Show clan rank and membership for an address.
+	-ggwpshareholderinfo <ADDRESS>
+		Show SC shareholder status and shares for an address.
+	-ggwpstakinginfo <ADDRESS>
+		Show staking info (staked amount, pending rewards, unstake status) for an address.
+	-ggwpexcludeinfo
+		Show WolfPack exclude addresses (slot 1 and slot 2).
+	-ggwpdistpreview <AMOUNT>
+		Preview the distribution split for AMOUNT QU.
+	-ggwpdeposit <AMOUNT>
+		Deposit revenue into WolfPack (amount in QU).
+	-ggwpaddclan <ADDRESS> <RANK>
+		Add a clan member with rank 0-5 (admin-only).
+	-ggwpremoveclan <ADDRESS>
+		Remove a clan member (admin-only).
+	-ggwpsetclanrank <ADDRESS> <RANK>
+		Set clan member rank 0-5 (admin-only).
+	-ggwpsetadmin <ADDRESS>
+		Set a new admin address (admin-only).
+	-ggwpsetexclude <SLOT> <ADDRESS>
+		Set exclude address slot 1 or 2 (admin-only).
+	-ggwpstake <AMOUNT>
+		Stake AMOUNT GGWP shares into the WolfPack contract.
+	-ggwprequestunstake <AMOUNT>
+		Request unstaking of AMOUNT shares (2-epoch delay before finalize).
+	-ggwpfinalizeunstake
+		Finalize a pending unstake request after the delay has passed.
+	-ggwpdepositstaking <AMOUNT>
+		Deposit AMOUNT GGWP shares into the staking reward pool.
+	-ggwpclaimrewards
+		Claim accumulated staking rewards.
+
 [TESTING COMMANDS]
 	-testqpifunctionsoutput
 		Test that output of qpi functions matches TickData and quorum tick votes for 15 ticks in the future (as specified by scheduletick offset). Requires the TESTEXA SC to be enabled.
