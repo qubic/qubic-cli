@@ -2065,7 +2065,7 @@ void getVoteCounterTransaction(const char* nodeIp, const int nodePort, unsigned 
     auto extraData = std::make_unique<std::vector<ExtraDataStruct>>();
     extraData->reserve(NUMBER_OF_TRANSACTIONS_PER_TICK);
 
-    getTickTransactions(qc, requestedTick, 1024, *txs, /*hashes=*/nullptr, extraData.get(), /*sigs=*/nullptr);
+    getTickTransactions(qc, requestedTick, NUMBER_OF_TRANSACTIONS_PER_TICK, *txs, /*hashes=*/nullptr, extraData.get(), /*sigs=*/nullptr);
     
     auto td = std::make_unique<TickData>();
     getTickData(qc, requestedTick, *td);
