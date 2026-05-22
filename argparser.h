@@ -212,6 +212,44 @@ void print_help()
     printf("\t-qrwarevokeasset <ISSUER> <ASSET_NAME> <numberOfShares>\n");
     printf("\t\tRevoke asset management rights back to QX (100 QU fee).\n");
 
+    printf("\n[WOLFPACK COMMANDS]\n");
+    printf("\t-ggwpstatus\n");
+    printf("\t\tShow WolfPack contract status.\n");
+    printf("\t-ggwpholderinfo <ADDRESS>\n");
+    printf("\t\tShow token balance and holder status for an address.\n");
+    printf("\t-ggwpclaninfo <ADDRESS>\n");
+    printf("\t\tShow clan rank and membership for an address.\n");
+    printf("\t-ggwpshareholderinfo <ADDRESS>\n");
+    printf("\t\tShow SC shareholder status and shares for an address.\n");
+    printf("\t-ggwpexcludeinfo\n");
+    printf("\t\tShow WolfPack exclude addresses (slot 1 and slot 2).\n");
+    printf("\t-ggwpdistpreview <AMOUNT>\n");
+    printf("\t\tPreview distribution split for AMOUNT QU (calls WP fn 7).\n");
+    printf("\t-ggwpdeposit <amount>\n");
+    printf("\t\tDeposit revenue into WolfPack (amount in QU).\n");
+    printf("\t-ggwpaddclan <ADDRESS> <rank>\n");
+    printf("\t\tAdd a clan member with rank 0-5 (admin-only).\n");
+    printf("\t-ggwpremoveclan <ADDRESS>\n");
+    printf("\t\tRemove a clan member (admin-only).\n");
+    printf("\t-ggwpsetclanrank <ADDRESS> <rank>\n");
+    printf("\t\tSet clan member rank 0-5 (admin-only).\n");
+    printf("\t-ggwpsetadmin <ADDRESS>\n");
+    printf("\t\tSet new admin address (admin-only).\n");
+    printf("\t-ggwpsetexclude <slot> <ADDRESS>\n");
+    printf("\t\tSet exclude address slot 1 or 2 (admin-only).\n");
+    printf("\t-ggwpstakinginfo <ADDRESS>\n");
+    printf("\t\tShow staking info (staked amount, pending rewards, unstake status) for an address.\n");
+    printf("\t-ggwpstake <AMOUNT>\n");
+    printf("\t\tStake AMOUNT GGWP shares into the WolfPack contract.\n");
+    printf("\t-ggwprequestunstake <AMOUNT>\n");
+    printf("\t\tRequest unstaking of AMOUNT shares (2-epoch delay before finalize).\n");
+    printf("\t-ggwpfinalizeunstake\n");
+    printf("\t\tFinalize a pending unstake request after the delay has passed.\n");
+    printf("\t-ggwpdepositstaking <AMOUNT>\n");
+    printf("\t\tDeposit AMOUNT GGWP shares into the staking reward pool.\n");
+    printf("\t-ggwpclaimrewards\n");
+    printf("\t\tClaim accumulated staking rewards.\n");
+
     printf("\n[SMART CONTRACT COMMANDS]\n");
     printf("\t-callcontractfunction <CONTRACT_INDEX> <CONTRACT_FUNCTION> <INPUT_FORMAT_STRING> <OUTPUT_FORMAT_STRING>\n");
     printf("\t\tCall a contract function of contract index and print the output. Valid node ip/port are required.\t\n");
@@ -1389,6 +1427,168 @@ void parseArgument(int argc, char** argv)
             g_qrwa_asset_name = argv[i + 2];
             g_qrwa_num_shares = strtoll(argv[i + 3], nullptr, 10);
             i += 4;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        /*****************************
+         ***** WOLFPACK COMMANDS *****
+         *****************************/
+
+        if (strcmp(argv[i], "-ggwpstatus") == 0)
+        {
+            g_cmd = WP_STATUS;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpholderinfo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_HOLDER_INFO;
+            g_wp_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpclaninfo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_CLAN_MEMBER_INFO;
+            g_wp_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpshareholderinfo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_SHAREHOLDER_INFO;
+            g_wp_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpexcludeinfo") == 0)
+        {
+            g_cmd = WP_EXCLUDE_INFO;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpdistpreview") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_DIST_PREVIEW;
+            g_wp_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpdeposit") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_DEPOSIT_REVENUE;
+            g_wp_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpaddclan") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = WP_ADD_CLAN_MEMBER;
+            g_wp_address = argv[i + 1];
+            g_wp_rank = strtoull(argv[i + 2], nullptr, 10);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpremoveclan") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_REMOVE_CLAN_MEMBER;
+            g_wp_address = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpsetclanrank") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = WP_SET_CLAN_RANK;
+            g_wp_address = argv[i + 1];
+            g_wp_rank = strtoull(argv[i + 2], nullptr, 10);
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpsetadmin") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_SET_ADMIN;
+            g_wp_address = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpsetexclude") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(2)
+            g_cmd = WP_SET_EXCLUDE_ADDRESS;
+            g_wp_slot = strtoull(argv[i + 1], nullptr, 10);
+            g_wp_address = argv[i + 2];
+            i += 3;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpstakinginfo") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_STAKING_INFO;
+            g_wp_identity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpstake") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_STAKE;
+            g_wp_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwprequestunstake") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_REQUEST_UNSTAKE;
+            g_wp_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpfinalizeunstake") == 0)
+        {
+            g_cmd = WP_FINALIZE_UNSTAKE;
+            i += 1;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpdepositstaking") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = WP_DEPOSIT_STAKING_REWARDS;
+            g_wp_amount = strtoull(argv[i + 1], nullptr, 10);
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-ggwpclaimrewards") == 0)
+        {
+            g_cmd = WP_CLAIM_STAKING_REWARDS;
+            i += 1;
             CHECK_OVER_PARAMETERS
             break;
         }
