@@ -2377,19 +2377,18 @@ void pushTickDataToNode(const char* nodeIp, const int nodePort, const char* file
         const auto& sig = signatures[i];
         const auto& extra = extraData[i];
 
-        // Compute transaction digest for verification
-        std::vector<uint8_t> txData;
-        txData.resize(sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
-        memcpy(txData.data(), &tx, sizeof(Transaction));
+        // Compute transaction digest for verification (WITHOUT signature)
+        std::vector<uint8_t> txDataForDigest;
+        txDataForDigest.resize(sizeof(Transaction) + tx.inputSize);
+        memcpy(txDataForDigest.data(), &tx, sizeof(Transaction));
         if (tx.inputSize > 0)
         {
-            memcpy(txData.data() + sizeof(Transaction), extra.vecU8.data(), tx.inputSize);
+            memcpy(txDataForDigest.data() + sizeof(Transaction), extra.vecU8.data(), tx.inputSize);
         }
-        memcpy(txData.data() + sizeof(Transaction) + tx.inputSize, sig.sig, SIGNATURE_SIZE);
 
         // Verify transaction signature
         uint8_t txDigest[32];
-        KangarooTwelve(txData.data(), txData.size(), txDigest, 32);
+        KangarooTwelve(txDataForDigest.data(), txDataForDigest.size(), txDigest, 32);
 
         // Verify signature with source public key
         if (!verify(tx.sourcePublicKey, txDigest, sig.sig))
@@ -2398,6 +2397,16 @@ void pushTickDataToNode(const char* nodeIp, const int nodePort, const char* file
             failCount++;
             continue;
         }
+
+        // Prepare full transaction data for sending (WITH signature)
+        std::vector<uint8_t> txData;
+        txData.resize(sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
+        memcpy(txData.data(), &tx, sizeof(Transaction));
+        if (tx.inputSize > 0)
+        {
+            memcpy(txData.data() + sizeof(Transaction), extra.vecU8.data(), tx.inputSize);
+        }
+        memcpy(txData.data() + sizeof(Transaction) + tx.inputSize, sig.sig, SIGNATURE_SIZE);
 
         // Send transaction to node
         constexpr size_t maxPacketSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
