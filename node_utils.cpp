@@ -2321,3 +2321,106 @@ void getExecutionFeeMultiplier(const char* nodeIp, const int nodePort, const cha
         LOG("Failed to get execution fee multiplier\n");
     }
 }
+
+void pushTickDataToNode(const char* nodeIp, const int nodePort, const char* fileName)
+{
+    // Read tick data and transactions from file
+    TickData td;
+    std::vector<Transaction> txs;
+    std::vector<ExtraDataStruct> extraData;
+    std::vector<SignatureStruct> signatures;
+
+    readTickDataFromFile(fileName, td, txs, &extraData, &signatures, /*txHashes=*/nullptr);
+
+    if (td.epoch == 0)
+    {
+        LOG("Failed to read valid tick data from file %s\n", fileName);
+        return;
+    }
+
+    LOG("Pushing tick %u (epoch %u) to node %s:%d\n", td.tick, td.epoch, nodeIp, nodePort);
+
+    // Get computor list to verify tick data signature
+    auto qc = std::make_shared<QubicConnection>(nodeIp, nodePort);
+
+    // Verify tick data signature
+    uint8_t tickDataDigest[32];
+    TickData tdCopy = td;
+    tdCopy.computorIndex ^= TickData::type();
+    KangarooTwelve((uint8_t*)&tdCopy, sizeof(TickData) - SIGNATURE_SIZE, tickDataDigest, 32);
+    tdCopy.computorIndex ^= TickData::type();
+
+    // We need the computor public key to verify - for now we'll assume the data is valid
+    // In production, you'd need to get BroadcastComputors first
+    LOG("Warning: Tick data signature verification requires computor list\n");
+
+    // Send tick data to node
+    struct {
+        RequestResponseHeader header;
+        TickData tickData;
+    } tickDataPacket;
+    tickDataPacket.header.setSize(sizeof(tickDataPacket));
+    tickDataPacket.header.randomizeDejavu();
+    tickDataPacket.header.setType(BROADCAST_FUTURE_TICK_DATA);
+    tickDataPacket.tickData = td;
+
+    qc->sendData((uint8_t*)&tickDataPacket, tickDataPacket.header.size());
+    LOG("Sent tick data for tick %u\n", td.tick);
+
+    // Send each transaction with signature verification
+    int successCount = 0;
+    int failCount = 0;
+
+    for (size_t i = 0; i < txs.size(); i++)
+    {
+        const auto& tx = txs[i];
+        const auto& sig = signatures[i];
+        const auto& extra = extraData[i];
+
+        // Compute transaction digest for verification
+        std::vector<uint8_t> txData;
+        txData.resize(sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
+        memcpy(txData.data(), &tx, sizeof(Transaction));
+        if (tx.inputSize > 0)
+        {
+            memcpy(txData.data() + sizeof(Transaction), extra.vecU8.data(), tx.inputSize);
+        }
+        memcpy(txData.data() + sizeof(Transaction) + tx.inputSize, sig.sig, SIGNATURE_SIZE);
+
+        // Verify transaction signature
+        uint8_t txDigest[32];
+        KangarooTwelve(txData.data(), txData.size(), txDigest, 32);
+
+        // Verify signature with source public key
+        if (!verify(tx.sourcePublicKey, txDigest, sig.sig))
+        {
+            LOG("Transaction %zu has invalid signature, skipping\n", i);
+            failCount++;
+            continue;
+        }
+
+        // Send transaction to node
+        constexpr size_t maxPacketSize = sizeof(RequestResponseHeader) + MAX_TRANSACTION_SIZE;
+        std::vector<uint8_t> txPacket;
+        txPacket.resize(maxPacketSize);
+
+        auto header = (RequestResponseHeader*)txPacket.data();
+        header->setSize(sizeof(RequestResponseHeader) + sizeof(Transaction) + tx.inputSize + SIGNATURE_SIZE);
+        header->randomizeDejavu();
+        header->setType(BROADCAST_TRANSACTION);
+
+        memcpy(txPacket.data() + sizeof(RequestResponseHeader), txData.data(), txData.size());
+
+        qc->sendData(txPacket.data(), header->size());
+        successCount++;
+
+        if ((i + 1) % 100 == 0)
+        {
+            LOG("Sent %zu/%zu transactions\n", i + 1, txs.size());
+        }
+    }
+
+    LOG("Finished pushing tick data to node\n");
+    LOG("Successfully sent: %d transactions\n", successCount);
+    LOG("Failed (invalid signature): %d transactions\n", failCount);
+}

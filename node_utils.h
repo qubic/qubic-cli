@@ -16,6 +16,7 @@ int getTxInfo(const char* nodeIp, const int nodePort, const char* txHash);
 void getQuorumTick(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* compFileName);
 bool getTickData(QCPtr qc, const uint32_t tick, TickData& result);
 void getTickDataToFile(const char* nodeIp, const int nodePort, uint32_t requestedTick, const char* fileName);
+void pushTickDataToNode(const char* nodeIp, const int nodePort, const char* fileName);
 void printTickDataFromFile(const char* fileName, const char* compFile);
 bool checkTxOnFile(const char* txHash, const char* fileName);
 void sendRawPacket(const char* nodeIp, const int nodePort, int rawPacketSize, uint8_t* rawPacket);

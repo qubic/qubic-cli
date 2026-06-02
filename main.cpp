@@ -126,6 +126,11 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             getTickDataToFile(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
             break;
+        case PUSH_TICK_DATA:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityFileExist(g_requestedFileName);
+            pushTickDataToNode(g_nodeIp, g_nodePort, g_requestedFileName);
+            break;
         case GET_QUORUM_TICK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             getQuorumTick(g_nodeIp, g_nodePort, g_requestedTickNumber, g_requestedFileName);
