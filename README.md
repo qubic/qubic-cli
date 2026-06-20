@@ -109,6 +109,8 @@ Commands:
 		View list of active IPOs in this epoch. valid node ip/port are required.
 	-getsysteminfo
 		View Current System Status. Includes initial tick, random mining seed, epoch info.
+	-getrevenuedata <OUTPUT_CSV_FILE>
+		Write current (approximate) per-computor revenue score components (tx, oracle, doge) as CSV to OUTPUT_CSV_FILE. Valid node ip/port required.
 
 [NODE COMMANDS]
 	-getcurrenttick

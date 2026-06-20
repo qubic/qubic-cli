@@ -124,6 +124,173 @@ void printSystemInfoFromNode(const char* nodeIp, int nodePort)
     }
 }
 
+// Mirrors core computeMultiDimRevenue in src/revenue.h
+// Constants match the core: NUMBER_OF_COMPUTORS = 676 -> QUORUM = 451, REVENUE_SCALE = 1024.
+static const unsigned long long REVENUE_SCALE = 1024;
+static const unsigned int REVENUE_QUORUM = 451;
+
+// QUORUM-th largest score (== core getQuorumScore), min 1.
+static unsigned long long revQuorumThreshold(const unsigned long long* scores)
+{
+    std::vector<unsigned long long> sorted(scores, scores + NUMBER_OF_COMPUTORS);
+    std::sort(sorted.begin(), sorted.end()); // ascending; index N-QUORUM is the QUORUM-th largest
+    unsigned long long th = sorted[NUMBER_OF_COMPUTORS - REVENUE_QUORUM];
+    return th ? th : 1ULL;
+}
+
+// Per-computor factor in [0, SCALE]. noActivityValve mirrors the oracle/doge valve: if the whole
+// network is idle in this dimension, everyone gets the full factor (tx has no valve in core).
+static void revComputeFactor(const unsigned long long* scores, bool noActivityValve, unsigned long long* out)
+{
+    if (noActivityValve)
+    {
+        bool any = false;
+        for (unsigned int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+        {
+            if (scores[i])
+            {
+                any = true;
+                break;
+            }
+        }
+        if (!any)
+        {
+            for (unsigned int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+            {
+                out[i] = REVENUE_SCALE;
+            }
+            return;
+        }
+    }
+    unsigned long long th = revQuorumThreshold(scores);
+    for (unsigned int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+    {
+        if (scores[i] == 0)
+        {
+            out[i] = 0;
+        }
+        else if (scores[i] >= th)
+        {
+            out[i] = REVENUE_SCALE;
+        }
+        else
+        {
+            out[i] = REVENUE_SCALE * scores[i] / th;
+        }
+    }
+}
+
+static unsigned long long revIpow(unsigned long long v, unsigned int e)
+{
+    unsigned long long r = 1;
+    for (unsigned int i = 0; i < e; i++)
+    {
+        r *= v;
+    }
+    return r;
+}
+
+// true if x^k <= n, computed without overflow
+static bool revPowLE(unsigned long long x, unsigned int k, unsigned long long n)
+{
+    unsigned long long r = 1;
+    for (unsigned int i = 0; i < k; i++)
+    {
+        if (x != 0 && r > n / x)
+        {
+            return false;
+        }
+        r *= x;
+    }
+    return r <= n;
+}
+
+// floor(n^(1/k)), matches core math_lib::irootK64<k>
+static unsigned long long revIroot(unsigned long long n, unsigned int k)
+{
+    if (k <= 1)
+    {
+        return n;
+    }
+    if (n == 0)
+    {
+        return 0;
+    }
+    unsigned long long lo = 0, hi = n;
+    while (lo < hi)
+    {
+        unsigned long long mid = lo + (hi - lo + 1) / 2;
+        if (revPowLE(mid, k, n))
+        {
+            lo = mid;
+        }
+        else
+        {
+            hi = mid - 1;
+        }
+    }
+    return lo;
+}
+
+void dumpRevenueDataFromNode(const char* nodeIp, int nodePort, const char* outputFile)
+{
+    auto qc = make_qc(nodeIp, nodePort);
+
+    struct {
+        RequestResponseHeader header;
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(REQUEST_REVENUE_DATA);
+    qc->sendData((uint8_t *) &packet, packet.header.size());
+
+    // RevenueData is ~16 KB; receive into a heap buffer to avoid a large stack frame.
+    auto result = std::make_unique<RevenueData>();
+    try
+    {
+        qc->receivePacketWithHeaderAs<RevenueData>(*result);
+    }
+    catch (std::logic_error)
+    {
+        LOG("Error while getting revenue data from %s:%d\n", nodeIp, nodePort);
+        return;
+    }
+
+    // Compute the factors and revenue exactly as the node does at end of epoch (approximate mid-epoch).
+    auto txF = std::make_unique<unsigned long long[]>(NUMBER_OF_COMPUTORS);
+    auto oracleF = std::make_unique<unsigned long long[]>(NUMBER_OF_COMPUTORS);
+    auto dogeF = std::make_unique<unsigned long long[]>(NUMBER_OF_COMPUTORS);
+    revComputeFactor(result->txScore, /*noActivityValve=*/false, txF.get());
+    revComputeFactor(result->oracleScore, /*noActivityValve=*/true, oracleF.get());
+    revComputeFactor(result->dogeScore, /*noActivityValve=*/true, dogeF.get());
+
+    const unsigned int K = result->dogeK ? result->dogeK : 1;
+    const unsigned long long sPowKm1 = revIpow(REVENUE_SCALE, K - 1);
+    const unsigned long long divisor = REVENUE_SCALE * REVENUE_SCALE * REVENUE_SCALE;
+
+    FILE* f = fopen(outputFile, "w");
+    if (!f)
+    {
+        LOG("Failed to open %s for writing\n", outputFile);
+        return;
+    }
+    fprintf(f, "Tick,DogeK,IPC,ComputorIndex,txScore,oracleScore,dogeScore,txFactor,oracleFactor,dogeFactor,revenue,revenuePercent\n");
+
+    for (unsigned int i = 0; i < NUMBER_OF_COMPUTORS; i++)
+    {
+        const unsigned long long dogeRoot = revIroot(dogeF[i] * sPowKm1, K);
+        const unsigned long long revenue =
+            (unsigned long long)result->ipc * txF[i] * oracleF[i] * dogeRoot / divisor;
+        const double pct = result->ipc ? (100.0 * (double)revenue / (double)result->ipc) : 0.0;
+        fprintf(f, "%u,%u,%lld,%u,%llu,%llu,%llu,%llu,%llu,%llu,%llu,%.4f\n",
+                result->tick, result->dogeK, result->ipc,
+                i, result->txScore[i], result->oracleScore[i], result->dogeScore[i],
+                txF[i], oracleF[i], dogeF[i], revenue, pct);
+    }
+
+    fclose(f);
+}
+
 static void getTickTransactions(QCPtr qc, const uint32_t requestedTick, int nTx,
                                 std::vector<Transaction>& txs, // out
                                 std::vector<TxhashStruct>* hashes, // out
