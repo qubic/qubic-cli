@@ -6,6 +6,7 @@
 void printTickInfoFromNode(const char* nodeIp, int nodePort);
 void printSystemInfoFromNode(const char* nodeIp, int nodePort);
 CurrentSystemInfo getSystemInfoFromNode(QCPtr qc);
+void dumpRevenueDataFromNode(const char* nodeIp, int nodePort, const char* outputFile);
 uint32_t getTickNumberFromNode(QCPtr qc);
 bool checkTxOnTick(QCPtr qc, const char* txHash, uint32_t requestedTick, bool printTxReceipt = true);
 bool checkTxOnTick(const char* nodeIp, const int nodePort, const char* txHash, uint32_t requestedTick, bool printTxReceipt = true);

@@ -45,6 +45,11 @@ int run(int argc, char* argv[])
             sanityCheckNode(g_nodeIp, g_nodePort);
             printSystemInfoFromNode(g_nodeIp, g_nodePort);
             break;
+        case GET_REVENUE_DATA:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidString(g_dumpBinaryFileOutput);
+            dumpRevenueDataFromNode(g_nodeIp, g_nodePort, g_dumpBinaryFileOutput);
+            break;
         case GET_BALANCE:
             sanityCheckIdentity(g_requestedIdentity);
             sanityCheckNode(g_nodeIp, g_nodePort);

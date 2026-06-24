@@ -135,6 +135,8 @@ void print_help()
     printf("\t\tView list of active IPOs in this epoch. valid node ip/port are required.\n");
     printf("\t-getsysteminfo\n");
     printf("\t\tView Current System Status. Includes initial tick, random mining seed, epoch info.\n");
+    printf("\t-getrevenuedata <OUTPUT_CSV_FILE>\n");
+    printf("\t\tWrite current (approximate) per-computor revenue score components (tx, oracle, doge) as CSV to OUTPUT_CSV_FILE. Valid node ip/port required.\n");
 
     printf("\n[NODE COMMANDS]\n");
     printf("\t-getcurrenttick\n");
@@ -1055,6 +1057,16 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = GET_SYSTEM_INFO;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+
+        if (strcmp(argv[i], "-getrevenuedata") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = GET_REVENUE_DATA;
+            g_dumpBinaryFileOutput = argv[i+1];
+            i+=2;
             CHECK_OVER_PARAMETERS
             break;
         }
