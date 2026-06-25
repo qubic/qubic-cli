@@ -3,6 +3,10 @@
 #include <cstddef>
 #include <cstring>
 
+// Core network-message common_def.h MUST be included before defines.h so that core's
+// NetworkMessageType enum is parsed before defines.h's same-named macros are introduced.
+#include "network_messages/common_def.h"
+
 #include "defines.h"
 #include "utils.h"
 
@@ -416,26 +420,6 @@ struct CurrentSystemInfo
     static constexpr unsigned char type()
     {
         return RESPOND_SYSTEM_INFO;
-    }
-};
-#pragma pack(pop)
-
-// Mirrors core RespondRevenueData (src/network_messages/revenue_data.h). Wire format must match exactly.
-// Approximate, current-tick snapshot of the per-computor revenue score components; the consumer
-// computes the final revenue from these (rank-cap + k-th root DOGE softening + multiply).
-#pragma pack(push, 1)
-struct RevenueData
-{
-    unsigned int tick;          // current tick the scores correspond to
-    unsigned short dogeK;       // REVENUE_DOGE_K (DOGE softening exponent) active on the node
-    long long ipc;              // REVENUE_IPC, the per-computor revenue cap
-    unsigned long long txScore[NUMBER_OF_COMPUTORS];
-    unsigned long long oracleScore[NUMBER_OF_COMPUTORS];
-    unsigned long long dogeScore[NUMBER_OF_COMPUTORS];
-
-    static constexpr unsigned char type()
-    {
-        return RESPOND_REVENUE_DATA;
     }
 };
 #pragma pack(pop)

@@ -8,6 +8,9 @@
 #include <stdexcept>
 #include <cinttypes>
 
+// Core network-message header must precede defines.h to avoid macro/enum collisions.
+#include "network_messages/revenue_data.h"
+
 #include "defines.h"
 #include "structs.h"
 #include "connection.h"
@@ -241,14 +244,14 @@ void dumpRevenueDataFromNode(const char* nodeIp, int nodePort, const char* outpu
     } packet;
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
-    packet.header.setType(REQUEST_REVENUE_DATA);
+    packet.header.setType(RequestRevenueData::type());
     qc->sendData((uint8_t *) &packet, packet.header.size());
 
-    // RevenueData is ~16 KB; receive into a heap buffer to avoid a large stack frame.
-    auto result = std::make_unique<RevenueData>();
+    // RespondRevenueData is ~16 KB; receive into a heap buffer to avoid a large stack frame.
+    auto result = std::make_unique<RespondRevenueData>();
     try
     {
-        qc->receivePacketWithHeaderAs<RevenueData>(*result);
+        qc->receivePacketWithHeaderAs<RespondRevenueData>(*result);
     }
     catch (std::logic_error)
     {
@@ -1973,7 +1976,6 @@ static bool isEmptyEntity(const Entity& e){
 }
 
 void dumpSpectrumToCSV(const char* input, const char* output){
-    const size_t SPECTRUM_CAPACITY = 0x1000000ULL; // may be changed in the future
     Entity* spectrum = (Entity*)malloc(SPECTRUM_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
     if (fread(spectrum, 1, SPECTRUM_CAPACITY*sizeof(Entity), f) != SPECTRUM_CAPACITY*sizeof(Entity))
@@ -2010,7 +2012,6 @@ void dumpSpectrumToCSV(const char* input, const char* output){
 
 // only print ownership
 void dumpUniverseToCSV(const char* input, const char* output){
-    const size_t ASSETS_CAPACITY = 0x1000000ULL; // may be changed in the future
     AssetRecord* asset = (AssetRecord*)malloc(ASSETS_CAPACITY*sizeof(Entity));
     FILE* f = fopen(input, "rb");
     if (fread(asset, 1, ASSETS_CAPACITY*sizeof(AssetRecord), f) != ASSETS_CAPACITY * sizeof(AssetRecord))
