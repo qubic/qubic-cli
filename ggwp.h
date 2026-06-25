@@ -3,7 +3,12 @@
 #include "structs.h"
 
 // ─── Contract constants ────────────────────────────────────────
-#define WP_CONTRACT_INDEX 27
+#define WP_CONTRACT_INDEX 28
+
+// Invocation-reward fees required by the contract (QU)
+#define WP_STAKE_FEE    900   // Stake: invocationReward >= WOLFPACK_STAKE_FEE
+#define WP_FINALIZE_FEE 1000  // FinalizeUnstake: QX_TRANSFER_FEE(100) + STAKE_FEE(900)
+#define WP_CLAIM_FEE    100   // ClaimStakingRewards: QX release fee
 
 // Query function numbers
 #define WP_GET_STATUS           1
