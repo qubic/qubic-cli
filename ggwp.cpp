@@ -204,9 +204,9 @@ void wpStake(const char* nodeIp, int nodePort, const char* seed,
     input.numberOfShares = numberOfShares;
 
     LOG("Staking %llu WP tokens...\n", (unsigned long long)numberOfShares);
-    LOG("NOTE: Transfer management rights on QX first (newMgmtIdx: 27)\n");
+    LOG("NOTE: Transfer management rights on QX first (newMgmtIdx: 28)\n");
     makeContractTransaction(nodeIp, nodePort, seed, WP_CONTRACT_INDEX,
-        WP_PROC_STAKE, 0, sizeof(input), &input, scheduledTickOffset);
+        WP_PROC_STAKE, WP_STAKE_FEE, sizeof(input), &input, scheduledTickOffset);
 }
 
 void wpRequestUnstake(const char* nodeIp, int nodePort, const char* seed,
@@ -227,7 +227,7 @@ void wpFinalizeUnstake(const char* nodeIp, int nodePort, const char* seed,
     LOG("Finalizing unstake...\n");
     LOG("NOTE: 100 QU QX fee will be charged\n");
     makeContractTransaction(nodeIp, nodePort, seed, WP_CONTRACT_INDEX,
-        WP_PROC_FINALIZE_UNSTAKE, 0, 0, nullptr, scheduledTickOffset);
+        WP_PROC_FINALIZE_UNSTAKE, WP_FINALIZE_FEE, 0, nullptr, scheduledTickOffset);
 }
 
 void wpDepositStakingRewards(const char* nodeIp, int nodePort, const char* seed,
@@ -247,7 +247,7 @@ void wpClaimStakingRewards(const char* nodeIp, int nodePort, const char* seed,
     LOG("Claiming staking rewards...\n");
     LOG("NOTE: 100 QU QX fee will be charged\n");
     makeContractTransaction(nodeIp, nodePort, seed, WP_CONTRACT_INDEX,
-        WP_PROC_CLAIM_STAKING_REWARDS, 0, 0, nullptr, scheduledTickOffset);
+        WP_PROC_CLAIM_STAKING_REWARDS, WP_CLAIM_FEE, 0, nullptr, scheduledTickOffset);
 }
 
 
