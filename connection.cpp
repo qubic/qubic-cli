@@ -180,6 +180,9 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
 
 int QubicConnection::receiveAllDataOrThrowException(uint8_t* buffer, int sz)
 {
+    if (sz < 0 || sz > (int)sizeof(mBuffer)) {
+        throw std::logic_error("Invalid packet size.");
+    }
     int recvSz = receiveData(buffer, sz);
     if (recvSz != sz)
     {
