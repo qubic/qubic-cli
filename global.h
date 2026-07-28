@@ -305,3 +305,9 @@ char* g_escrow_issuer = nullptr;
 int64_t g_escrow_amount = 0;
 int64_t g_escrow_proposedOffset = 0;
 int64_t g_escrow_publicOffset = 0;
+// wolfpack
+char* g_wp_identity = nullptr;
+uint64_t g_wp_amount = 0;
+uint64_t g_wp_rank = 0;
+uint64_t g_wp_slot = 0;
+char* g_wp_address = nullptr;
