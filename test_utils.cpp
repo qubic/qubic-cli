@@ -163,7 +163,7 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
     packet.transaction.inputType = TESTEXA_QUERY_QPI_FUNCTIONS_TO_STATE;
     packet.transaction.inputSize = 0;
     // set header
-    packet.header.setSize(sizeof(packet.header) + sizeof(Transaction) + SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
@@ -179,7 +179,7 @@ std::vector<std::array<char, 128>> queryQpiFunctionsOutputToState(QCPtr qc, cons
         sign(subSeed, sourcePublicKey, digest, signature);
         memcpy(packet.sig, signature, SIGNATURE_SIZE);
 
-        qc->sendData((uint8_t*)&packet, packet.header.size());
+        qc->sendData(packet);
 
         KangarooTwelve((unsigned char*)&packet.transaction,
             sizeof(Transaction) + SIGNATURE_SIZE,
@@ -206,7 +206,7 @@ QpiFunctionsOutput getQpiFunctionsOutput(QCPtr qc, uint32_t requestedTick, unsig
     packet.tick = requestedTick;
     packet.rcf.inputType = inputType;
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     try
     {
         output = qc->receivePacketWithHeaderAs<QpiFunctionsOutput>();
@@ -310,7 +310,7 @@ static void queryAndMatchQpiFunctionsOutput(QCPtr qc, uint32_t firstQueriedTick,
         packetQT.header.setType(RequestedQuorumTick::type);
         packetQT.rqt.tick = requestedTick;
         memset(packetQT.rqt.voteFlags, 0, (676 + 7) / 8);
-        qc->sendData(reinterpret_cast<uint8_t*>(&packetQT), sizeof(packetQT));
+        qc->sendData(packetQT);
         auto votes = qc->getLatestVectorPacketAs<Tick>();
         LOG("\tComparing BEGIN_TICK qpi functions output and quorum tick votes\n");
         LOG("\t\tReceived %d quorum tick votes for comparison\n", votes.size());

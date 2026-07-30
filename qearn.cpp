@@ -110,7 +110,7 @@ void qearnLock(const char* nodeIp, int nodePort, const char* seed, long long loc
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + SIGNATURE_SIZE,
                    digest,
@@ -168,7 +168,7 @@ void qearnUnlock(const char* nodeIp, int nodePort, const char* seed, long long u
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(Unlock_input) + SIGNATURE_SIZE,
                    digest,
@@ -195,7 +195,7 @@ void qearnGetInfoPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoch
     packet.rcf.inputType = QEARN_GET_LOCK_INFO_PER_EPOCH;
     packet.rcf.contractIndex = QEARN_CONTRACT_INDEX; 
     packet.input.Epoch = epoch;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetLockInfoPerEpoch_output result;
     try
@@ -246,7 +246,7 @@ void qearnGetUserLockedInfo(const char* nodeIp, const int nodePort, char* Identi
     packet.input.epoch = epoch;
     memcpy(packet.input.publicKey, publicKey, 32);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetUserLockedInfo_output result;
     try
@@ -278,7 +278,7 @@ void qearnGetStateOfRound(const char* nodeIp, const int nodePort, uint32_t epoch
 
     packet.input.Epoch = epoch;
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetStateOfRound_output result;
     try
@@ -313,7 +313,7 @@ void qearnGetStatsPerEpoch(const char* nodeIp, const int nodePort, uint32_t epoc
 
     packet.input.epoch = epoch;
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetStatsPerEpoch_output result;
     try
@@ -354,7 +354,7 @@ void qearnGetBurnedAndBoostedStats(const char* nodeIp, const int nodePort)
 
     packet.input.t = 10;
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetBurnedAndBoostedStats_output result;
     try
@@ -400,7 +400,7 @@ void qearnGetBurnedAndBoostedStatsPerEpoch(const char* nodeIp, const int nodePor
 
     packet.input.epoch = epoch;
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetBurnedAndBoostedStatsPerEpoch_output result;
     try
@@ -450,7 +450,7 @@ void qearnGetUserLockedStatus(const char* nodeIp, const int nodePort, char* Iden
 
     memcpy(packet.input.publicKey, publicKey, 32);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetUserLockStatus_output result;
     try
@@ -502,7 +502,7 @@ void qearnGetEndedStatus(const char* nodeIp, const int nodePort, char* Identity)
 
     memcpy(packet.input.publicKey, publicKey, 32);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QEarnGetEndedStatus_output result;
     try

@@ -88,7 +88,7 @@ static int64_t getBalanceNumber(QCPtr& qc, const uint8_t* publicKey) {
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_ENTITY);
     memcpy(packet.req.publicKey, publicKey, 32);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     auto result = qc->receivePacketWithHeaderAs<RespondedEntity>();
     return result.entity.incomingAmount - result.entity.outgoingAmount;
 }
@@ -109,7 +109,7 @@ void quotteryGetBasicInfo(QCPtr& qc, qtryBasicInfo_output& result)
     packet.rcf.inputSize = 0;
     packet.rcf.inputType = QTRY_GET_BASIC;
     packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -281,7 +281,7 @@ void _quotteryGetEventInfo(QCPtr& qc, uint64_t eventId, getEventInfo_output& res
     packet.rcf.inputType = QTRY_GET_EVENT;
     packet.rcf.contractIndex = QUOTTERY_CONTRACT_ID;
     packet.input.eventId = eventId;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {

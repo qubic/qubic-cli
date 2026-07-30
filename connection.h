@@ -4,8 +4,20 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
+#include <array>
+#include <span>
 
 #define DEFAULT_TIMEOUT_MSEC 1000
+
+namespace
+{
+    // Custom concept to detect if something behaves like a pointer (raw or smart)
+    template <typename T>
+    concept IsPointerLike = std::is_pointer_v<T> || requires(T t)
+    {
+        t.operator->();
+    };
+}
 
 // Not thread safe
 class QubicConnection
@@ -20,13 +32,32 @@ public:
 
     // Receive at most sz bytes and write them to buffer. Return the actual number of received bytes.
     // Should only return less than sz bytes on timeout, closed connection, or error.
-	int receiveData(uint8_t* buffer, int sz);
+    // Throws std::logic_error if sz > buffer.size().
+	int receiveData(std::span<uint8_t> buffer, unsigned int sz);
 
-    // Receive sz bytes and write them to buffer. Throws std::logic_error if sz bytes cannot be read. 
-    int receiveAllDataOrThrowException(uint8_t* buffer, int sz);
+    // Receive an object of type T. Return the actual number of received bytes.
+    // Should only return less than sz bytes on timeout, closed connection, or error.
+    template <typename T>
+    int receiveData(T& obj)
+    {
+		return receiveData(std::span<uint8_t>(reinterpret_cast<uint8_t*>(&obj), sizeof(T)), sizeof(T));
+    }
 
-    // Send sz bytes contained in buffer.
-	int sendData(uint8_t* buffer, int sz);
+    // Receive sz bytes and write them to the buffer. Throws std::logic_error if sz bytes cannot be read.
+    int receiveAllDataOrThrowException(std::span<uint8_t> buffer, unsigned int sz);
+
+    // Send sz bytes contained in buffer. Throws std::logic_error if sz > buffer.size().
+	int sendData(std::span<const uint8_t> buffer, unsigned int sz);
+
+    // Send an object of type T. This template only accepts trivially copyable types that are no ranges or pointers.
+    template <typename T>
+    requires std::is_trivially_copyable_v<T>
+    && (!std::ranges::range<T>)
+    && (!IsPointerLike<T>)
+    int sendData(const T& obj)
+    {
+        return sendData(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(&obj), sizeof(T)), sizeof(T));
+    }
 
     //void receiveDataAll(std::vector<uint8_t>& buffer);
     void getHandshakeData(std::vector<uint8_t>& buffer);
@@ -48,7 +79,7 @@ private:
 	char mNodeIp[32];
 	int mNodePort;
 	int mSocket;
-    uint8_t mBuffer[0xFFFFFF];
+    std::array<uint8_t, 0xFFFFFF> mBuffer;
     std::vector<uint8_t> mHandshakeData; // storing handshake data after open a connection
 };
 

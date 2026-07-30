@@ -112,7 +112,7 @@ void qbondStake(const char* nodeIp, int nodePort, const char* seed, const int64_
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -180,7 +180,7 @@ void qbondTransfer(const char* nodeIp, int nodePort, const char* seed, const cha
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -267,7 +267,7 @@ void qbondOperateOrder(const char* nodeIp, int nodePort, const char* seed, const
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -332,7 +332,7 @@ void qbondBurn(const char* nodeIp, int nodePort, const char* seed, const int64_t
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -399,7 +399,7 @@ void qbondUpdateCFA(const char* nodeIp, int nodePort, const char* seed, const ch
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -424,16 +424,16 @@ void qbondGetFees(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
         GetFees_input in;
     } req;
-
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_FEES;
     req.rcf.inputSize = sizeof(req.in);
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(req.in));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetFees_output output;
     memset(&output, 0, sizeof(output));
@@ -463,16 +463,16 @@ void qbondGetEarnedFees(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
         GetFees_input in;
     } req;
-
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_EARNED_FEES;
     req.rcf.inputSize = sizeof(req.in);
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(req.in));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetEarnedFees_output output;
     memset(&output, 0, sizeof(output));
@@ -491,9 +491,6 @@ void qbondGetEarnedFees(const char* nodeIp, int nodePort)
 
 void qbondGetInfoPerEpoch(const char* nodeIp, int nodePort, const int64_t epoch)
 {
-    GetInfoPerEpoch_input input;
-    input.epoch = epoch;
-
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
         LOG("Failed to connect to node.\n");
@@ -503,19 +500,19 @@ void qbondGetInfoPerEpoch(const char* nodeIp, int nodePort, const int64_t epoch)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetInfoPerEpoch_input in;
+        GetInfoPerEpoch_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+
+    req.input.epoch = epoch;
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_INFO_PER_EPOCH;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetInfoPerEpoch_output output;
     memset(&output, 0, sizeof(output));
@@ -536,11 +533,6 @@ void qbondGetInfoPerEpoch(const char* nodeIp, int nodePort, const int64_t epoch)
 
 void qbondGetOrders(const char* nodeIp, int nodePort, const int64_t epoch, const int64_t asksOffset, const int64_t bidsOffset)
 {
-    GetOrders_input input;
-    input.epoch = epoch;
-    input.asksOffset = asksOffset;
-    input.bidsOffset = bidsOffset;
-
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
         LOG("Failed to connect to node.\n");
@@ -550,19 +542,22 @@ void qbondGetOrders(const char* nodeIp, int nodePort, const int64_t epoch, const
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetOrders_input in;
+        GetOrders_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+    
+    req.input.epoch = epoch;
+    req.input.asksOffset = asksOffset;
+    req.input.bidsOffset = bidsOffset;
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_ORDERS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetOrders_output output;
     memset(&output, 0, sizeof(output));
@@ -580,12 +575,6 @@ void qbondGetOrders(const char* nodeIp, int nodePort, const int64_t epoch, const
 
 void qbondGetUserOrders(const char* nodeIp, int nodePort, const char* owner, const int64_t asksOffset, const int64_t bidsOffset)
 {
-    GetUserOrders_input input;
-    memset(input.owner, 0, 32);
-    getPublicKeyFromIdentity(owner, input.owner);
-    input.asksOffset = asksOffset;
-    input.bidsOffset = bidsOffset;
-
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
         LOG("Failed to connect to node.\n");
@@ -595,19 +584,21 @@ void qbondGetUserOrders(const char* nodeIp, int nodePort, const char* owner, con
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetUserOrders_input in;
+        GetUserOrders_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+
+    getPublicKeyFromIdentity(owner, req.input.owner);
+    req.input.asksOffset = asksOffset;
+    req.input.bidsOffset = bidsOffset;
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_USER_ORDERS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetUserOrders_output output;
     memset(&output, 0, sizeof(output));
@@ -636,16 +627,16 @@ void qbondGetTable(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
         MBondsTable_input in;
     } req;
-
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_TABLE;
     req.rcf.inputSize = sizeof(req.in);
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(req.in));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MBondsTable_output output;
     memset(&output, 0, sizeof(output));
@@ -684,18 +675,18 @@ void qbondGetUserMBonds(const char* nodeIp, int nodePort, const char* owner)
         RequestContractFunction rcf;
         GetUserMBonds_input in;
     } req;
-
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_USER_MBONDS;
     req.rcf.inputSize = sizeof(req.in);
     memset(req.in.owner, 0, 32);
     getPublicKeyFromIdentity(owner, req.in.owner);
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(req.in));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetUserMBonds_output output;
     memset(&output, 0, sizeof(output));
@@ -733,16 +724,16 @@ void qbondGetCFA(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
         GetCFA_input in;
     } req;
-
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_CFA;
     req.rcf.inputSize = sizeof(req.in);
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(req.in));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetCFA_output output;
     memset(&output, 0, sizeof(output));

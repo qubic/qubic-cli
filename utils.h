@@ -112,7 +112,7 @@ static inline std::string base64_encode(const std::vector<uint8_t> &in) {
     std::string out;
     int val = 0, valb = -6;
 
-    for (uint8_t c : in) {
+    for (const uint8_t c : in) {
         val = (val << 8) + c;
         valb += 8;
         while (valb >= 0) {
@@ -129,7 +129,7 @@ static inline std::string base64_encode(const std::vector<uint8_t> &in) {
     return out;
 }
 
-static std::string base64_encode(uint8_t *data, size_t length) {
+static std::string base64_encode(const uint8_t *data, size_t length) {
     return base64_encode(std::vector<uint8_t>(data, data + length));
 }
 
@@ -160,7 +160,8 @@ static std::vector<uint8_t> base64_decode(const std::string &in) {
     return out;
 }
 
-static void printBytes(uint8_t* data, size_t length, std::string type = "base64") {\
+static void printBytes(const uint8_t* data, size_t length, std::string type = "base64")
+{
     printf("---------------- %s ----------------\n", type.c_str());
    if (type == "base64") {
        std::string encoded = base64_encode(data, length);

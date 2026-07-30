@@ -55,7 +55,7 @@ std::vector<RespondOwnedAssets> getOwnedAsset(const char * nodeIp, const int nod
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_OWNED_ASSETS);
     auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     return qc->getLatestVectorPacketAs<RespondOwnedAssets>();
 }
@@ -74,7 +74,7 @@ std::vector<RespondPossessedAssets> getPossessionAsset(const char * nodeIp, cons
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_POSSESSED_ASSETS);
     auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     return qc->getLatestVectorPacketAs<RespondPossessedAssets>();
 }
@@ -405,7 +405,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
     }
 
     auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     bool receivedResponses = false;
     if (withSiblings)

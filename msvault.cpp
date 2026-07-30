@@ -56,9 +56,15 @@ static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKe
     int attempts = 0;
     while (attempts < maxAttempts)
     {
-        MsVaultGetVaults_input input;
-        memset(&input, 0, sizeof(input));
-        memcpy(input.publicKey, publicKey, 32);
+        struct
+        {
+            RequestResponseHeader header;
+            RequestContractFunction rcf;
+            MsVaultGetVaults_input input;
+        } req;
+        memset(&req, 0, sizeof(req));
+
+        memcpy(req.input.publicKey, publicKey, 32);
 
         auto qc = make_qc(nodeIp, nodePort);
         if (!qc)
@@ -67,23 +73,15 @@ static bool queryVaults(const char* nodeIp, int nodePort, const uint8_t publicKe
             attempts++;
             continue;
         }
-
-        struct
-        {
-            RequestResponseHeader header;
-            RequestContractFunction rcf;
-            MsVaultGetVaults_input in;
-        } req;
-        memset(&req, 0, sizeof(req));
+  
         req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
         req.rcf.inputType = MSVAULT_GET_VAULTS;
-        req.rcf.inputSize = sizeof(input);
-        memcpy(&req.in, &input, sizeof(input));
-        req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+        req.rcf.inputSize = sizeof(req.input);
+        req.header.setSize(sizeof(req));
         req.header.randomizeDejavu();
         req.header.setType(RequestContractFunction::type());
 
-        qc->sendData((uint8_t*)&req, req.header.size());
+        qc->sendData(req);
 
         memset(&output, 0, sizeof(output));
         try
@@ -226,7 +224,7 @@ void msvaultRegisterVault(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, digest, 32);
     getTxHashFromDigest(digest, txHash);
 
@@ -288,7 +286,7 @@ void msvaultDeposit(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -361,7 +359,7 @@ void msvaultReleaseTo(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -425,7 +423,7 @@ void msvaultResetRelease(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -465,8 +463,14 @@ void msvaultGetVaults(const char* nodeIp, int nodePort, const char* identity)
 
 void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
 {
-    MsVaultGetReleaseStatus_input input;
-    input.vaultID = vaultID;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetReleaseStatus_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -474,21 +478,14 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetReleaseStatus_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_RELEASE_STATUS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetReleaseStatus_output output;
     memset(&output, 0, sizeof(output));
@@ -520,8 +517,14 @@ void msvaultGetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vaultID)
 
 void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
 {
-    MsVaultGetBalanceOf_input input;
-    input.vaultID = vaultID;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetBalanceOf_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -529,21 +532,14 @@ void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetBalanceOf_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_BALANCE_OF;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetBalanceOf_output output;
     memset(&output, 0, sizeof(output));
@@ -566,8 +562,14 @@ void msvaultGetBalanceOf(const char* nodeIp, int nodePort, uint64_t vaultID)
 
 void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
 {
-    MsVaultGetVaultName_input input;
-    input.vaultID = vaultID;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetVaultName_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -575,21 +577,14 @@ void msvaultGetVaultName(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetVaultName_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_VAULT_NAME;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetVaultName_output output;
     memset(&output, 0, sizeof(output));
@@ -626,14 +621,15 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_REVENUE_INFO;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetRevenueInfo_output output;
     memset(&output, 0, sizeof(output));
@@ -652,8 +648,12 @@ void msvaultGetRevenueInfo(const char* nodeIp, int nodePort)
 
 void msvaultGetFees(const char* nodeIp, int nodePort)
 {
-    MsVaultGetFees_input input;
-    memset(&input, 0, sizeof(input));
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetFees_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -661,21 +661,14 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetFees_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_FEES;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    if (qc->sendData((uint8_t*)&req, req.header.size()) != (int)req.header.size()) {
+    if (qc->sendData(req) != (int)req.header.size()) {
         LOG("Failed to send msVault getFees request.\n");
         return;
     }
@@ -700,9 +693,14 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
 
 void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
 {
-    MsVaultGetVaultOwners_input input;
-    memset(&input, 0, sizeof(input));
-    input.vaultID = vaultID;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultGetVaultOwners_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -710,22 +708,16 @@ void msvaultGetVaultOwners(const char* nodeIp, int nodePort, uint64_t vaultID)
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultGetVaultOwners_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_VAULT_OWNERS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
 
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetVaultOwners_output output;
     memset(&output, 0, sizeof(output));
@@ -816,7 +808,7 @@ void msvaultDepositAsset(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -885,7 +877,7 @@ void msvaultReleaseAssetTo(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -948,7 +940,7 @@ void msvaultResetAssetRelease(const char* nodeIp, int nodePort, const char* seed
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, digest, 32);
     getTxHashFromDigest(digest, txHash);
     LOG("MsVault resetAssetRelease transaction sent.\n");
@@ -966,27 +958,25 @@ void msvaultGetVaultAssetBalances(const char* nodeIp, int nodePort, uint64_t vau
         return;
     }
 
-    MsVaultGetVaultAssetBalances_input input;
-    input.vaultID = vaultID;
-
     struct
     {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        MsVaultGetVaultAssetBalances_input in;
+        MsVaultGetVaultAssetBalances_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_VAULT_ASSET_BALANCES;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
 
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetVaultAssetBalances_output output;
     memset(&output, 0, sizeof(output));
@@ -1024,28 +1014,27 @@ void msvaultGetAssetReleaseStatus(const char* nodeIp, int nodePort, uint64_t vau
     {
         LOG("Failed to connect to node.\n");
         return;
-    }
-    MsVaultGetAssetReleaseStatus_input input;
-    input.vaultID = vaultID;
+    }    
 
     struct
     {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        MsVaultGetAssetReleaseStatus_input in;
+        MsVaultGetAssetReleaseStatus_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+
+    req.input.vaultID = vaultID;
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_ASSET_RELEASE_STATUS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
 
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetAssetReleaseStatus_output output;
     memset(&output, 0, sizeof(output));
@@ -1101,30 +1090,28 @@ void msvaultGetManagedAssetBalance(const char* nodeIp, int nodePort, const char*
         LOG("Failed to connect to node.\n");
         return;
     }
-    MsVaultGetManagedAssetBalance_input input;
-    memset(&input, 0, sizeof(input));
-    getPublicKeyFromIdentity(issuer, input.asset.issuer);
-    input.asset.assetName = assetNameFromString(assetName);
-    getPublicKeyFromIdentity(owner, input.owner);
-
     struct
     {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        MsVaultGetManagedAssetBalance_input in;
+        MsVaultGetManagedAssetBalance_input input;
     } req;
-
     memset(&req, 0, sizeof(req));
+
+    getPublicKeyFromIdentity(issuer, req.input.asset.issuer);
+    req.input.asset.assetName = assetNameFromString(assetName);
+    getPublicKeyFromIdentity(owner, req.input.owner);
+
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_MANAGED_ASSET_BALANCE;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
 
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetManagedAssetBalance_output output;
     memset(&output, 0, sizeof(output));
@@ -1200,7 +1187,7 @@ void msvaultRevokeAssetManagementRights(const char* nodeIp, int nodePort, const 
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
@@ -1216,14 +1203,20 @@ void msvaultRevokeAssetManagementRights(const char* nodeIp, int nodePort, const 
 
 void msvaultIsShareHolder(const char* nodeIp, int nodePort, const char* identity)
 {
-    MsVaultIsShareHolder_input input;
-    memset(&input, 0, sizeof(input));
+    struct
+    {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        MsVaultIsShareHolder_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
     if (!checkSumIdentity(identity))
     {
         LOG("Invalid identity: %s\n", identity);
         return;
     }
-    getPublicKeyFromIdentity(identity, input.candidate);
+    getPublicKeyFromIdentity(identity, req.input.candidate);
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc)
@@ -1232,22 +1225,14 @@ void msvaultIsShareHolder(const char* nodeIp, int nodePort, const char* identity
         return;
     }
 
-    struct
-    {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        MsVaultIsShareHolder_input in;
-    } req;
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_IS_SHAREHOLDER;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultIsShareHolder_output output;
     memset(&output, 0, sizeof(output));
@@ -1321,7 +1306,7 @@ void msvaultVoteFeeChange(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                    digest,
@@ -1347,13 +1332,14 @@ void msvaultGetFeeVotes(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_FEE_VOTES;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetFeeVotes_output output;
     memset(&output, 0, sizeof(output));
@@ -1398,13 +1384,14 @@ void msvaultGetFeeVotesOwner(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_FEE_VOTES_OWNER;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetFeeVotesOwner_output output;
     memset(&output, 0, sizeof(output));
@@ -1446,13 +1433,14 @@ void msvaultGetFeeVotesScore(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_FEE_VOTES_SCORE;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetFeeVotesScore_output output;
     memset(&output, 0, sizeof(output));
@@ -1492,13 +1480,14 @@ void msvaultGetUniqueFeeVotes(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_UNIQUE_FEE_VOTES;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetUniqueFeeVotes_output output;
     memset(&output, 0, sizeof(output));
@@ -1543,13 +1532,14 @@ void msvaultGetUniqueFeeVotesRanking(const char* nodeIp, int nodePort)
         RequestContractFunction rcf;
     } req;
     memset(&req, 0, sizeof(req));
+
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_UNIQUE_FEE_VOTES_RANKING;
     req.rcf.inputSize = 0;
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf));
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     MsVaultGetUniqueFeeVotesRanking_output output;
     memset(&output, 0, sizeof(output));

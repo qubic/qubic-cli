@@ -151,8 +151,11 @@ QubicConnection::~QubicConnection()
 }
 
 // Receive the requested number of bytes (sz) or less if sz bytes have not been received after timeout. Return number of received bytes.
-int QubicConnection::receiveData(uint8_t* buffer, int sz)
+int QubicConnection::receiveData(std::span<uint8_t> buffer, unsigned int sz)
 {
+	if (sz > buffer.size())
+		throw std::logic_error("Buffer size is smaller than requested size.");
+
     int totalRecvSz = 0;
     while (sz)
     {
@@ -166,7 +169,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
         //   "For connection-oriented sockets (type SOCK_STREAM for example), calling recv will
         //   return as much data as is currently available up to the size of the buffer specified. [...]
         //   If no incoming data is available at the socket, the recv call blocks and waits for data to arrive [...]"
-        int recvSz = recv(mSocket, (char*)buffer + totalRecvSz, sz, 0);
+        int recvSz = recv(mSocket, (char*)buffer.data() + totalRecvSz, sz, 0);
         if (recvSz <= 0)
         {
             // timeout, closed connection, or other error
@@ -178,7 +181,7 @@ int QubicConnection::receiveData(uint8_t* buffer, int sz)
     return totalRecvSz;
 }
 
-int QubicConnection::receiveAllDataOrThrowException(uint8_t* buffer, int sz)
+int QubicConnection::receiveAllDataOrThrowException(std::span<uint8_t> buffer, unsigned int sz)
 {
     int recvSz = receiveData(buffer, sz);
     if (recvSz != sz)
@@ -213,7 +216,7 @@ void QubicConnection::receivePacketWithHeaderAs(T& result)
     int recvByte = -1, packetSize = -1, remainingSize = -1;
     while (true)
     {
-        recvByte = receiveData((uint8_t*)&header, sizeof(RequestResponseHeader));
+        recvByte = receiveData(header);
         if (recvByte != sizeof(RequestResponseHeader))
         {
             throw std::logic_error("No connection.");
@@ -239,9 +242,9 @@ void QubicConnection::receivePacketWithHeaderAs(T& result)
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
-        memset(mBuffer, 0, sizeof(T));
+		mBuffer.fill(0);
         receiveAllDataOrThrowException(mBuffer, remainingSize);
-        result = *((T*)mBuffer);
+        result = *((T*)mBuffer.data());
     }
 }
 
@@ -257,7 +260,7 @@ T QubicConnection::receivePacketAs()
     {
         throw std::logic_error("Unexpected data size.");
     }
-    result = *((T*)mBuffer);
+    result = *((T*)mBuffer.data());
     return result;
 }
 
@@ -284,28 +287,36 @@ std::vector<T> QubicConnection::getLatestVectorPacketAs()
     return results;
 }
 
-int QubicConnection::sendData(uint8_t* buffer, int sz)
+int QubicConnection::sendData(std::span<const uint8_t> buffer, unsigned int sz)
 {
+	if (sz > buffer.size())
+	{
+		throw std::logic_error("Buffer size is smaller than requested send size.");
+	}
     // also skip printing packets of size 8 (typically used during the preparation step, not the final stage)
-    if (!std::string(g_printToScreen).empty() && sz != 8) {
+    if (!std::string(g_printToScreen).empty() && sz != 8)
+    {
         std::string printType = g_printToScreen;
         // Do not print the first 8 bytes (header)
-        printBytes(buffer + 8, sz - 8, printType);
+        printBytes(buffer.data() + 8, sz - 8, printType);
 
         // this operation may break the normal flow, we need to skip printing error messages to console
         if (!std::freopen("/dev/null", "w", stdout)) {}
         if (!std::freopen("/dev/null", "w", stderr)) {}
         return 0;
-    } else {
+    }
+    else
+    {
         int size = sz;
         int numberOfBytes;
-        while (size)
+        int offset = 0;
+        while (size > 0)
         {
-            if ((numberOfBytes = send(mSocket, (char*)buffer, size, 0)) <= 0)
+            if ((numberOfBytes = send(mSocket, (const char*)buffer.data() + offset, size, 0)) <= 0)
             {
                 return 0;
             }
-            buffer += numberOfBytes;
+            offset += numberOfBytes;
             size -= numberOfBytes;
         }
         return sz - size;
