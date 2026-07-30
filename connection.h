@@ -37,7 +37,11 @@ public:
 
     // Receive an object of type T. Return the actual number of received bytes.
     // Should only return less than sz bytes on timeout, closed connection, or error.
+    // This template only accepts trivially copyable types that are no ranges or pointers.
     template <typename T>
+    requires std::is_trivially_copyable_v<T>
+    && (!std::ranges::range<T>)
+    && (!IsPointerLike<T>)
     int receiveData(T& obj)
     {
 		return receiveData(std::span<uint8_t>(reinterpret_cast<uint8_t*>(&obj), sizeof(T)), sizeof(T));
