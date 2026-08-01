@@ -13,6 +13,9 @@
 #include <string>
 #include <stdexcept>
 
+// core submodule
+#include "network_messages/revenue_data.h"
+
 #include "connection.h"
 #include "logger.h"
 #include "structs.h"
@@ -422,4 +425,4 @@ template GetCurrentPollId_output QubicConnection::receivePacketWithHeaderAs<GetC
 template GetPollInfo_output QubicConnection::receivePacketWithHeaderAs<GetPollInfo_output>();
 
 // REVENUE
-template void QubicConnection::receivePacketWithHeaderAs<RevenueData>(RevenueData&);
+template void QubicConnection::receivePacketWithHeaderAs<RespondRevenueData>(RespondRevenueData&);
