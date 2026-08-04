@@ -76,7 +76,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
     packet.req.reqType = reqType;
     packet.req.reqTickOrId = reqTickOrId;
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     std::vector<int64_t> queryIds;
 
@@ -99,7 +99,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
             {
                 payloadBuffer.resize(payloadSize);
             }
-            recvByte = qc->receiveAllDataOrThrowException(payloadBuffer.data(), payloadSize);
+            recvByte = qc->receiveAllDataOrThrowException(payloadBuffer, payloadSize);
             auto resp = (RespondOracleData*)(payloadBuffer.data());
             if (resp->resType == RespondOracleData::respondQueryIds)
             {
@@ -161,7 +161,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
     memset(&request.req, 0, sizeof(request.req));
     request.req.reqType = RequestOracleData::requestQueryAndResponse;
     request.req.reqTickOrId = queryId;
-    qc->sendData((uint8_t*)&request, request.header.size());
+    qc->sendData(request);
 
     // reset output
     memset(&metadata, 0, sizeof(RespondOracleDataQueryMetadata));
@@ -184,7 +184,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
         {
             payloadBuffer.resize(responsePayloadSize);
         }
-        qc->receiveAllDataOrThrowException(payloadBuffer.data(), responsePayloadSize);
+        qc->receiveAllDataOrThrowException(payloadBuffer, responsePayloadSize);
 
         // only process if dejavu matches (response is to current request, skip otherwise)
         if (responseHeader->dejavu() == request.header.dejavu())
@@ -389,7 +389,7 @@ static void receiveQueryStats(QCPtr& qc, RespondOracleDataQueryStatistics& stats
     packet.header.setType(RequestOracleData::type());
     memset(&packet.req, 0, sizeof(packet.req));
     packet.req.reqType = RequestOracleData::requestQueryStatistics;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     constexpr unsigned long long responseSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + sizeof(RespondOracleDataQueryStatistics);
     uint8_t buffer[responseSize];
@@ -453,7 +453,7 @@ static void receiveOracleRevenuePoints(QCPtr& qc, std::vector<uint64_t>& revenue
     packet.header.setType(RequestOracleData::type());
     memset(&packet.req, 0, sizeof(packet.req));
     packet.req.reqType = RequestOracleData::requestOracleRevenuePoints;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     constexpr unsigned long long responseSize = sizeof(RequestResponseHeader) + sizeof(RespondOracleData) + 8 * 676;
     uint8_t buffer[responseSize];
@@ -713,7 +713,7 @@ static void receiveSubscriptionInformation(QCPtr qc, int64_t subscriptionId, Res
     memset(&request.req, 0, sizeof(request.req));
     request.req.reqType = RequestOracleData::requestSubscription;
     request.req.reqTickOrId = subscriptionId;
-    qc->sendData((uint8_t*)&request, request.header.size());
+    qc->sendData(request);
 
     // reset output
     memset(&subscription, 0, sizeof(subscription));
@@ -735,7 +735,7 @@ static void receiveSubscriptionInformation(QCPtr qc, int64_t subscriptionId, Res
         {
             payloadBuffer.resize(responsePayloadSize);
         }
-        qc->receiveAllDataOrThrowException(payloadBuffer.data(), responsePayloadSize);
+        qc->receiveAllDataOrThrowException(payloadBuffer, responsePayloadSize);
 
         // only process if dejavu matches (response is to current request, skip otherwise)
         if (responseHeader->dejavu() == request.header.dejavu())
@@ -837,7 +837,7 @@ static std::vector<int32_t> receiveSubscriptionIds(QCPtr qc, unsigned int reqTyp
     packet.req.reqType = reqType;
     packet.req.reqTickOrId = reqTickOrId;
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     std::vector<int32_t> subscriptionIds;
 
@@ -860,7 +860,7 @@ static std::vector<int32_t> receiveSubscriptionIds(QCPtr qc, unsigned int reqTyp
             {
                 payloadBuffer.resize(payloadSize);
             }
-            recvByte = qc->receiveAllDataOrThrowException(payloadBuffer.data(), payloadSize);
+            recvByte = qc->receiveAllDataOrThrowException(payloadBuffer, payloadSize);
             auto resp = (RespondOracleData*)(payloadBuffer.data());
             if (resp->resType == RespondOracleData::respondSubscriptionIds)
             {

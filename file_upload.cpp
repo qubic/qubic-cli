@@ -59,7 +59,7 @@ bool uploadHeader(QCPtr& qc, const char* seed, size_t fileSize, int numberOfFrag
     payload.header.setType(BROADCAST_TRANSACTION);
 
     signData(seed, (uint8_t*)&payload.fh, sizeof(payload.fh) - SIGNATURE_SIZE, payload.fh.signature);
-    qc->sendData((uint8_t *) &payload, payload.header.size());
+    qc->sendData(payload);
 
     KangarooTwelve((uint8_t*)&payload.fh, sizeof(payload.fh), txHash, 32);
     LOG("Waiting for tx to be included at tick %d\n", txTick);
@@ -125,7 +125,7 @@ bool uploadFragment(QCPtr& qc, const char* seed, const uint64_t fragmentId,
     payload.header.setType(BROADCAST_TRANSACTION);
     signData(seed, (uint8_t*)&payload.fftp, sizeof(FileFragmentTransactionPrefix) + fragmentSize, ptr_signature);
 
-    qc->sendData((uint8_t *) &payload, payload.header.size());
+    qc->sendData(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(&payload), payloadSize), static_cast<unsigned int>(payloadSize));
     KangarooTwelve((uint8_t*)&payload.fftp, uint16_t(sizeof(FileFragmentTransactionPrefix) + fragmentSize + SIGNATURE_SIZE), outTxHash, 32);
     LOG("Waiting for tx to be included at tick %d\n", txTick);
     currentTick = getTickNumberFromNode(qc);

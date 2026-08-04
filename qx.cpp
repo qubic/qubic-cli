@@ -47,7 +47,7 @@ void getQxFees(const char* nodeIp, const int nodePort, QxFees_output& result)
     packet.rcf.inputSize = 0;
     packet.rcf.inputType = QX_GET_FEE;
     packet.rcf.contractIndex = QX_CONTRACT_INDEX;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -129,11 +129,11 @@ void qxIssueAsset(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(IssueAsset_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(IssueAsset_input)+ SIGNATURE_SIZE,
                    digest,
@@ -206,10 +206,10 @@ void qxTransferAsset(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(TransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE,
                    digest,
@@ -294,10 +294,10 @@ void qxOrderAction(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(qxOrderAction_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(qxOrderAction_input)+ SIGNATURE_SIZE,
                    digest,
@@ -425,7 +425,7 @@ void qxGetAssetOrder(const char* nodeIp, int nodePort,
     memcpy(packet.qgao.issuer, issuer, 32);
     memcpy(&packet.qgao.assetName, assetNameU1, 8);
     packet.qgao.offset = offset;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -502,7 +502,7 @@ void qxGetEntityOrder(const char* nodeIp, int nodePort,
     packet.rcf.contractIndex = QX_CONTRACT_INDEX;
     memcpy(packet.qgeo.entity, entity, 32);
     packet.qgeo.offset = offset;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {

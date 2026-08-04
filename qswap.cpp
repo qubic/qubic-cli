@@ -54,7 +54,7 @@ void getQswapFees(const char* nodeIp, const int nodePort, QswapFees_output& resu
     packet.rcf.inputSize = 0;
     packet.rcf.inputType = QSWAP_GET_FEE;
     packet.rcf.contractIndex = QSWAP_CONTRACT_INDEX;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -139,11 +139,11 @@ void qswapIssueAsset(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(QswapIssueAsset_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(QswapIssueAsset_input)+ SIGNATURE_SIZE,
                    digest,
@@ -216,10 +216,10 @@ void qswapTransferAsset(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(QswapTransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(QswapTransferAssetOwnershipAndPossession_input)+ SIGNATURE_SIZE,
                    digest,
@@ -315,11 +315,11 @@ void qswapCreatePool(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(CreatePool_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(CreatePool_input)+ SIGNATURE_SIZE,
                    digest,
@@ -406,11 +406,11 @@ void qswapAddLiquidity(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(AddLiquidity_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(AddLiquidity_input)+ SIGNATURE_SIZE,
                    digest,
@@ -495,11 +495,11 @@ void qswapRemoveLiquidity(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(RemoveLiquidity_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(RemoveLiquidity_input)+ SIGNATURE_SIZE,
                    digest,
@@ -592,10 +592,10 @@ void qswapSwapQuForAssetAction(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(SwapQuForAssetAction_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(SwapQuForAssetAction_input)+ SIGNATURE_SIZE,
                    digest,
@@ -729,10 +729,10 @@ void qswapSwapAssetForQuAction(const char* nodeIp, int nodePort,
     sign(subSeed, sourcePublicKey, digest, signature);
     memcpy(packet.sig, signature, SIGNATURE_SIZE);
     // set header
-    packet.header.setSize(sizeof(packet.header)+sizeof(Transaction)+sizeof(SwapAssetForQuAction_input)+ SIGNATURE_SIZE);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(Transaction)+sizeof(SwapAssetForQuAction_input)+ SIGNATURE_SIZE,
                    digest,
@@ -796,7 +796,7 @@ void qswapGetPoolBasicState(const char* nodeIp, int nodePort,
     memcpy(packet.gpbs.issuer, issuer, 32);
     memcpy(&packet.gpbs.assetName, assetNameU1, 8);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -843,7 +843,7 @@ void qswapGetLiquidityOf(const char* nodeIp, int nodePort,
     memcpy(&packet.glo.assetName, assetNameU1, 8);
     memcpy(&packet.glo.account, account, 32);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -884,7 +884,7 @@ void qswapQuoteAction(const char* nodeIp, int nodePort,
     memcpy(packet.q.issuer, issuer, 32);
     memcpy(&packet.q.assetName, assetNameU1, 8);
     packet.q.amount = amount;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {

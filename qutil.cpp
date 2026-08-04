@@ -217,7 +217,7 @@ long long getSendToManyV1Fee(QCPtr qc)
     packet.rcf.inputSize = 0;
     packet.rcf.inputType = qutilFunctionId::GetSendToManyV1Fee;
     packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     GetSendToManyV1Fee_output fee;
     memset(&fee, 0, sizeof(GetSendToManyV1Fee_output));
@@ -352,7 +352,7 @@ void qutilSendToManyV1(const char* nodeIp, int nodePort, const char* seed, const
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(SendToManyV1_input) + SIGNATURE_SIZE,
                    digest,
@@ -438,7 +438,7 @@ void qutilTransferSharesToManyV1(const char* nodeIp, int nodePort, const char* s
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(TransferSharesToManyV1_input) + SIGNATURE_SIZE,
                    digest,
@@ -554,7 +554,7 @@ void qutilBurnQubic(const char* nodeIp, int nodePort, const char* seed, long lon
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(BurnQubic_input) + SIGNATURE_SIZE,
                    digest,
@@ -641,7 +641,7 @@ void qutilSendToManyBenchmark(const char* nodeIp, int nodePort, const char* seed
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
 
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
         sizeof(packet.transaction) + sizeof(SendToManyBenchmark_input) + SIGNATURE_SIZE,
         digest,
@@ -821,7 +821,7 @@ void qutilCreatePoll(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
         sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
         digest,
@@ -892,7 +892,7 @@ void qutilVote(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                     sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE,
                     digest,
@@ -928,7 +928,7 @@ void qutilGetCurrentResult(const char* nodeIp, int nodePort, uint64_t poll_id)
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetCurrentResult_output output;
     try
@@ -987,7 +987,7 @@ void qutilGetPollsByCreator(const char* nodeIp, int nodePort, const char* creato
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     GetPollsByCreator_output output;
     try
@@ -1030,7 +1030,7 @@ void qutilGetCurrentPollId(const char* nodeIp, int nodePort) {
     packet.rcf.inputSize = 0;
     packet.rcf.inputType = qutilFunctionId::GetCurrentPollId;
     packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     GetCurrentPollId_output output;
     try {
@@ -1073,7 +1073,7 @@ void qutilGetPollInfo(const char* nodeIp, int nodePort, uint64_t poll_id)
     packet.rcf.inputType = qutilFunctionId::GetPollInfo;
     packet.rcf.contractIndex = QUTIL_CONTRACT_ID;
     memcpy(&packet.inputData, &input, sizeof(input));
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -1171,7 +1171,7 @@ void qutilCancelPoll(const char* nodeIp, int nodePort, const char* seed, uint64_
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction,
                     sizeof(packet.transaction) + sizeof(CancelPoll_input) + SIGNATURE_SIZE,
                     digest,

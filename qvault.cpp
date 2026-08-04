@@ -181,7 +181,7 @@ void submitAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint3
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitAuthAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -240,7 +240,7 @@ void changeAuthAddress(const char* nodeIp, int nodePort, const char* seed, uint3
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(changeAuthAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -301,7 +301,7 @@ void submitFees(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitFees_input) + SIGNATURE_SIZE,
                    digest,
@@ -362,7 +362,7 @@ void changeFees(const char* nodeIp, int nodePort, const char* seed, uint32_t sch
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(changeFees_input) + SIGNATURE_SIZE,
                    digest,
@@ -424,7 +424,7 @@ void submitReinvestingAddress(const char* nodeIp, int nodePort, const char* seed
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitReinvestingAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -486,7 +486,7 @@ void changeReinvestingAddress(const char* nodeIp, int nodePort, const char* seed
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(changeReinvestingAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -548,7 +548,7 @@ void submitAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uin
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitAdminAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -610,7 +610,7 @@ void changeAdminAddress(const char* nodeIp, int nodePort, const char* seed,  uin
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(changeAdminAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -639,7 +639,7 @@ void getData(const char* nodeIp, int nodePort)
     packet.rcf.contractIndex = QVAULT_CONTRACT_INDEX;
     packet.input.t = 10;
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     QVaultGetData_output result;
     try
@@ -767,7 +767,7 @@ void submitBannedAddress(const char* nodeIp, int nodePort, const char* seed,  ui
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitBannedAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -829,7 +829,7 @@ void saveBannedAddress(const char* nodeIp, int nodePort, const char* seed,  uint
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(saveBannedAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -891,7 +891,7 @@ void submitUnbannedannedAddress(const char* nodeIp, int nodePort, const char* se
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(submitUnbannedAddress_input) + SIGNATURE_SIZE,
                    digest,
@@ -953,7 +953,7 @@ void saveUnbannedAddress(const char* nodeIp, int nodePort, const char* seed,  ui
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(unblockBannedAddress_input) + SIGNATURE_SIZE,
                    digest,

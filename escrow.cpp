@@ -88,7 +88,7 @@ void escrowCreateDeal(const char* nodeIp, int nodePort, const char* seed,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -207,17 +207,23 @@ int64_t escrowGetSharesFeesForDeal(const char* nodeIp, int nodePort, const char*
 
 EscrowGetDeals_output escrowGetDealsOutput(const char* nodeIp, int nodePort, const char* seed, const int64_t proposedOffset, const int64_t publicOffset)
 {
-    EscrowGetDeals_input input;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        EscrowGetDeals_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
     uint8_t subseed[32] = { 0 };
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
     getSubseedFromSeed((uint8_t*) seed, subseed);
     getPrivateKeyFromSubSeed(subseed, privateKey);
     getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
-    memset(input.owner, 0, 32);
-    memcpy(input.owner, sourcePublicKey, 32); 
-    input.proposedOffset = proposedOffset;
-    input.publicOffset = publicOffset;
+    memset(req.input.owner, 0, 32);
+    memcpy(req.input.owner, sourcePublicKey, 32); 
+    req.input.proposedOffset = proposedOffset;
+    req.input.publicOffset = publicOffset;
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -225,22 +231,14 @@ EscrowGetDeals_output escrowGetDealsOutput(const char* nodeIp, int nodePort, con
         return EscrowGetDeals_output{};
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        EscrowGetDeals_input in;
-    } req;
-
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = ESCROW_CONTRACT_INDEX;
     req.rcf.inputType = ESCROW_GET_DEALS;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     EscrowGetDeals_output output;
     memset(&output, 0, sizeof(output));
@@ -332,7 +330,7 @@ void escrowOperateDeal(const char* nodeIp, int nodePort, const char* seed, const
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -402,7 +400,7 @@ void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, co
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t*)&packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((uint8_t*)&packet.transaction, 
                    sizeof(packet.transaction) + sizeof(input) + SIGNATURE_SIZE, 
                    digest,
@@ -416,7 +414,13 @@ void escrowTransferRights(const char* nodeIp, int nodePort, const char* seed, co
 
 void escrowGetFreeAsset(const char* nodeIp, int nodePort, const char* seed, const char* assetName, const char* issuer)
 {
-    EscrowGetFreeAsset_input input;
+    struct {
+        RequestResponseHeader header;
+        RequestContractFunction rcf;
+        EscrowGetFreeAsset_input input;
+    } req;
+    memset(&req, 0, sizeof(req));
+
     uint8_t subseed[32] = { 0 };
     uint8_t privateKey[32] = { 0 };
     uint8_t sourcePublicKey[32] = { 0 };
@@ -426,12 +430,12 @@ void escrowGetFreeAsset(const char* nodeIp, int nodePort, const char* seed, cons
     getPublicKeyFromPrivateKey(privateKey, pk);
     getPublicKeyFromIdentity(issuer, sourcePublicKey);
 
-    memset(input.owner, 0, 32);
-    memcpy(input.owner, pk, 32);
-    memset(input.asset.issuer, 0, 32);
-    memcpy(input.asset.issuer, sourcePublicKey, 32);
-    memset(&input.asset.assetName, 0, 8);
-    memcpy(&input.asset.assetName, assetName, std::min(strlen(assetName), (size_t) 7));
+    memset(req.input.owner, 0, 32);
+    memcpy(req.input.owner, pk, 32);
+    memset(req.input.asset.issuer, 0, 32);
+    memcpy(req.input.asset.issuer, sourcePublicKey, 32);
+    memset(&req.input.asset.assetName, 0, 8);
+    memcpy(&req.input.asset.assetName, assetName, std::min(strlen(assetName), (size_t) 7));
 
     auto qc = make_qc(nodeIp, nodePort);
     if (!qc) {
@@ -439,22 +443,14 @@ void escrowGetFreeAsset(const char* nodeIp, int nodePort, const char* seed, cons
         return;
     }
 
-    struct {
-        RequestResponseHeader header;
-        RequestContractFunction rcf;
-        EscrowGetFreeAsset_input in;
-    } req;
-
-    memset(&req, 0, sizeof(req));
     req.rcf.contractIndex = ESCROW_CONTRACT_INDEX;
     req.rcf.inputType = ESCROW_GET_FREE_ASSET;
-    req.rcf.inputSize = sizeof(input);
-    memcpy(&req.in, &input, sizeof(input));
-    req.header.setSize(sizeof(req.header) + sizeof(req.rcf) + sizeof(input));
+    req.rcf.inputSize = sizeof(req.input);
+    req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
 
-    qc->sendData((uint8_t*)&req, req.header.size());
+    qc->sendData(req);
 
     EscrowGetFreeAsset_output output;
     memset(&output, 0, sizeof(output));

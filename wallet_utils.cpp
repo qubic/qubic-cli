@@ -46,11 +46,13 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
         RequestResponseHeader header;
         RequestedEntity req;
     } packet;
+    memset(&packet, 0, sizeof(packet));
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_ENTITY);
     memcpy(packet.req.publicKey, publicKey, 32);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     int recvByte = qc->receiveData(tmp, 1024);
     while (recvByte > 0)
     {
@@ -59,7 +61,7 @@ RespondedEntity getBalance(const char* nodeIp, const int nodePort, const uint8_t
         recvByte = qc->receiveData(tmp, 1024);
     }
     uint8_t* data = buffer.data();
-    recvByte = int(buffer.size());
+    recvByte = static_cast<int>(buffer.size());
     int ptr = 0;
     while (ptr < recvByte)
     {
@@ -215,10 +217,10 @@ void makeStandardTransactionInTick(const char* nodeIp, int nodePort, const char*
                    32);
     sign(subseed, sourcePublicKey, digest, signature);
     memcpy(packet.signature, signature, 64);
-    packet.header.setSize(sizeof(packet.header)+sizeof(packet.transaction) + 64);
+    packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + 64,
@@ -312,7 +314,7 @@ void makeCustomTransaction(const char* nodeIp, int nodePort,
     temp_packet.header.zeroDejavu();
     temp_packet.header.setType(BROADCAST_TRANSACTION);
     memcpy(packet.data(), &temp_packet.header, sizeof(RequestResponseHeader));
-    qc->sendData(packet.data(), uint32_t(packet.size()));
+    qc->sendData(packet, static_cast<unsigned int>(packet.size()));
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
                    sizeof(Transaction) + extraDataSize + 64,
@@ -379,7 +381,7 @@ void makeContractTransaction(const char* nodeIp, int nodePort,
         32);
     sign(subseed, sourcePublicKey, digest, packetSignature);
 
-    qc->sendData(packet.data(), int(packet.size()));
+    qc->sendData(packet, static_cast<unsigned int>(packet.size()));
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize + 64,
@@ -418,11 +420,11 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     packetRcf.contractIndex = contractIndex;
     if (inputSize)
         memcpy(packetInputData, inputPtr, inputSize);
-    qc->sendData(&packet[0], packetHeader.size());
+    qc->sendData(packet, static_cast<unsigned int>(packet.size()));
 
     const size_t fullPacketSize = sizeof(RequestResponseHeader) + outputSize;
     std::vector<uint8_t> buffer(fullPacketSize);
-    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
+    int recvByte = qc->receiveAllDataOrThrowException(buffer, static_cast<unsigned int>(buffer.size()));
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() && 
@@ -436,7 +438,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
             LOG("WARNING: Response of runContractFunction() is %llu bytes longer than expected. Dropping unexpected part that cannot be interpreted.\n", (unsigned long long)dropSize);
             if (dropSize > buffer.size())
                 buffer.resize(dropSize);
-            qc->receiveAllDataOrThrowException(buffer.data(), int(dropSize));
+            qc->receiveAllDataOrThrowException(buffer, static_cast<unsigned int>(dropSize));
         }
 
         return true;
@@ -475,7 +477,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
     packetRcf.contractIndex = contractIndex;
     if (inputSize)
         memcpy(packetInputData, inputData, inputSize);
-    qc->sendData(&packet[0], packetHeader.size());
+    qc->sendData(packet, static_cast<unsigned int>(packet.size()));
 
     ContractObject outputContractObject = buildContractObject(formatOutput, true);
     auto outputSize = outputContractObject.getSize();
@@ -488,7 +490,7 @@ bool runContractFunction(const char* nodeIp, int nodePort,
         }
     }
     std::vector<uint8_t> buffer(sizeof(RequestResponseHeader) + outputSize);
-    int recvByte = qc->receiveAllDataOrThrowException(buffer.data(), int(buffer.size()));
+    int recvByte = qc->receiveAllDataOrThrowException(buffer, static_cast<unsigned int>(buffer.size()));
 
     auto header = (RequestResponseHeader*)buffer.data();
     if (header->type() == RespondContractFunction::type() &&
@@ -564,7 +566,7 @@ void invokeContractProcedure(const char* nodeIp, int nodePort,
         32);
     sign(subseed, sourcePublicKey, digest, packetSignature);
 
-    qc->sendData(packet.data(), int(packet.size()));
+    qc->sendData(packet, static_cast<unsigned int>(packet.size()));
 
     KangarooTwelve(packet.data() + sizeof(RequestResponseHeader),
         sizeof(Transaction) + extraDataSize + 64,
@@ -631,7 +633,7 @@ void makeIPOBid(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(packet.ipo) + SIGNATURE_SIZE,
                    digest,
@@ -655,7 +657,7 @@ RespondContractIPO _getIPOStatus(const char* nodeIp, int nodePort, uint32_t cont
     packet.header.randomizeDejavu();
     packet.header.setType(REQUEST_CONTRACT_IPO);
     packet.req.contractIndex = contractIndex;
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     try
     {
@@ -676,7 +678,7 @@ std::vector<RespondActiveIPO> _getActiveIPOs(const char* nodeIp, int nodePort)
     header.setSize(sizeof(header));
     header.randomizeDejavu();
     header.setType(RequestActiveIPOs::type());
-    qc->sendData((uint8_t*)&header, header.size());
+    qc->sendData(header);
 
     return qc->getLatestVectorPacketAs<RespondActiveIPO>();
 }

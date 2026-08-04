@@ -310,7 +310,7 @@ void registerInTier(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(registerInTier_input) + SIGNATURE_SIZE,
                    digest,
@@ -371,7 +371,7 @@ void logoutFromTier(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(logoutFromTier_input) + SIGNATURE_SIZE,
                    digest,
@@ -456,7 +456,7 @@ void createProject(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(createProject_input) + SIGNATURE_SIZE,
                    digest,
@@ -522,7 +522,7 @@ void voteInProject(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(voteInProject_input) + SIGNATURE_SIZE,
                    digest,
@@ -682,7 +682,7 @@ void createFundraising(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(createFundraising_input) + SIGNATURE_SIZE,
                    digest,
@@ -746,7 +746,7 @@ void investInProject(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(investInProject_input) + SIGNATURE_SIZE,
                    digest,
@@ -812,7 +812,7 @@ void claimToken(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(claimToken_input) + SIGNATURE_SIZE,
                    digest,
@@ -901,7 +901,7 @@ void upgradeTierLevel(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(upgradeTier_input) + SIGNATURE_SIZE,
                    digest,
@@ -977,7 +977,7 @@ void nostromoTransferShareManagementRights(const char* nodeIp, int nodePort,
     packet.header.setSize(sizeof(packet));
     packet.header.zeroDejavu();
     packet.header.setType(BROADCAST_TRANSACTION);
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
     KangarooTwelve((unsigned char*)&packet.transaction,
                    sizeof(packet.transaction) + sizeof(nostromoTransferShareManagementRights_input) + SIGNATURE_SIZE,
                    digest,
@@ -1007,7 +1007,7 @@ void getStats(const char* nodeIp, int nodePort)
     packet.rcf.inputType = NOSTROMO_TYPE_GET_STATS;
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetStats_output result;
     try
@@ -1048,7 +1048,7 @@ void getTierLevelByUser(const char* nodeIp, int nodePort,
     
     memcpy(packet.input.userId, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetTierLevelByUser_output result;
     try
@@ -1086,7 +1086,7 @@ void getUserVoteStatus(const char* nodeIp, int nodePort,
     
     memcpy(packet.input.userId, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetUserVoteStatus_output result;
     try
@@ -1137,7 +1137,7 @@ void checkTokenCreatability(const char* nodeIp, int nodePort,
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     memcpy(&packet.input.tokenName, assetNameS1, 8);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOCheckTokenCreatability_output result;
     try
@@ -1183,7 +1183,7 @@ void getNumberOfInvestedProjects(const char* nodeIp, int nodePort,
     
     memcpy(packet.input.userId, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetNumberOfInvestedProjects_output result;
     try
@@ -1220,7 +1220,7 @@ void getProjectByIndex(const char* nodeIp, int nodePort,
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     packet.input.indexOfProject = indexOfProject;
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetProjectByIndex_output result;
     try
@@ -1276,7 +1276,7 @@ void getFundarasingByIndex(const char* nodeIp, int nodePort,
     packet.rcf.contractIndex = NOSTROMO_CONTRACT_INDEX;
     packet.input.indexOfFundarasing = indexOfFundarasing;
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetFundarasingByIndex_output result;
     try
@@ -1330,6 +1330,8 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
         NOSTROMOGetProjectIndexListByCreator_input input;
     } packet;
     #pragma pack(pop)
+	memset(&packet, 0, sizeof(packet));
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1339,7 +1341,7 @@ void getProjectIndexListByCreator(const char* nodeIp, int nodePort,
 
     memcpy(packet.input.creator, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetProjectIndexListByCreator_output result;
     try
@@ -1383,6 +1385,8 @@ void getInfoUserInvested(const char* nodeIp, int nodePort,
         NOSTROMOGetInfoUserInvested_input input;
     } packet;
     #pragma pack(pop)
+    memset(&packet, 0, sizeof(packet));
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1392,7 +1396,7 @@ void getInfoUserInvested(const char* nodeIp, int nodePort,
 
     memcpy(packet.input.investorId, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetInfoUserInvested_output result;
     try
@@ -1434,6 +1438,8 @@ void getMaxClaimAmount(const char* nodeIp, int nodePort,
         NOSTROMOGetMaxClaimAmount_input input;
     } packet;
     #pragma pack(pop)
+    memset(&packet, 0, sizeof(packet));
+
     packet.header.setSize(sizeof(packet));
     packet.header.randomizeDejavu();
     packet.header.setType(RequestContractFunction::type());
@@ -1443,7 +1449,7 @@ void getMaxClaimAmount(const char* nodeIp, int nodePort,
 
     memcpy(packet.input.investorId, publicKey, 32);
     
-    qc->sendData((uint8_t *) &packet, packet.header.size());
+    qc->sendData(packet);
 
     NOSTROMOGetMaxClaimAmount_output result;
     try

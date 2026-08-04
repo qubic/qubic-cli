@@ -24,7 +24,7 @@
 #endif
 
 #include "core/src/contract_core/pre_qpi_def.h"
-#include "core/src/contracts/qpi.h"
+#include "core/src/qpi/qpi.h"
 #include "core/src/oracle_core/oracle_interfaces_def.h"
 
 #include <string>
