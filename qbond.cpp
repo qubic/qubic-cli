@@ -422,13 +422,12 @@ void qbondGetFees(const char* nodeIp, int nodePort)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetFees_input in;
     } req;
     memset(&req, 0, sizeof(req));
 
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_FEES;
-    req.rcf.inputSize = sizeof(req.in);
+    req.rcf.inputSize = 0;
     req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
@@ -461,13 +460,12 @@ void qbondGetEarnedFees(const char* nodeIp, int nodePort)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetFees_input in;
     } req;
     memset(&req, 0, sizeof(req));
 
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_EARNED_FEES;
-    req.rcf.inputSize = sizeof(req.in);
+    req.rcf.inputSize = 0;
     req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
@@ -625,13 +623,12 @@ void qbondGetTable(const char* nodeIp, int nodePort)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        MBondsTable_input in;
     } req;
     memset(&req, 0, sizeof(req));
 
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_TABLE;
-    req.rcf.inputSize = sizeof(req.in);
+    req.rcf.inputSize = 0;
     req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
@@ -722,13 +719,12 @@ void qbondGetCFA(const char* nodeIp, int nodePort)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        GetCFA_input in;
     } req;
     memset(&req, 0, sizeof(req));
 
     req.rcf.contractIndex = QBOND_CONTRACT_INDEX;
     req.rcf.inputType = QBOND_GET_CFA;
-    req.rcf.inputSize = sizeof(req.in);
+    req.rcf.inputSize = 0;
     req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());

@@ -651,7 +651,6 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
     struct {
         RequestResponseHeader header;
         RequestContractFunction rcf;
-        MsVaultGetFees_input input;
     } req;
     memset(&req, 0, sizeof(req));
 
@@ -663,7 +662,7 @@ void msvaultGetFees(const char* nodeIp, int nodePort)
 
     req.rcf.contractIndex = MSVAULT_CONTRACT_INDEX;
     req.rcf.inputType = MSVAULT_GET_FEES;
-    req.rcf.inputSize = sizeof(req.input);
+    req.rcf.inputSize = 0;
     req.header.setSize(sizeof(req));
     req.header.randomizeDejavu();
     req.header.setType(RequestContractFunction::type());
