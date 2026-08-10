@@ -405,7 +405,7 @@ void printAssetRecords(const char* nodeIp, const int nodePort, const char* reque
     }
 
     auto qc = make_qc(nodeIp, nodePort);
-    qc->sendData(packet);
+    qc->sendData(std::span<const uint8_t>(reinterpret_cast<const uint8_t*>(&packet), packet.header.size()), packet.header.size());
 
     bool receivedResponses = false;
     if (withSiblings)
