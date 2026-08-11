@@ -9,6 +9,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #endif
+
+#include <algorithm>
 #include <cstring>
 #include <string>
 #include <stdexcept>
@@ -242,7 +244,7 @@ void QubicConnection::receivePacketWithHeaderAs(T& result)
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
-		mBuffer.fill(0);
+		std::fill_n(mBuffer.begin(), remainingSize, 0);
         receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer.data());
     }

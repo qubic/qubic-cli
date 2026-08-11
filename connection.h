@@ -6,18 +6,16 @@
 #include <stdexcept>
 #include <array>
 #include <span>
+#include <type_traits>
 
 #define DEFAULT_TIMEOUT_MSEC 1000
 
-namespace
+// Custom concept to detect if something behaves like a pointer (raw or smart)
+template <typename T>
+concept IsPointerLike = std::is_pointer_v<T> || requires(T t)
 {
-    // Custom concept to detect if something behaves like a pointer (raw or smart)
-    template <typename T>
-    concept IsPointerLike = std::is_pointer_v<T> || requires(T t)
-    {
-        t.operator->();
-    };
-}
+	t.operator->();
+};
 
 // Not thread safe
 class QubicConnection
