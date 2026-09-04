@@ -176,7 +176,7 @@ void print_help()
     printf("\n[ORACLE COMMANDS]\n");
     printf("\t-getoraclequery <...>\n");
     printf("\t\tGet information about oracle queries. Skip arguments to get detailed documentation.\n");
-    printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n");
+    printf("\t-queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS] [FEE]\n");
     printf("\t\tSend user oracle query. Skip arguments to get detailed documentation.\n");
     printf("\t-getoraclesubscription <...>\n");
     printf("\t\tGet information about oracle subscriptions. Skip arguments to get detailed documentation.\n");
@@ -1235,7 +1235,9 @@ void parseArgument(int argc, char** argv)
                 g_paramString2 = argv[i + 2];
             if (i + 3 < argc)
                 g_paramString3 = argv[i + 3];
-            i += 4;
+            if (i + 4 < argc)
+                g_paramString4 = argv[i + 4];
+            i += 5;
             CHECK_OVER_PARAMETERS
             break;
         }
