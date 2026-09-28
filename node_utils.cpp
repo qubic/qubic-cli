@@ -2182,15 +2182,26 @@ void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* s
     if (response.numRankings > 0)
     {
         memcpy(response.rankings.data(), ptr, response.numRankings * sizeof(SpecialCommandGetMiningScoreRanking::ScoreEntry));
-        LOG("%-8s%-64s%s\n", "ArrayIndex", "Identity", "Score");
+        // minerScore packs the rating as ((0xFFFF - shift) << 16) | error, and stays at
+        // NO_MINER_SCORE until the miner lands one.
+        const unsigned int NO_MINER_SCORE = 0xFFFFFFFFU;
+        unsigned int minersWithSolution = 0;
+        LOG("%-12s%-62s%-8s%-8s%s\n", "ArrayIndex", "Identity", "Shift", "Error", "Score");
         for (unsigned int i = 0; i < response.numRankings ; i++)
         {
             SpecialCommandGetMiningScoreRanking::ScoreEntry miner = response.rankings[i];
             char publicIdentity[128] = {0};
             getIdentityFromPublicKey(miner.minerPublicKey, publicIdentity, false);
-            LOG("%-8u%-64s%u\n", i + 1, publicIdentity, miner.minerScore);
+            const unsigned int shift = 0xFFFFU - (miner.minerScore >> 16);
+            const unsigned int error = miner.minerScore & 0xFFFFU;
+            if (miner.minerScore != NO_MINER_SCORE)
+            {
+                minersWithSolution++;
+            }
+            LOG("%-12u%-62s%-8u%-8u%u\n", i + 1, publicIdentity, shift, error, miner.minerScore);
             total_score += miner.minerScore;
         }
+        LOG("Miners with at least one solution: %u of %u\n", minersWithSolution, response.numRankings);
         LOG("WARNING: This is raw miner score data from the node and is NOT the final ranking list.\n");
         LOG("Check processTick function in core node to have the latest ranking logic\n");
     }

@@ -86,12 +86,22 @@ void printAntEpochContext(const char* nodeIp, int nodePort)
 
 // --- identity tree (operator-signed) ---
 
+// Reach first, then errors: a higher shift outranks any lower one, whatever the error count.
+static bool ranksAbove(const AntIdentityTreeNode& a, const AntIdentityTreeNode& b)
+{
+    if (a.shift != b.shift)
+    {
+        return a.shift > b.shift;
+    }
+    return a.score < b.score;
+}
+
 static int findBest(const std::vector<AntIdentityTreeNode>& nodes)
 {
     int best = -1;
     for (int i = 0; i < (int)nodes.size(); i++)
     {
-        if (best < 0 || nodes[i].score < nodes[best].score)
+        if (best < 0 || ranksAbove(nodes[i], nodes[best]))
         {
             best = i;
         }
@@ -109,7 +119,7 @@ static std::map<Ref, std::vector<int>> buildChildren(const std::vector<AntIdenti
     for (auto& entry : children)
     {
         std::sort(entry.second.begin(), entry.second.end(),
-            [&](int a, int b) { return nodes[a].score < nodes[b].score; });   // best (lowest error) first
+            [&](int a, int b) { return ranksAbove(nodes[a], nodes[b]); });   // best first
     }
     return children;
 }
@@ -249,8 +259,8 @@ void printAntIdentityTree(const char* nodeIp, int nodePort, const char* identity
                 line[off++] = ' ';
                 line[off++] = ' ';
             }
-            snprintf(line + off, sizeof(line) - off, "[%u] d%u kids=%u ref=%u:%u anchor=%u%s%s",
-                n.score, n.depth, n.childCount, n.selfTick, n.selfSolutionIndexInTick, n.anchorTick,
+            snprintf(line + off, sizeof(line) - off, "err=%u shift=%u d%u kids=%u ref=%u:%u anchor=%u%s%s",
+                n.score, n.shift, n.depth, n.childCount, n.selfTick, n.selfSolutionIndexInTick, n.anchorTick,
                 (cap && n.childCount >= cap) ? "  FULL" : "",
                 (idx == best) ? "  * best" : "");
             LOG("%s\n", line);
