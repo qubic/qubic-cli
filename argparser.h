@@ -642,8 +642,11 @@ void readConfigFile(const char* path)
             { // override when node ip is default value
                 g_nodeIp = (char*) malloc(64);
                 memset(g_nodeIp, 0, 64);
-                memcpy(g_nodeIp, v[1].c_str(), v[1].size());
-                if (g_nodeIp[v[1].size()-1] == '\n') g_nodeIp[v[1].size()-1] = 0;
+                // Bound the copy to 63 bytes so a long value cannot overflow the
+                // 64-byte buffer and the 64th byte stays a null terminator.
+                size_t nodeIpLen = v[1].size() < 63 ? v[1].size() : 63;
+                memcpy(g_nodeIp, v[1].c_str(), nodeIpLen);
+                if (nodeIpLen > 0 && g_nodeIp[nodeIpLen - 1] == '\n') g_nodeIp[nodeIpLen - 1] = 0;
             }
         }
         if (v[0] == "seed")
@@ -651,9 +654,12 @@ void readConfigFile(const char* path)
             if (strcmp(g_seed, DEFAULT_SEED) == 0)
             {
                 // override when seed is default value
-                g_seed = (char*) malloc(55);
-                memset(g_seed, 0, 55);
-                memcpy(g_seed, v[1].c_str(), 55);
+                // Allocate 56 bytes (55-char seed + null terminator) and copy at
+                // most the value's own length, so sanityCheckSeed()'s strlen() does
+                // not read past the buffer and a short value is not over-read.
+                g_seed = (char*) malloc(56);
+                memset(g_seed, 0, 56);
+                memcpy(g_seed, v[1].c_str(), v[1].size() < 55 ? v[1].size() : 55);
             }
         }
         if (v[0] == "node_port")
