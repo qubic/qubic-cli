@@ -99,3 +99,25 @@ target_compile_options(fourq-qubic PRIVATE -DBUILD_4Q_LIB)
 install(TARGETS fourq-qubic LIBRARY)
 install(TARGETS qubic-cli RUNTIME)
 
+
+# Opt-in unit tests (off by default, so normal and CI builds are unchanged):
+#   cmake -DQUBIC_CLI_BUILD_TESTS=ON -S . -B build
+#   cmake --build build --target qubic-cli-tests && ctest --test-dir build
+option(QUBIC_CLI_BUILD_TESTS "Build qubic-cli unit tests" OFF)
+if(QUBIC_CLI_BUILD_TESTS)
+    include(FetchContent)
+    FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+
+    enable_testing()
+    add_executable(qubic-cli-tests tests/sanity_check_test.cpp)
+    target_include_directories(qubic-cli-tests PRIVATE ${CMAKE_SOURCE_DIR})
+    target_link_libraries(qubic-cli-tests PRIVATE GTest::gtest_main)
+
+    include(GoogleTest)
+    gtest_discover_tests(qubic-cli-tests)
+endif()
