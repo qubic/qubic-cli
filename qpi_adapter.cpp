@@ -79,6 +79,55 @@ static std::string oracleReplyToString(const typename OI::Mock::OracleReply& rep
 	return std::string("Mock::OracleReply(echoedValue = ") + std::to_string(reply.echoedValue) + ", doubledValue = " + std::to_string(reply.doubledValue) + ")";
 }
 
+static std::string oracleQueryToString(const typename OI::EvmLogRead::OracleQuery& query)
+{
+	char txHash[65] = {0};
+	byteToHex(&query.txHash.get(0), txHash, 32);
+	return std::string("EvmLogRead::OracleQuery(chainId = ") + std::to_string(query.chainId) +
+		", txHash = " + txHash +
+		", logIndex = " + std::to_string(query.logIndex) + ")";
+}
+
+static std::string oracleReplyToString(const typename OI::EvmLogRead::OracleReply& reply)
+{
+	char hex[513] = {0};
+	byteToHex(&reply.address.get(0), hex, 32);
+	std::string str = std::string("EvmLogRead::OracleReply(code = ") + std::to_string(reply.code) +
+		", address = " + hex +
+		", topicCount = " + std::to_string(reply.topicCount);
+	for (uint64_t i = 0; i < reply.topicCount && i < 4; ++i)
+	{
+		byteToHex(&reply.topics.get(i).get(0), hex, 32);
+		str += ", topics[" + std::to_string(i) + "] = " + hex;
+	}
+	const int dataLen = (int)std::min<uint64_t>(reply.dataLen, 256);
+	byteToHex(&reply.data.get(0), hex, dataLen);
+	hex[dataLen * 2] = 0;
+	str += ", dataLen = " + std::to_string(reply.dataLen) + ", data = " + hex + ")";
+	return str;
+}
+
+static std::string oracleQueryToString(const typename OI::QubicLogRead::OracleQuery& query)
+{
+	char txHash[65] = {0};
+	byteToHex(&query.txHash.get(0), txHash, 32);
+	return std::string("QubicLogRead::OracleQuery(tick = ") + std::to_string(query.tick) +
+		", txHash = " + txHash +
+		", logId = " + std::to_string(query.logId) + ")";
+}
+
+static std::string oracleReplyToString(const typename OI::QubicLogRead::OracleReply& reply)
+{
+	char hex[513] = {0};
+	const int dataLen = (int)std::min<uint64_t>(reply.dataLen, 256);
+	byteToHex(&reply.data.get(0), hex, dataLen);
+	return std::string("QubicLogRead::OracleReply(code = ") + std::to_string(reply.code) +
+		", contractIndex = " + std::to_string(reply.contractIndex) +
+		", logType = " + std::to_string(reply.logType) +
+		", dataLen = " + std::to_string(reply.dataLen) +
+		", data = " + hex + ")";
+}
+
 template <typename OracleInterface>
 static std::string callOracleQueryToString(const std::vector<uint8_t>& query)
 {
@@ -96,6 +145,10 @@ std::string oracleQueryToString(uint32_t interfaceIndex, const std::vector<uint8
 		return callOracleQueryToString<OI::Price>(query);
 	case OI::Mock::oracleInterfaceIndex:
 		return callOracleQueryToString<OI::Mock>(query);
+	case OI::EvmLogRead::oracleInterfaceIndex:
+		return callOracleQueryToString<OI::EvmLogRead>(query);
+	case OI::QubicLogRead::oracleInterfaceIndex:
+		return callOracleQueryToString<OI::QubicLogRead>(query);
 	default:
 		return "[error: unsupported interface]";
 	}
@@ -118,6 +171,10 @@ std::string oracleReplyToString(uint32_t interfaceIndex, const std::vector<uint8
 		return callOracleReplyToString<OI::Price>(reply);
 	case OI::Mock::oracleInterfaceIndex:
 		return callOracleReplyToString<OI::Mock>(reply);
+	case OI::EvmLogRead::oracleInterfaceIndex:
+		return callOracleReplyToString<OI::EvmLogRead>(reply);
+	case OI::QubicLogRead::oracleInterfaceIndex:
+		return callOracleReplyToString<OI::QubicLogRead>(reply);
 	default:
 		return "[error: unsupported interface]";
 	}
@@ -131,6 +188,10 @@ std::string oracleInterfaceToString(uint32_t interfaceIndex)
 		return "Price";
 	case OI::Mock::oracleInterfaceIndex:
 		return "Mock";
+	case OI::EvmLogRead::oracleInterfaceIndex:
+		return "EvmLogRead";
+	case OI::QubicLogRead::oracleInterfaceIndex:
+		return "QubicLogRead";
 	default:
 		return "[error: unsupported interface]";
 	}
@@ -145,6 +206,14 @@ uint32_t stringToOracleInterface(const char* oracleInterfaceString)
 	else if (strcasecmp(oracleInterfaceString, "Mock") == 0)
 	{
 		return OI::Mock::oracleInterfaceIndex;
+	}
+	else if (strcasecmp(oracleInterfaceString, "EvmLogRead") == 0)
+	{
+		return OI::EvmLogRead::oracleInterfaceIndex;
+	}
+	else if (strcasecmp(oracleInterfaceString, "QubicLogRead") == 0)
+	{
+		return OI::QubicLogRead::oracleInterfaceIndex;
 	}
 	else
 	{
@@ -167,6 +236,18 @@ void printOracleQueryParamHelp(uint32_t interfaceIndex)
 		break;
 	case OI::Mock::oracleInterfaceIndex:
 		LOG("As [QUERY_PARAMS] pass an unsigned integer value.\n");
+		break;
+	case OI::EvmLogRead::oracleInterfaceIndex:
+		LOG("As [QUERY_PARAMS] pass \"[chain_id],[tx_hash],[log_index]\" separated with commas without any spaces.\n");
+		LOG("[tx_hash] is the 32-byte EVM transaction hash in hex (64 digits, no 0x), [log_index] is the receipt-local log index.\n");
+		LOG("Example:\n");
+		LOG("    11155111,1234...abcd,0    (log 0 of the given tx on Sepolia)\n");
+		break;
+	case OI::QubicLogRead::oracleInterfaceIndex:
+		LOG("As [QUERY_PARAMS] pass \"[tick],[tx_hash],[log_id]\" separated with commas without any spaces.\n");
+		LOG("[tx_hash] is the 60-character Qubic transaction hash, [log_id] is the global log id of the log event.\n");
+		LOG("Example:\n");
+		LOG("    12345678,abcd...xyz,987654    (log id 987654 of the given tx executed in tick 12345678)\n");
 		break;
 	}
 }
@@ -245,6 +326,65 @@ static bool parseOracleQueryParams(const char* paramString, typename OI::Price::
 	return true;
 }
 
+static bool parseOracleQueryParams(const char* paramString, typename OI::EvmLogRead::OracleQuery& query)
+{
+	std::vector<std::string> parts = splitString(paramString, ",");
+	if (parts.size() != 3)
+	{
+		LOG("As [QUERY_PARAMS] pass \"[chain_id],[tx_hash],[log_index]\".\n");
+		return false;
+	}
+	try
+	{
+		query.chainId = std::stoull(parts[0]);
+		query.logIndex = std::stoull(parts[2]);
+	}
+	catch (...)
+	{
+		LOG("[chain_id] and [log_index] must be unsigned integers.\n");
+		return false;
+	}
+	const char* hex = parts[1].c_str();
+	if (strlen(hex) != 64 || strspn(hex, "0123456789abcdefABCDEF") != 64)
+	{
+		LOG("[tx_hash] must be 32 bytes in hex, found \"%s\".\n", parts[1].c_str());
+		return false;
+	}
+	uint8_t txHash[32];
+	hexToByte(hex, txHash, 32);
+	memcpy(&query.txHash, txHash, 32);
+	return true;
+}
+
+static bool parseOracleQueryParams(const char* paramString, typename OI::QubicLogRead::OracleQuery& query)
+{
+	std::vector<std::string> parts = splitString(paramString, ",");
+	if (parts.size() != 3)
+	{
+		LOG("As [QUERY_PARAMS] pass \"[tick],[tx_hash],[log_id]\".\n");
+		return false;
+	}
+	try
+	{
+		query.tick = std::stoull(parts[0]);
+		query.logId = std::stoull(parts[2]);
+	}
+	catch (...)
+	{
+		LOG("[tick] and [log_id] must be unsigned integers.\n");
+		return false;
+	}
+	if (parts[1].size() != 60)
+	{
+		LOG("[tx_hash] must be a 60-character Qubic transaction hash, found \"%s\".\n", parts[1].c_str());
+		return false;
+	}
+	uint8_t txHash[32];
+	getPublicKeyFromIdentity(parts[1].c_str(), txHash);
+	memcpy(&query.txHash, txHash, 32);
+	return true;
+}
+
 template <typename OracleInterface>
 static std::vector<uint8_t> callParseOracleQueryParams(const char* oracleQueryParams)
 {
@@ -269,6 +409,10 @@ std::vector<uint8_t> parseOracleQueryParams(uint32_t interfaceIndex, const char*
 		return callParseOracleQueryParams<OI::Price>(oracleQueryString);
 	case OI::Mock::oracleInterfaceIndex:
 		return callParseOracleQueryParams<OI::Mock>(oracleQueryString);
+	case OI::EvmLogRead::oracleInterfaceIndex:
+		return callParseOracleQueryParams<OI::EvmLogRead>(oracleQueryString);
+	case OI::QubicLogRead::oracleInterfaceIndex:
+		return callParseOracleQueryParams<OI::QubicLogRead>(oracleQueryString);
 	default:
 		LOG("Error: unsupported interface\n");
 		return {};

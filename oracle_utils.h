@@ -7,6 +7,7 @@ void makeOracleUserQueryTransaction(
     const char* oracleInterfaceString,
     const char* queryString,
     const char* timeoutSecondsString,
+    const char* feeString,
     uint32_t scheduledTickOffset);
 void makePriceOracleContractTransaction(
     const char* nodeIp, int nodePort, const char* seed,
