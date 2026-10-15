@@ -244,7 +244,8 @@ void QubicConnection::receivePacketWithHeaderAs(T& result)
     memset(&result, 0, sizeof(T));
     if (remainingSize)
     {
-		std::fill_n(mBuffer.begin(), remainingSize, 0);
+        // Only fill the part read back into result; receiveData() rejects an oversized size.
+        std::fill_n(mBuffer.begin(), sizeof(T), 0);
         receiveAllDataOrThrowException(mBuffer, remainingSize);
         result = *((T*)mBuffer.data());
     }
