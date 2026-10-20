@@ -49,9 +49,10 @@ void printGetOracleQueryHelpAndExit()
 
 void printMakeOracleUserQueryTransactionHelpAndExit()
 {
-    LOG("qubic-cli [...] -queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS]\n\n");
+    LOG("qubic-cli [...] -queryoracle [INTERFACE] [QUERY_STRING] [TIMEOUT_IN_SECONDS] [FEE]\n\n");
     LOG("    Send an oracle user query transaction. [INTERFACE] and [QUERY_STRING] are mandatory parameters.\n");
-    LOG("    [TIMEOUT_IN_SECONDS] is optional (the default value is 60 seconds).\n\n");
+    LOG("    [TIMEOUT_IN_SECONDS] is optional (the default value is 60 seconds).\n");
+    LOG("    [FEE] is optional (the default is the fee returned by the interface's getQueryFee; overpayment is refunded).\n\n");
     LOG("    As [INTERFACE], you can currently chose one of following:\n");
     for (uint32_t idx = 0; idx < OI::oracleInterfacesCount; ++idx)
         LOG("        %s\n", oracleInterfaceToString(idx).c_str());
@@ -1042,6 +1043,7 @@ void makeOracleUserQueryTransaction(
     const char* oracleInterfaceString,
     const char* queryString,
     const char* timeoutSecondsString,
+    const char* feeString,
     uint32_t scheduledTickOffset)
 {
     if (strcasecmp(oracleInterfaceString, "") == 0)
@@ -1077,6 +1079,26 @@ void makeOracleUserQueryTransaction(
     // get oracle query fee
     OI::initOracleInterfaces();
     int64_t fee = OI::getOracleQueryFeeFunc[interfaceIndex](queryData.data());
+    if (strcasecmp(feeString, "") != 0)
+    {
+        int64_t customFee = 0;
+        try
+        {
+            customFee = std::stoll(feeString);
+        }
+        catch (...)
+        {
+            customFee = 0;
+        }
+        if (customFee <= 0)
+        {
+            LOG("Error: Invalid fee \"%s\"! Please use a positive integer.\n", feeString);
+            return;
+        }
+        if (customFee < fee)
+            LOG("Warning: fee %" PRIi64 " is below the interface fee %" PRIi64 ", the query will be rejected.\n", customFee, fee);
+        fee = customFee;
+    }
     LOG("Fee for oracle query: %" PRIi64 "\n", fee);
 
     // build tx input data
