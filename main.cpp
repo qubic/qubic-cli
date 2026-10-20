@@ -1168,6 +1168,7 @@ int run(int argc, char* argv[])
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
             sanityCheckSeed(g_seed);
+            sanityCheckValidAssetName(g_nost_tokenName);
             nostromoTransferShareManagementRights(g_nodeIp, g_nodePort, g_seed, 
                 g_offsetScheduledTick, 
                 g_nost_identity, 
@@ -1199,6 +1200,7 @@ int run(int argc, char* argv[])
         case NOSTROMO_CHECK_TOKEN_CREATABILITY:
         {
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckValidAssetName(g_nost_tokenName);
             checkTokenCreatability(g_nodeIp,g_nodePort,
                         g_nost_tokenName);
             break;
