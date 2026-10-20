@@ -118,7 +118,11 @@ static int connect(const char* nodeIp, int nodePort)
 QubicConnection::QubicConnection(const char* nodeIp, int nodePort, unsigned long timeoutMillisec)
 {
 	memset(mNodeIp, 0, 32);
-	memcpy(mNodeIp, nodeIp, strlen(nodeIp));
+	// Bound to 31 bytes so a long address cannot overflow mNodeIp[32];
+	// the 32nd byte stays the null terminator from the memset above.
+	size_t ipLen = strlen(nodeIp);
+	if (ipLen > 31) ipLen = 31;
+	memcpy(mNodeIp, nodeIp, ipLen);
 	mNodePort = nodePort;
 	mSocket = connect(nodeIp, nodePort);
     if (mSocket < 0)
