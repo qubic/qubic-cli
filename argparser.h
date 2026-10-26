@@ -140,6 +140,7 @@ void print_help()
 
     printf("\n[NODE COMMANDS]\n");
     printf("\t-getcurrenttick\n");
+    printf("\t\tShow current tick information of a node\n");
     printf("\t-getantepochcontext\n");
     printf("\t\tPrint the ant-colony epoch context (threshold, freshness window, child cap, ...). Node ip/port required.\n");
     printf("\t-getanttree <IDENTITY>\n");
@@ -148,7 +149,6 @@ void print_help()
     printf("\t\tCraft an ant-colony solution as an inputType-12 transaction and submit it (dest=zero, amount=deposit).\n");
     printf("\t\tNONCE_HEX is 64 hex chars. Anchor is auto-resolved to a non-empty tick. Defaults: score 0, parent ROOT.\n");
     printf("\t\tSigns with -seed; the solution lands in the signer's own tree. -scheduletick sets the tx offset.\n");
-    printf("\t\tShow current tick information of a node\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
     printf("\t\tPerform a special command to node, valid seed and node ip/port are required.\t\n");
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");

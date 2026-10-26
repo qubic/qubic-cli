@@ -166,15 +166,17 @@ static bool fetchAntIdentityTree(QCPtr qc, const uint8_t* subseed, const uint8_t
             return false;
         }
 
-        const uint32_t payloadSize = respHeader.size() - (uint32_t)sizeof(RequestResponseHeader);
-        std::vector<uint8_t> buffer(payloadSize > 0 ? payloadSize : 1);
-        if (payloadSize > 0 && qc->receiveData(std::span<uint8_t>(buffer.data(), payloadSize), payloadSize) != (int)payloadSize)
+        // The node always sends at least the metadata header; anything shorter is malformed (and
+        // would underflow payloadSize).
+        if (respHeader.size() < sizeof(RequestResponseHeader) + sizeof(RespondAntIdentityTreeHeader))
         {
             return false;
         }
-        if (payloadSize < sizeof(RespondAntIdentityTreeHeader))
+        const uint32_t payloadSize = respHeader.size() - (uint32_t)sizeof(RequestResponseHeader);
+        std::vector<uint8_t> buffer(payloadSize);
+        if (qc->receiveData(std::span<uint8_t>(buffer.data(), payloadSize), payloadSize) != (int)payloadSize)
         {
-            return true;
+            return false;
         }
 
         const RespondAntIdentityTreeHeader* rh = (const RespondAntIdentityTreeHeader*)buffer.data();
@@ -182,6 +184,13 @@ static bool fetchAntIdentityTree(QCPtr qc, const uint8_t* subseed, const uint8_t
         {
             LOG("Tree node itemSize mismatch (node %u, cli %u) - struct out of sync.\n",
                 rh->itemSize, (unsigned)sizeof(AntIdentityTreeNode));
+            return false;
+        }
+        // count is untrusted: make sure the payload actually carries that many nodes.
+        const size_t nodeBytes = payloadSize - sizeof(RespondAntIdentityTreeHeader);
+        if (rh->count > nodeBytes / sizeof(AntIdentityTreeNode))
+        {
+            LOG("Tree page truncated: count %u but only %zu bytes of nodes.\n", rh->count, nodeBytes);
             return false;
         }
         const AntIdentityTreeNode* nodes =
