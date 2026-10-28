@@ -141,6 +141,14 @@ void print_help()
     printf("\n[NODE COMMANDS]\n");
     printf("\t-getcurrenttick\n");
     printf("\t\tShow current tick information of a node\n");
+    printf("\t-getantepochcontext\n");
+    printf("\t\tPrint the ant-colony epoch context (threshold, freshness window, child cap, ...). Node ip/port required.\n");
+    printf("\t-getanttree <IDENTITY>\n");
+    printf("\t\tPage and print IDENTITY's ant-colony tree. Operator-signed: -seed must be the node operator's seed.\n");
+    printf("\t-sendantsolution <NONCE_HEX> [CLAIMED_SCORE] [PARENT_TICK] [PARENT_INDEX]\n");
+    printf("\t\tCraft an ant-colony solution as an inputType-12 transaction and submit it (dest=zero, amount=deposit).\n");
+    printf("\t\tNONCE_HEX is 64 hex chars. Anchor is auto-resolved to a non-empty tick. Defaults: score 0, parent ROOT.\n");
+    printf("\t\tSigns with -seed; the solution lands in the signer's own tree. -scheduletick sets the tx offset.\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
     printf("\t\tPerform a special command to node, valid seed and node ip/port are required.\t\n");
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
@@ -1080,6 +1088,40 @@ void parseArgument(int argc, char** argv)
         {
             g_cmd = GET_CURRENT_TICK;
             i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-getantepochcontext") == 0)
+        {
+            g_cmd = GET_ANT_EPOCH_CONTEXT;
+            i++;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-getanttree") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = GET_ANT_IDENTITY_TREE;
+            g_requestedIdentity = argv[i + 1];
+            i += 2;
+            CHECK_OVER_PARAMETERS
+            break;
+        }
+        if (strcmp(argv[i], "-sendantsolution") == 0)
+        {
+            CHECK_NUMBER_OF_PARAMETERS(1)
+            g_cmd = SEND_ANT_SOLUTION;
+            if (strlen(argv[i + 1]) != 64)
+            {
+                LOG("Nonce must be 64 hex chars (32 bytes).\n");
+                exit(1);
+            }
+            hexToByte(argv[i + 1], g_antNonce, 32);
+            i += 2;
+            // optional trailing positionals: [claimedScore] [parentTick] [parentIndex]
+            if (i < argc) { g_antClaimedScore = (uint32_t)charToNumber(argv[i]); i++; }
+            if (i < argc) { g_antParentTick = (uint32_t)charToNumber(argv[i]); i++; }
+            if (i < argc) { g_antParentIndex = (uint32_t)charToNumber(argv[i]); i++; }
             CHECK_OVER_PARAMETERS
             break;
         }

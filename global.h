@@ -63,6 +63,12 @@ int g_waitUntilFinish = 0;
 uint8_t g_txExtraData[1024] = {0};
 uint8_t g_rawPacket[1024] = {0};
 
+// ant colony solution (-sendantsolution)
+uint8_t g_antNonce[32] = {0};
+uint32_t g_antClaimedScore = 0;
+uint32_t g_antParentTick = 0;
+uint32_t g_antParentIndex = 0xFFFFFFFF;
+
 char* g_qx_issueAssetName = nullptr;
 char* g_qx_issueUnitOfMeasurement = nullptr;
 int64_t g_qx_issueAssetNumberOfUnit = -1;
