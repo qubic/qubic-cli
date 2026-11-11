@@ -283,6 +283,7 @@ int run(int argc, char* argv[])
             break;
         case MAKE_IPO_BID:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             makeIPOBid(g_nodeIp, g_nodePort, g_seed, g_IPOContractIndex, g_makeIPOBidPricePerShare, g_makeIPOBidNumberOfShare, g_offsetScheduledTick);
             break;
         case GET_IPO_STATUS:
@@ -687,34 +688,42 @@ int run(int argc, char* argv[])
             break;
         case QVAULT_SUBMIT_AUTH_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_CHANGE_AUTH_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             changeAuthAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_numberOfChangedAddress);
             break;
         case QVAULT_SUBMIT_FEES:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolderFee, g_qvault_newReinvestingFee, g_qvault_newDevFee);
             break;
         case QVAULT_CHANGE_FEES:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             changeFees(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_newQCAPHolderFee, g_qvault_newReinvestingFee, g_qvault_newDevFee);
             break;
         case QVAULT_SUBMIT_REINVESTING_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitReinvestingAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_CHANGE_REINVESTING_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             changeReinvestingAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_SUBMIT_ADMIN_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitAdminAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_CHANGE_ADMIN_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             changeAdminAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_GET_DATA:
@@ -723,18 +732,22 @@ int run(int argc, char* argv[])
             break;
         case QVAULT_SUBMIT_BANNED_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitBannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_SAVE_BANNED_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             saveBannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_SUBMIT_UNBANNED_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             submitUnbannedannedAddress(g_nodeIp, g_nodePort, g_seed, g_offsetScheduledTick, g_qvault_identity);
             break;
         case QVAULT_SAVE_UNBANNED_ADDRESS:
             sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
             saveUnbannedAddress(g_nodeIp, g_nodePort, g_seed,  g_offsetScheduledTick, g_qvault_identity);
             break;
         // MSVAULT
