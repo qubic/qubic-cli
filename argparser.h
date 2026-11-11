@@ -836,7 +836,7 @@ void parseArgument(int argc, char** argv)
             CHECK_NUMBER_OF_PARAMETERS(3)
             g_cmd = SEND_COIN_IN_TICK;
             g_targetIdentity = argv[i+1];
-            g_txAmount = uint32_t(charToNumber(argv[i+2]));
+            g_txAmount = charToNumber(argv[i+2]);
             g_txTick = uint32_t(charToNumber(argv[i+3]));
             i+=4;
             CHECK_OVER_PARAMETERS
