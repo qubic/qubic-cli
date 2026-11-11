@@ -654,12 +654,11 @@ void readConfigFile(const char* path)
             if (strcmp(g_seed, DEFAULT_SEED) == 0)
             {
                 // override when seed is default value
-                // Allocate 56 bytes (55-char seed + null terminator) and copy at
-                // most the value's own length, so sanityCheckSeed()'s strlen() does
-                // not read past the buffer and a short value is not over-read.
-                g_seed = (char*) malloc(56);
-                memset(g_seed, 0, 56);
-                memcpy(g_seed, v[1].c_str(), v[1].size() < 55 ? v[1].size() : 55);
+                // Strip the line ending and keep the full value, so sanityCheckSeed()
+                // rejects a seed of the wrong length instead of using a truncated one.
+                std::string seed = v[1];
+                while (!seed.empty() && (seed.back() == '\n' || seed.back() == '\r')) seed.pop_back();
+                g_seed = strdup(seed.c_str());
             }
         }
         if (v[0] == "node_port")
