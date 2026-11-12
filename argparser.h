@@ -658,7 +658,7 @@ void readConfigFile(const char* path)
                 // rejects a seed of the wrong length instead of using a truncated one.
                 std::string seed = v[1];
                 while (!seed.empty() && (seed.back() == '\n' || seed.back() == '\r')) seed.pop_back();
-                g_seed = strdup(seed.c_str());
+                g_seed = STRDUP(seed.c_str());
             }
         }
         if (v[0] == "node_port")
