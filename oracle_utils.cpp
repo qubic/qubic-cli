@@ -15,6 +15,23 @@
 #include "wallet_utils.h"
 #include "contracts.h"
 
+#include <stdexcept>
+
+// A RequestResponseHeader read from a node carries an attacker-controlled 24-bit size().
+// A size() below the header size (1..7) would underflow size() - sizeof(RequestResponseHeader)
+// into a ~4 GB value; a zero size() (reported as INT32_MAX) would yield a ~2 GB one. Either
+// drives a huge payloadBuffer.resize() before any data is received. Reject both here so the
+// derived payload size stays within the protocol's 24-bit bound.
+static unsigned int checkedOraclePayloadSize(const RequestResponseHeader* header)
+{
+    const unsigned int packetSize = header->size();
+    if (packetSize < sizeof(RequestResponseHeader) || packetSize > 0xFFFFFF)
+    {
+        throw std::runtime_error("Malformed oracle response: invalid header size");
+    }
+    return packetSize - (unsigned int)sizeof(RequestResponseHeader);
+}
+
 
 void printGetOracleQueryHelpAndExit()
 {
@@ -94,7 +111,7 @@ static std::vector<int64_t> receiveQueryIds(QCPtr qc, unsigned int reqType, long
         }
         if (header->type() == RespondOracleData::type())
         {
-            unsigned int payloadSize = header->size() - sizeof(RequestResponseHeader);
+            unsigned int payloadSize = checkedOraclePayloadSize(header);
             if (payloadSize > payloadBuffer.size())
             {
                 payloadBuffer.resize(payloadSize);
@@ -179,7 +196,7 @@ static void receiveQueryInformation(QCPtr qc, int64_t queryId, RespondOracleData
     while (recvHeaderBytes == sizeof(RequestResponseHeader))
     {
         // get remaining part of the response
-        const unsigned int responsePayloadSize = responseHeader->size() - sizeof(RequestResponseHeader);
+        const unsigned int responsePayloadSize = checkedOraclePayloadSize(responseHeader);
         if (responsePayloadSize > payloadBuffer.size())
         {
             payloadBuffer.resize(responsePayloadSize);
@@ -730,7 +747,7 @@ static void receiveSubscriptionInformation(QCPtr qc, int64_t subscriptionId, Res
     while (recvHeaderBytes == sizeof(RequestResponseHeader))
     {
         // get remaining part of the response
-        const unsigned int responsePayloadSize = responseHeader->size() - sizeof(RequestResponseHeader);
+        const unsigned int responsePayloadSize = checkedOraclePayloadSize(responseHeader);
         if (responsePayloadSize > payloadBuffer.size())
         {
             payloadBuffer.resize(responsePayloadSize);
@@ -855,7 +872,7 @@ static std::vector<int32_t> receiveSubscriptionIds(QCPtr qc, unsigned int reqTyp
         }
         if (header->type() == RespondOracleData::type())
         {
-            unsigned int payloadSize = header->size() - sizeof(RequestResponseHeader);
+            unsigned int payloadSize = checkedOraclePayloadSize(header);
             if (payloadSize > payloadBuffer.size())
             {
                 payloadBuffer.resize(payloadSize);
