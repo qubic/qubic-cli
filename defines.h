@@ -17,6 +17,7 @@
 #define DEFAULT_SEED "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 #define ARBITRATOR "AFZPUAIYVPNUYGJRQVLUKOPPVLHAZQTGLYAAUUNBXFTVTAMSBKQBLEIEPCVJ"
 #define NUMBER_OF_COMPUTORS 676
+#define MAX_NUMBER_OF_MINERS 8192 // mirrors qubic/core src/mining/mining.h; mining ranking covers computors + candidates
 
 #define EXCHANGE_PUBLIC_PEERS 0
 #define BROADCAST_MESSAGE 1
