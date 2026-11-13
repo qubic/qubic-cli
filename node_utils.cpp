@@ -2155,6 +2155,17 @@ void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* s
         uint8_t* data = buffer.data() + sizeof(RequestResponseHeader);
         response.everIncreasingNonceAndCommandType = *((unsigned long long*)data);
         response.numRankings = *((unsigned int*)(data+8));
+        // numRankings comes straight from the node response. A mining-score ranking holds
+        // at most one entry per computor, so bound it by NUMBER_OF_COMPUTORS before the
+        // multiply below: an unbounded value overflows numRankings * 36 (a wrapped-small
+        // contentSize then slips past the 676*36 lower-bound check) and drives the later
+        // rankings.resize() / memcpy() into a multi-GB OOM and an out-of-bounds read of
+        // the receive buffer.
+        if (response.numRankings > NUMBER_OF_COMPUTORS)
+        {
+            LOG("Malformed mining score ranking: %u rankings exceeds NUMBER_OF_COMPUTORS (%u)\n", response.numRankings, NUMBER_OF_COMPUTORS);
+            return;
+        }
         contentSize = response.numRankings * 36; // 32 pubkey + 4 bytes score
     }
     if (response.everIncreasingNonceAndCommandType != packet.cmd.everIncreasingNonceAndCommandType)
