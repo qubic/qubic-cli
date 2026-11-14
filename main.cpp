@@ -7,6 +7,7 @@
 #include "wallet_utils.h"
 #include "node_utils.h"
 #include "ant_utils.h"
+#include "price_feed_utils.h"
 #include "asset_utils.h"
 #include "key_utils.h"
 #include "sanity_check.h"
@@ -55,6 +56,14 @@ int run(int argc, char* argv[])
             sanityCheckSeed(g_seed);
             sendAntSolution(g_nodeIp, g_nodePort, g_seed, g_antNonce, g_antClaimedScore,
                             g_antParentTick, g_antParentIndex, g_offsetScheduledTick);
+            break;
+        case GET_BTC_PRICE_SERIES:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printBtcPriceSeries(g_nodeIp, g_nodePort, g_btcSeriesFromHour, g_btcSeriesCount, g_btcSeriesPeriodSec);
+            break;
+        case GET_BPP9000_TASK_DATA:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printBpp9000TaskData(g_nodeIp, g_nodePort, g_bpp9000AnchorTick);
             break;
         case GET_SYSTEM_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);

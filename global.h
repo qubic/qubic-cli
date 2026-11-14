@@ -69,6 +69,12 @@ uint32_t g_antClaimedScore = 0;
 uint32_t g_antParentTick = 0;
 uint32_t g_antParentIndex = 0xFFFFFFFF;
 
+// BTC price series (-getbtcpriceseries) and bpp9000 task data (-getbpp9000taskdata)
+uint32_t g_btcSeriesFromHour = 0xFFFFFFFF;
+uint32_t g_btcSeriesCount = 24;
+uint32_t g_btcSeriesPeriodSec = 3600;
+uint32_t g_bpp9000AnchorTick = 0;
+
 char* g_qx_issueAssetName = nullptr;
 char* g_qx_issueUnitOfMeasurement = nullptr;
 int64_t g_qx_issueAssetNumberOfUnit = -1;
