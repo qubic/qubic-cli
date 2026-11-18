@@ -6,6 +6,7 @@
 #include "argparser.h"
 #include "wallet_utils.h"
 #include "node_utils.h"
+#include "ant_utils.h"
 #include "asset_utils.h"
 #include "key_utils.h"
 #include "sanity_check.h"
@@ -40,6 +41,20 @@ int run(int argc, char* argv[])
         case GET_CURRENT_TICK:
             sanityCheckNode(g_nodeIp, g_nodePort);
             printTickInfoFromNode(g_nodeIp, g_nodePort);
+            break;
+        case GET_ANT_EPOCH_CONTEXT:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printAntEpochContext(g_nodeIp, g_nodePort);
+            break;
+        case GET_ANT_IDENTITY_TREE:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            printAntIdentityTree(g_nodeIp, g_nodePort, g_requestedIdentity, g_seed);
+            break;
+        case SEND_ANT_SOLUTION:
+            sanityCheckNode(g_nodeIp, g_nodePort);
+            sanityCheckSeed(g_seed);
+            sendAntSolution(g_nodeIp, g_nodePort, g_seed, g_antNonce, g_antClaimedScore,
+                            g_antParentTick, g_antParentIndex, g_offsetScheduledTick);
             break;
         case GET_SYSTEM_INFO:
             sanityCheckNode(g_nodeIp, g_nodePort);

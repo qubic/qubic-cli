@@ -4,7 +4,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # keep the lists sorted alphabetically
-SET(FILES 	${CMAKE_SOURCE_DIR}/asset_utils.cpp
+SET(FILES 	${CMAKE_SOURCE_DIR}/ant_utils.cpp
+		${CMAKE_SOURCE_DIR}/asset_utils.cpp
 		${CMAKE_SOURCE_DIR}/connection.cpp
 		${CMAKE_SOURCE_DIR}/contracts.cpp
 		${CMAKE_SOURCE_DIR}/file_upload.cpp
