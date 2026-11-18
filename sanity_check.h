@@ -40,6 +40,14 @@ static void sanityCheckSeed(const char* privKey)
         LOG("Seed must be 55-char length\n");
         exit(1);
     }
+    for (int i = 0; i < 55; i++)
+    {
+        if (privKey[i] < 'a' || privKey[i] > 'z')
+        {
+            LOG("Seed must be 55 lowercase letters a-z\n");
+            exit(1);
+        }
+    }
     if (memcmp(privKey, DEFAULT_SEED, 55) == 0)
     {
         LOG("WARNING: You are using default seed\n");
