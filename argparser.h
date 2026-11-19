@@ -148,6 +148,7 @@ void print_help()
     printf("\t-sendantsolution <NONCE_HEX> [CLAIMED_SCORE] [PARENT_TICK] [PARENT_INDEX]\n");
     printf("\t\tCraft an ant-colony solution as an inputType-12 transaction and submit it (dest=zero, amount=deposit).\n");
     printf("\t\tNONCE_HEX is 64 hex chars. Anchor is auto-resolved to a non-empty tick. Defaults: score 0, parent ROOT.\n");
+    printf("\t\tSigns with -seed; the solution lands in the signer's own tree. -scheduletick sets the tx offset.\n");
     printf("\t-getbtcpriceseries [FROM_HOUR] [COUNT] [PERIOD_SEC]\n");
     printf("\t\tPrint the state of the node's hourly BTC price series (synced, next hour, digest, reply counters) and COUNT points as CSV.\n");
     printf("\t\tDefaults: the latest 24 hours. FROM_HOUR \"latest\" keeps that default; COUNT 0 prints the state only.\n");
@@ -155,7 +156,6 @@ void print_help()
     printf("\t-getbpp9000taskdata [ANCHOR_TICK]\n");
     printf("\t\tPrint the mining task data the node uses for a solution anchored at ANCHOR_TICK (default: the latest completed tick):\n");
     printf("\t\tshift limit, number of targets and their hash.\n");
-    printf("\t\tSigns with -seed; the solution lands in the signer's own tree. -scheduletick sets the tx offset.\n");
     printf("\t-sendspecialcommand <COMMAND_IN_NUMBER> \n");
     printf("\t\tPerform a special command to node, valid seed and node ip/port are required.\t\n");
     printf("\t-togglemainaux <MODE_0> <Mode_1> \n");
