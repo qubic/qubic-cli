@@ -15,6 +15,7 @@ SET(FILES 	${CMAKE_SOURCE_DIR}/ant_utils.cpp
 		${CMAKE_SOURCE_DIR}/node_utils.cpp
 		${CMAKE_SOURCE_DIR}/nostromo.cpp
 		${CMAKE_SOURCE_DIR}/oracle_utils.cpp
+		${CMAKE_SOURCE_DIR}/price_feed_utils.cpp
 		${CMAKE_SOURCE_DIR}/proposal.cpp
 		${CMAKE_SOURCE_DIR}/qbond.cpp
 		${CMAKE_SOURCE_DIR}/qearn.cpp
