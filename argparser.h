@@ -174,7 +174,8 @@ void print_help()
     printf("\t-synctime\n");
     printf("\t\tSync node time with local time, valid seed and node ip/port are required. Make sure that your local time is synced (with NTP)!\t\n");
     printf("\t-getminingscoreranking\n");
-    printf("\t\tGet current mining score ranking. Valid seed and node ip/port are required.\t\n");
+    printf("\t\tGet current mining score ranking. Valid seed and node ip/port are required."
+           " A node with the prediction phase also gives the prediction result of every identity: its attempts (counted hours), how many of them were correct and whether it is ranked by prediction or by training.\t\n");
     printf("\t-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>\n");
     printf("\t\tGet vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3) \t\n");
     printf("\t-setloggingmode <MODE>\n");

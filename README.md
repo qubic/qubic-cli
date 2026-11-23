@@ -148,7 +148,7 @@ Commands:
 	-synctime
 		Sync node time with local time, valid seed and node ip/port are required. Make sure that your local time is synced (with NTP)!	
 	-getminingscoreranking
-		Get current mining score ranking. Valid seed and node ip/port are required.	
+		Get current mining score ranking. Valid seed and node ip/port are required. A node with the prediction phase also gives the prediction result of every identity: its attempts (counted hours), how many of them were correct and whether it is ranked by prediction or by training.	
 	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
 		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3)
 	-setloggingmode <MODE>

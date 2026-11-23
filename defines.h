@@ -54,6 +54,7 @@
 #define SPECIAL_COMMAND_QUERY_TIME 12ULL    // send this to node to query time, responds with time read from clock
 #define SPECIAL_COMMAND_SEND_TIME 13ULL     // send this to node to set time, responds with time read from clock after setting
 #define SPECIAL_COMMAND_GET_MINING_SCORE_RANKING 14ULL // get the ranking of miners connect to node
+#define SPECIAL_COMMAND_GET_PREDICTION_RANKING 21ULL // get the prediction state of the identities that qualified
 #define SPECIAL_COMMAND_SET_CONSOLE_LOGGING_MODE 17ULL // PAUSE key
 #define SPECIAL_COMMAND_SAVE_SNAPSHOT 18ULL // F8
 #define SPECIAL_COMMAND_SET_EXECUTION_FEE_MULTIPLIER 19ULL
