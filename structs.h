@@ -32,6 +32,8 @@ enum COMMAND
     GET_ANT_EPOCH_CONTEXT,
     GET_ANT_IDENTITY_TREE,
     SEND_ANT_SOLUTION,
+    GET_BTC_PRICE_SERIES,
+    GET_BPP9000_TASK_DATA,
     //GET_LOG_FROM_NODE, // moved to qlogging tool
     DUMP_SPECTRUM_FILE,
     DUMP_UNIVERSE_FILE,
@@ -891,6 +893,34 @@ struct SpecialCommandGetMiningScoreRanking
     unsigned long long everIncreasingNonceAndCommandType;
     unsigned int numRankings;
     std::vector<ScoreEntry> rankings;
+    static constexpr unsigned char type()
+    {
+        return 255;
+    }
+};
+#pragma pack(pop)
+
+#pragma pack(push, 1)
+struct SpecialCommandGetPredictionRanking
+{
+    struct Entry
+    {
+        unsigned char publicKey[32];
+        // First hour counted for the identity
+        unsigned int firstHour;
+        // Attempts (hours counted for the identity) and how many of them were correct
+        unsigned int hours;
+        unsigned int correct;
+        // NO_PREDICTION_KEY while the identity is ranked by its training score
+        unsigned int predictionKey;
+    };
+    static constexpr unsigned int NO_PREDICTION_KEY = 0xFFFFFFFFU;
+
+    unsigned long long everIncreasingNonceAndCommandType;
+    // 0: training. Else the tick the epoch switched in
+    unsigned int switchTick;
+    unsigned int numberOfEntries;
+    std::vector<Entry> entries;
     static constexpr unsigned char type()
     {
         return 255;

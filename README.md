@@ -115,6 +115,21 @@ Commands:
 [NODE COMMANDS]
 	-getcurrenttick
 		Show current tick information of a node
+	-getantepochcontext
+		Print the ant-colony epoch context (threshold, freshness window, child cap, ...). Node ip/port required.
+	-getanttree <IDENTITY>
+		Page and print IDENTITY's ant-colony tree. Operator-signed: -seed must be the node operator's seed.
+	-sendantsolution <NONCE_HEX> [CLAIMED_SCORE] [PARENT_TICK] [PARENT_INDEX]
+		Craft an ant-colony solution as an inputType-12 transaction and submit it (dest=zero, amount=deposit).
+		NONCE_HEX is 64 hex chars. Anchor is auto-resolved to a non-empty tick. Defaults: score 0, parent ROOT.
+		Signs with -seed; the solution lands in the signer's own tree. -scheduletick sets the tx offset.
+	-getbtcpriceseries [FROM_HOUR] [COUNT] [PERIOD_SEC]
+		Print the state of the node's hourly BTC price series (synced, next hour, digest, reply counters) and COUNT points as CSV.
+		Defaults: the latest 24 hours. FROM_HOUR "latest" keeps that default; COUNT 0 prints the state only.
+		Compare "series digest" between nodes to check they hold the same series. PERIOD_SEC (default 3600) is only used for the UTC column.
+	-getbpp9000taskdata [ANCHOR_TICK]
+		Print the mining task data the node uses for a solution anchored at ANCHOR_TICK (default: the latest completed tick):
+		shift limit, number of targets and their hash.
 	-sendspecialcommand <COMMAND_IN_NUMBER> 
 		Perform a special command to node, valid seed and node ip/port are required.	
 	-togglemainaux <MODE_0> <Mode_1>
@@ -133,7 +148,7 @@ Commands:
 	-synctime
 		Sync node time with local time, valid seed and node ip/port are required. Make sure that your local time is synced (with NTP)!	
 	-getminingscoreranking
-		Get current mining score ranking. Valid seed and node ip/port are required.	
+		Get current mining score ranking. Valid seed and node ip/port are required. A node with the prediction phase also gives the prediction result of every identity: its attempts (counted hours), how many of them were correct and whether it is ranked by prediction or by training.	
 	-getvotecountertx <COMPUTOR_LIST_FILE> <TICK>
 		Get vote counter transaction of a tick: showing how many votes per ID that this tick leader saw from (<TICK>-675-3) to (<TICK>-3)
 	-setloggingmode <MODE>

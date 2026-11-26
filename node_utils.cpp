@@ -7,6 +7,9 @@
 #include <memory>
 #include <stdexcept>
 #include <cinttypes>
+#include <array>
+#include <map>
+#include <span>
 
 #include "defines.h"
 #include "structs.h"
@@ -2113,6 +2116,154 @@ void dumpUniverseToCSV(const char* input, const char* output){
     fclose(f);
 }
 
+// Asks the node for the prediction state of every identity that has qualified (operator command), on a
+// connection that is open already. switchTick is the tick the epoch switched to the prediction ranking in,
+// 0 while it is in training. Returns false if the node does not answer the command.
+static bool fetchPredictionRanking(QCPtr& qc, const char* seed,
+    unsigned int& switchTick, std::vector<SpecialCommandGetPredictionRanking::Entry>& entries)
+{
+    uint8_t privateKey[32] = {0};
+    uint8_t sourcePublicKey[32] = {0};
+    uint8_t subseed[32] = {0};
+    uint8_t digest[32] = {0};
+    uint8_t signature[64] = {0};
+
+    struct {
+        RequestResponseHeader header;
+        SpecialCommand cmd;
+        uint8_t signature[64];
+    } packet;
+    packet.header.setSize(sizeof(packet));
+    packet.header.randomizeDejavu();
+    packet.header.setType(PROCESS_SPECIAL_COMMAND);
+    uint64_t curTime = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    uint64_t commandByte = (uint64_t)(SPECIAL_COMMAND_GET_PREDICTION_RANKING) << 56;
+    packet.cmd.everIncreasingNonceAndCommandType = commandByte | curTime;
+    getSubseedFromSeed((uint8_t*)seed, subseed);
+    getPrivateKeyFromSubSeed(subseed, privateKey);
+    getPublicKeyFromPrivateKey(privateKey, sourcePublicKey);
+    KangarooTwelve((unsigned char*)&packet.cmd,
+                   sizeof(packet.cmd),
+                   digest,
+                   32);
+    sign(subseed, sourcePublicKey, digest, signature);
+    memcpy(packet.signature, signature, 64);
+    qc->sendData(packet);
+
+    // header, everIncreasingNonceAndCommandType, switchTick and numberOfEntries
+    const unsigned int fixedSize = sizeof(RequestResponseHeader) + 8 + 4 + 4;
+    std::vector<uint8_t> buffer(fixedSize);
+    const int fixedBytes = qc->receiveData(buffer, fixedSize);
+    if (fixedBytes != (int)fixedSize)
+    {
+        return false;
+    }
+    const uint8_t* data = buffer.data() + sizeof(RequestResponseHeader);
+    unsigned long long nonce = 0;
+    unsigned int replySwitchTick = 0;
+    unsigned int numberOfEntries = 0;
+    memcpy(&nonce, data, 8);
+    memcpy(&replySwitchTick, data + 8, 4);
+    memcpy(&numberOfEntries, data + 12, 4);
+    const unsigned long long contentSize = (unsigned long long)numberOfEntries * sizeof(SpecialCommandGetPredictionRanking::Entry);
+    const RequestResponseHeader* replyHeader = (const RequestResponseHeader*)buffer.data();
+    if (nonce != packet.cmd.everIncreasingNonceAndCommandType || replyHeader->size() != fixedSize + contentSize)
+    {
+        return false;
+    }
+    entries.resize(numberOfEntries);
+    if (contentSize != 0)
+    {
+        const int contentBytes = qc->receiveData(std::span<uint8_t>((uint8_t*)entries.data(), (size_t)contentSize), (unsigned int)contentSize);
+        if (contentBytes != (int)contentSize)
+        {
+            return false;
+        }
+    }
+    switchTick = replySwitchTick;
+    return true;
+}
+
+// The ranking table with the prediction result of every identity. The order and the training result come
+// from the mining score ranking, the prediction result from the prediction ranking, joined by the identity.
+static void printRankingWithPrediction(const SpecialCommandGetMiningScoreRanking& response, unsigned int switchTick,
+    const std::vector<SpecialCommandGetPredictionRanking::Entry>& entries)
+{
+    std::map<std::array<uint8_t, 32>, unsigned int> entryOfIdentity;
+    for (unsigned int i = 0; i < entries.size(); i++)
+    {
+        std::array<uint8_t, 32> key;
+        memcpy(key.data(), entries[i].publicKey, 32);
+        entryOfIdentity[key] = i;
+    }
+
+    // minerScore packs the rating as ((0xFFFF - shift) << 16) | error, and stays at
+    // NO_MINER_SCORE until the miner lands one.
+    const unsigned int NO_MINER_SCORE = 0xFFFFFFFFU;
+    unsigned int minersWithSolution = 0;
+    unsigned int rankedByPrediction = 0;
+
+    // Two groups of columns: the identity's best ANN, and the answers of its latest accepted ANN.
+    LOG("%-74s%-20s%s\n", "", "Training (best ANN)", "Prediction (latest accepted ANN)");
+    LOG("%-12s%-62s%-10s%-10s%-9s%-9s%-10s%s\n", "ArrayIndex", "Identity", "Shift", "Error", "Attempts", "Correct", "Accuracy", "RankedBy");
+    for (unsigned int i = 0; i < response.numRankings; i++)
+    {
+        const SpecialCommandGetMiningScoreRanking::ScoreEntry miner = response.rankings[i];
+        char publicIdentity[128] = {0};
+        getIdentityFromPublicKey(miner.minerPublicKey, publicIdentity, false);
+
+        char shift[16] = "-";
+        char error[16] = "-";
+        if (miner.minerScore != NO_MINER_SCORE)
+        {
+            minersWithSolution++;
+            snprintf(shift, sizeof(shift), "%u", 0xFFFFU - (miner.minerScore >> 16));
+            snprintf(error, sizeof(error), "%u", miner.minerScore & 0xFFFFU);
+        }
+
+        unsigned int hours = 0;
+        unsigned int correct = 0;
+        bool isRankedByPrediction = false;
+        std::array<uint8_t, 32> key;
+        memcpy(key.data(), miner.minerPublicKey, 32);
+        const auto found = entryOfIdentity.find(key);
+        if (found != entryOfIdentity.end())
+        {
+            const SpecialCommandGetPredictionRanking::Entry& entry = entries[found->second];
+            hours = entry.hours;
+            correct = entry.correct;
+            isRankedByPrediction = (entry.predictionKey != SpecialCommandGetPredictionRanking::NO_PREDICTION_KEY);
+        }
+        char accuracy[16] = "-";
+        if (hours != 0)
+        {
+            snprintf(accuracy, sizeof(accuracy), "%.1f%%", 100.0 * correct / hours);
+        }
+        if (isRankedByPrediction)
+        {
+            rankedByPrediction++;
+        }
+        LOG("%-12u%-62s%-10s%-10s%-9u%-9u%-10s%s\n", i + 1, publicIdentity, shift, error, hours, correct, accuracy,
+            isRankedByPrediction ? "prediction" : "training");
+    }
+
+    LOG("Miners with at least one solution: %u of %u\n", minersWithSolution, response.numRankings);
+    LOG("Qualified for the prediction: %u, ranked by prediction: %u\n", (unsigned int)entries.size(), rankedByPrediction);
+    if (switchTick == 0)
+    {
+        LOG("Prediction ranking: not switched, every identity is ranked by training.\n");
+    }
+    else
+    {
+        LOG("Prediction ranking: since tick %u. The rows are in the node's order: identities ranked by prediction first, then those ranked by training.\n", switchTick);
+    }
+    LOG("Rows 1 to %u are the computors of this epoch, the rows after them the candidates; each group is ranked on its own.\n", NUMBER_OF_COMPUTORS);
+    LOG("Shift and Error are of the identity's best ANN. Attempts (counted hours), Correct and Accuracy are of its answers,\n");
+    LOG("which its latest accepted ANN gives. The two can be different ANNs.\n");
+    LOG("WARNING: This is raw miner score data from the node and is NOT the final ranking list.\n");
+    LOG("Check processTick function in core node to have the latest ranking logic\n");
+}
+
 void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* seed)
 {
     uint8_t privateKey[32] = {0};
@@ -2192,6 +2343,27 @@ void getMiningScoreRanking(const char* nodeIp, const int nodePort, const char* s
     if (response.numRankings > 0)
     {
         memcpy(response.rankings.data(), ptr, response.numRankings * sizeof(SpecialCommandGetMiningScoreRanking::ScoreEntry));
+
+        // A node with the prediction phase answers a second command: the table then holds the prediction
+        // result of every identity too. Without that answer the table is the mining score ranking alone.
+        unsigned int switchTick = 0;
+        std::vector<SpecialCommandGetPredictionRanking::Entry> predictionEntries;
+        bool hasPredictionRanking = false;
+        try
+        {
+            hasPredictionRanking = fetchPredictionRanking(qc, seed, switchTick, predictionEntries);
+        }
+        catch (const std::exception&)
+        {
+            // a connection that broke after the first reply: the table without the prediction result
+            hasPredictionRanking = false;
+        }
+        if (hasPredictionRanking)
+        {
+            printRankingWithPrediction(response, switchTick, predictionEntries);
+            return;
+        }
+        LOG("The node did not answer the prediction ranking command: mining score ranking only.\n");
         // minerScore packs the rating as ((0xFFFF - shift) << 16) | error, and stays at
         // NO_MINER_SCORE until the miner lands one.
         const unsigned int NO_MINER_SCORE = 0xFFFFFFFFU;
